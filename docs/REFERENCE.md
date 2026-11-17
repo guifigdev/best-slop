@@ -1,32 +1,32 @@
-# Referência de gameplay e decisões
+# Referências e limites de fidelidade
 
-## Confirmado na descrição histórica, não por inspeção do mapa
+O projeto é um híbrido independente: Custom Hero Survival + atributos definidos pelo usuário + clima e narrativa originais. Não há arquivo `.w3x` no repositório e nenhuma equivalência completa a um patch de Warcraft III ou Ragnarok é alegada.
 
-Referência provisória: [hoihoi8's Custom Hero Survival v1.21](https://www.hiveworkshop.com/threads/hoihoi8s-custom-hero-survival-v1-21.105943/), atualizada em 2009. Descrição do autor: sete espaços de habilidades, comuns até nível 20, ultimates até nível 3, 300 ouro e 200 madeira entre ondas. São dados dessa versão, não de toda a família CHS.
+## Base histórica verificada
 
-[Wiki comunitária](https://tallnasgames.itch.io/custom-hero-survival-wiki): fonte candidata para um catálogo mais recente; ainda não conciliada com a 1.21. O usuário deseja uma versão recente, mas ainda não identificada. Não misturar números entre versões sem registrar sua origem.
+Fontes primárias: guia clássico da Blizzard, consultado em 17/11/2026. É referência histórica, não garantia de balanceamento do Reforged atual. Cada skill guarda `reference`, `source` e `originalRanks` no catálogo. Valores documentados são mantidos nos ranks correspondentes; ranks extras são explícitos.
 
-## Implementado provisoriamente
+| Fonte | Campos usados como base |
+|---|---|
+| [Mountain King](https://classic.battle.net/war3/human/units/mountainking.shtml) | Storm Bolt: dano 100/225/350, mana 75, CD 9s; Bash: chance 20/30/40%, +25 dano; Avatar: +5 armor, +500 HP, +20 dano, 60s |
+| [Tauren Chieftain](https://classic.battle.net/war3/orc/units/taurenchieftain.shtml) | War Stomp: 25/50/75 dano, mana 90, CD 6s; Shock Wave: 75/130/200, mana 100, CD 8s; Endurance: ataque +5/10/15%, movimento +10/20/30% |
+| [Paladin](https://classic.battle.net/war3/human/units/paladin.shtml) | Holy Light: cura 200/400/600, mana 65, CD 5s; Devotion: +1,5/3/4,5 armor |
+| [Far Seer](https://classic.battle.net/war3/orc/units/farseer.shtml) | Chain Lightning: 85/125/180 dano, 4/6/8 saltos, mana 120; Feral Spirit: dois lobos, 60s, mana 75, CD 30/25/25s |
+| [Blademaster](https://classic.battle.net/war3/orc/units/blademaster.shtml) | Critical Strike: chance 15%, multiplicador 2/3/4× |
+| [Archmage](https://classic.battle.net/war3/human/units/archmage.shtml) | Blizzard: 6/8/10 pulsos, 30/40/50 dano por pulso, mana 75; Brilliance: +0,75/1,5/2,25 mana/s |
+| [Dread Lord](https://classic.battle.net/war3/undead/units/dreadlord.shtml) | Vampiric Aura: 15/30/45% roubo de vida corpo a corpo |
+| [Keeper](https://classic.battle.net/war3/nightelf/units/keepergrove.shtml) | Thorns Aura: reflexão 10/20/30% |
+| [Itens permanentes](https://classic.battle.net/war3/basics/heroitemspermanent.shtml) | Anel +3 armor, pingente +150 mana e garras +9 dano como referências clássicas; preços/estoque próprios |
 
-- Sete espaços e recompensa de 300 ouro entre ondas usam a descrição histórica como ponto de partida.
-- Mana, recargas, dano, armadura, atributos, economia inicial e todos os valores em `shared/catalog.js` são experimentais.
-- Fórmula de redução física simplificada para armadura positiva; dano mágico sem resistência neste protótipo.
-- Três arquétipos originais, sem correspondência numérica com os heróis do mapa.
-- Dez ondas, preparação de 25 segundos e campeão nos marcos 5 e 10 são uma estrutura de teste.
-- Arena cooperativa compartilhada. A estrutura de CHS com arenas individuais e PvP ainda não foi recriada.
-- Ainda sem madeira, upgrades de habilidades, reembolso, tabela de tipos de ataque/armadura, imunidade mágica, dispel, orb effects, cancelamento de animações, cast point, backswing e regras completas de projéteis.
-- Dano de ataque atualmente resolve no instante do ataque; o projétil é visual. É uma diferença de gameplay a corrigir após escolher o mapa.
+## Extensões e adaptações
 
-## Critério para alegar fidelidade
+- Cinco níveis por skill: níveis 4–5 são extensões; Avatar é documentado em um nível e seus 2–5 são próprios.
+- Disparo múltiplo, Cometa de brasas, Anel de inverno, Salto de cauda, Passos de névoa, Arco selvagem, Presas de musgo, Sopro voraz e Manto de pétalas são técnicas próprias.
+- Holy Light vira cura própria; o alvo é diferente do original. Blizzard mantém canalização e cap por pulso, mas não tem fogo amigo. HP/ATQ dos lobos são adaptados. A redução por salto e os alcances usam escala própria do coliseu.
+- As auras Fervor, Couraça e Fonte afetam heróis aliados próximos. Vampirismo e Espinhos são efeitos do portador nesta versão. Itens de lifesteal podem funcionar à distância.
+- Ataques resolvem dano ao disparar; projéteis ainda são apresentação. Não há tabela completa de tipos de ataque, cast point, backswing, dispel/orb rules ou pathfinding equivalente ao WC3.
+- INT e clima modificam o resultado das magias; a interface descreve seus valores base.
+- Os seis atributos seguem as instruções do usuário com incrementos e limites próprios explicitados no README/UI. Não são as fórmulas oficiais de Ragnarok. O indicador de crítico usa explosão vermelha, centro claro e número ampliado; Miss usa texto claro inclinado, ambos originais em estilo inspirado em RO, sem copiar sprites.
+- Ouro, preços, limites, potes, encontros, climas e IA exigem ajustes após playtests humanos. A campanha automatizada até 50 valida o fluxo; não demonstra equilíbrio competitivo.
 
-Obter mapa/patch e registrar origem de cada regra. Para cada skill: níveis, custo, alvo, alcance, mana, recarga, cast point, canalização, duração, pulsos, dano, imunidades, dispel e interações. Conferir situações controladas no jogo original e no protótipo. Marcar como confirmado apenas o que foi observado ou lido em fonte correspondente à versão.
-
-## Arquitetura
-
-### Polimento do coliseu
-
-O universo de Aurélia, os Ecos mágicos e o arauto Orfeu são narrativa original deste projeto. Heróis, retratos e ícones são originais. O Hall da Fama é local, sem verificação ou sincronização global. Os controles agora incluem movimento na preparação, ataque ao mover, manter posição, seleção do herói e câmera livre. Não equivale ainda ao sistema completo de seleção, pathfinding e comandos de Warcraft III. Invocações continuam automáticas.
-
-Three.js é [uma biblioteca 3D, não uma engine de jogos](https://threejs.org/manual/pages/game.html). Foi escolhido por priorizar navegador, assets leves e compartilhamento da simulação JS com Node. [Godot exporta para web](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html), mas suas características de exportação e rede precisariam ser consideradas; ele não está descartado por incapacidade.
-
-Arte voxel original inspirada no aspecto de diorama de Crossy Road, sem copiar personagens. Câmera inclinada, cores chapadas, iluminação quente e animação limitada. Próxima etapa artística: modelos com paleta em vertex colors, clipes baked em poses discretas, malhas agrupadas/instanciadas e comparação de draw calls antes de introduzir pós-processamento.
+Referência anterior de CHS: [hoihoi8 v1.21](https://www.hiveworkshop.com/threads/hoihoi8s-custom-hero-survival-v1-21.105943/). A versão recente do mapa desejada pelo usuário ainda não foi identificada.

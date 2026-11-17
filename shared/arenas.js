@@ -1,0 +1,9 @@
+export const ARENAS={
+ forest:{name:'Jardins de Aurélia',weather:'Chuva de primavera',description:'Chuva leve: +10% regeneração de mana. Sem perigos no solo.',sky:0xaac2b0,floor:[0x9bb379,0x99b078,0xa3b980],rim:0xc4bc99,tint:0xffffff,particle:0xcbded0,manaRegen:1.1,zones:[]},
+ volcano:{name:'Caldeira de Obsidiana',weather:'Cinzas e calor',description:'Lava aplica queimadura por 3s. Magia de fogo +20%; gelo −15%. Obsidiana reduz queimadura.',sky:0x79645c,floor:[0x897565,0x7a6a60,0x927b65],rim:0xb19a78,tint:0xf1c09b,particle:0xffbf77,fire:1.2,ice:.85,zones:[{type:'lava',x:-6,z:3,r:2.6},{type:'lava',x:6,z:-3,r:2.6},{type:'lava',x:0,z:8,r:2.2}]},
+ glacier:{name:'Coroa da Geada',weather:'Nevasca',description:'Gelo escorrega. Zonas frias aplicam frost: −45% movimento e dano contínuo. Gelo +20%; fogo −15%.',sky:0xb4c8d5,floor:[0xc9dbd9,0xbacecf,0xc5d5da],rim:0xa7b9c0,tint:0xc6e3ff,particle:0xffffff,ice:1.2,fire:.85,zones:[{type:'ice',x:-5,z:3,r:3.2},{type:'ice',x:6,z:-4,r:3.1},{type:'frost',x:0,z:-7,r:2.5},{type:'frost',x:2,z:8,r:2.5}]},
+ tempest:{name:'Terraço dos Trovões',weather:'Tempestade elétrica',description:'Chuva forte: −10% movimento, +20% dano elétrico. Raios marcam o chão 2s antes do impacto.',sky:0x687d91,floor:[0x799486,0x829c91,0x71887d],rim:0xa2afa4,tint:0xc3d5ef,particle:0xb5d6fa,lightning:1.2,move:.9,zones:[]},
+ moon:{name:'Anfiteatro Lunar',weather:'Névoa noturna',description:'Névoa: −5% precisão de ataques comuns e +2% esquiva. Cristais frios aplicam frost. Críticos não erram.',sky:0x55566f,floor:[0x8d8da4,0x9297a6,0x7f869c],rim:0xb9aec3,tint:0xd6c8f2,particle:0xd5c2f5,accuracy:-.05,evasion:.02,zones:[{type:'frost',x:-7,z:0,r:2.6},{type:'frost',x:7,z:0,r:2.6}]}
+};
+export const ARENA_ORDER=Object.keys(ARENAS);
+export const arenaForWave=wave=>ARENA_ORDER[Math.min(4,Math.floor(Math.max(0,wave-1)/10))];
