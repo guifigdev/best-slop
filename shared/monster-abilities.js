@@ -5,7 +5,7 @@ import {blocked,limitPoint,moveUnit} from './field.js';
 const BATTLE=new Set(['wave','bonus','final']);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-const sourceData=u=>({id:u.id,owner:u.owner,team:u.team,x:u.x,z:u.z,challenge:u.challenge,cell:u.cell,magicPower:u.magicPower||1});
+const sourceData=u=>({id:u.id,owner:u.owner,team:u.team,x:u.x,z:u.z,altitude:u.flying?u.altitude||0:0,challenge:u.challenge,cell:u.cell,magicPower:u.magicPower||1});
 function direction(u,p){const x=p.x-u.x,z=p.z-u.z,d=Math.hypot(x,z);return d>.001?{x:x/d,z:z/d}:{x:Math.sin(u.facing||0),z:Math.cos(u.facing||0)};}
 function lineClear(game,from,to){const d=distance(from,to),steps=Math.max(1,Math.ceil(d/.25));for(let i=1;i<=steps;i++)if(blocked({x:from.x+(to.x-from.x)*i/steps,z:from.z+(to.z-from.z)*i/steps},game.obstacles||[],.1))return false;return true;}
 function sameTrial(game,h,t){if(t.team===h.team)return false;if(t.challenge){if(game.phase==='bonus')return t.challenge===h.owner;if(['best','war'].includes(game.options.mode))return game.groupKey(h)===t.challenge;}return true;}
@@ -56,11 +56,11 @@ export const monsterMethods={
    const old=(u.rageUntil||0)>this.time?u.rageData:null,next={damage:s.rageDamage||0,attackSpeed:s.rageSpeed||0},power=data=>(1+(data?.damage||0))*(1+(data?.attackSpeed||0));u.rageData=old&&power(old)>power(next)?old:next;u.rageUntil=Math.max(u.rageUntil||0,this.time+s.duration);if(u.hero)this.refresh(u);this.fx(key,u.x,u.z,{source:u.id,duration:s.duration,radius:2});return true;
   }
   if(key==='warlockfire'||key==='warlockfrost'){
-   this.projectiles||=[];const projectile={id:this.id(),skill:key,x:u.x+dir.x*.55,z:u.z+dir.z*.55,dx:dir.x,dz:dir.z,speed:s.projectileSpeed||12,remaining:s.distance||14,radius:s.radius||.5,damage:this.spellDamage(u,s.damage,key==='warlockfire'?'fire':'ice'),push:s.push||0,slow:s.slow||0,slowDuration:s.duration||0,source:sourceData(u),phase:this.phase,wave:this.wave,created:this.time};
+   this.projectiles||=[];const projectile={id:this.id(),skill:key,element:key==='warlockfire'?'fire':'ice',x:u.x+dir.x*.55,z:u.z+dir.z*.55,dx:dir.x,dz:dir.z,speed:s.projectileSpeed||12,remaining:s.distance||14,radius:s.radius||.5,damage:this.spellDamage(u,s.damage,key==='warlockfire'?'fire':'ice'),push:s.push||0,slow:s.slow||0,slowDuration:s.duration||0,source:sourceData(u),phase:this.phase,wave:this.wave,created:this.time};
    this.projectiles.push(projectile);this.fx('projectileCast',u.x,u.z,{source:u.id,skill:key,tx:point.x,tz:point.z});return true;
   }
   if(key==='flamebreath'){
-   for(const enemy of this.enemies(u,s.radius)){const d=distance(u,enemy)||1,dot=((enemy.x-u.x)*dir.x+(enemy.z-u.z)*dir.z)/d;if(dot<Math.cos(s.cone||.7)||!lineClear(this,u,enemy))continue;this.hit(enemy,this.spellDamage(u,s.damage,'fire')*(1-(enemy.fireResist||0)),u,true);if((enemy.avatar||0)<=this.time)this.applyDot(enemy,'burn',s.burn||0,s.duration||4,u);}
+   for(const enemy of this.enemies(u,s.radius)){const d=distance(u,enemy)||1,dot=((enemy.x-u.x)*dir.x+(enemy.z-u.z)*dir.z)/d;if(dot<Math.cos(s.cone||.7)||!lineClear(this,u,enemy))continue;this.hit(enemy,this.spellDamage(u,s.damage,'fire')*(1-(enemy.fireResist||0)),u,true,false,false,false,'fire');if((enemy.avatar||0)<=this.time)this.applyDot(enemy,'burn',s.burn||0,s.duration||4,u);}
    this.fx('flamebreath',u.x,u.z,{source:u.id,tx:u.x+dir.x*s.radius,tz:u.z+dir.z*s.radius,radius:s.radius});return true;
   }
   if(key==='venomcloud'){
@@ -68,7 +68,7 @@ export const monsterMethods={
   }
   if(key==='stormdive'){
    const d=distance(u,point)||1,length=Math.min(d,s.distance);moveUnit(this,u,limitPoint(this,u,{x:u.x+dir.x*length,z:u.z+dir.z*length}));u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;
-   for(const enemy of this.enemies(u,s.radius)){this.hit(enemy,this.spellDamage(u,s.damage,'lightning'),u,true);if((enemy.avatar||0)<=this.time){enemy.stun=Math.max(enemy.stun||0,enemy.hero?s.heroStun||s.stun:s.stun);this.cancelChannel(enemy);}}
+   for(const enemy of this.enemies(u,s.radius)){this.hit(enemy,this.spellDamage(u,s.damage,'lightning'),u,true,false,false,false,'lightning');if((enemy.avatar||0)<=this.time){enemy.stun=Math.max(enemy.stun||0,enemy.hero?s.heroStun||s.stun:s.stun);this.cancelChannel(enemy);}}
    this.fx('stormdive',u.x,u.z,{source:u.id,tx:origin.x,tz:origin.z,radius:s.radius});return true;
   }
   if(key==='hornrush'){
@@ -89,7 +89,7 @@ export const monsterMethods={
   const active=[];for(const p of this.projectiles){if(p.phase!==this.phase||p.wave!==this.wave)continue;let alive=true;const travel=Math.min(p.remaining,Math.max(0,dt)*p.speed),steps=Math.max(1,Math.ceil(travel/.18));for(let i=0;i<steps;i++){
     const next={x:p.x+p.dx*travel/steps,z:p.z+p.dz*travel/steps},limit=limitPoint(this,p.source,next);if(distance(next,limit)>.001||blocked(next,this.obstacles||[],p.radius*.7)){alive=false;this.fx('projectileImpact',p.x,p.z,{skill:p.skill,radius:.8});break;}p.x=next.x;p.z=next.z;
     const target=this.units.find(t=>this.canTarget(p.source,t)&&!(t.stageDone&&this.phase==='wave')&&distance(t,p)<=p.radius+.45);if(!target)continue;
-    const resist=p.skill==='warlockfire'?target.fireResist||0:target.coldResist||0;this.hit(target,p.damage*(1-resist),p.source,true);if((target.avatar||0)<=this.time){if(p.push)this.displace(target,p.dx*p.push,p.dz*p.push);if(p.slow)target.frostUntil=Math.max(target.frostUntil||0,this.time+p.slowDuration);}
+    const resist=p.skill==='warlockfire'?target.fireResist||0:target.coldResist||0;this.hit(target,p.damage*(1-resist),p.source,true,false,false,false,p.element||(p.skill==='warlockfire'?'fire':'ice'));if((target.avatar||0)<=this.time){if(p.push)this.displace(target,p.dx*p.push,p.dz*p.push);if(p.slow)target.frostUntil=Math.max(target.frostUntil||0,this.time+p.slowDuration);}
     this.fx('projectileImpact',p.x,p.z,{source:p.source.id,target:target.id,skill:p.skill,radius:1.4});alive=false;break;
    }p.remaining-=travel;if(alive&&p.remaining>0)active.push(p);
   }this.projectiles=active;

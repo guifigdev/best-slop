@@ -4,6 +4,8 @@ import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable} from './enchantments.
 import {equipmentEffectAt} from './equipment-effects.js';
 import {MONSTERS,monsterKind} from './monsters.js';
 import {monsterMethods} from './monster-abilities.js';
+import {shopMethods} from './shop-system.js';
+import {shopForItem} from './shops.js';
 import {baseAttributes,recompute} from './stats.js';
 import {modeOptions,capacity} from './modes.js';
 import {attributeCost,attributePointsForLevel} from './progression.js';
@@ -16,7 +18,7 @@ const TERMINAL=new Set(['victory','defeat']);
 export class Game {
  constructor(seed=7381,options={}){
   this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.bounds=14;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
-  this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: equipe itens e distribua atributos. Cada nível concede um ponto de habilidade.';
+  this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
   this.arena='forest';this.zones=[];this.nextWeather=8;this.stock={};this.shopVisit=0;this.bonusResults=[];this.winner=null;this.restock();
  }
  random(){this.seed=(Math.imul(this.seed,1664525)+1013904223)>>>0;return this.seed/4294967296;}
@@ -27,7 +29,7 @@ export class Game {
  addPlayer(id,type='knight',name='Aventureiro',bot=false,squad=null){
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
   const h=HEROES[type],i=Object.keys(this.players).length;
-  const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-10.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[h.skill],skillLevels:{[h.skill]:1},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
+  const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[h.skill],skillLevels:{[h.skill]:1},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
   recompute(u,this.time);this.players[id]=u.id;this.units.push(u);return true;
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
@@ -38,6 +40,8 @@ export class Game {
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
  command(id,c){
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
+  if(c.type==='interact')return this.interactShop(u,c.npc);
+  if(c.type==='leaveShop'){this.closeShop(u,true);return true;}
   if(c.type==='attribute'){
    if(!Object.hasOwn(ATTRIBUTES,c.attribute)||u.attributePoints<attributeCost(u.attributes[c.attribute])||u.attributes[c.attribute]>=99)return false;
    u.attributePoints-=attributeCost(u.attributes[c.attribute]);u.attributes[c.attribute]++;this.refresh(u);return true;
@@ -50,7 +54,7 @@ export class Game {
   }
   if(c.type==='item'){
    const s=Object.hasOwn(ITEMS,c.item)?ITEMS[c.item]:null;
-   if(!s||this.phase!=='preparation'||!u.alive||u.gold<s.cost||!(this.stock[c.item]>0))return false;
+   if(!s||!this.atShop(u,shopForItem(c.item))||u.gold<s.cost||!(this.stock[c.item]>0))return false;
    const stack=s.consumable&&u.inventory.find(slot=>slot?.key===c.item&&slot.charges<3),empty=u.inventory.findIndex(slot=>!slot);
    if(!stack&&empty===-1&&u.inventory.length>=6)return false;
    u.gold-=s.cost;this.stock[c.item]--;
@@ -58,29 +62,29 @@ export class Game {
    this.refresh(u);return true;
   }
   if(c.type==='enchantItem'){
-   if(this.phase!=='preparation'||!u.alive||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!Object.hasOwn(ENCHANTMENTS,c.enchantment))return false;const slot=u.inventory[c.slot];if(!slot||!isEnchantable(slot.key)||slot.enchantment===c.enchantment)return false;const cost=enchantPrice(c.enchantment,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.enchantment=c.enchantment;this.refresh(u);return true;
+   if(!this.atShop(u,'enchanter')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!Object.hasOwn(ENCHANTMENTS,c.enchantment))return false;const slot=u.inventory[c.slot];if(!slot||!isEnchantable(slot.key)||slot.enchantment===c.enchantment)return false;const cost=enchantPrice(c.enchantment,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.enchantment=c.enchantment;this.refresh(u);return true;
   }
   if(c.type==='upgradeItem'){
 
-   if(this.phase!=='preparation'||!u.alive||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;const slot=u.inventory[c.slot];if(!slot)return false;const cost=itemUpgradePrice(slot.key,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.level=(slot.level||1)+1;this.refresh(u);return true;
+   if(!this.atShop(u,'smith')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;const slot=u.inventory[c.slot];if(!slot)return false;const cost=itemUpgradePrice(slot.key,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.level=(slot.level||1)+1;this.refresh(u);return true;
   }
   if(c.type==='sell'){
 
-   if(this.phase!=='preparation'||!Number.isInteger(c.slot))return false;const slot=u.inventory[c.slot];if(!slot)return false;
+   if(!this.atShop(u)||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;const slot=u.inventory[c.slot];if(!slot)return false;
    u.gold+=Math.floor((ITEMS[slot.key].consumable?ITEMS[slot.key].cost*slot.charges:(slot.invested??ITEMS[slot.key].cost))*.5);u.inventory[c.slot]=null;this.refresh(u);return true;
   }
   if(c.type==='use'){
    if(!u.alive||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;
-   const slot=u.inventory[c.slot],item=ITEMS[slot?.key];if(item?.active)return this.activateEquipment(u,slot);if(!item?.consumable||(u.potionUntil||0)>this.time||(item.heal&&u.hp>=u.maxHp)||(item.mana&&u.mana>=u.maxMana))return false;
+   const slot=u.inventory[c.slot],item=ITEMS[slot?.key];if(item?.xp){if(this.phase!=='preparation')return false;this.gainXp(u,item.xp);if(--slot.charges<=0)u.inventory[c.slot]=null;this.fx('bookRead',u.x,u.z,{source:u.id,item:slot.key,amount:item.xp});return true;}if(item?.active)return this.activateEquipment(u,slot);if(!item?.consumable||(u.potionUntil||0)>this.time||(item.heal&&u.hp>=u.maxHp)||(item.mana&&u.mana>=u.maxMana))return false;
    if(item.heal)this.heal(u,item.heal);if(item.mana){u.mana=Math.min(u.maxMana,u.mana+item.mana);this.fx('mana',u.x,u.z,{source:u.id,amount:item.mana});}
    if(--slot.charges<=0)u.inventory[c.slot]=null;u.potionUntil=this.time+10;return true;
   }
   if(!u.alive)return false;
   if(c.type==='ready'&&this.phase==='preparation'){u.ready=true;if(this.heroes().filter(h=>!h.bot).every(h=>h.ready))this.timer=Math.min(this.timer,3);return true;}
-  if(['move','attackMove'].includes(c.type)&&Number.isFinite(c.x)&&Number.isFinite(c.z)){this.cancelChannel(u);u.destination=limitPoint(this,u,c);u.order=c.type;u.target=null;return true;}
-  if(c.type==='attack'){const t=this.units.find(t=>t.id===c.target&&this.canTarget(u,t));if(!t)return false;this.cancelChannel(u);u.target=t.id;u.order='attack';u.destination=null;return true;}
-  if(c.type==='stop'||c.type==='hold'){this.cancelChannel(u);u.order=c.type;u.destination=null;u.target=null;return true;}
-  if(c.type==='auto'){this.cancelChannel(u);u.order='auto';u.destination=null;return true;}
+  if(['move','attackMove'].includes(c.type)&&Number.isFinite(c.x)&&Number.isFinite(c.z)){this.closeShop(u);this.cancelChannel(u);u.destination=limitPoint(this,u,c);u.order=c.type;u.target=null;return true;}
+  if(c.type==='attack'){const t=this.units.find(t=>t.id===c.target&&this.canTarget(u,t));if(!t)return false;this.closeShop(u);this.cancelChannel(u);u.target=t.id;u.order='attack';u.destination=null;return true;}
+  if(c.type==='stop'||c.type==='hold'){this.closeShop(u);this.cancelChannel(u);u.order=c.type;u.destination=null;u.target=null;return true;}
+  if(c.type==='auto'){this.closeShop(u);this.cancelChannel(u);u.order='auto';u.destination=null;return true;}
   if(c.type==='claimLoot')return this.claimLoot(u,c);
   if(c.type==='cast')return this.cast(u,c);
   return false;
@@ -90,10 +94,12 @@ export class Game {
   if(slot.key==='restoration')for(const ally of this.heroes().filter(h=>h.alive&&h.team===u.team&&distance(u,h)<=s.radius))this.heal(ally,s.heal);
   this.fx('itemUse',u.x,u.z,{source:u.id,item:slot.key});return true;
  }
- equipmentTick(){if(!BATTLE.has(this.phase)||this.time<(this.nextEquipmentTick||0))return;this.nextEquipmentTick=this.time+.5;const sources=this.heroes().filter(h=>h.alive&&h.itemEffects?.solar&&!(h.stageDone&&this.phase==='wave'));for(const target of this.units.filter(u=>u.alive)){const teams=new Map();for(const owner of sources){const effect=equipmentEffectAt('solar',owner.itemEffects.solar);if(!this.canTarget(owner,target)||distance(owner,target)>effect.radius)continue;const old=teams.get(owner.team);if(!old||old.effect.damage<effect.damage)teams.set(owner.team,{owner,effect});}for(const {owner,effect}of teams.values()){if(this.hit(target,effect.damage*.5*(1-(target.fireResist||0)),owner,true,false)>0)target.solarUntil=this.time+.6;this.fx('solarHit',target.x,target.z,{source:owner.id});}}
+ equipmentTick(){if(!BATTLE.has(this.phase)||this.time<(this.nextEquipmentTick||0))return;this.nextEquipmentTick=this.time+.5;const sources=this.heroes().filter(h=>h.alive&&h.itemEffects?.solar&&!(h.stageDone&&this.phase==='wave'));for(const target of this.units.filter(u=>u.alive)){const teams=new Map();for(const owner of sources){const effect=equipmentEffectAt('solar',owner.itemEffects.solar);if(!this.canTarget(owner,target)||distance(owner,target)>effect.radius)continue;const old=teams.get(owner.team);if(!old||old.effect.damage<effect.damage)teams.set(owner.team,{owner,effect});}for(const {owner,effect}of teams.values()){if(this.hit(target,effect.damage*.5*(1-(target.fireResist||0)),owner,true,false,false,false,'fire')>0)target.solarUntil=this.time+.6;this.fx('solarHit',target.x,target.z,{source:owner.id});}}
  }
  cancelChannel(u){u.channel=null;for(const e of this.effects)if(e.owner===u.id&&e.channel)e.pulses=0;}
  heal(u,amount){const actual=Math.min(u.maxHp-u.hp,amount);u.hp+=actual;if(actual>0)this.fx('heal',u.x,u.z,{amount:Math.round(actual),source:u.id});return actual;}
+ // Creature affinities are independent of hero equipment/attributes.
+ elementDamage(target,amount,element){const resistance=element?target?.resistances?.[element]:null;return Number.isFinite(resistance)?amount*(1-clamp(resistance,-.5,.75)):amount;}
  spellDamage(u,damage,element='arcane'){const weather=ARENAS[this.arena];return damage*(u.magicPower||1)*(weather[element]||1);}
  cast(u,c){
   if(u.stageDone&&this.phase==='wave'&&['best','war'].includes(this.options.mode))return false;
@@ -107,7 +113,7 @@ export class Game {
   if(s.target==='ground'&&(!Number.isFinite(c.x)||!Number.isFinite(c.z)||distance(u,c)>14||Math.abs(c.x)>this.bounds||Math.abs(c.z)>this.bounds||distance(c,limitPoint(this,u,c))>.01))return false;
   this.cancelChannel(u);u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=this.time;u.castSkill=key;this.fx('cast',u.x,u.z,{source:u.id,skill:key});
   if(this.castSpecial(u,key,s,c,t))return true;
-  const hit=(v,n,element)=>this.hit(v,this.spellDamage(u,n,element),u,true),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
+  const hit=(v,n,element)=>this.hit(v,this.spellDamage(u,n,element),u,true,false,false,false,element||null),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
   if(key==='bolt'){hit(t,s.damage,'lightning');stun(t);this.fx('bolt',u.x,u.z,{tx:t.x,tz:t.z});}
   if(key==='stomp'){this.fx('stomp',u.x,u.z,{radius:s.radius});for(const e of this.enemies(u,s.radius)){hit(e,s.damage);stun(e);}}
   if(key==='heal')this.heal(u,s.heal*(u.magicPower||1));
@@ -131,14 +137,14 @@ export class Game {
   return true;
  }
  displace(u,dx,dz){const n=Math.ceil(Math.hypot(dx,dz)/.2);for(let i=0;i<n;i++){const p=limitPoint(this,u,{x:u.x+dx/n,z:u.z+dz/n});if(blocked(p,this.obstacles))break;u.x=p.x;u.z=p.z;}u.vx=u.vz=0;u.pathKey=null;}
- applyDot(u,key,damage,duration,source=null){if(key==='burn')damage*=1-(u.fireResist||0);u.dots||={};const old=u.dots[key];const active=old&&old.until>=this.time;u.dots[key]={damage:active?Math.max(damage,old.damage):damage,until:active?Math.max(old.until,this.time+duration):this.time+duration,next:active?old.next:this.time+1,source:active&&old.damage>damage?old.source:source?.id};}
- hit(t,amount,source=null,magic=false,reflect=false,critical=false,environment=false){
+ applyDot(u,key,damage,duration,source=null){if(key==='burn')damage*=1-(u.fireResist||0);u.dots||={};const old=u.dots[key];const active=old&&old.until>=this.time;u.dots[key]={damage:active?Math.max(damage,old.damage):damage,until:active?Math.max(old.until,this.time+duration):this.time+duration,next:active?old.next:this.time+1,source:active&&old.damage>damage?old.source:source?.id,element:({burn:'fire',lava:'fire',frost:'ice',poison:'poison'})[key]||null};}
+ hit(t,amount,source=null,magic=false,reflect=false,critical=false,environment=false,element=null){
   if(!t?.alive||!Number.isFinite(amount)||amount<0)return 0;
   if(magic&&!environment&&(t.avatar||0)>this.time)return 0;
-  let dmg=magic?amount:amount/(1+.06*Math.max(0,t.armor||0));
+  amount=this.elementDamage(t,amount,element);let dmg=magic?amount:amount/(1+.06*Math.max(0,t.armor||0));
   if((t.shieldUntil||0)>this.time&&t.shield>0){const absorbed=Math.min(t.shield,dmg);t.shield-=absorbed;dmg-=absorbed;}
   const actual=Math.min(t.hp,Math.max(0,dmg));t.hp=Math.max(0,t.hp-dmg);t.hitAt=this.time;
-  this.fx('damage',t.x,t.z,{amount:Math.round(actual),magic,critical,source:source?.id,target:t.id,environment});
+  this.fx('damage',t.x,t.z,{amount:Math.round(actual),magic,critical,source:source?.id,target:t.id,environment,element});
   if(critical)this.fx('critical',t.x,t.z,{source:source?.id,target:t.id});
   // Resolve death once before retaliation to prevent duplicate kills and reflection recursion.
   if(t.hp<=0){t.alive=false;t.died=this.time;this.cancelChannel(t);this.monsterLoot(t,source);if(source&&t.team!==source.team){const p=this.player(source.owner);if(p){p.gold+=12+this.wave;p.kills++;}if(!t.hero&&!t.summon)for(const h of this.heroes().filter(h=>!t.challenge||this.groupKey(h)===t.challenge||this.options.mode==='campaign'))this.gainXp(h,12);}}
@@ -149,22 +155,22 @@ export class Game {
  }
  gainXp(u,amount){u.xp+=amount;while(u.xp>=u.level*55){u.xp-=u.level*55;u.level++;u.attributePoints+=attributePointsForLevel(u.level);u.skillPoints++;this.refresh(u);this.heal(u,80);this.fx('levelup',u.x,u.z,{source:u.id});}}
  attack(u,t){
-  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena];
-  if((t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:Object.keys(u.enchantments||{})[0]||null});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
+  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena],attackElement=!u.hero&&!u.summon?u.element||null:null;
+  if((t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
   const crit=this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
-  this.fx(u.range>3?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:Object.keys(u.enchantments||{})[0]||null});
+  this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});
   if(!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
-  const damage=this.hit(t,u.damage*(crit?u.critMultiplier||2:1),u,false,false,crit);
+  const baseDamage=u.damage*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?this.spellDamage(u,baseDamage,attackElement):baseDamage,u,!!attackElement,false,crit,false,attackElement);
   if(levelOf(u,'bash')){const s=skillAt('bash',levelOf(u,'bash'));if(this.random()<s.chance&&t.alive){this.hit(t,s.damage,u);t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
   if(levelOf(u,'cleave')&&u.range<3){const s=skillAt('cleave',levelOf(u,'cleave'));for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
   if(levelOf(u,'bounce')&&u.range>=3){const s=skillAt('bounce',levelOf(u,'bounce')),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
-  if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false);this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
+  if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false,false,false,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
   if(t.alive&&(t.avatar||0)<=this.time)for(const [key,rank]of Object.entries(u.enchantments||{})){const s=enchantAt(key,rank);if(key==='frost'){t.frostUntil=Math.max(t.frostUntil||0,this.time+s.duration);this.fx('frost',t.x,t.z,{source:u.id,enchantment:true});}else{this.applyDot(t,key==='fire'?'burn':'poison',s.damage,s.duration,u);this.fx(key==='fire'?'burn':'poison',t.x,t.z,{source:u.id,enchantment:true});}}
   if(levelOf(u,'poison')&&t.alive){const s=skillAt('poison',levelOf(u,'poison'));this.applyDot(t,'poison',s.poison,4,u);this.fx('poison',t.x,t.z);}
  }
  setArena(key){this.arena=key;this.zones=ARENAS[key].zones.map((z,i)=>({...z,id:`${key}-${i}`}));this.nextWeather=this.time+8;}
  arenaAt(wave){const keys=Object.keys(ARENAS),start=Math.max(0,keys.indexOf(this.startingArena||'forest'));return keys[(start+Math.floor(Math.max(0,wave-1)/10))%keys.length];}
- restoreHeroes(full=true){for(const [i,u]of this.heroes().entries()){u.alive=true;u.team=this.homeTeam(u);u.x=-4+(i%5)*2;u.z=2;u.destination=null;u.target=null;u.order='auto';u.stun=0;u.itemReflectUntil=0;u.itemReflect=0;u.rageUntil=0;u.rageData=null;u.dots={};u.frostUntil=0;u.vx=0;u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=full?u.maxHp:Math.min(u.maxHp,u.hp+u.maxHp*.3);u.mana=full?u.maxMana:Math.min(u.maxMana,u.mana+u.maxMana*.3);}}
+ restoreHeroes(full=true){for(const [i,u]of this.heroes().entries()){this.closeShop(u);u.alive=true;u.team=this.homeTeam(u);u.x=-4+(i%5)*2;u.z=2;u.destination=null;u.target=null;u.order='auto';u.stun=0;u.itemReflectUntil=0;u.itemReflect=0;u.rageUntil=0;u.rageData=null;u.dots={};u.frostUntil=0;u.vx=0;u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=full?u.maxHp:Math.min(u.maxHp,u.hp+u.maxHp*.3);u.mana=full?u.maxMana:Math.min(u.maxMana,u.mana+u.maxMana*.3);}}
  spawnWave(){
   if(this.options.mode!=='campaign')return this.spawnCompetitionWave();this.clearField();
   this.phase='wave';this.wave++;this.setArena(this.arenaAt(this.wave));this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes(this.wave%5===1);this.message=`Onda ${this.wave}/50 · ${ARENAS[this.arena].name}`;
@@ -172,7 +178,7 @@ export class Game {
   for(let i=0;i<count;i++){const a=this.random()*Math.PI*2,r=11+this.random()*2,kind=kinds[Math.floor(this.random()*Math.min(kinds.length,2+Math.floor(this.wave/3)))],brute=['brute','ram','tortoise'].includes(kind),ranged=kind==='bat';this.spawnEnemy(kind,Math.sin(a)*r,Math.cos(a)*r,{hp:(65+this.wave*16)*(brute?1.6:1),damage:7+this.wave*1.2,armor:brute?3+Math.floor(this.wave/15):Math.floor(this.wave/20),range:ranged?6:1.4,speed:brute?2.4:3.1,interval:ranged?1.8:1.4});}
   if(this.wave%10===0)this.spawnEnemy('champion',0,-10,{hp:600+this.wave*55,damage:25+this.wave*2,armor:5,range:2,speed:2.5,interval:1.5});
  }
- spawnEnemy(kind,x,z,data){if(['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog','champion'].includes(kind)){const boss=!!data.boss||kind==='champion';kind=monsterKind(kind,this.wave,data.variantRoll??this.random(),boss);if(boss)data={...data,boss:data.boss||'boss'};}const species=MONSTERS[kind];if(species)data={...data,hp:data.hp*species.hpMultiplier,damage:data.damage*species.damageMultiplier,armor:(data.armor||0)+species.armorBonus,size:species.size,name:species.name};const u={id:this.id(),kind,team:2,x,z,hp:data.hp,maxHp:data.hp,damage:data.damage,armor:data.armor||0,range:data.range||1.4,speed:data.speed||2.8,interval:data.interval||1.5,accuracy:.9,evasion:data.evasion||0,cd:this.random(),stun:0,alive:true,...data};this.units.push(u);return u;}
+ spawnEnemy(kind,x,z,data){if(['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog','champion'].includes(kind)){const boss=!!data.boss||kind==='champion';kind=monsterKind(kind,this.wave,data.variantRoll??this.random(),boss);if(boss)data={...data,boss:data.boss||'boss'};}const species=MONSTERS[kind];if(species)data={...data,hp:data.hp*species.hpMultiplier,damage:data.damage*species.damageMultiplier,armor:(data.armor||0)+species.armorBonus,size:species.size,name:species.name,flying:!!species.flying,altitude:species.flying?species.altitude||1.4:0,range:species.range||data.range||1.4,element:species.element||null,resistances:{...(species.resistances||{})}};const u={id:this.id(),kind,team:2,x,z,hp:data.hp,maxHp:data.hp,damage:data.damage,armor:data.armor||0,range:data.range||1.4,speed:data.speed||2.8,interval:data.interval||1.5,accuracy:.9,evasion:data.evasion||0,cd:this.random(),stun:0,alive:true,...data};this.units.push(u);return u;}
  finishWave(){if(this.options.mode!=='campaign')return this.finishCompetitionWave();for(const h of this.heroes()){h.gold+=100+this.wave*12;this.gainXp(h,30);}this.units=this.units.filter(u=>u.hero&&!u.summon);if(this.wave===50){this.phase='finalCountdown';this.timer=12;this.message='50 ondas vencidas. Prepare-se: todos contra todos!';this.restoreHeroes();}
   else if(this.wave%5===0)this.startBonus();else{this.phase='intermission';this.timer=7;this.restoreHeroes(false);this.message='Respire. A próxima onda começa em instantes; loja a cada cinco ondas.';}}
  startBonus(){
@@ -181,14 +187,13 @@ export class Game {
  }
  checkBonus(){for(const u of this.heroes()){if(u.challengeDone)continue;if(!this.units.some(e=>e.alive&&e.challenge===u.owner)){u.challengeDone=true;const elapsed=this.time-this.bonusStarted;this.bonusResults.push({owner:u.owner,name:u.name,time:elapsed});this.fx('bonus',u.x,u.z,{source:u.id});}else if(!u.alive||this.time-this.bonusStarted>=45){u.challengeDone=true;this.bonusResults.push({owner:u.owner,name:u.name,time:null});}}
   if(this.heroes().every(u=>u.challengeDone)){this.bonusResults.sort((a,b)=>(a.time??Infinity)-(b.time??Infinity)||a.owner.localeCompare(b.owner));let rank=0;for(const r of this.bonusResults){r.gold=r.time===null?0:Math.max(120,500-rank++*120);this.player(r.owner).gold+=r.gold;}this.phase='bonusResults';this.timer=8;this.message=`Desafio concluído! ${this.bonusResults.find(r=>r.time!==null)?.name||'Ninguém'} venceu a corrida. Mercado em 8s.`;}}
- openShop(){this.clearField();this.cells=[];this.phase='preparation';this.timer=65;this.restock();this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes();this.setArena(this.arenaAt(this.wave+1));for(const [i,h]of this.heroes().entries()){h.z=-10.8;h.ready=false;h.botBuyAt=this.time+12+i*2;}this.message='Mercado do coliseu aberto. Estoque compartilhado: quem comprar primeiro leva!';}
+ openShop(){this.clearField();this.cells=[];this.phase='preparation';this.timer=65;this.restock();this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes();this.setArena(this.arenaAt(this.wave+1));for(const [i,h]of this.heroes().entries()){h.z=-8.8;h.ready=false;h.botBuyAt=this.time+12+i*2;}this.message='Mercado do coliseu aberto. Estoque compartilhado: quem comprar primeiro leva!';}
  startFinal(){if(this.options.mode!=='campaign')return this.startCompetitionClash();this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes();for(const [i,u]of this.heroes().entries()){u.team=10+i;u.x=Math.sin(i/this.heroes().length*Math.PI*2)*8;u.z=Math.cos(i/this.heroes().length*Math.PI*2)*8;}this.phase='final';this.finalStarted=this.time;this.message='Grande final: todos contra todos. Somente um nome no pedestal!';if(this.heroes().length===1)this.finishFinal(this.heroes()[0]);}
  finishFinal(winner){this.winningOwners=winner?[winner.owner]:[];this.phase='victory';this.winner=winner?.owner||null;this.message=winner?`${winner.name} é o herói perfeito do Coliseu das Mil Formas!`:'A final terminou sem sobreviventes.';}
  learnBotSkills(u){const plan=['heal','vampiric','critical','endurance','multishot','devotion'];while(u.skillPoints>0){const next=plan.find(k=>!u.skills.includes(k)&&u.skills.length<7)||[...u.skills].sort((a,b)=>levelOf(u,a)-levelOf(u,b)).find(k=>levelOf(u,k)<5);if(!next||!this.command(u.owner,{type:'buy',skill:next}))break;}}
  allocateBot(u){while(u.attributePoints>0){const key=[HEROES[u.hero].focus,'vit','agi','dex','int','str','luk'].find(k=>u.attributes[k]<99&&attributeCost(u.attributes[k])<=u.attributePoints);if(!key)break;this.command(u.owner,{type:'attribute',attribute:key});}}
  botThink(u){
-  if(this.phase==='preparation'&&this.time>=u.botBuyAt){u.botBuyAt=this.time+2;this.allocateBot(u);this.learnBotSkills(u);const item=Object.keys(ITEMS).find(k=>!ITEMS[k].consumable&&this.stock[k]>0&&u.gold>=ITEMS[k].cost&&!u.inventory.some(i=>i?.key===k));if(item&&u.inventory.filter(Boolean).length<6)this.command(u.owner,{type:'item',item});else{const slot=u.inventory.findIndex(s=>s&&!ITEMS[s.key].consumable&&(s.level||1)<ITEM_MAX_LEVEL&&u.gold>=itemUpgradePrice(s.key,s.level||1));if(slot>=0)this.command(u.owner,{type:'upgradeItem',slot});}}
-  if(this.phase==='preparation'&&this.time>=(u.botEnchantAt||0)){u.botEnchantAt=this.time+4;const slot=u.inventory.findIndex(s=>s&&isEnchantable(s.key)&&!s.enchantment),enchantment=['fire','frost','poison'][u.seat%3];if(slot>=0&&u.gold>=enchantPrice(enchantment,u.inventory[slot].level||1))this.command(u.owner,{type:'enchantItem',slot,enchantment});}
+  if(this.phase==='preparation')this.botShopThink(u);
   if(!BATTLE.has(this.phase)||!u.alive)return;
   this.allocateBot(u);this.learnBotSkills(u);
   if(u.hp<u.maxHp*.45){const slot=u.inventory.findIndex(i=>ITEMS[i?.key]?.heal);if(slot>=0)this.command(u.owner,{type:'use',slot});}
@@ -196,12 +201,12 @@ export class Game {
   const target=this.enemies(u,12)[0];for(const [slot,key]of u.skills.entries()){const s=skillAt(key,levelOf(u,key));if(s.kind!=='active'||s.heal&&u.hp>u.maxHp*.65)continue;if(!target&&s.target!=='self')continue;if(this.cast(u,{slot,target:target?.id,x:target?.x,z:target?.z}))break;}
  }
  environment(u,dt){
-  if(!BATTLE.has(this.phase)||u.stageDone&&this.phase==='wave'&&['best','war'].includes(this.options.mode))return;const active=this.zones.filter(z=>distance(u,z)<z.r);u.sliding=active.some(z=>z.type==='ice');u.wading=active.some(z=>z.type==='water');
+  if(!BATTLE.has(this.phase)||u.stageDone&&this.phase==='wave'&&['best','war'].includes(this.options.mode))return;const active=this.zones.filter(z=>distance(u,z)<z.r&&(!u.flying||z.type==='lightning'));u.sliding=active.some(z=>z.type==='ice');u.wading=active.some(z=>z.type==='water');
   for(const z of active.filter(z=>z.type==='trap')){const cycle=Math.floor((this.time+z.offset)/z.period),age=(this.time+z.offset)%z.period;u.trapCycles||={};if(age>=1.5&&age<2&&u.trapCycles[z.id]!==cycle){u.trapCycles[z.id]=cycle;this.hit(u,90+this.wave*3,null,true,true,false,true);u.stun=Math.max(u.stun,.6);this.fx('thunder',z.x,z.z,{radius:z.r});}}
   if(active.some(z=>z.type==='lava'))this.applyDot(u,'lava',(12+u.maxHp*.015)*(1-(u.fireResist||0)),3);
   if(active.some(z=>z.type==='frost')){u.frostUntil=this.time+2;this.applyDot(u,'frost',(8+this.wave*.3)*(1-(u.coldResist||0)),2);}
-  for(const [key,dot]of Object.entries(u.dots||{})){if(dot.until<this.time){delete u.dots[key];continue;}if(dot.next<=this.time){dot.next+=1;const source=this.units.find(v=>v.id===dot.source);this.hit(u,dot.damage,source,true,false,false,!source);this.fx(key,u.x,u.z);}}
-  if(this.arena==='tempest')for(const z of active.filter(z=>z.type==='lightning'&&z.strike<=this.time&&!z.hit?.includes(u.id))){z.hit||=[];z.hit.push(u.id);this.hit(u,100+this.wave*2,null,true,true,false,true);this.fx('thunder',z.x,z.z);}
+  for(const [key,dot]of Object.entries(u.dots||{})){if(dot.until<this.time){delete u.dots[key];continue;}if(dot.next<=this.time){dot.next+=1;const source=this.units.find(v=>v.id===dot.source);this.hit(u,dot.damage,source,true,false,false,!source,dot.element||({burn:'fire',lava:'fire',frost:'ice',poison:'poison'})[key]||null);this.fx(key,u.x,u.z);}}
+  if(this.arena==='tempest')for(const z of active.filter(z=>z.type==='lightning'&&z.strike<=this.time&&!z.hit?.includes(u.id))){z.hit||=[];z.hit.push(u.id);this.hit(u,100+this.wave*2,null,true,true,false,true,'lightning');this.fx('thunder',z.x,z.z);}
  }
  tick(dt){
   if(!Number.isFinite(dt)||dt<=0)return;this.time+=dt;this.tickSpecials(dt);
@@ -210,7 +215,7 @@ export class Game {
   if(!this.heroes().length||TERMINAL.has(this.phase))return;
   if(['preparation','intermission','bonusResults','finalCountdown'].includes(this.phase)){this.timer-=dt;if(this.timer<=0){if(this.phase==='bonusResults')this.openShop();else if(this.phase==='finalCountdown')this.startFinal();else this.spawnWave();}}
   if(this.arena==='tempest'&&BATTLE.has(this.phase)&&this.time>=this.nextWeather){this.nextWeather=this.time+7;this.weatherStrike();}this.zones=this.zones.filter(z=>!z.expires||z.expires>this.time);
-  for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true);if(e.pulses===0){owner.channel=null;owner.order='auto';}}
+  for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true,false,false,false,'ice');if(e.pulses===0){owner.channel=null;owner.order='auto';}}
   for(const e of this.effects.filter(e=>e.type==='gravity')){const owner=this.units.find(u=>u.id===e.owner);if(!owner)continue;for(const t of this.enemies(owner).filter(t=>distance(t,e)<e.radius)){const d=distance(t,e)||1;if((t.avatar||0)<=this.time)this.displace(t,(e.x-t.x)/d*dt*2.5,(e.z-t.z)/d*dt*2.5);if(this.time>=e.next)this.hit(t,e.damage,owner,true);}if(this.time>=e.next)e.next+=1;}
   for(const u of [...this.units]){
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}
@@ -225,6 +230,7 @@ export class Game {
    if(u.sliding){const blend=1-Math.exp(-dt*2.8);u.vx=(u.vx||0)+(vx-(u.vx||0))*blend;u.vz=(u.vz||0)+(vz-(u.vz||0))*blend;}else{u.vx=vx;u.vz=vz;}moveUnit(this,u,{x:u.x+u.vx*dt,z:u.z+u.vz*dt});
   }
   const live=this.units.filter(u=>u.alive);for(let i=0;i<live.length;i++)for(let j=i+1;j<live.length;j++){const a=live[i],b=live[j],d=distance(a,b);const separation=.4*((a.size||1)+(b.size||1));if((!a.cell||a.cell===b.cell)&&d<separation&&d>.001){const push=(separation-d)*.35,dx=(a.x-b.x)/d,dz=(a.z-b.z)/d;moveUnit(this,a,{x:a.x+dx*push,z:a.z+dz*push});moveUnit(this,b,{x:b.x-dx*push,z:b.z-dz*push});}}
+  for(const hero of this.heroes())this.tickNPC(hero);
   this.equipmentTick();
   if(this.phase==='bonus')this.checkBonus();
   if(this.phase==='wave'&&this.options.mode!=='campaign')this.checkCompetitionWave();
@@ -236,4 +242,4 @@ export class Game {
  snapshot(){return {drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
 }
 
-Object.assign(Game.prototype,competitionMethods,monsterMethods);
+Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods);

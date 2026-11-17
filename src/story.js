@@ -3,7 +3,7 @@ import {ARENAS} from '../shared/arenas.js';
 import {MODES} from '../shared/modes.js';
 export const INTRO=[
  ['Orfeu','Arauto do Coliseu','Bem-vindo ao Torneio das Mil Formas. Seis clãs procuram o herói perfeito. Você enfrentará cinquenta ondas em cinco coliseus e, ao último sino, os próprios competidores. No solo, seus rivais são controlados por IA.'],
- ['Orfeu','O mercado é uma corrida','Você começa na loja e retorna a cada cinco ondas, depois de um desafio de velocidade. Quem conclui mais rápido recebe mais ouro. Os equipamentos têm estoque compartilhado: quem compra primeiro leva. Sua mochila comporta seis espaços.'],
+ ['Orfeu','O mercado é uma corrida','Você começa no mercado e retorna a cada cinco ondas. Clique no NPC para caminhar até ele e conversar: Brás vende equipamentos, Cora vende poções, Orfeu tem livros de XP, Nico melhora itens e Faísca encanta armas. O estoque é compartilhado. Sua mochila comporta seis espaços.'],
  ['Orfeu','Sua build evolui','Cada nível ganho dá 1 ponto de habilidade: aprenda ou melhore técnicas na aba Técnicas, mesmo em batalha. Você começa com a técnica do seu clã. Atributos custam mais a cada faixa de 10: até 10 custa 1; 11 a 20 custa 2, e assim por diante. Distribua na aba Herói (I).'],
  ['Orfeu','Leia o terreno','Os coliseus mudam a cada dez ondas. Lava queima. Gelo escorrega. Frio intenso aplica frost, lentidão e dano gradual. Na tempestade, saia da marca do raio. Equipamentos de proteção podem salvar sua build.'],
  ['Orfeu','Seu primeiro comando','Direito move ou ataca. A + clique avança atacando. S para, H mantém posição. Q W E R D F C usam técnicas; 1 a 6 usam potes. Roda aproxima; meio + arraste gira; Shift + meio move a câmera. Espaço centraliza. F2 ou ? abre todos os atalhos.']

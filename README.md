@@ -56,7 +56,7 @@ Cada nível dá `5 + floor(nível/5)` pontos de atributo. O custo depende do pr�
 
 Ataques comuns testam precisão menos esquiva e clima. Esquiva perfeita tem teste independente antes do crítico e pode evitá-lo; aparece como Lucky em verde. Precisão não reduz essa chance. Críticos ignoram apenas o teste comum. Esquiva comum é limitada a 45% (perfeita: 35%), crítico a 80% e velocidade de ataque a 3×. Crítico usa o maior multiplicador disponível, com chance somada. Armadura física positiva: `dano / (1 + 0.06 * armadura)`. Dano mágico é ampliado por INT e pelo elemento/clima.
 
-21 itens, equipamentos e consumíveis. Inventário de **seis espaços**, sem mochila oculta. Potes iguais acumulam até três cargas por espaço; precisam ser ativados e compartilham recarga de dez segundos. Vida: 300, mana: 200 (valores próprios). **Equipamentos têm cinco níveis.** Clique num equipamento da mochila para abrir a forja, comparar os bônus e melhorá-lo com ouro no mercado. A melhoria preserva o espaço e não consome estoque de outro exemplar. Os preços crescem por nível; poções continuam com cargas, sem upgrade. Shift + clique vende por metade do ouro efetivamente investido (item + melhorias), somente no mercado. Resistências de equipamento somadas são limitadas a 90%; multiplicadores críticos usam o maior, sem somar exemplares.
+23 itens, equipamentos e consumíveis. Inventário de **seis espaços**, sem mochila oculta. Potes iguais acumulam até três cargas por espaço; precisam ser ativados e compartilham recarga de dez segundos. Vida: 300, mana: 200 (valores próprios). **Equipamentos têm cinco níveis.** Clique num equipamento da mochila para inspecionar seus bônus e caminhar até o ferreiro. A melhoria com ouro exige conversar com Nico perto da forja. A melhoria preserva o espaço e não consome estoque de outro exemplar. Os preços crescem por nível; poções continuam com cargas, sem upgrade. Shift + clique vende por metade do ouro efetivamente investido (item + melhorias), somente no mercado. Resistências de equipamento somadas são limitadas a 90%; multiplicadores críticos usam o maior, sem somar exemplares.
 
 ## Arenas e clima
 
@@ -113,7 +113,7 @@ A revisão dos agentes de game design, UI/UX e jogabilidade está consolidada em
 
 ## Ferreiro, venda e encantamentos
 
-Na aba **Itens**, os botões Ferreiro, Encantadora e Vender abrem os serviços do mercado. Vender tem botão explícito e mostra o ouro devolvido; funciona para equipamentos e todas as cargas de um consumível. A mochila continua com seis espaços.
+As compras acontecem nas cinco lojas físicas do mercado. Clique no NPC (botão esquerdo ou direito), ou pressione G para o mais próximo: o herói caminha até ele e a conversa só abre ao chegar. A lateral contém ficha, evolução de técnicas e crônica; não há loja remota. Vender tem botão explícito e mostra o ouro devolvido; funciona para equipamentos e todas as cargas de um consumível. A mochila continua com seis espaços.
 
 Armas, arcos e cajados aceitam um encantamento: fogo aplica queimadura, gelo aplica frost e veneno aplica dano gradual. Efeitos crescem com o nível da arma. A compra e a substituição custam ouro no mercado; o custo entra no investimento para a venda. Só o acerto primário aplica; ricochete e Cleave não repetem o proc, e o mesmo tipo de dano gradual renova a duração mantendo o pulso e o dano mais forte. INT, crítico e lifesteal não multiplicam esses danos. A proteção contra fogo também reduz queimadura de encantamento. Uma gema colorida identifica a arma encantada.
 
@@ -132,3 +132,21 @@ Orbe de Brasa e Orbe de Geada são projéteis reais inspirados no posicionamento
 Lâmina do sol errante (inspiraçãoRadiance) causa dano de fogo em área; Bobina da tormenta(Maelstrom) tem proc de relâmpagos; Couraça do contragolpe(BladeMail) reflete dano recebido durante uma janela ativa; Relicário do recomeço(Mekansm) cura aliados próximos. São números e artes próprios, sem promessa de reprodução de um patch. O efeito mais forte de aura solar de uma mesma equipe prevalece, sem somar cópias; os raios não repetem encantamentos ou procs. Os ativos usam as teclas1–6 ou clique no item durante a batalha e compartilham recarga por tipo no herói. No mercado, o clique continua abrindo a forja.
 
 Os estados persistentes usam shaders sem texturas: fogo/brasas, geada/cristais e veneno, em até3drawcalls por ator, animação em8Hz e orçamento de48atores próximos. Até12 atores recebem rótulos, e a faixa do herói mostra duração dos estados. Frost representa lentidão, não congelamento imóvel. A arte está documentada em `docs/ART_DIRECTION.md`.
+
+## Serviços físicos do coliseu
+
+| NPC | Local | Serviço |
+|---|---|---|
+| Brás | Arsenal dos seis clãs | Equipamentos e relíquias |
+| Cora | Botica | Poções e consumíveis |
+| Orfeu | Biblioteca | Livros de 80 ou 200 XP |
+| Nico | Forja | Melhorias de equipamento até nível 5 |
+| Faísca | Ateliê | Encantamentos de armas |
+
+Todos podem comprar seus itens de volta, por metade do investimento. A interação começa a 2,7m; a conversa aceita uma margem de 35cm para pequenos empurrões de outros heróis e fecha ao sair dela. Mover manualmente ou começar uma prova encerra o atendimento. O servidor valida posição, NPC correto, fase, ouro e estoque, inclusive para bots. Livros ocupam espaços/cargas da mochila e só podem ser usados na preparação; concedem XP, níveis e pontos normais e não usam a recarga das poções.
+
+## Voo e afinidades
+
+O catálogo especial tem 11 espécies. Valquíria-coruja, harpia, fênix, serpente alada de gelo e basilisco completam o bestiário. Grifos e dragões agora voam. As asas são grupos 3D separados do corpo e usam oito poses pré-calculadas; altura e oscilação acompanham a espécie, com sombra e seleção no chão. Voadores evitam lava, gelo, água e armadilhas de chão, mas continuam sujeitos a raios, efeitos aplicados e ataques/habilidades de todos os heróis. Pilares e limites continuam bloqueando a movimentação.
+
+Criaturas elementais têm resistências leves e fraquezas próprias. Isso não modifica as fórmulas dos atributos do herói. O dano básico elemental foi calibrado para compensar o fato de não usar armadura física; a campanha automatizada completa segue concluível com a IA que caminha aos NPCs.

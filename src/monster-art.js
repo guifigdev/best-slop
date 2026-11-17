@@ -1,12 +1,15 @@
 // Original voxel silhouettes. These body parts are merged by the view into one
-// coloured mesh; the existing four legs and 8 Hz body clips supply locomotion.
+// coloured mesh; the existing 8 Hz body clips supply locomotion. Wings are
+// returned as local voxel descriptors so the view can retain animated pivots.
 export function buildMonster(kind,body,voxel){
- if(!['lion','rhino','griffin','chimera','dragon','sphinx'].includes(kind))return null;
+ if(!['lion','rhino','griffin','chimera','dragon','sphinx','valkyrie','harpy','phoenix','frostwyrm','basilisk'].includes(kind))return null;
  const box=(x,y,z,w,h,d,c)=>voxel(body,x,y,z,w,h,d,c);
+ const wings=[];
+ const wing=(side,worldParts,pivot=[side*.5,1.38,-.05])=>wings.push({side,pivot,parts:worldParts.map(([x,y,z,w,h,d,c])=>[x-pivot[0],y-pivot[1],z-pivot[2],w,h,d,c])});
  const eyes=(x,y,z,glow=0x293b35)=>{for(const side of [-1,1]){box(x+side*.3,y,z,.14,.16,.06,glow);box(x+side*.31,y+.04,z+.035,.035,.04,.02,0xf1f1d6);}};
  const tail=(fur,tip=fur)=>{box(0,.94,-.99,.25,.25,.8,fur);box(.12,1.08,-1.4,.24,.26,.35,fur);box(.2,1.25,-1.57,.34,.34,.34,tip);};
- const featherWings=(feather=0xe5e1c8,shadow=0xaeb9aa)=>{for(const side of [-1,1]){box(side*.69,1.45,-.12,.42,.38,1.3,shadow);box(side*1.06,1.68,-.2,.55,.2,1.25,feather);box(side*1.47,1.88,-.33,.45,.17,.98,feather);box(side*1.78,2.03,-.47,.28,.15,.68,0xf2ebcf);for(let i=0;i<3;i++)box(side*(.95+i*.27),1.53+i*.16,-.75-i*.03,.2,.17,.55,shadow);}};
- const batWings=(skin=0xa96255,rib=0xd5b875)=>{for(const side of [-1,1]){box(side*.68,1.45,-.08,.3,.45,.95,rib);box(side*1.04,1.72,-.15,.55,.17,1.2,rib);box(side*1.43,2.0,-.26,.42,.16,.93,rib);box(side*1.71,2.23,-.4,.24,.16,.55,rib);box(side*1.04,1.51,-.31,.47,.28,1.05,skin);box(side*1.42,1.73,-.46,.35,.38,.76,skin);box(side*1.1,1.23,-.58,.3,.2,.5,skin);}};
+ const featherWings=(feather=0xe5e1c8,shadow=0xaeb9aa,tip=0xf2ebcf)=>{for(const side of [-1,1]){const parts=[[side*.69,1.45,-.12,.42,.38,1.3,shadow],[side*1.06,1.68,-.2,.55,.2,1.25,feather],[side*1.47,1.88,-.33,.45,.17,.98,feather],[side*1.78,2.03,-.47,.28,.15,.68,tip]];for(let i=0;i<3;i++)parts.push([side*(.95+i*.27),1.53+i*.16,-.75-i*.03,.2,.17,.55,shadow]);wing(side,parts);}};
+ const batWings=(skin=0xa96255,rib=0xd5b875)=>{for(const side of [-1,1])wing(side,[[side*.68,1.45,-.08,.3,.45,.95,rib],[side*1.04,1.72,-.15,.55,.17,1.2,rib],[side*1.43,2.0,-.26,.42,.16,.93,rib],[side*1.71,2.23,-.4,.24,.16,.55,rib],[side*1.04,1.51,-.31,.47,.28,1.05,skin],[side*1.42,1.73,-.46,.35,.38,.76,skin],[side*1.1,1.23,-.58,.3,.2,.5,skin]]);};
  let fur,muzzle;
  if(kind==='lion'){
   fur=0xd6ac65;muzzle=0xefd8a1;
@@ -56,5 +59,41 @@ export function buildMonster(kind,body,voxel){
   box(0,1.84,1.1,.73,.62,.08,0xecd5a1);box(0,1.56,1.29,.61,.28,.31,muzzle);box(0,1.64,1.47,.19,.12,.06,0x67513a);eyes(0,1.98,1.17,0x314e58);
   box(0,1.27,1.05,.2,.36,.22,0x46778a);box(0,1.07,.5,1.13,.22,.95,0x4e8292);box(0,1.22,.97,.46,.2,.16,0xf0d58e);box(0,2.55,.72,.23,.26,.19,0xe7c779);tail(fur,0x997644);
  }
- return{fur,muzzle};
+ if(kind==='valkyrie'){
+  fur=0xc7c5ae;muzzle=0xe3bb62;
+  box(0,1.04,-.1,.93,1.12,1.3,fur);box(0,1.83,.48,1.09,.95,.81,0xded9bf);box(0,.9,.51,.73,.71,.2,0xece2c4);
+  for(const side of [-1,1]){box(side*.27,1.85,.92,.44,.46,.065,0xf7edca);box(side*.27,1.88,.965,.21,.25,.05,0xb49b5f);box(side*.27,1.89,1.0,.11,.19,.035,0x2f4750);box(side*.31,1.96,1.02,.045,.055,.025,0xf8f0d6);}
+  box(0,1.59,1.04,.25,.34,.29,muzzle);box(0,2.36,.43,1.2,.26,.94,0x4e7b8f);box(0,2.53,.43,.88,.17,.76,0xd9bd77);box(0,2.65,.29,.16,.25,.54,0xf0d698);
+  for(const side of [-1,1]){box(side*.66,2.44,.33,.31,.15,.72,0xdddcc6);box(side*.86,2.57,.29,.22,.13,.48,0xf3e9cb);box(side*.59,2.02,.31,.15,.6,.73,0x5b8190);}
+  box(0,1.19,.54,1.04,.19,.38,0xb79554);box(0,1.25,.78,.24,.29,.12,0xf0d592);box(-.73,1.48,.63,.09,2.48,.1,0x8b7754);box(-.73,2.77,.63,.25,.42,.23,0xdce4d8);box(-.73,3.01,.63,.12,.15,.12,0xf6e8ba);
+  box(.69,1.2,.69,.17,.94,.76,0xbf9d58);box(.8,1.2,.75,.07,.71,.58,0x4a7f91);box(.85,1.21,.76,.06,.41,.3,0xe3c777);box(0,.9,-.85,.58,.26,.55,0x9baea7);featherWings(0xdddcc8,0xb4beaf,0xf4e5bd);
+ }
+ if(kind==='harpy'){
+  fur=0x63a99f;muzzle=0xdfbc67;
+  box(0,1.0,-.12,.9,1.07,1.35,fur);box(0,1.78,.58,.96,.81,.79,0x76b5a9);box(0,1.65,1.08,.45,.32,.45,muzzle);box(0,1.45,1.25,.26,.25,.24,0x9f8649);
+  box(0,.91,.61,.63,.72,.16,0xbad2a7);for(const side of [-1,1]){box(side*.37,2.2,.41,.19,.45,.45,0x315b65);box(side*.44,2.06,.64,.15,.28,.25,0x457d82);box(side*.28,1.87,1.0,.2,.13,.055,0x314c4b);box(side*.29,1.9,1.035,.045,.04,.02,0xf4edd3);}
+  box(0,.91,-1.0,.57,.2,.72,0x3f7c83);box(0,.97,-1.41,.35,.16,.37,0x9ec3ab);box(-.21,.87,-1.23,.15,.16,.64,0x3b6672);box(.21,.87,-1.23,.15,.16,.64,0x3b6672);featherWings(0x79bcb0,0x417c85,0xc4d8b4);
+ }
+ if(kind==='phoenix'){
+  fur=0xd57c4d;muzzle=0xf2cc77;
+  box(0,1.02,-.09,.89,1.05,1.37,fur);box(0,1.72,.56,.81,.82,.76,0xeaa45c);box(0,1.55,1.02,.43,.28,.39,muzzle);box(0,1.37,1.15,.21,.2,.22,0xbc7a3c);eyes(0,1.88,.965,0x633b33);
+  box(0,.96,.61,.61,.72,.15,0xf4cf80);for(const side of [-1,1]){box(side*.29,2.16,.37,.17,.45,.31,0xc45546);box(side*.3,2.39,.25,.14,.18,.28,0xf4ce77);box(side*.17,1.78,-.55,.15,.35,.25,0xedbb67);}
+  for(let i=0;i<4;i++){const x=(i-1.5)*.23;box(x,.97-i*.04,-1.1-i*.16,.2,.18,.92,0xd76543);box(x,.98-i*.04,-1.59-i*.16,.2,.2,.31,i%2?0xf1b25a:0xf8d47d);}
+  featherWings(0xe29b53,0xba5345,0xffdc8c);for(const wingData of wings){wingData.parts.push([wingData.side*1.07,.72,-.58,.24,.12,.37,0xf9d27a]);}
+ }
+ if(kind==='frostwyrm'){
+  fur=0xa4d3da;muzzle=0xd6ece1;
+  box(0,1.13,-.12,.78,.73,1.46,fur);box(0,1.52,.43,.58,1.01,.67,0xb9e3e5);box(0,2.01,.82,.79,.55,.91,0xcce9e6);box(0,1.87,1.31,.59,.24,.4,muzzle);
+  box(0,1.72,1.28,.58,.09,.38,0x6fabc1);eyes(0,2.06,1.29,0x47768f);for(const side of [-1,1]){box(side*.31,2.39,.52,.16,.43,.2,0xcdeef1);box(side*.35,2.61,.39,.11,.17,.27,0xeaf6ef);box(side*.24,1.84,1.49,.08,.19,.08,0xf6f1d9);}
+  for(let i=0;i<5;i++){box(0,1.11-i*.02,-1.02-i*.35,.41-i*.055,.36-i*.04,.52,0x87b9ce);box(0,1.4-i*.04,-.31-i*.44,.15,.24,.21,i%2?0xe5f1e8:0xbee3e6);}
+  batWings(0xb0dcea,0xe7f3eb);for(const w of wings)w.parts.push([w.side*.98,.64,-.57,.18,.26,.2,0xe9f5ef]);
+ }
+ if(kind==='basilisk'){
+  fur=0x90b85f;muzzle=0xc3d28b;
+  box(0,.85,-.12,1.09,.83,1.78,fur);box(0,1.15,.57,.89,.83,.79,0x94bc6b);box(0,1.08,1.16,.87,.35,.59,muzzle);box(0,.88,1.24,.83,.11,.52,0x527249);
+  for(const side of [-1,1]){box(side*.39,1.5,.77,.26,.3,.24,0xb9ce7d);box(side*.39,1.48,.92,.1,.16,.06,0x3d5d3c);box(side*.39,1.5,.96,.025,.1,.02,0xf2df92);box(side*.57,.88,-.4,.1,.31,.73,0x6e944d);}
+  for(let i=0;i<5;i++){box(0,1.4-i*.045,.52-i*.38,.16,.43-i*.025,.23,i%2?0xd6dd8c:0xb3ca6b);box(0,.84-i*.015,-1.15-i*.31,.43-i*.06,.3-i*.035,.48,0x739f51);}
+  box(0,1.0,1.57,.055,.06,.35,0x996a7b);box(-.07,1.0,1.76,.055,.06,.13,0xb17a8c);box(.07,1.0,1.76,.055,.06,.13,0xb17a8c);box(0,.57,.24,.8,.16,1.43,0xc5d092);
+ }
+ return{fur,muzzle,wings};
 }

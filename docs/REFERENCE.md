@@ -40,3 +40,7 @@ Ricochete, Blink, troca de posições, barreira de gelo, repulsão, laço e grav
 ## Inspiração de equipamentos e bestiário
 
 Os efeitos dos equipamentos novos usam como referência conceitual os papéis de itens de Dota, consultados nos arquivos oficiais [6.84](https://www.dota2.com/684/) e [Mistwoods](https://www.dota2.com/mistwoods). Os números e exceções deste jogo estão no catálogo e em BALANCE.md. Animais e bestas mitológicas são modelos originais; suas técnicas não copiam assets, mapas ou scripts de Warcraft.
+
+## Variedade inspirada em Ragnarok
+
+Valquírias e harpias servem de referência conceitual de variedade; os animais, modelos, elementos e números deste jogo são próprios. Fontes primárias consultadas: [monstros do evento oficial](https://renewal.playragnarok.com/news/updatedetail.aspx?id=344), que inclui Harpy e afinidades elementais, e [evento oficial com Valkyrie](https://iro.ragnarokonline.com/news/eventdetail.aspx?id=167&p=43). Não se trata de uma importação da tabela de monstros ou das fórmulas do RO.

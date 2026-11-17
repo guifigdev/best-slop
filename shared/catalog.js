@@ -93,7 +93,9 @@ export const ITEMS={
  mirror:{name:'Couraça do contragolpe',cost:850,stock:1,stats:{armor:4,damage:6},effect:'mirror',active:true,inspiration:'Blade Mail',description:'+4 armadura e +6 dano físico. Ativar: reflete 35% do dano de inimigos por 4s; recarga 25s, sem mana. Não reflete ambiente ou reflexão. Inspirada em Blade Mail; valores próprios.'},
  restoration:{name:'Relicário do recomeço',cost:1000,stock:1,stats:{armor:2,manaRegen:.5},effect:'restoration',active:true,inspiration:'Mekansm',description:'+2 armadura e +0,5 mana/s. Ativar: cura 150 vida do portador e aliados em 6m, custa 75 mana; recarga 30s. Não ressuscita. Inspirado em Mekansm; valores próprios.'},
  potion:{name:'Poção de vida',cost:80,stock:12,consumable:true,heal:300,description:'Restaura 300 vida. Até 3 cargas por espaço. Recarga de poções: 10s.'},
- manapot:{name:'Poção de mana',cost:70,stock:12,consumable:true,mana:200,description:'Restaura 200 mana. Até 3 cargas por espaço. Recarga de poções: 10s.'}
+ manapot:{name:'Poção de mana',cost:70,stock:12,consumable:true,mana:200,description:'Restaura 200 mana. Até 3 cargas por espaço. Recarga de poções: 10s.'},
+ xpbook:{name:'Caderno do aprendiz',cost:350,stock:3,consumable:true,xp:80,description:'Concede 80 experiência ao herói. Consumível usado somente durante o mercado; não aciona a recarga de poções. Não recebe melhorias ou encantamentos.'},
+ epicbook:{name:'Tomo das grandes provas',cost:900,stock:1,consumable:true,xp:200,description:'Concede 200 experiência ao herói. Consumível raro usado somente durante o mercado; não aciona a recarga de poções. Não recebe melhorias ou encantamentos.'}
 };
 export const ITEM_MAX_LEVEL=5;
 const ITEM_ATTRIBUTE_SCALE=[1,1.35,1.7,2.05,2.4];

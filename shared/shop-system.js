@@ -1,0 +1,22 @@
+import {SHOPS,shopForItem} from './shops.js';
+import {ITEMS,itemUpgradePrice,ITEM_MAX_LEVEL} from './catalog.js';
+import {isEnchantable,enchantPrice} from './enchantments.js';
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
+
+export const shopMethods={
+ atShop(u,id=null){const key=u?.shopInteraction,npc=Object.hasOwn(SHOPS,key)?SHOPS[key]:null;return !!(u?.alive&&this.phase==='preparation'&&npc&&(!id||key===id)&&distance(u,npc)<=npc.range+.35);},
+ closeShop(u,stop=false){const wasOpen=u.shopInteraction;u.shopInteraction=null;u.pendingShop=null;u.pendingPurchase=null;if(stop){u.destination=null;u.target=null;u.order='stop';u.vx=u.vz=0;}if(wasOpen)this.fx('shopClose',u.x,u.z,{source:u.id,npc:wasOpen});},
+ openShopInteraction(u,key){const npc=SHOPS[key];if(!npc||!u.alive||this.phase!=='preparation'||distance(u,npc)>npc.range+.001)return false;const alreadyOpen=u.shopInteraction===key;u.pendingShop=null;u.shopInteraction=key;if(!alreadyOpen)u.shopSessionId=this.id();u.destination=null;u.target=null;u.order='stop';u.vx=u.vz=0;if(!alreadyOpen)this.fx('shopOpen',u.x,u.z,{source:u.id,npc:key});return true;},
+ interactShop(u,key){if(!u.alive||this.phase!=='preparation'||typeof key!=='string'||!Object.hasOwn(SHOPS,key))return false;const npc=SHOPS[key];this.cancelChannel(u);u.shopInteraction=null;u.pendingShop=key;u.target=null;if(distance(u,npc)<=npc.range+.001)return this.openShopInteraction(u,key);u.order='move';u.destination={x:npc.x,z:npc.z+1.5};return true;},
+ tickNPC(u){if(!u.hero||u.summon)return;if(!u.alive||this.phase!=='preparation'){if(u.pendingShop||u.shopInteraction||u.pendingPurchase)this.closeShop(u,!!u.pendingShop);return;}const current=Object.hasOwn(SHOPS,u.shopInteraction)?SHOPS[u.shopInteraction]:null;if(current&&distance(u,current)>current.range+.35)this.closeShop(u);if(u.pendingShop&&Object.hasOwn(SHOPS,u.pendingShop)){const npc=SHOPS[u.pendingShop];if(distance(u,npc)<=npc.range+.001)this.openShopInteraction(u,u.pendingShop);}},
+
+ botShopThink(u){
+  if(this.phase!=='preparation'||!u.alive)return;
+  if(u.pendingPurchase){const plan=u.pendingPurchase;if(this.atShop(u,plan.npc)){this.command(u.owner,plan.command);u.pendingPurchase=null;u.botBuyAt=this.time+1.2;}else if(u.pendingShop!==plan.npc)this.interactShop(u,plan.npc);return;}
+  if(this.time<(u.botBuyAt||0))return;u.botBuyAt=this.time+2;this.allocateBot(u);this.learnBotSkills(u);
+  const count=u.inventory.filter(Boolean).length,weapon=u.inventory.findIndex(s=>s&&isEnchantable(s.key)&&!s.enchantment),enchantment=['fire','frost','poison'][u.seat%3];let command=null,npc=null;
+  if(count>=3&&weapon>=0&&u.gold>=enchantPrice(enchantment,u.inventory[weapon].level||1)){command={type:'enchantItem',slot:weapon,enchantment};npc='enchanter';}
+  else{const item=count<6&&Object.keys(ITEMS).find(k=>!ITEMS[k].consumable&&this.stock[k]>0&&u.gold>=ITEMS[k].cost&&!u.inventory.some(i=>i?.key===k));if(item){command={type:'item',item};npc=shopForItem(item);}else{const slot=u.inventory.findIndex(s=>s&&!ITEMS[s.key].consumable&&(s.level||1)<ITEM_MAX_LEVEL&&u.gold>=itemUpgradePrice(s.key,s.level||1));if(slot>=0){command={type:'upgradeItem',slot};npc='smith';}}}
+  if(command){u.pendingPurchase={npc,command};this.interactShop(u,npc);}
+ }
+};

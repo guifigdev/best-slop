@@ -166,6 +166,80 @@ Contrato dos campos para a simulação:
 
 Direção de balanceamento: Pele de monólito oferece mais armadura própria que Devoção, que permanece útil por proteger aliados; Rugido prioriza dano por golpe e Fúria combina dano e velocidade; projéteis permitem desviar e exigem boa mira; nuvem e cone premiam posicionamento. Atordoamentos curtos nos deslocamentos evitam criar mais uma fonte de controle permanente. Esses números precisam de testes de partidas humanas, em especial quando vários drops raros chegam à mesma equipe. Atributos, seus custos, marcos e ganhos por nível permanecem intactos.
 
+## Fauna alada e especializações elementais
+
+O bestiário contém **11 espécies especiais**, preservando o leão, rinoceronte, grifo, quimera, dragão e esfinge. Cinco acréscimos ampliam a leitura de distância, voo e elemento. As criaturas e descrições são originais; valquíria e grifo remetem a arquétipos de fantasia familiares a Ragnarok e Warcraft, sem reproduzir sprites, fórmulas ou estatísticas desses jogos. Nenhuma habilidade nova foi adicionada: os drops reutilizam o catálogo existente de 40 técnicas.
+
+| Espécie | Primeira onda | Tipo / altura | Alcance de ataque | Técnica e drop | Resistência / fraqueza elementais |
+|---|---|---|---|---|---|
+| Harpia dos ventos frios (`harpy`) | 9 | Voadora / 1,4m | 4m | Orbe de inverno | Vento +20% resistência; eletricidade −15% resistência |
+| Coruja valquíria do trovão (`valkyrie`) | 18 | Voadora / 1,7m | 5m | Mergulho da tempestade | Eletricidade +25%; veneno −15% |
+| Fênix da alvorada (`phoenix`) | 23 | Voadora / 1,8m | 5m | Esfera de repulsão | Fogo +25%; gelo −20% |
+| Serpente alada da geada (`frostwyrm`) | 30 | Voadora / 1,8m | 5m | Orbe de inverno | Gelo +25%; fogo −20% |
+| Basilisco das raízes (`basilisk`) | 14 | Terrestre / 0m | 3m | Névoa da hidra | Veneno +25%; fogo −15% |
+| Grifo das tempestades — atualizado | 12 | Voador / 1,3m | 4m | Mergulho da tempestade | Eletricidade +20%; gelo −15% |
+| Dragão das brasas — atualizado | 25 | Voador / 1,6m | 5m | Sopro da quimera | Fogo +25%; gelo −20% |
+
+O leão, rinoceronte, quimera e esfinge permanecem terrestres. Seus multiplicadores de vida, dano, armadura e ondas de entrada foram preservados. Grifo e dragão conservam vida, armadura e ondas de entrada anteriores, acrescentando voo, alcance e especialização. Os ataques básicos elementais receberam uma calibração própria, pois ignorar armadura física aumenta bastante a ameaça contra heróis com equipamentos defensivos. Não foram reduzidas suas habilidades, vida ou resistências.
+
+| Especial elemental | Multiplicador de vida | Multiplicador de dano básico calibrado |
+|---|---|---|
+| Harpia | 0,95 | 0,65 |
+| Grifo | 1,30 | 0,65 |
+| Basilisco | 1,20 | 0,65 |
+| Valquíria | 1,20 | 0,65 |
+| Fênix | 1,20 | 0,65 |
+| Dragão | 1,65 | 0,70 |
+| Serpente alada | 1,45 | 0,70 |
+
+Antes dessa calibração, a campanha automatizada com quatro bots terminou em derrota na onda 47: os heróis tinham cerca de 22–32 de armadura, que reduz dano físico por um fator de 2,32–2,92, mas não protegiam contra os novos ataques mágicos. Manter multiplicadores básicos de 0,95–1,20 ao mesmo tempo em que se adiciona voo e alcance aumentava três dimensões da ameaça de uma vez. Uma primeira redução para 0,65–0,80 deixou 24 inimigos vivos na derrota da onda 47, contra cerca de 50 antes. A redução final para 0,65, mantendo dragão e serpente alada em 0,70, permitiu à mesma campanha concluir as 50 ondas e a final em aproximadamente 39,4 minutos simulados. Isso compensa parte da diferença sem trocar as fórmulas de armadura, adicionar resistência geral aos heróis ou remover a identidade elemental. Uma execução de bots não estabelece a dificuldade ideal para humanos.
+
+Depois da integração da IA que caminha até os NPCs de equipamentos, encantamentos e melhorias, o teste completo da campanha foi executado novamente e passou: 50 ondas, nove desafios bônus, cinco temas, dez visitas ao mercado e um único vencedor na final. Portanto, a conclusão automatizada não depende de ignorar distância de compra ou gastar ouro fora do comerciante adequado. Isso valida o fluxo integrado; a dificuldade humana e a justiça competitiva ainda exigem playtests.
+
+Contrato compartilhado com a simulação:
+
+- Cada espécie tem `flying` e `altitude`. `range` só substitui o alcance padrão quando definido. `element` identifica os ataques básicos elementais e a especialização; não deve converter também habilidades físicas neutras em dano de outro elemento.
+- `resistances` usa chaves `fire`, `ice`, `lightning`, `poison` e `wind`. Valor positivo reduz o dano daquele elemento; valor negativo representa fraqueza, por exemplo `ice: -0.2` significa receber 20% a mais de dano de gelo. Ausência da chave significa resistência neutra.
+- São modificadores da criatura, separados dos equipamentos do herói e aplicados uma vez por fonte elemental. A integração deve evitar aplicar duas vezes resistência de equipamento ou aumentar dano físico neutro apenas porque o monstro tem um elemento.
+- Voo precisa ser simulado, além de desenhado. A implementação deve distinguir terrenos que exigem contato com o solo de regiões frias, clima, projéteis e ataques que ainda alcançam o alvo. Limites do campo e isolamento entre provas continuam valendo.
+- A técnica indicada em `skill` é a usada e oferecida pelo drop. Não há uma segunda técnica oculta nem habilidades fora das 40 existentes. A fênix não recebe ressurreição implícita pelo nome.
+
+`monsterKind` continua deixando **55% da faixa de seleção** para a fauna anterior e usando os 45% restantes para espécies especiais liberadas. O crescimento do bestiário não transforma toda onda em uma onda de voadores. Chefes preferem o conjunto `mythic` disponível, agora incluindo as cinco novidades, além de grifo, quimera, dragão e esfinge; antes do primeiro mítico, leão e rinoceronte continuam elegíveis como antes. A mistura preserva míticos terrestres — basilisco, quimera e esfinge — junto aos alados. Todos os seis especiais anteriores permanecem no catálogo e no conjunto de ondas normais.
+
+Não foi adicionada imunidade elemental. As resistências de 20–25% e fraquezas de 15–20% incentivam trocar técnicas ou alvo sem invalidar uma build inteira. Ainda são necessárias partidas humanas para avaliar alcance de ataques corpo a corpo contra voadores, segurança acima de obstáculos, duração real das perseguições e diferença entre o dano visual e o efetivamente aplicado. Atributos e sua progressão permanecem inalterados.
+
+## Mercado com NPCs e livros de experiência
+
+O mercado passa a usar cinco prestadores de serviço físicos e uma configuração compartilhada em `shared/shops.js`. Isso permite que cenário, interface e servidor consultem os mesmos nomes, posições e raios de interação.
+
+| Serviço / chave | NPC / aparência | Posição | Atividade |
+|---|---|---|---|
+| `equipment` — Arsenal dos seis clãs | Brás / capivara (`knight`) | X −10, Z −10,8 | Comprar equipamentos |
+| `consumables` — Botica de Cora | Cora / coelha (`mage`) | X −5, Z −10,8 | Comprar poções e consumíveis comuns |
+| `books` — Biblioteca de Orfeu | Orfeu / coruja (`owl`) | X 0, Z −10,8 | Comprar livros de experiência |
+| `smith` — Forja de Nico | Nico / guaxinim (`raccoon`) | X 5, Z −10,8 | Melhorar equipamentos existentes |
+| `enchanter` — Ateliê de Faísca | Faísca / raposa (`ranger`) | X 10, Z −10,8 | Encantar armas existentes |
+
+Todos usam raio de interação de **2,7m**. O destino sugerido de aproximação é o mesmo X com **Z −8,8**, voltado para a arena, a 2m do NPC. Os cinco podem receber vendas; comprar, melhorar ou encantar continua dependendo do serviço adequado, da fase, da distância e da validação do servidor. Um comando inválido não deve cobrar ouro nem remover o item.
+
+Contrato dos helpers:
+
+- `shopForItem(itemKey)` retorna o **id do serviço**, como string: `books` se o item concede XP, `consumables` para outros consumíveis e `equipment` para equipamentos; chave desconhecida retorna `null`.
+- `shopCanSell(shopId)` retorna `true` para qualquer um dos cinco NPCs conhecidos e `false` para uma chave desconhecida.
+- `shopPosition(shopId)` retorna uma cópia `{ x, z, range }`, ou `null` se o serviço não existe. A posição é a do NPC, não o destino de aproximação. Alterar essa cópia não altera a configuração compartilhada.
+
+Dois livros ampliam o uso de ouro sem modificar a regra de progressão:
+
+| Item / chave | Preço | Estoque por visita | Efeito |
+|---|---|---|---|
+| Caderno do aprendiz (`xpbook`) | 350 ouro | 3 | +80 experiência |
+| Tomo das grandes provas (`epicbook`) | 900 ouro | 1 | +200 experiência |
+
+Ambos são `consumable: true`, ocupam o inventário e só podem ser utilizados durante a preparação/mercado. Não recebem melhorias ou encantamentos e não acionam nem dependem da recarga de poções. Consumir uma carga concede XP pela função normal da simulação: se o total cruzar o requisito do nível, os mesmos pontos de habilidade e de atributo já definidos são concedidos. Os livros não distribuem pontos diretamente e não alteram requisitos de XP, custos de atributos ou marcos de bônus.
+
+O Caderno custa 4,375 ouro por XP; o Tomo, 4,5. O livro maior oferece mais XP em um exemplar e tem estoque raro, sem ser mais eficiente em ouro. Comprar XP disputa o orçamento com equipamento, poções, melhorias e encantamentos. O estoque compartilhado pode favorecer quem compra cedo; precisa de playtests para avaliar se o ganho de níveis no mercado inicial cria vantagem excessiva em modos competitivos. A configuração não adiciona venda automática nem teletransporte até o comerciante.
+
 ## Adição posterior solicitada: regeneração de Vitalidade
 
 Por solicitação explícita do usuário, VIT agora também concede +0,1% de vida máxima por segundo a cada dez pontos totais. A nova parcela soma à regeneração plana já existente (`1,5 + 0,03 × VIT` por segundo). O marco considera equipamento; os custos de distribuição continuam por valor base e nenhuma outra regra de atributo foi alterada. A porcentagem inicial é uma escolha de implementação explicitada ao usuário, não uma fórmula oficial de RO.
+

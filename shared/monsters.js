@@ -1,17 +1,22 @@
 // Original animals and mythical challengers. These are not Warcraft assets.
 export const MONSTERS={
- lion:{name:'Leão da juba solar',size:1.2,color:0xd8aa56,skill:'battlecry',unlockWave:4,hpMultiplier:1.15,damageMultiplier:1.1,armorBonus:1},
- rhino:{name:'Rinoceronte de basalto',size:1.45,color:0x92978d,skill:'hornrush',unlockWave:7,hpMultiplier:1.45,damageMultiplier:1.05,armorBonus:3},
- griffin:{name:'Grifo das tempestades',size:1.25,color:0xd9c994,skill:'stormdive',unlockWave:12,hpMultiplier:1.3,damageMultiplier:1.15,armorBonus:1},
- chimera:{name:'Quimera do brejo',size:1.35,color:0x9f85ba,skill:'venomcloud',unlockWave:18,hpMultiplier:1.4,damageMultiplier:1.1,armorBonus:2},
- dragon:{name:'Dragão das brasas',size:1.6,color:0xbe7751,skill:'flamebreath',unlockWave:25,hpMultiplier:1.65,damageMultiplier:1.2,armorBonus:3},
- sphinx:{name:'Esfinge do crepúsculo',size:1.45,color:0xc9b589,skill:'stonehide',unlockWave:32,hpMultiplier:1.5,damageMultiplier:1.15,armorBonus:6}
+ lion:{name:'Leão da juba solar',description:'Um guardião de juba dourada que anuncia a investida com um rugido. Enfrentá-lo exige resistir ao seu breve surto de força.',size:1.2,color:0xd8aa56,skill:'battlecry',unlockWave:4,hpMultiplier:1.15,damageMultiplier:1.1,armorBonus:1,flying:false,altitude:0},
+ rhino:{name:'Rinoceronte de basalto',description:'Placas de rocha recobrem um corredor impaciente. Seu chifre abre caminho, mas o aviso da investida oferece uma chance de desviar.',size:1.45,color:0x92978d,skill:'hornrush',unlockWave:7,hpMultiplier:1.45,damageMultiplier:1.05,armorBonus:3,flying:false,altitude:0},
+ griffin:{name:'Grifo das tempestades',description:'Um caçador de penas claras e patas felinas. Sobrevoa pilares antes de mergulhar envolto em eletricidade; o gelo corta sua vantagem elemental.',size:1.25,color:0xd9c994,skill:'stormdive',unlockWave:12,hpMultiplier:1.3,damageMultiplier:0.65,armorBonus:1,flying:true,altitude:1.3,range:4,element:'lightning',resistances:{lightning:.2,ice:-.15},mythic:true},
+ chimera:{name:'Quimera do brejo',description:'Uma mistura inquieta de fera e serpente. Prefere cobrir a arena com uma névoa venenosa antes de se aproximar.',size:1.35,color:0x9f85ba,skill:'venomcloud',unlockWave:18,hpMultiplier:1.4,damageMultiplier:1.1,armorBonus:2,flying:false,altitude:0,mythic:true},
+ dragon:{name:'Dragão das brasas',description:'Um grande réptil alado que mantém distância com garras e fogo. Resiste às brasas, mas sua couraça aquecida cede mais ao gelo.',size:1.6,color:0xbe7751,skill:'flamebreath',unlockWave:25,hpMultiplier:1.65,damageMultiplier:0.7,armorBonus:3,flying:true,altitude:1.6,range:5,element:'fire',resistances:{fire:.25,ice:-.2},mythic:true},
+ sphinx:{name:'Esfinge do crepúsculo',description:'Uma guardiã paciente de pedra e areia. Seu desafio é uma defesa persistente, não uma perseguição veloz.',size:1.45,color:0xc9b589,skill:'stonehide',unlockWave:32,hpMultiplier:1.5,damageMultiplier:1.15,armorBonus:6,flying:false,altitude:0,mythic:true},
+ valkyrie:{name:'Coruja valquíria do trovão',description:'Uma coruja de plumagem prateada e elmo dourado que guarda os andares altos. Ataca do ar e anuncia seu mergulho elétrico antes de tocar o coliseu.',size:1.15,color:0xd8d5b1,skill:'stormdive',unlockWave:18,hpMultiplier:1.2,damageMultiplier:0.65,armorBonus:2,flying:true,altitude:1.7,range:5,element:'lightning',resistances:{lightning:.25,poison:-.15},mythic:true},
+ harpy:{name:'Harpia dos ventos frios',description:'Uma ave de asas lilases que dança entre as correntes de ar. Seu orbe gelado interrompe perseguições, mas relâmpagos atravessam sua defesa leve.',size:1,color:0xaba3cc,skill:'warlockfrost',unlockWave:9,hpMultiplier:.95,damageMultiplier:0.65,armorBonus:0,flying:true,altitude:1.4,range:4,element:'wind',resistances:{wind:.2,lightning:-.15},mythic:true},
+ phoenix:{name:'Fênix da alvorada',description:'Penas de cobre e ouro cercam uma chama viva. Lança esferas de fogo que disputam espaço; gelo é sua fraqueza. Não ressuscita nesta adaptação.',size:1.25,color:0xea9a4f,skill:'warlockfire',unlockWave:23,hpMultiplier:1.2,damageMultiplier:0.65,armorBonus:1,flying:true,altitude:1.8,range:5,element:'fire',resistances:{fire:.25,ice:-.2},mythic:true},
+ frostwyrm:{name:'Serpente alada da geada',description:'Uma serpente de escamas azuis que paira sobre os pisos congelados. Seus orbes frios punem trajetos previsíveis, enquanto fogo encontra frestas nas escamas.',size:1.4,color:0x9bc4d6,skill:'warlockfrost',unlockWave:30,hpMultiplier:1.45,damageMultiplier:0.7,armorBonus:3,flying:true,altitude:1.8,range:5,element:'ice',resistances:{ice:.25,fire:-.2},mythic:true},
+ basilisk:{name:'Basilisco das raízes',description:'Um réptil terrestre de crista verde que cospe névoa tóxica a curta distância. Tolera veneno e prefere emboscadas entre obstáculos; fogo o expulsa do abrigo.',size:1.2,color:0x899e70,skill:'venomcloud',unlockWave:14,hpMultiplier:1.2,damageMultiplier:0.65,armorBonus:2,flying:false,altitude:0,range:3,element:'poison',resistances:{poison:.25,fire:-.15},mythic:true}
 };
 
 export function monsterKind(base,wave,roll,boss=false){
  const available=Object.keys(MONSTERS).filter(key=>wave>=MONSTERS[key].unlockWave),r=Math.max(0,Math.min(.999999,Number.isFinite(roll)?roll:0));
  if(!available.length)return base;
- if(boss){const mythic=available.filter(key=>['griffin','chimera','dragon','sphinx'].includes(key)),pool=mythic.length?mythic:available;return pool[Math.floor(r*pool.length)];}
+ if(boss){const mythic=available.filter(key=>MONSTERS[key].mythic),pool=mythic.length?mythic:available;return pool[Math.floor(r*pool.length)];}
  // Retain the existing fauna as the pool grows instead of replacing every wave.
  return r<.45?available[Math.min(available.length-1,Math.floor(r/.45*available.length))]:base;
 }
