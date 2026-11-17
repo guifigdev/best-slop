@@ -1,0 +1,3 @@
+// The cost is based on the next BASE value: 1–10 cost 1; 11–20 cost 2…
+export const attributeCost=current=>1+Math.floor(Math.max(0,current)/10);
+export const attributePointsForLevel=level=>5+Math.floor(level/5);

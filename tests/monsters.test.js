@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {Game} from '../shared/simulation.js';
+import {skillAt} from '../shared/catalog.js';
+import {MONSTERS,monsterKind} from '../shared/monsters.js';
+import {monsterMethods} from '../shared/monster-abilities.js';
+Object.assign(Game.prototype,monsterMethods);
+function setup(mode='campaign'){const g=new Game(8,{mode});g.addPlayer('a','knight');g.addPlayer('b','mage');g.spawnWave();g.units=g.heroes();const p=g.player('a');p.x=p.z=0;g.projectiles=[];g.specials=[];g.drops=[];return{g,p};}
+const enemy=(g,x,z,data={})=>g.spawnEnemy('lion',x,z,{hp:10000,damage:0,speed:0,...data});
+function special(g,p,key,c={x:0,z:8}){return g.castSpecial(p,key,skillAt(key,1),c);}
+function project(g,seconds){for(let i=0;i<Math.ceil(seconds*60);i++){g.time+=1/60;g.tickSpecials(1/60);}}
+
+test('new animal/mythic species unlock gradually, retaining old fauna and guaranteeing eligible mythic bosses',()=>{assert.equal(Object.keys(MONSTERS).length,6);assert.equal(monsterKind('frog',1,.1),'frog');assert.equal(monsterKind('frog',4,.1),'lion');assert.equal(monsterKind('frog',40,.8),'frog');for(let i=0;i<100;i++){const kind=monsterKind('champion',25,i/100,true);assert.ok(['griffin','chimera','dragon'].includes(kind));}assert.equal(monsterKind('champion',32,.99,true),'sphinx');for(const m of Object.values(MONSTERS))assert.ok(skillAt(m.skill,5));});
+
+test('monster loot is rolled once, assigned to the actual owner, and bosses guarantee their own technique',()=>{const {g,p}=setup(),t=enemy(g,0,2,{boss:'boss'});t.alive=false;const drop=g.monsterLoot(t,p);assert.equal(drop.owner,'a');assert.equal(drop.skill,'battlecry');assert.equal(drop.expires,g.time+90);assert.equal(g.monsterLoot(t,p),null);assert.equal(g.drops.length,1);const none=enemy(g,2,2);none.alive=false;g.random=()=>.99;assert.equal(g.monsterLoot(none,p),null);});
+
+test('loot cannot be stolen across isolated challenges and environmental kills stay in the right trial',()=>{const {g,p}=setup('best'),b=g.player('b'),t=enemy(g,b.cell.x,b.cell.z,{challenge:'b',boss:'boss'});t.alive=false;assert.equal(g.monsterLoot(t,p),null);const env=enemy(g,b.cell.x,b.cell.z,{challenge:'b',boss:'boss'});env.alive=false;const drop=g.monsterLoot(env,null);assert.equal(drop.owner,'b');assert.equal(g.claimLoot(p,{dropId:drop.id}),false);});
+
+test('loot appends safely, upgrades duplicates for free, and enforces rank five, expiry and ownership',()=>{const {g,p}=setup();g.drops=[{id:500,skill:'flamebreath',owner:'a',expires:g.time+90}];const points=p.skillPoints;assert.equal(g.claimLoot(p,{dropId:500}),true);assert.equal(p.skills.at(-1),'flamebreath');assert.equal(p.skillLevels.flamebreath,1);g.drops=[{id:501,skill:'flamebreath',owner:'a',expires:g.time+90}];assert.equal(g.claimLoot(p,{dropId:501}),true);assert.equal(p.skillLevels.flamebreath,2);assert.equal(p.skillPoints,points);p.skillLevels.flamebreath=5;g.drops=[{id:502,skill:'flamebreath',owner:'a',expires:g.time+90}];assert.equal(g.claimLoot(p,{dropId:502}),false);g.drops=[{id:503,skill:'hornrush',owner:'b',expires:g.time+90},{id:504,skill:'hornrush',owner:'a',expires:g.time-1}];assert.equal(g.claimLoot(p,{dropId:503}),false);assert.equal(g.claimLoot(p,{dropId:504}),false);});
+
+test('a full seven-skill build requires an explicit valid replacement slot and never creates an eighth skill',()=>{const {g,p}=setup();p.skills=['stomp','heal','chain','blizzard','shield','dash','critical'];p.skillLevels=Object.fromEntries(p.skills.map(k=>[k,2]));g.drops=[{id:510,skill:'hornrush',owner:'a',expires:g.time+90}];for(const slot of [undefined,-1,7,1.5,'2'])assert.equal(g.claimLoot(p,{dropId:510,slot}),false);assert.equal(g.claimLoot(p,{dropId:510,slot:2}),true);assert.equal(p.skills.length,7);assert.equal(p.skills[2],'hornrush');assert.equal(p.skillLevels.hornrush,1);assert.equal(p.skillLevels.chain,undefined);});
+
+test('Warlock fire is a true moving skillshot: it can miss and collides before dealing damage and push',()=>{const {g,p}=setup(),t=enemy(g,0,5),hp=t.hp;special(g,p,'warlockfire');assert.equal(t.hp,hp);assert.equal(g.projectiles.length,1);project(g,.2);assert.equal(t.hp,hp);project(g,.4);assert.ok(t.hp<hp);assert.ok(t.z>5);assert.equal(g.projectiles.length,0);const miss=enemy(g,3,5),before=miss.hp;special(g,p,'warlockfire');project(g,1.5);assert.equal(miss.hp,before);});
+
+test('Warlock projectiles are intercepted by obstacles and cannot leave the source trial',()=>{const {g,p}=setup(),t=enemy(g,0,5),hp=t.hp;g.obstacles=[{x:0,z:3,w:4,d:.8}];special(g,p,'warlockfire');project(g,1);assert.equal(t.hp,hp);assert.equal(g.projectiles.length,0);const a=setup('best');a.p.x=a.p.cell.x;a.p.z=a.p.cell.z;const other=enemy(a.g,a.p.cell.x,a.p.cell.z+a.p.cell.r+2,{challenge:'a'}),health=other.hp;special(a.g,a.p,'warlockfrost',{x:other.x,z:other.z});project(a.g,2);assert.equal(other.hp,health);assert.equal(a.g.projectiles.length,0);});
+
+test('frost skillshot applies an actual timed slow and Avatar resists its control',()=>{const {g,p}=setup(),t=enemy(g,0,4);special(g,p,'warlockfrost');project(g,.5);assert.ok(t.frostUntil>g.time);const immune=enemy(g,0,4,{avatar:g.time+10}),hp=immune.hp;special(g,p,'warlockfrost');project(g,.5);assert.equal(immune.hp,hp);assert.ok(!immune.frostUntil);});
+
+test('flame breath is a directional cone, while venom persists on the ground and applies poison',()=>{const {g,p}=setup(),front=enemy(g,0,3),back=enemy(g,0,-3),side=enemy(g,3,0),hp=front.hp;special(g,p,'flamebreath');assert.ok(front.hp<hp);assert.equal(back.hp,back.maxHp);assert.equal(side.hp,side.maxHp);assert.ok(front.dots.burn);special(g,p,'venomcloud',{x:3,z:0});project(g,.3);assert.ok(side.dots.poison);const before=side.hp;g.time+=1;g.environment(side,1/30);assert.ok(side.hp<before);});
+
+test('monster abilities have a warning window and cancelled casts cannot damage after changing waves',()=>{const {g,p}=setup(),rhino=g.spawnEnemy('rhino',0,4,{hp:9999,damage:0,team:2});g.monsterThink(rhino,1/30);g.time=3.5;g.monsterThink(rhino,1/30);assert.equal(g.specials.length,1);assert.ok(g.effects.some(e=>e.type==='monsterWarning'));const hp=p.hp;g.time+=.4;g.tickSpecials(.4);assert.equal(p.hp,hp);g.wave++;g.time+=1;g.tickSpecials(1);assert.equal(p.hp,hp);assert.equal(g.specials.length,0);});
+
+test('Rage and Battlecry choose one complete buff rather than adding or combining their bonuses',()=>{const {g,p}=setup();g.castSpecial(p,'battlecry',skillAt('battlecry',5),{});assert.equal(p.rageData.damage,.6);assert.equal(p.rageData.attackSpeed,0);g.castSpecial(p,'rage',skillAt('rage',5),{});assert.deepEqual(p.rageData,{damage:.3,attackSpeed:.3});const first={...p.rageData};g.castSpecial(p,'battlecry',skillAt('battlecry',1),{});assert.deepEqual(p.rageData,first);});
+
