@@ -1,5 +1,5 @@
-const LABELS={learn:'NOVA TÉCNICA',upgrade:'TÉCNICA EVOLUÍDA',item:'EQUIPAMENTO ADQUIRIDO',equipment:'EQUIPAMENTO EVOLUÍDO',enchant:'ARMA ENCANTADA',activate:'ITEM ATIVADO',gold:'OURO RECEBIDO',level:'NÍVEL ALCANÇADO',attribute:'ATRIBUTO EVOLUÍDO',error:'AÇÃO NÃO CONCLUÍDA'};
-const SYMBOLS={learn:'✦',upgrade:'↑',item:'◆',equipment:'↑',enchant:'✧',activate:'✧',gold:'◆',level:'✧',attribute:'+',error:'!'};
+const LABELS={learn:'NOVA TÉCNICA',upgrade:'TÉCNICA EVOLUÍDA',item:'EQUIPAMENTO ADQUIRIDO',equipment:'EQUIPAMENTO EVOLUÍDO',enchant:'ARMA ENCANTADA',activate:'ITEM ATIVADO',gold:'OURO RECEBIDO',essence:'ESSÊNCIA RECUPERADA',level:'NÍVEL ALCANÇADO',attribute:'ATRIBUTO EVOLUÍDO',error:'AÇÃO NÃO CONCLUÍDA'};
+const SYMBOLS={learn:'✦',upgrade:'↑',item:'◆',equipment:'↑',enchant:'✧',activate:'✧',gold:'◆',essence:'◈',level:'✧',attribute:'+',error:'!'};
 
 /** Presentation only. Call after an authoritative command/snapshot confirms a change. */
 export function createFeedback({host=document.body}={}){

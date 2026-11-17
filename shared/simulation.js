@@ -2,9 +2,11 @@ import {HEROES,SKILLS,ITEMS,ATTRIBUTES,levelOf,skillAt,itemUpgradePrice,ITEM_MAX
 import {ARENAS,arenaForWave} from './arenas.js';
 import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable} from './enchantments.js';
 import {equipmentEffectAt} from './equipment-effects.js';
-import {MONSTERS,monsterKind} from './monsters.js';
+import {MONSTERS,MONSTER_PROFILES,monsterKind,monsterLoadout} from './monsters.js';
+import {ARENA_BOUNDS} from './arena-size.js';
 import {monsterMethods} from './monster-abilities.js';
 import {shopMethods} from './shop-system.js';
+import {techniqueMethods} from './technique-system.js';
 import {shopForItem} from './shops.js';
 import {baseAttributes,recompute} from './stats.js';
 import {modeOptions,capacity} from './modes.js';
@@ -17,7 +19,7 @@ const BATTLE=new Set(['wave','bonus','final']);
 const TERMINAL=new Set(['victory','defeat']);
 export class Game {
  constructor(seed=7381,options={}){
-  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.bounds=14;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
+  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
   this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
   this.arena='forest';this.zones=[];this.nextWeather=8;this.stock={};this.shopVisit=0;this.bonusResults=[];this.winner=null;this.restock();
  }
@@ -29,17 +31,21 @@ export class Game {
  addPlayer(id,type='knight',name='Aventureiro',bot=false,squad=null){
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
   const h=HEROES[type],i=Object.keys(this.players).length;
-  const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[h.skill],skillLevels:{[h.skill]:1},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
+  const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[h.skill],skillLevels:{[h.skill]:1},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
   recompute(u,this.time);this.players[id]=u.id;this.units.push(u);return true;
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
  restock(){this.stock=Object.fromEntries(Object.entries(ITEMS).map(([key,v])=>[key,v.stock]));this.shopVisit++;}
- auraFor(u,key){let best=null;for(const hero of this.heroes())if(hero.alive&&hero.team===u.team&&distance(hero,u)<=9&&levelOf(hero,key)){const s=skillAt(key,levelOf(hero,key));if(!best||s.level>best.level)best=s;}return best;}
- refresh(u){recompute(u,this.time,Object.fromEntries(['endurance','devotion','brilliance'].map(k=>[k,this.auraFor(u,k)])));}
+ auraFor(u,key){let best=null;const group=unit=>unit.challenge||(this.phase==='bonus'?unit.owner:null);for(const ally of this.units)if(ally.alive&&ally.team===u.team&&group(ally)===group(u)&&distance(ally,u)<=9&&levelOf(ally,key)){const s=skillAt(key,levelOf(ally,key));if(!best||s.level>best.level)best=s;}return best;}
+ refresh(u){if(!u.hero)return this.refreshMonsterStats(u);recompute(u,this.time,Object.fromEntries(['endurance','devotion','brilliance'].map(k=>[k,this.auraFor(u,k)])));}
  canTarget(u,t){if(!t||!t.alive||u.id===t.id||u.team===t.team)return false;if(this.phase==='wave'&&['best','war'].includes(this.options.mode))return !!(u.challenge&&u.challenge===t.challenge);if(this.phase==='bonus')return !!(t.challenge&&t.challenge===u.owner||u.challenge&&u.challenge===t.owner);return true;}
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
  command(id,c){
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
+  if(c.type==='recycleLoot')return this.recycleLoot(u,c);
+  if(c.type==='distillSkillPoint')return this.distillSkillPoint(u);
+  if(c.type==='rollTechniques')return this.rollTechniques(u);
+  if(c.type==='chooseTechnique')return this.chooseTechnique(u,c);
   if(c.type==='interact')return this.interactShop(u,c.npc);
   if(c.type==='leaveShop'){this.closeShop(u,true);return true;}
   if(c.type==='attribute'){
@@ -119,7 +125,7 @@ export class Game {
   if(key==='heal')this.heal(u,s.heal*(u.magicPower||1));
   if(key==='chain'){let last=t,from=u;const visited=new Set();for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);hit(last,s.damage*.85**i,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z});from=last;last=this.enemies(u).filter(e=>!visited.has(e.id)&&distance(from,e)<6)[0];}}
   if(key==='blizzard'){u.channel='blizzard';u.destination=null;u.order='hold';this.effects.push({id:this.id(),type:'blizzard',x:c.x,z:c.z,time:this.time,next:this.time+.25,pulses:s.pulses,damage:this.spellDamage(u,s.damage,'ice'),radius:s.radius,owner:u.id,channel:true,duration:s.pulses+1});}
-  if(key==='summon'){this.units=this.units.filter(v=>!(v.summon&&v.owner===u.owner));for(let i=0;i<2;i++)this.units.push({id:this.id(),owner:u.owner,summon:true,challenge:u.challenge,cell:u.cell,kind:'wolf',team:u.team,x:u.x+(i?1:-1),z:u.z+1,hp:s.hp,maxHp:s.hp,damage:s.damage,armor:1,range:1.4,speed:5.6,interval:.8,accuracy:1,critChance:0,cd:0,stun:0,alive:true,expires:this.time+s.duration});this.fx('summon',u.x,u.z);}
+  if(key==='summon'){const owner=u.owner||('npc-'+u.id);this.units=this.units.filter(v=>!(v.summon&&v.summoner===u.id));for(let i=0;i<2;i++)this.spawnEnemy('wolf',u.x+(i?1:-1),u.z+1,{owner,summon:true,summoner:u.id,challenge:u.challenge,cell:u.cell,team:u.team,hp:s.hp,damage:s.damage,armor:1,range:1.4,speed:5.6,interval:.8,accuracy:1,critChance:0,level:u.level,skills:[],skillLevels:{},expires:this.time+s.duration});this.fx('summon',u.x,u.z);}
   if(key==='multishot')for(const e of this.enemies(u,10).slice(0,s.count)){this.hit(e,s.damage*(1+(u.totalAttributes?.dex||0)*.015),u);this.fx('arrow',u.x,u.z,{tx:e.x,tz:e.z});}
   if(key==='avatar'){u.avatar=this.time+s.duration;u.avatarData={hp:s.hp,armor:s.armor,damage:s.damage};this.refresh(u);this.fx('avatar',u.x,u.z);}
   if(key==='shockwave'){const dx=c.x-u.x,dz=c.z-u.z,len=Math.hypot(dx,dz)||1;for(const e of this.enemies(u,12).filter(e=>{const proj=((e.x-u.x)*dx+(e.z-u.z)*dz)/len;return proj>=0&&Math.abs((e.x-u.x)*dz-(e.z-u.z)*dx)/len<s.radius;}).slice(0,12))hit(e,s.damage);this.fx('shockwave',u.x,u.z,{tx:c.x,tz:c.z,radius:s.radius});}
@@ -160,7 +166,7 @@ export class Game {
   const crit=this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
   this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});
   if(!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
-  const baseDamage=u.damage*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?this.spellDamage(u,baseDamage,attackElement):baseDamage,u,!!attackElement,false,crit,false,attackElement);
+  const baseDamage=u.damage*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?baseDamage*(weather[attackElement]||1):baseDamage,u,!!attackElement,false,crit,false,attackElement);
   if(levelOf(u,'bash')){const s=skillAt('bash',levelOf(u,'bash'));if(this.random()<s.chance&&t.alive){this.hit(t,s.damage,u);t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
   if(levelOf(u,'cleave')&&u.range<3){const s=skillAt('cleave',levelOf(u,'cleave'));for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
   if(levelOf(u,'bounce')&&u.range>=3){const s=skillAt('bounce',levelOf(u,'bounce')),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
@@ -175,10 +181,21 @@ export class Game {
   if(this.options.mode!=='campaign')return this.spawnCompetitionWave();this.clearField();
   this.phase='wave';this.wave++;this.setArena(this.arenaAt(this.wave));this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes(this.wave%5===1);this.message=`Onda ${this.wave}/50 · ${ARENAS[this.arena].name}`;
   const kinds=['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog'];const count=Math.min(80,(4+Math.floor(this.wave/3))*this.heroes().length);
-  for(let i=0;i<count;i++){const a=this.random()*Math.PI*2,r=11+this.random()*2,kind=kinds[Math.floor(this.random()*Math.min(kinds.length,2+Math.floor(this.wave/3)))],brute=['brute','ram','tortoise'].includes(kind),ranged=kind==='bat';this.spawnEnemy(kind,Math.sin(a)*r,Math.cos(a)*r,{hp:(65+this.wave*16)*(brute?1.6:1),damage:7+this.wave*1.2,armor:brute?3+Math.floor(this.wave/15):Math.floor(this.wave/20),range:ranged?6:1.4,speed:brute?2.4:3.1,interval:ranged?1.8:1.4});}
+  for(let i=0;i<count;i++){const a=this.random()*Math.PI*2,r=13+this.random()*2,kind=kinds[Math.floor(this.random()*Math.min(kinds.length,2+Math.floor(this.wave/3)))],brute=['brute','ram','tortoise'].includes(kind),ranged=kind==='bat';this.spawnEnemy(kind,Math.sin(a)*r,Math.cos(a)*r,{hp:(65+this.wave*16)*(brute?1.6:1),damage:7+this.wave*1.2,armor:brute?3+Math.floor(this.wave/15):Math.floor(this.wave/20),range:ranged?6:1.4,speed:brute?2.4:3.1,interval:ranged?1.8:1.4});}
   if(this.wave%10===0)this.spawnEnemy('champion',0,-10,{hp:600+this.wave*55,damage:25+this.wave*2,armor:5,range:2,speed:2.5,interval:1.5});
  }
- spawnEnemy(kind,x,z,data){if(['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog','champion'].includes(kind)){const boss=!!data.boss||kind==='champion';kind=monsterKind(kind,this.wave,data.variantRoll??this.random(),boss);if(boss)data={...data,boss:data.boss||'boss'};}const species=MONSTERS[kind];if(species)data={...data,hp:data.hp*species.hpMultiplier,damage:data.damage*species.damageMultiplier,armor:(data.armor||0)+species.armorBonus,size:species.size,name:species.name,flying:!!species.flying,altitude:species.flying?species.altitude||1.4:0,range:species.range||data.range||1.4,element:species.element||null,resistances:{...(species.resistances||{})}};const u={id:this.id(),kind,team:2,x,z,hp:data.hp,maxHp:data.hp,damage:data.damage,armor:data.armor||0,range:data.range||1.4,speed:data.speed||2.8,interval:data.interval||1.5,accuracy:.9,evasion:data.evasion||0,cd:this.random(),stun:0,alive:true,...data};this.units.push(u);return u;}
+ spawnEnemy(kind,x,z,data){
+  const variant=Number.isFinite(data.variantRoll)?data.variantRoll:this.random();let boss=data.boss===true?'boss':data.boss;
+  if(['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog','champion'].includes(kind)){if(kind==='champion')boss||='boss';kind=monsterKind(kind,this.wave,variant,!!boss);}
+  const species=MONSTERS[kind],profile=species||MONSTER_PROFILES[kind]||{},level=Math.max(1,data.level||this.wave+(boss==='boss'?10:boss==='miniboss'?5:species?2:0));let seed=(Math.floor(variant*4294967296)^Math.imul(level,2654435761))>>>0;for(const char of kind)seed=(Math.imul(seed,31)+char.charCodeAt(0))>>>0;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;},loadout=monsterLoadout(kind,level,boss,random);
+  if(species)data={...data,hp:data.hp*species.hpMultiplier,damage:data.damage*species.damageMultiplier,armor:(data.armor||0)+species.armorBonus,name:species.name,flying:!!species.flying,altitude:species.flying?species.altitude||1.4:0,range:species.range||data.range||1.4,element:species.element||null,resistances:{...(species.resistances||{})}};
+  else data={...data,damage:data.damage*(profile.attackMultiplier||1)};
+  const useRaw=data.summon||kind==='bonus',speed=useRaw||data.speed===0?data.speed??profile.moveSpeed??2.8:profile.moveSpeed??data.speed??2.8,interval=useRaw?data.interval??profile.attackInterval??1.5:profile.attackInterval??data.interval??1.5;
+  const skills=data.summon?[]:Array.isArray(data.skills)?[...data.skills]:loadout.skills,skillLevels=Object.fromEntries(skills.map(key=>[key,data.skillLevels?.[key]||loadout.skillLevels[key]||loadout.rank]));
+  const cd=data.cd??random(),size=data.size||clamp((species?.size||profile.size||1)*(boss?1.2:1),.55,2.1);
+  const u={id:this.id(),kind,team:2,x,z,hp:data.hp,maxHp:data.hp,damage:data.damage,armor:data.armor||0,range:data.range||1.4,speed,interval,accuracy:data.accuracy??profile.accuracy??.9,evasion:data.evasion??profile.evasion??0,critChance:data.critChance??profile.critChance??0,critMultiplier:data.critMultiplier??profile.critMultiplier??1.5,cd,stun:0,alive:true,...data,boss,level,skills,skillLevels,speed,interval,size,cooldowns:{},rarity:loadout.rarity,monsterRank:loadout.rank};
+  u.monsterBase=Object.freeze({hp:u.maxHp,damage:u.damage,armor:u.armor,speed:u.speed,interval:u.interval,accuracy:u.accuracy,evasion:u.evasion,critChance:u.critChance,critMultiplier:u.critMultiplier,mana:260+u.level*12,manaRegen:2.5,hpRegen:0,magicPower:boss==='boss'?1:boss==='miniboss'?.8:.55});u.mana=u.maxMana=u.monsterBase.mana;this.units.push(u);this.refresh(u);return u;
+ }
  finishWave(){if(this.options.mode!=='campaign')return this.finishCompetitionWave();for(const h of this.heroes()){h.gold+=100+this.wave*12;this.gainXp(h,30);}this.units=this.units.filter(u=>u.hero&&!u.summon);if(this.wave===50){this.phase='finalCountdown';this.timer=12;this.message='50 ondas vencidas. Prepare-se: todos contra todos!';this.restoreHeroes();}
   else if(this.wave%5===0)this.startBonus();else{this.phase='intermission';this.timer=7;this.restoreHeroes(false);this.message='Respire. A próxima onda começa em instantes; loja a cada cinco ondas.';}}
  startBonus(){
@@ -220,7 +237,7 @@ export class Game {
   for(const u of [...this.units]){
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}
    if(u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*u.hpRegen);for(const key of Object.keys(u.cooldowns))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(u.bot)this.botThink(u);}
-   if(!u.hero&&!u.summon)this.monsterThink(u,dt);this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
+   if(!u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*(u.hpRegen||0));for(const key of Object.keys(u.cooldowns||{}))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(!u.summon)this.monsterThink(u,dt);}this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
    let t=BATTLE.has(this.phase)?this.units.find(t=>t.id===u.target&&this.canTarget(u,t)):null;
    if(!t&&BATTLE.has(this.phase))t=this.enemies(u,u.order==='hold'||u.order==='stop'?u.range:u.hero?(this.phase==='final'&&(u.bot||u.order==='auto')?Infinity:9):Infinity)[0];
    let dest=['move','attackMove'].includes(u.order)?u.destination:null;
@@ -242,4 +259,4 @@ export class Game {
  snapshot(){return {drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
 }
 
-Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods);
+Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods);

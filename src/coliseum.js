@@ -1,3 +1,4 @@
+import {ARENA_BOUNDS,ARENA_TILE_HALF,ARENA_SCALE} from '../shared/arena-size.js';
 import * as T from 'three';
 import {ARENAS} from '../shared/arenas.js';
 
@@ -6,7 +7,7 @@ export function createColiseum(scene,tiles,environment,sun,base,material){
  let current=null,preview='forest',lastFrame=-1,cheerUntil=0,lastTime=0;const seen=new Set(),hazards=new T.Group();scene.add(hazards);
  const count=72,parts={body:new T.InstancedMesh(base,material,count),head:new T.InstancedMesh(base,material,count),left:new T.InstancedMesh(base,material,count),right:new T.InstancedMesh(base,material,count)};
  const dummy=new T.Object3D(),color=new T.Color(),frames={idle:[],cheer:[]};
- const spectators=Array.from({length:count},(_,i)=>{const a=(i+.5)/count*Math.PI*2,r=18.7+(i%2)*.7;return{x:Math.sin(a)*r,z:Math.cos(a)*r,y:1+(i%2)*.4,yaw:a+Math.PI,color:[0xb88b64,0xeee4cd,0xd8935f,0x8fa67e,0xa7a0b1,0xcfc89e][i%6]};});
+ const spectators=Array.from({length:count},(_,i)=>{const a=(i+.5)/count*Math.PI*2,r=18.7*ARENA_SCALE+(i%2)*.7;return{x:Math.sin(a)*r,z:Math.cos(a)*r,y:1+(i%2)*.4,yaw:a+Math.PI,color:[0xb88b64,0xeee4cd,0xd8935f,0x8fa67e,0xa7a0b1,0xcfc89e][i%6]};});
  function matrix(p,x,y,z,w,h,d,rz=0){const c=Math.cos(p.yaw),s=Math.sin(p.yaw);dummy.position.set(p.x+x*c+z*s,p.y+y,p.z-x*s+z*c);dummy.scale.set(w,h,d);dummy.rotation.set(0,p.yaw,rz);dummy.updateMatrix();return dummy.matrix.clone();}
  for(const mode of ['idle','cheer'])for(let f=0;f<8;f++){const frame={body:[],head:[],left:[],right:[]};for(const [i,p]of spectators.entries()){const n=(f+i)%8,hop=mode==='cheer'?HOP[n]:0,angle=mode==='cheer'?ARM[n]:.12;frame.body.push(matrix(p,0,.2+hop,0,.55,.65,.55));frame.head.push(matrix(p,0,.78+hop,.1,.55,.5,.55));frame.left.push(matrix(p,-.39,.25+hop+(mode==='cheer'?.35:0),0,.18,.65,.2,-angle));frame.right.push(matrix(p,.39,.25+hop+(mode==='cheer'?.35:0),0,.18,.65,.2,angle));}frames[mode].push(frame);}
  for(const [key,mesh]of Object.entries(parts)){for(let i=0;i<count;i++)mesh.setColorAt(i,color.setHex(key==='head'?spectators[i].color: key==='body'?[0x6d8d6a,0xb39064,0x8d80a1][i%3]:spectators[i].color));mesh.castShadow=true;scene.add(mesh);}
@@ -15,7 +16,7 @@ export function createColiseum(scene,tiles,environment,sun,base,material){
  function hazardMat(hex){if(!materials.has(hex))materials.set(hex,new T.MeshBasicMaterial({color:hex,transparent:true,opacity:.8,side:T.DoubleSide,depthWrite:false}));return materials.get(hex);}
  const meshById=new Map();
  function theme(key){if(current===key)return;current=key;const a=ARENAS[key];scene.background.setHex(a.sky);scene.fog.color.setHex(a.sky);environment.material.color.setHex(a.tint);weather.material.color.setHex(a.particle);sun.color.setHex(key==='volcano'?0xffb781:key==='glacier'?0xe4f3ff:key==='moon'?0xd4c4fa:0xffeccb);
-  let index=0;for(let x=-16;x<16;x++)for(let z=-16;z<16;z++){const r=Math.hypot(x+.5,z+.5);tiles.setColorAt(index++,color.setHex(r>12.5&&r<14.5?a.rim:a.floor[(x*x+z*z)%a.floor.length]));}tiles.instanceColor.needsUpdate=true;
+  let index=0;for(let x=-ARENA_TILE_HALF;x<ARENA_TILE_HALF;x++)for(let z=-ARENA_TILE_HALF;z<ARENA_TILE_HALF;z++){const r=Math.hypot(x+.5,z+.5);tiles.setColorAt(index++,color.setHex(r>ARENA_BOUNDS-1.5&&r<ARENA_BOUNDS+.5?a.rim:a.floor[(x*x+z*z)%a.floor.length]));}tiles.instanceColor.needsUpdate=true;
  }
  function update(state,now){const key=state?.arena||preview,a=ARENAS[key],time=state?.time??now/1000;theme(key);if(time<lastTime){seen.clear();cheerUntil=0;lastFrame=-1;}lastTime=time;
   for(const e of state?.effects||[]){if(seen.has(e.id))continue;seen.add(e.id);if(['critical','fireball','stomp','thunder','levelup','bonus'].includes(e.type))cheerUntil=time+(e.type==='critical'?1.4:2.3);}if(seen.size>5000)seen.clear();

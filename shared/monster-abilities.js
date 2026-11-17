@@ -11,29 +11,46 @@ function lineClear(game,from,to){const d=distance(from,to),steps=Math.max(1,Math
 function sameTrial(game,h,t){if(t.team===h.team)return false;if(t.challenge){if(game.phase==='bonus')return t.challenge===h.owner;if(['best','war'].includes(game.options.mode))return game.groupKey(h)===t.challenge;}return true;}
 
 export const monsterMethods={
+ refreshMonsterStats(u){
+  const base=u.monsterBase;if(!base)return;const passive=key=>levelOf(u,key)?skillAt(key,levelOf(u,key)):{};
+  const aura=key=>this.auraFor(u,key)||passive(key),fervor=aura('endurance'),devotion=aura('devotion'),brilliance=aura('brilliance'),avatar=(u.avatar||0)>this.time?u.avatarData||{}:{},rage=(u.rageUntil||0)>this.time?u.rageData||{}:{};
+  const oldHp=u.maxHp||base.hp;u.maxHp=base.hp+(avatar.hp||0);u.hp=clamp(u.hp+u.maxHp-oldHp,u.alive?1:0,u.maxHp);
+  u.maxMana=base.mana;u.mana=clamp(u.mana??u.maxMana,0,u.maxMana);u.manaRegen=base.manaRegen+(brilliance.manaRegen||0);u.hpRegen=base.hpRegen||0;
+  u.damage=(base.damage+(avatar.damage||0))*(1+(rage.damage||0));u.armor=base.armor+(passive('stonehide').armor||0)+(devotion.armor||0)+(avatar.armor||0);
+  u.speed=base.speed*(1+(fervor.moveSpeed||0));u.interval=base.interval;u.attackSpeed=Math.min(3,1+(fervor.attackSpeed||0)+(rage.attackSpeed||0));u.accuracy=base.accuracy;
+  u.evasion=Math.min(.45,base.evasion+(passive('evasion').evasion||0));u.critChance=Math.min(.8,base.critChance+(passive('critical').chance||0));u.critMultiplier=Math.max(base.critMultiplier,passive('critical').multiplier||0);
+  u.lifesteal=u.range<3?passive('vampiric').lifesteal||0:0;u.reflect=passive('thorns').reflect||0;u.magicPower=base.magicPower;
+ },
+
  monsterThink(u,dt){
-  const species=MONSTERS[u.kind];if(!species||u.hero||u.summon||!u.alive||!BATTLE.has(this.phase))return;
-  // Monster buffs use their immutable spawn damage; hero buffs use recompute.
-  u.monsterBaseDamage??=u.damage;const rage=(u.rageUntil||0)>this.time?u.rageData:null;u.damage=u.monsterBaseDamage*(1+(rage?.damage||0));u.attackSpeed=1+(rage?.attackSpeed||0);
-  if(species.skill==='stonehide')return;
-  if(u.nextMonsterSkill===undefined){u.nextMonsterSkill=this.time+2+(u.id%5)*.35;return;}
-  if(u.stun>0||this.time<u.nextMonsterSkill||u.pendingSpecial)return;
-  const target=this.enemies(u,9).find(t=>t.hero||t.summon);if(!target)return;
-  const rank=clamp(1+Math.floor(this.wave/12),1,5),base=skillAt(species.skill,rank);if(!base)return;
-  const multiplier=u.boss==='boss'?1:u.boss==='miniboss'?.8:.55,s={...base,...(base.damage!==undefined?{damage:base.damage*multiplier}:{}),...(base.burn!==undefined?{burn:base.burn*multiplier}:{})};
-  const point=limitPoint(this,u,target),warning=species.skill==='battlecry'?.45:.9;
-  u.nextMonsterSkill=this.time+Math.max(8,base.cooldown||12);u.pendingSpecial=true;u.castAt=this.time;u.castSkill=species.skill;u.facing=Math.atan2(point.x-u.x,point.z-u.z);
-  this.specials||=[];this.specials.push({id:this.id(),type:'warning',source:u.id,key:species.skill,s,point,phase:this.phase,wave:this.wave,fireAt:this.time+warning});
-  this.fx('monsterWarning',point.x,point.z,{source:u.id,skill:species.skill,radius:s.radius||2.2,tx:u.x,tz:u.z,duration:warning});
+  if(u.hero||u.summon||!u.alive||!BATTLE.has(this.phase)||!u.skills?.length)return;
+  if(u.nextMonsterDecision===undefined){u.nextMonsterDecision=this.time+2+(u.id%5)*.35;return;}
+  if(u.stun>0||u.channel||this.time<u.nextMonsterDecision||u.pendingSpecial)return;u.nextMonsterDecision=this.time+1.2;
+  const target=this.enemies(u,14).find(t=>t.hero||t.summon);if(!target)return;
+  for(let offset=0;offset<u.skills.length;offset++){
+   const slot=((u.monsterSkillCursor||0)+offset)%u.skills.length,key=u.skills[slot],s=skillAt(key,levelOf(u,key));
+   if(!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana)continue;
+   if(s.heal&&u.hp>u.maxHp*.7||key==='shield'&&(u.shieldUntil||0)>this.time&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time+.7)continue;
+   if(s.target==='enemy'&&distance(u,target)>12||s.target==='self'&&['stomp','frostnova'].includes(key)&&!this.enemies(u,s.radius).length)continue;
+   if(key==='summon'&&this.units.filter(v=>v.alive&&v.summon&&v.summoner===u.id&&v.expires>this.time+10).length>=2)continue;
+   let point=limitPoint(this,u,target);
+   if(key==='icewall'){
+    const dir=direction(u,target),mid={x:(u.x+target.x)/2,z:(u.z+target.z)/2},candidates=[{x:mid.x-dir.z*2.3,z:mid.z+dir.x*2.3},{x:mid.x+dir.z*2.3,z:mid.z-dir.x*2.3}];
+    point=candidates.map(p=>limitPoint(this,u,p)).find(p=>distance(p,u)<=14&&!blocked(p,this.obstacles||[],1)&&(!u.cell||Math.abs(p.x-u.cell.x)+s.width/2<=u.cell.r&&Math.abs(p.z-u.cell.z)+.4<=u.cell.r)&&!this.units.some(v=>v.alive&&blocked(v,[{...p,w:s.width,d:.8}],.65)));if(!point)continue;
+   }
+   const warning=.6+(u.boss==='boss'?.35:u.boss==='miniboss'?.2:.1);u.monsterSkillCursor=(slot+1)%u.skills.length;u.pendingSpecial=true;u.castAt=this.time;u.castSkill=key;u.facing=Math.atan2(point.x-u.x,point.z-u.z);
+   this.specials||=[];this.specials.push({id:this.id(),type:'warning',source:u.id,slot,key,target:target.id,point,phase:this.phase,wave:this.wave,fireAt:this.time+warning});
+   this.fx('monsterWarning',point.x,point.z,{source:u.id,skill:key,radius:s.radius||2.2,tx:u.x,tz:u.z,duration:warning});break;
+  }
  },
 
  monsterLoot(t,source=null){
-  if(t.lootRolled||t.alive||t.hero||t.summon||!MONSTERS[t.kind]||!BATTLE.has(this.phase))return null;t.lootRolled=true;
+  if(t.lootRolled||t.alive||t.hero||t.summon||!t.skills?.some(key=>SKILLS[key])||!BATTLE.has(this.phase))return null;t.lootRolled=true;
   let owner=source?.owner?this.player(source.owner):null;
   if(source){if(!owner||!sameTrial(this,owner,t))return null;}
   else owner=this.heroes().filter(h=>h.alive&&sameTrial(this,h,t)).sort((a,b)=>distance(a,t)-distance(b,t)||a.owner.localeCompare(b.owner))[0];
   if(!owner)return null;const chance=t.boss==='boss'?1:t.boss==='miniboss'?.5:.15;if(chance<1&&this.random()>=chance)return null;
-  const drop={id:this.id(),skill:MONSTERS[t.kind].skill,owner:owner.owner,x:t.x,z:t.z,expires:this.time+90,kind:t.kind};
+  const skills=t.skills.filter(key=>SKILLS[key]),drop={id:this.id(),skill:skills[Math.min(skills.length-1,Math.floor(this.random()*skills.length))],owner:owner.owner,x:t.x,z:t.z,expires:this.time+90,kind:t.kind};
   this.drops||=[];this.drops.push(drop);this.fx('lootDrop',t.x,t.z,{source:owner.id,skill:drop.skill,dropId:drop.id});return drop;
  },
 
@@ -44,8 +61,7 @@ export const monsterMethods={
   if(rank){if(rank>=5)return false;u.skillLevels[drop.skill]=rank+1;}
   else{let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
    if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
-   if(slot<u.skills.length){replaced=u.skills[slot];delete u.skillLevels[replaced];u.skills[slot]=drop.skill;}else u.skills.push(drop.skill);
-   u.skillLevels[drop.skill]=1;
+   replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);
   }
   this.cancelChannel(u);this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,skill:drop.skill,level:u.skillLevels[drop.skill],replaced});return true;
  },
@@ -53,7 +69,7 @@ export const monsterMethods={
  castSpecial(u,key,s,c,target){
   const point={x:c.x??target?.x??u.x,z:c.z??target?.z??u.z},dir=direction(u,point),origin={x:u.x,z:u.z};
   if(key==='rage'||key==='battlecry'){
-   const old=(u.rageUntil||0)>this.time?u.rageData:null,next={damage:s.rageDamage||0,attackSpeed:s.rageSpeed||0},power=data=>(1+(data?.damage||0))*(1+(data?.attackSpeed||0));u.rageData=old&&power(old)>power(next)?old:next;u.rageUntil=Math.max(u.rageUntil||0,this.time+s.duration);if(u.hero)this.refresh(u);this.fx(key,u.x,u.z,{source:u.id,duration:s.duration,radius:2});return true;
+   const old=(u.rageUntil||0)>this.time?u.rageData:null,next={damage:s.rageDamage||0,attackSpeed:s.rageSpeed||0},power=data=>(1+(data?.damage||0))*(1+(data?.attackSpeed||0));if(!old||power(old)<=power(next)){u.rageData=next;u.rageSkill=key;}else u.rageData=old;u.rageUntil=Math.max(u.rageUntil||0,this.time+s.duration);this.refresh(u);this.fx(key,u.x,u.z,{source:u.id,duration:s.duration,radius:2});return true;
   }
   if(key==='warlockfire'||key==='warlockfrost'){
    this.projectiles||=[];const projectile={id:this.id(),skill:key,element:key==='warlockfire'?'fire':'ice',x:u.x+dir.x*.55,z:u.z+dir.z*.55,dx:dir.x,dz:dir.z,speed:s.projectileSpeed||12,remaining:s.distance||14,radius:s.radius||.5,damage:this.spellDamage(u,s.damage,key==='warlockfire'?'fire':'ice'),push:s.push||0,slow:s.slow||0,slowDuration:s.duration||0,source:sourceData(u),phase:this.phase,wave:this.wave,created:this.time};
@@ -83,7 +99,7 @@ export const monsterMethods={
   this.drops=(this.drops||[]).filter(d=>d.expires>this.time);this.specials||=[];this.projectiles||=[];
   if(!BATTLE.has(this.phase)){this.specials=[];this.projectiles=[];for(const u of this.units)u.pendingSpecial=false;return;}
   const pending=[];for(const special of this.specials){if(special.phase!==this.phase||special.wave!==this.wave)continue;
-   if(special.type==='warning'){const owner=this.units.find(u=>u.id===special.source);if(!owner?.alive)continue;if(this.time<special.fireAt){pending.push(special);continue;}owner.pendingSpecial=false;if(owner.stun>0)continue;this.castSpecial(owner,special.key,special.s,special.point);}
+   if(special.type==='warning'){const owner=this.units.find(u=>u.id===special.source);if(!owner?.alive)continue;if(owner.stun>0){owner.pendingSpecial=false;continue;}if(this.time<special.fireAt){pending.push(special);continue;}owner.pendingSpecial=false;if(owner.skills[special.slot]===special.key)this.cast(owner,{slot:special.slot,target:special.target,...special.point});}
    else if(special.type==='cloud'&&special.expires>this.time){if(this.time>=special.next){special.next=this.time+1;for(const enemy of this.units.filter(t=>this.canTarget(special.source,t)&&distance(t,special)<special.radius&&(t.avatar||0)<=this.time))this.applyDot(enemy,'poison',special.damage,2,special.source);}pending.push(special);}
   }this.specials=pending;
   const active=[];for(const p of this.projectiles){if(p.phase!==this.phase||p.wave!==this.wave)continue;let alive=true;const travel=Math.min(p.remaining,Math.max(0,dt)*p.speed),steps=Math.max(1,Math.ceil(travel/.18));for(let i=0;i<steps;i++){

@@ -202,7 +202,7 @@ Contrato compartilhado com a simulação:
 - `resistances` usa chaves `fire`, `ice`, `lightning`, `poison` e `wind`. Valor positivo reduz o dano daquele elemento; valor negativo representa fraqueza, por exemplo `ice: -0.2` significa receber 20% a mais de dano de gelo. Ausência da chave significa resistência neutra.
 - São modificadores da criatura, separados dos equipamentos do herói e aplicados uma vez por fonte elemental. A integração deve evitar aplicar duas vezes resistência de equipamento ou aumentar dano físico neutro apenas porque o monstro tem um elemento.
 - Voo precisa ser simulado, além de desenhado. A implementação deve distinguir terrenos que exigem contato com o solo de regiões frias, clima, projéteis e ataques que ainda alcançam o alvo. Limites do campo e isolamento entre provas continuam valendo.
-- A técnica indicada em `skill` é a usada e oferecida pelo drop. Não há uma segunda técnica oculta nem habilidades fora das 40 existentes. A fênix não recebe ressurreição implícita pelo nome.
+- Os campos `skill` e `preferredDropSkill` indicam a preferência da espécie; o conjunto efetivamente sorteado pode variar conforme as regras de loadout descritas adiante. O drop deve corresponder a uma técnica que o monstro realmente possuía, sem uma segunda técnica oculta fora das 40 existentes. A fênix não recebe ressurreição implícita pelo nome.
 
 `monsterKind` continua deixando **55% da faixa de seleção** para a fauna anterior e usando os 45% restantes para espécies especiais liberadas. O crescimento do bestiário não transforma toda onda em uma onda de voadores. Chefes preferem o conjunto `mythic` disponível, agora incluindo as cinco novidades, além de grifo, quimera, dragão e esfinge; antes do primeiro mítico, leão e rinoceronte continuam elegíveis como antes. A mistura preserva míticos terrestres — basilisco, quimera e esfinge — junto aos alados. Todos os seis especiais anteriores permanecem no catálogo e no conjunto de ondas normais.
 
@@ -238,6 +238,81 @@ Dois livros ampliam o uso de ouro sem modificar a regra de progressão:
 Ambos são `consumable: true`, ocupam o inventário e só podem ser utilizados durante a preparação/mercado. Não recebem melhorias ou encantamentos e não acionam nem dependem da recarga de poções. Consumir uma carga concede XP pela função normal da simulação: se o total cruzar o requisito do nível, os mesmos pontos de habilidade e de atributo já definidos são concedidos. Os livros não distribuem pontos diretamente e não alteram requisitos de XP, custos de atributos ou marcos de bônus.
 
 O Caderno custa 4,375 ouro por XP; o Tomo, 4,5. O livro maior oferece mais XP em um exemplar e tem estoque raro, sem ser mais eficiente em ouro. Comprar XP disputa o orçamento com equipamento, poções, melhorias e encantamentos. O estoque compartilhado pode favorecer quem compra cedo; precisa de playtests para avaliar se o ganho de níveis no mercado inicial cria vantagem excessiva em modos competitivos. A configuração não adiciona venda automática nem teletransporte até o comerciante.
+
+## Perfis de combate e conjuntos de técnicas dos monstros
+
+A fauna comum recebe **12 perfis próprios** em `MONSTER_PROFILES`, com nome, tamanho, movimento, intervalo entre ataques, precisão, esquiva, crítico e multiplicador de ataque. Os 11 especiais em `MONSTERS` também recebem movimento, intervalo, precisão, esquiva e crítico. Os dados anteriores de voo, altura, elemento, resistência, vida, armadura, progressão e dano especial foram preservados; o novo perfil não deve multiplicar novamente `damageMultiplier` de um especial.
+
+| Fauna comum | Movimento (m/s) | Intervalo (s) | Multiplicador ATQ | Precisão | Esquiva | Crítico / multiplicador |
+|---|---|---|---|---|---|---|
+| Pintinho (`goblin`) | 3,4 | 1,25 | 0,85 | 82% | 3% | 2% / 1,6× |
+| Pato (`duck`) | 2,8 | 1,5 | 1,05 | 90% | 2% | 2% / 1,6× |
+| Sapo (`frog`) | 3,2 | 1,6 | 0,90 | 85% | 8% | 0% / 1,6× |
+| Lebre (`hare`) | 4,7 | 0,95 | 0,80 | 80% | 16% | 6% / 1,7× |
+| Javali (`brute`) | 2,3 | 1,9 | 1,20 | 88% | 0% | 8% / 2× |
+| Carneiro (`ram`) | 3,2 | 1,65 | 1,10 | 87% | 2% | 5% / 1,8× |
+| Morcego (`bat`) | 4,2 | 1,7 | 0,80 | 80% | 13% | 2% / 1,6× |
+| Cágado (`tortoise`) | 1,85 | 1,9 | 1,15 | 90% | 0% | 0% / 1,6× |
+| Ouriço (`hedgehog`) | 2,6 | 1,3 | 0,85 | 87% | 7% | 3% / 1,6× |
+| Urso campeão (`champion`) | 2,5 | 1,7 | 1,15 | 93% | 3% | 10% / 2× |
+| Lobo (`wolf`) | 4,8 | 0,8 | 0,90 | 88% | 10% | 6% / 1,7× |
+| Eco de prova (`bonus`) | 1,8 | 1,8 | 0,75 | 75% | 0% | 0% / 1,6× |
+
+O multiplicador ATQ incide uma única vez sobre o dano base da onda. Não foi adicionado outro multiplicador de vida aos perfis comuns: as diferenças de vida e armadura já existentes da onda continuam valendo. Os perfis de lobo e Eco são padrões; um lobo invocado com estatísticas explícitas pela habilidade deve preservar os dados da invocação, sem perder os bônus de nível dos Espíritos lobos.
+
+As diferenças trocam vantagens em vez de aumentar todas as estatísticas: a lebre ataca e corre rápido, mas tem dano por golpe menor e só 80% de precisão; o javali causa golpes mais fortes, porém espaçados; o cágado se move lentamente; o morcego paga esquiva e mobilidade com dano menor. Críticos continuam obedecendo às regras já existentes de acerto e esquiva perfeita do alvo, sem alterar qualquer atributo do herói.
+
+| Especial | Movimento (m/s) | Intervalo (s) | Precisão | Esquiva | Crítico / multiplicador |
+|---|---|---|---|---|---|
+| Leão | 3,8 | 1,55 | 90% | 3% | 8% / 1,9× |
+| Rinoceronte | 2,7 | 1,9 | 88% | 0% | 10% / 2,1× |
+| Grifo | 4,2 | 1,8 | 87% | 12% | 5% / 1,7× |
+| Quimera | 2,8 | 1,7 | 90% | 2% | 5% / 1,8× |
+| Dragão | 2,9 | 1,9 | 92% | 1% | 10% / 2× |
+| Esfinge | 2,2 | 1,9 | 94% | 0% | 4% / 1,8× |
+| Valquíria | 3,9 | 1,65 | 93% | 9% | 8% / 1,9× |
+| Harpia | 4,6 | 1,7 | 82% | 18% | 3% / 1,6× |
+| Fênix | 4,1 | 1,7 | 88% | 10% | 7% / 1,8× |
+| Serpente alada | 3,1 | 1,9 | 90% | 4% | 6% / 2× |
+| Basilisco | 2,8 | 1,8 | 90% | 3% | 4% / 1,7× |
+
+O dano básico elemental calibrado em 0,65–0,70 continua valendo. A maioria desses ataques usa intervalos de 1,65–1,9s, compensando a adição de esquiva e crítico e mantendo janelas de resposta. Não foi criado bônus automático de dano por nível além do crescimento da onda já existente.
+
+### Quantidade, nível e sorteio de habilidades
+
+`monsterLoadout(kind, level, boss, random)` retorna objetos novos com `{ level, rank, rarity, skills, skillLevels }`. Não altera o catálogo nem usa `Math.random`: recebe a função aleatória da simulação. Um retorno pode ser modificado pelo chamador sem afetar os próximos sorteios. O nível é um número final fornecido pelo servidor — a função não acrescenta novamente os bônus de chefe.
+
+- **Normal:** fauna comum sem sinal de chefe recebe zero técnicas.
+- **Especial:** uma das 11 espécies especiais recebe uma técnica.
+- **Chefe ou minichefe:** recebe `min(5, 1 + floor(nível / 15))` técnicas únicas. Assim, níveis 1–14 têm uma, 15–29 têm duas, 30–44 têm três, 45–59 têm quatro e, a partir de 60, cinco.
+- **Nível das técnicas:** `clamp(1 + floor((nível − 1) / 10), 1, 5)`. Níveis de monstro 1–10 usam técnicas de nível 1; 11–20 usam nível 2; 21–30 usam nível 3; 31–40 usam nível 4; 41+ usam nível 5.
+- **Nível de entrada:** o servidor usa a onda, mais 2 para especiais, 5 para minichefes ou 10 para chefes. A classificação de chefe prevalece sobre o bônus de especial.
+- **Preferência:** no primeiro espaço de um especial, sua técnica característica tem 65% de chance. Os 35% restantes escolhem entre as outras técnicas. Espaços adicionais de chefes são sorteados entre as elegíveis ainda não escolhidas. Chefes sem espécie especial podem usar todo o catálogo sem uma preferência de espécie.
+- **Cobertura:** as 40 técnicas, inclusive as exclusivas de drop, participam do conjunto. Itens e seus efeitos não entram no sorteio. Isso inclui passivas, cura, invocação, deslocamento, controle, projéteis e fúria.
+
+Um chefe recebe no máximo **uma técnica de controle forte** entre Martelo, Pisada, Bash, Mergulho, Investida, Repulsão, Laço, Gravidade e Esfera de repulsão; e no máximo **uma de sustentação** entre cura, Vampirismo, Dreno, Barreira e Avatar. Os grupos impedem sortear cinco atordoamentos ou várias fontes de cura/proteção no mesmo chefe, sem excluir qualquer técnica do jogo. Controle entre monstros distintos ainda pode se combinar e deve ser acompanhado nos testes.
+
+`rarity` identifica `normal`, `special`, `miniboss` ou `boss`; `rank` é o nível das técnicas, não o nível do monstro. `preferredDropSkill` continua documentando a preferência da espécie, enquanto o conjunto real informa o que aquele inimigo sabe usar e pode oferecer como drop. A interface deve mostrar essa distinção, além de movimento, ataque, esquiva e crítico, sem inventar pontos de atributo para monstros.
+
+Validação desta passagem: os 23 perfis foram conferidos quanto a valores válidos; 500 conjuntos de chefes respeitaram quantidade máxima, ausência de duplicatas e limites de controle/sustentação; uma varredura de sorteios dos especiais cobriu as 40 técnicas. Depois da integração dos perfis especiais ao servidor, o teste completo da campanha passou novamente com as habilidades aleatórias, chefes progressivos, os cinco NPCs e a final real. Não foi necessário reduzir novamente dano, habilidades ou atributos para esse fluxo. Esses ensaios confirmam consistência e conclusão automatizada, sem estabelecer equilíbrio competitivo entre os conjuntos possíveis.
+
+## Porte e separação física
+
+Os tamanhos diferentes já são dados de cada espécie e dos heróis; chefes recebem ainda um fator de porte de 1,2. O tamanho afeta a separação física entre corpos, e não apenas o modelo desenhado. Adicionar uma variação individual aleatória de ±8%, mesmo sem mudar o RNG de dano ou de habilidades, alterou a formação dos grupos, o acesso a alvos e os momentos em que auras alcançam aliados. Por isso, uma mudança aparentemente visual pode mudar a dificuldade da campanha.
+
+Para distinguir esse efeito de um problema geral nos números de ataque, foram executadas dez campanhas automáticas: cinco seeds com variação individual e as mesmas cinco com tamanho fixo por espécie/chefe. A comparação manteve atributos, estatísticas, habilidades, equipamentos e sequência de RNG de combate iguais; o tamanho fixo foi aplicado ao inimigo imediatamente após sua criação, antes da próxima atualização física.
+
+| Seed | Porte com ±8% | Porte fixo da espécie/chefe |
+|---|---|---|
+| 7381 | Derrota na onda 40 | Concluiu onda 50 e final |
+| 42 | Derrota na onda 37 | Derrota na onda 40 |
+| 101 | Derrota na onda 49 | Derrota na onda 47 |
+| 2026 | Concluiu onda 50 e final | Concluiu onda 50 e final |
+| 98765 | Derrota na onda 39 | Derrota na onda 40 |
+
+A taxa de conclusão nesta amostra foi 1/5 com variação e 2/5 com porte fixo; a média da última onda alcançada foi 43 e 45,4, respectivamente. A seed 101 piorou ao retirar a variação, indicando que não se trata de um aumento ou redução uniforme de dano. São efeitos de posicionamento em uma amostra pequena, não uma estimativa confiável da taxa de vitória humana.
+
+A recomendação é manter o porte previsível de cada espécie e chefe, que já atende à variedade de tamanhos pedida, e retirar a randomização individual opcional. Não reduzir dano, velocidade ou habilidades apenas para compensar a colisão alterada ou recuperar uma seed específica. Os 23 perfis de combate, a diferença entre chefes e normais e as fórmulas de atributos permanecem intactos. Se a variação individual voltar no futuro, deve ser testada junto com navegação, separação de grupos e alcance real de contato, com múltiplas seeds e partidas humanas.
 
 ## Adição posterior solicitada: regeneração de Vitalidade
 

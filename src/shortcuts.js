@@ -2,6 +2,7 @@ import {KEYS} from '../shared/catalog.js';
 export const SHORTCUTS=[
  ['Comandos','Botão direito','Mover no chão / atacar inimigo'],['Comandos','A + clique','Atacar ao mover'],['Comandos','M + clique','Mover'],['Comandos','G','Falar com o comerciante mais próximo'],['Comandos','S','Parar / interromper canalização'],['Comandos','H','Manter posição'],
  ['Técnicas','Q W E R D F C','Usar os sete espaços de técnicas'],['Técnicas','1 2 3 4 5 6','Usar consumível no espaço da mochila'],['Técnicas','I','Abrir atributos e equipamentos'],['Técnicas','L','Abrir espólios e trocar técnicas especiais'],['Técnicas','Shift + clique no item','Vender equipamento/consumível na loja'],
+ ['Comandos','T','Examinar próximo inimigo'],['Comandos','Clique esquerdo no inimigo','Consultar atributos e técnicas'],
  ['Câmera','Roda do mouse','Aproximar / afastar'],['Câmera','Meio + arraste','Girar'],['Câmera','Shift + meio + arraste','Deslocar'],['Câmera','Setas','Deslocar câmera'],['Câmera','Espaço / F1','Selecionar e centralizar herói'],
  ['Diálogos','Enter / Espaço','Revelar texto; se completo, avançar'],['Diálogos','Esc','Fechar diálogo / cancelar mira / fechar modal'],['Interface','? / F2','Mostrar todos os atalhos']
 ];
@@ -20,6 +21,7 @@ export function useShortcuts({target=window,context,onAction}){
   if(KEYS.includes(key)){e.preventDefault();onAction('skill',KEYS.indexOf(key));}
   else if(/^[1-6]$/.test(key)){e.preventDefault();onAction('item',Number(key)-1);}
   else if(key==='G')onAction('interact');
+  else if(key==='T')onAction('inspect');
   else if(key==='L')onAction('loot');
   else if(key==='I')onAction('attributes');
   else if(key==='A')onAction('attackMove');else if(key==='M')onAction('move');

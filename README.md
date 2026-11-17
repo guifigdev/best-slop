@@ -113,7 +113,7 @@ A revisão dos agentes de game design, UI/UX e jogabilidade está consolidada em
 
 ## Ferreiro, venda e encantamentos
 
-As compras acontecem nas cinco lojas físicas do mercado. Clique no NPC (botão esquerdo ou direito), ou pressione G para o mais próximo: o herói caminha até ele e a conversa só abre ao chegar. A lateral contém ficha, evolução de técnicas e crônica; não há loja remota. Vender tem botão explícito e mostra o ouro devolvido; funciona para equipamentos e todas as cargas de um consumível. A mochila continua com seis espaços.
+As compras acontecem nas cinco lojas físicas do mercado. Clique no NPC (botão esquerdo ou direito), ou pressione G para o mais próximo: o herói caminha até ele e a conversa só abre ao chegar. A lateral contém ficha, evolução de técnicas e crônica; não há loja remota. Vender tem botão explícito e mostra o ouro devolvido; funciona para equipamentos e todas as cargas de um consumível. A mochila continua com seis espaços, agora sempre visíveis no HUD junto do herói e das técnicas. Clique ou use 1–6 para ativar itens; os ícones mostram nível, cargas, encantamento e recarga.
 
 Armas, arcos e cajados aceitam um encantamento: fogo aplica queimadura, gelo aplica frost e veneno aplica dano gradual. Efeitos crescem com o nível da arma. A compra e a substituição custam ouro no mercado; o custo entra no investimento para a venda. Só o acerto primário aplica; ricochete e Cleave não repetem o proc, e o mesmo tipo de dano gradual renova a duração mantendo o pulso e o dano mais forte. INT, crítico e lifesteal não multiplicam esses danos. A proteção contra fogo também reduz queimadura de encantamento. Uma gema colorida identifica a arma encantada.
 
@@ -121,11 +121,21 @@ Vitalidade concede regeneração percentual a cada dez pontos totais, inclusive 
 
 ## Bestas, espólios e novas técnicas
 
-O bestiário inclui leão (onda4), rinoceronte(7), grifo(12), quimera(18), dragão(25) e esfinge(32), mantendo a fauna anterior. Modelos, tamanhos e silhuetas são próprios. Bestas especiais usam rugido, investida, mergulho elétrico, nuvem venenosa, sopro de fogo ou carapaça. Ativos têm avisos antes da execução. Provas concorrentes usam a mesma composição, também para essas espécies.
+O bestiário inclui leão (onda4), rinoceronte(7), grifo(12), quimera(18), dragão(25) e esfinge(32), mantendo a fauna anterior. Modelos, tamanhos e silhuetas são próprios. Os 23 perfis variam movimento, intervalo de ataque, dano, precisão, esquiva e crítico. Cada espécie tem porte próprio; chefes são maiores. Provas concorrentes recebem os mesmos perfis e técnicas, sem variar a dificuldade por jogador.
 
-Bestas normais especiais têm15% de chance de deixar sua técnica; minichefes50%, chefes100%. O fragmento pertence ao herói escolhido pela simulação e dura90segundos. Clique no livro dourado no chão, no botão **Espólios** ou pressione **L**. Você pode ocupar um espaço livre ou escolher explicitamente uma das sete técnicas para substituir; a nova entra no nível1. Fragmentos repetidos elevam a técnica em um nível até5. Não gasta pontos, e as melhorias seguintes também podem usar os pontos de habilidade normais. A loja não permite aprender essas seis técnicas do zero. O servidor valida dono, fragmento, fase, vida e espaço.
+Animais normais não têm habilidades; especiais têm uma; minichefes e chefes recebem até cinco, conforme o nível. Todas as 40 técnicas podem aparecer, inclusive passivas, auras e invocações. As técnicas usam nível 1 nos níveis de monstro 1–10, nível 2 em 11–20, até nível 5 em 41+. Cada chefe recebe no máximo uma técnica de controle forte e uma de sustentação. Os ativos usam mana, recarga e aviso de 0,7–0,95s antes da execução, permitindo interromper com atordoamento. Empurrões, puxões, lentidão e stun afetam o combate e respeitam os limites do campo.
+
+Clique esquerdo em qualquer personagem para consultar sua ficha, ou pressione **T** para alternar os inimigos: a aba **Alvo** mostra vida, nível, tamanho, estatísticas atuais, habilidades, recargas e tipos de controle. A seleção não altera as ordens do herói. A arena comum cresceu de 28 para 32m entre os limites laterais, com cantos arredondados; o campo de guerra passou de 54 para 60m. Cenário, plateia e câmera acompanham a ampliação.
+
+Bestas especiais têm 15% de chance de deixar uma das técnicas que realmente possuíam; minichefes 50%, chefes 100%. O fragmento pertence ao herói escolhido pela simulação e dura 90 segundos. Clique no livro dourado no chão, no botão **Espólios** ou pressione **L**. Você pode ocupar um espaço livre ou escolher explicitamente uma das sete técnicas para substituir; a nova entra no nível 1. Fragmentos repetidos elevam a técnica em um nível até 5. Não gasta pontos, e as melhorias seguintes também podem usar os pontos de habilidade normais. Seis técnicas de monstros só podem ser aprendidas inicialmente por fragmentos. O servidor valida dono, fragmento, fase, vida e espaço.
 
 Orbe de Brasa e Orbe de Geada são projéteis reais inspirados no posicionamento de Warlock: percorrem o campo, colidem com obstáculos e primeiro alvo válido e respeitam provas separadas. Fúria é um buff de dano/velocidade com corpo avermelhado e aura; não altera os atributos distribuídos. Roubo de vida usa uma corrente de fragmentos do alvo até o herói; críticos usam números vermelhos e impacto ampliado.
+
+## Essências e renovação de técnicas
+
+Abra **Espólios** para reciclar um fragmento indesejado em uma **Essência de técnica**, sem ouro. Depois que os sete espaços estiverem no nível 5, cada ponto de habilidade excedente também pode ser convertido em uma essência. Com três essências, revele três técnicas que ainda não conhece, incluindo as exclusivas de bestas. Escolha uma para um espaço livre (nível 1) ou para substituir uma técnica conservando o nível daquele espaço. As outras ofertas são descartadas. Revelar novamente custa mais três essências e substitui as ofertas anteriores. O limite continua sendo sete técnicas de cinco níveis, e a escolha não altera atributos.
+
+O servidor valida saldo, dono e expiração do fragmento e cada escolha; uma mesma recompensa só pode ser consumida uma vez. Trocar uma técnica preserva as recargas pendentes e encerra os buffs próprios da técnica removida. A janela de escolhas permanece aberta enquanto os contadores de expiração atualizam.
 
 ## Equipamentos com efeitos
 

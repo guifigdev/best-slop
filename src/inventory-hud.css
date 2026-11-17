@@ -1,0 +1,37 @@
+/* The six authoritative inventory slots remain beside the hero and techniques. */
+.world{container-type:inline-size}
+.worldbottom{display:grid;grid-template-columns:minmax(190px,230px) minmax(0,1fr) 168px;gap:12px;align-items:center}
+.worldbottom .hero-card{min-width:0;max-width:none;width:100%}
+.worldbottom .abilities{gap:4px}
+.worldbottom .ability{width:clamp(37px,4.7cqw,56px);height:clamp(46px,5.3cqw,62px);flex-shrink:0}
+.inventory-dock.inventory-panel{grid-column:auto;grid-row:auto;pointer-events:auto;padding:9px;border:1px solid #d4d4ab66;border-radius:11px;background:#18382feb;box-shadow:0 7px 24px #17362728}
+.inventory-dock .inventory-heading{margin:0 0 6px;font-size:8px;color:#e7dfb7;letter-spacing:1.3px;gap:8px}
+.inventory-dock .inventory-heading small{font-size:8px;color:#b6c6a7}
+.inventory-dock .inventory{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-width:none}
+.inventory-dock .inventory-slot{height:auto;max-height:none;aspect-ratio:1;border-color:#adbc8c6b;transition:border-color .12s,transform .12s}
+.inventory-dock .inventory-slot:hover{border-color:#f0d08a;transform:translateY(-1px)}
+.inventory-dock .inventory-slot:focus-visible{outline-offset:1px;z-index:2}
+.inventory-dock .inventory-slot small{font-size:9px}
+.inventory-dock .inventory-slot em{font-size:10px}
+.inventory-dock .inventory.pot-cooldown .inventory-slot:has(em){filter:none;opacity:1}
+.inventory-dock .inventory-slot.cooling{filter:saturate(.5)}
+.narrator-pill{bottom:164px}
+.world .novel{bottom:166px}
+@container (max-width:850px){
+ .worldbottom{grid-template-columns:minmax(180px,230px) minmax(140px,1fr);gap:8px;align-items:end}
+ .worldbottom .hero-card{grid-column:1;grid-row:1}
+ .inventory-dock.inventory-panel{grid-column:2;grid-row:1;justify-self:end;width:min(100%,290px);padding:8px}
+ .inventory-dock .inventory{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+ .worldbottom .skilldock{grid-column:1/3;grid-row:2}
+ .worldbottom .ability{width:clamp(37px,7cqw,52px);height:clamp(44px,8cqw,57px)}
+ .narrator-pill{bottom:224px}
+ .world .novel{bottom:226px}
+}
+@container (max-width:500px){
+ .worldbottom{grid-template-columns:minmax(160px,1fr) 145px}
+ .inventory-dock .inventory{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .inventory-dock .inventory-heading{font-size:7px;letter-spacing:.5px;gap:3px}
+ .inventory-dock .inventory-heading small{font-size:7px}
+ .narrator-pill{bottom:235px}
+ .world .novel{bottom:237px}
+}
