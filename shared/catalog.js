@@ -12,9 +12,9 @@ export const ATTRIBUTES={
  str:{name:'Força',short:'STR',description:'+1,2 ATQ físico/ponto; +5% dano físico a cada 10.'},
  int:{name:'Inteligência',short:'INT',description:'+2,5% poder mágico/ponto; +0,8 mana/s a cada 6; +8 mana/ponto.'},
  dex:{name:'Destreza',short:'DEX',description:'+1,5 ATQ à distância/ponto; +0,5% precisão/ponto e +2% a cada 5.'},
- luk:{name:'Sorte',short:'LUK',description:'+1% crítico a cada 3; +0,1% esquiva/ponto.'},
+ luk:{name:'Sorte',short:'LUK',description:'+1% crítico a cada 3; +1% esquiva perfeita a cada 10 (DEX não reduz).'},
  vit:{name:'Vitalidade',short:'VIT',description:'+20 vida/ponto; +1 armadura a cada 5.'},
- agi:{name:'Agilidade',short:'AGI',description:'+1% velocidade de ataque/ponto; +5% adicionais a cada 10.'}
+ agi:{name:'Agilidade',short:'AGI',description:'+1% vel. ataque e +0,3% esquiva comum/ponto; +5% vel. ataque a cada 10.'}
 };
 const urls={mk:'https://classic.battle.net/war3/human/units/mountainking.shtml',tc:'https://classic.battle.net/war3/orc/units/taurenchieftain.shtml',pal:'https://classic.battle.net/war3/human/units/paladin.shtml',far:'https://classic.battle.net/war3/orc/units/farseer.shtml',bm:'https://classic.battle.net/war3/orc/units/blademaster.shtml',am:'https://classic.battle.net/war3/human/units/archmage.shtml',dl:'https://classic.battle.net/war3/undead/units/dreadlord.shtml',kg:'https://classic.battle.net/war3/nightelf/units/keepergrove.shtml'};
 function skill(name,kind,cost,target,fields,description,reference=null,source=null,originalRanks=3){return{name,kind,cost,target,description,reference,source:urls[source]||null,originalRanks:reference?originalRanks:0,levels:Array.from({length:5},(_,i)=>Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,Array.isArray(v)?v[i]:v])))};}
@@ -27,7 +27,7 @@ export const SKILLS={
  summon:skill('Espíritos lobos','active',180,'self',{count:2,hp:[200,300,500,700,900],damage:[18,30,45,60,75],duration:60,mana:75,cooldown:[30,25,25,25,25]},'Dois lobos aliados; substitui os anteriores. HP/ATQ adaptados.','Feral Spirit','far'),
  multishot:skill('Disparo múltiplo','active',160,'self',{damage:[85,120,155,190,225],count:[3,4,5,6,7],mana:45,cooldown:7},'Flechas físicas contra vários alvos.'),
  avatar:skill('Avatar','active',240,'self',{armor:[5,7,9,11,13],hp:[500,650,800,950,1100],damage:[20,30,40,50,60],duration:60,mana:150,cooldown:180},'Vida, armadura, dano e imunidade a magia de inimigos; clima ainda afeta.','Avatar','mk',1),
- critical:skill('Golpe crítico','passive',170,'self',{chance:.15,multiplier:[2,3,4,5,6]},'Chance de dano multiplicado. Críticos ignoram teste de acerto.','Critical Strike','bm'),
+ critical:skill('Golpe crítico','passive',170,'self',{chance:.15,multiplier:[2,3,4,5,6]},'Dano multiplicado. Ignora acerto comum, mas pode ser evitado pela esquiva perfeita.','Critical Strike','bm'),
  vampiric:skill('Vampirismo','passive',170,'self',{lifesteal:[.15,.30,.45,.55,.65]},'Rouba vida com ataques corpo a corpo.','Vampiric Aura','dl'),
  endurance:skill('Fervor','passive',170,'self',{attackSpeed:[.05,.10,.15,.20,.25],moveSpeed:[.10,.20,.30,.40,.50]},'Velocidade de ataque e movimento em aura.','Endurance Aura','tc'),
  thorns:skill('Espinhos','passive',170,'self',{reflect:[.10,.20,.30,.40,.50]},'Reflete parte do dano corpo a corpo.','Thorns Aura','kg'),

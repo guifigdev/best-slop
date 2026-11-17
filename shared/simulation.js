@@ -111,6 +111,7 @@ export class Game {
  gainXp(u,amount){u.xp+=amount;while(u.xp>=u.level*55){u.xp-=u.level*55;u.level++;u.attributePoints+=5+Math.floor(u.level/5);this.refresh(u);this.heal(u,80);this.fx('levelup',u.x,u.z,{source:u.id});}}
  attack(u,t){
   u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena];
+  if((t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
   const crit=this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
   this.fx(u.range>3?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id});
   if(!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}

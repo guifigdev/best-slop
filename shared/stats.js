@@ -21,7 +21,8 @@ export function recompute(u,time=0,auras={}){
  u.accuracy=.85+a.dex*.005+Math.floor(a.dex/5)*.02;
  u.critChance=Math.min(.8,Math.floor(a.luk/3)*.01+(passive('critical').chance||0)+(equipment.crit||0));
  u.critMultiplier=Math.max(1.5,passive('critical').multiplier||0,equipment.critMultiplier||0);
- u.evasion=Math.min(.45,a.luk*.001+(passive('evasion').evasion||0)+(equipment.evasion||0));
+ u.evasion=Math.min(.45,a.agi*.003+(passive('evasion').evasion||0)+(equipment.evasion||0));
+ u.perfectEvasion=Math.min(.35,Math.floor(a.luk/10)*.01);
  u.attackSpeed=Math.min(3,1+a.agi*.01+Math.floor(a.agi/10)*.05+(fervor.attackSpeed||0)+(equipment.attackSpeed||0));
  u.speed=base.speed*(1+(fervor.moveSpeed||0)+(equipment.moveSpeed||0));
  u.lifesteal=Math.min(.8,(u.range<3?passive('vampiric').lifesteal||0:0)+(equipment.lifesteal||0));

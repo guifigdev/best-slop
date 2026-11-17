@@ -38,11 +38,11 @@ Cada nível dá `5 + floor(nível/5)` pontos de atributo. Cada incremento custa 
 | STR | +1,2 ATQ físico por ponto; +5% dano físico por dez pontos |
 | INT | +2,5% poder mágico por ponto; +8 mana por ponto; +0,8 mana/s por seis pontos |
 | DEX | +1,5 ATQ físico à distância por ponto; +0,5% precisão por ponto e +2% por cinco pontos |
-| LUK | +1% crítico por três pontos; +0,1% esquiva por ponto |
+| LUK | +1% crítico por três pontos; +1% esquiva perfeita por dez pontos (DEX não reduz) |
 | VIT | +20 vida por ponto; +1 armadura por cinco pontos |
-| AGI | +1% velocidade de ataque por ponto; +5% extras por dez pontos |
+| AGI | +1% velocidade de ataque e +0,3% esquiva comum por ponto; +5% velocidade de ataque extras por dez pontos |
 
-Ataques comuns testam precisão menos esquiva e clima. Críticos não erram. Esquiva é limitada a 45%, crítico a 80% e velocidade de ataque a 3×. Crítico usa o maior multiplicador disponível, com chance somada. Armadura física positiva: `dano / (1 + 0.06 * armadura)`. Dano mágico é ampliado por INT e pelo elemento/clima.
+Ataques comuns testam precisão menos esquiva e clima. Esquiva perfeita tem teste independente antes do crítico e pode evitá-lo; aparece como Lucky em verde. Precisão não reduz essa chance. Críticos ignoram apenas o teste comum. Esquiva comum é limitada a 45% (perfeita: 35%), crítico a 80% e velocidade de ataque a 3×. Crítico usa o maior multiplicador disponível, com chance somada. Armadura física positiva: `dano / (1 + 0.06 * armadura)`. Dano mágico é ampliado por INT e pelo elemento/clima.
 
 17 itens, equipamentos e consumíveis. Inventário de **seis espaços**, sem mochila oculta. Potes iguais acumulam até três cargas por espaço; precisam ser ativados e compartilham recarga de dez segundos. Vida: 300, mana: 200 (valores próprios). Shift + clique vende todas as cargas do espaço por metade do valor, somente no mercado.
 
