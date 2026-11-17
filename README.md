@@ -1,5 +1,19 @@
 # Custom Hero — Voxel Survival
 
+## Coliseu das Mil Formas · atualização de polimento
+
+Heróis animais originais: Bento (capivara), Lua (coelha) e Faísca (raposa). Galinhas de barro, javalis de musgo e o Urso de Bronze representam os Ecos do coliseu. Arquibancadas, espectadores e um pedestal compõem a arena.
+
+Câmera livre: roda para zoom; botão do meio e arraste para girar; Shift + meio e setas para deslocar; espaço/F1 centraliza. Há botões para zoom, giro, seguir o herói, restaurar vista e ativar movimento pelas bordas.
+
+Controle RTS: direito move/ataca, A + clique ataca ao mover, M + clique move, S interrompe, H mantém posição. O movimento foi corrigido para funcionar também durante a preparação. A seleção é do herói principal; não há seleção de grupos, filas por Shift ou microcontrole individual das invocações.
+
+Animações: clipes de transformações pré-calculadas a 8 poses/s para caminhar, atacar e conjurar; reação a dano e queda na morte. Personagens voxel com vertex colors e corpos agrupados em malhas. Ainda são modelos procedurais; não há importação de Blender/VAT.
+
+Feedback: números de dano, crítico identificado e explosão dourada, cura/vampirismo, auras simultâneas de passivas, brilho dos ícones ao ativar, projéteis, arcos de golpe, relâmpagos e chuva de cristais para Nevasca. SVGs próprios ilustram as 12 habilidades e quatro itens, sem fontes de ícones.
+
+Orfeu, a coruja arauto, apresenta a história em diálogos com retrato, páginas, fechar e continuar. Treino solo pausa durante a leitura; online continua. A Crônica registra marcos e críticos. O Hall da Fama salva as dez melhores tentativas e suas builds em localStorage **deste navegador**, incluindo derrotas; não é um ranking global ou verificado no servidor.
+
 Protótipo independente para navegador. Three.js renderiza; `shared/simulation.js` executa combate sem DOM ou dependência gráfica. O servidor Node usa a mesma simulação a 30 Hz e valida comandos. Não usa arquivos, modelos, áudio ou texturas da Blizzard.
 
 ## Executar
@@ -24,7 +38,7 @@ Entre com o mesmo código em duas abas. Até quatro jogadores na mesma arena coo
 - Botão direito: mover ou atacar inimigo.
 - Q W E R D F C: habilidade no espaço correspondente. Passivas não exigem ativação.
 - Habilidade com alvo: pressione a tecla e clique no inimigo ou chão.
-- S: parar e manter posição. A: retomar ataque automático. Esc: cancelar alvo.
+- S: parar. H: manter posição. A + clique: avançar atacando. M + clique: mover. Esc: cancelar alvo/fechar diálogo.
 - Compras somente na preparação. Passe o mouse sobre cada habilidade para consultar os efeitos.
 
 ## Estado desta versão

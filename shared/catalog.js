@@ -1,8 +1,8 @@
 // Prototype numbers. No claim of numeric parity with a Warcraft III map.
 export const HEROES = {
- knight: {name:'Guardião',role:'FORÇA · CORPO A CORPO',color:0xf3bd60,hp:950,mana:280,damage:34,armor:5,range:1.7,speed:4.3,interval:1.1,skill:'stomp',description:'Resiste na linha de frente. Controla grupos e abre espaço para atacar.'},
- mage: {name:'Arcanista',role:'INTELIGÊNCIA · À DISTÂNCIA',color:0x9978df,hp:650,mana:520,damage:28,armor:1,range:7,speed:4.1,interval:1.35,skill:'bolt',description:'Transforma mana em dano. Combina magias para eliminar as ondas.'},
- ranger: {name:'Patrulheira',role:'AGILIDADE · À DISTÂNCIA',color:0x6fbd8b,hp:740,mana:340,damage:30,armor:2,range:8,speed:4.9,interval:.85,skill:'multishot',description:'Ataca de longe e se reposiciona. Velocidade e precisão para sobreviver.'}
+ knight: {name:'Bento',animal:'Capivara guardiã',role:'FORÇA · CORPO A CORPO',color:0xf3bd60,hp:950,mana:280,damage:34,armor:5,range:1.7,speed:4.3,interval:1.1,skill:'stomp',description:'Uma capivara tranquila. Até alguém ameaçar o bosque. Escudo firme, pisada pesada.'},
+ mage: {name:'Lua',animal:'Coelha arcanista',role:'INTELIGÊNCIA · À DISTÂNCIA',color:0x9978df,hp:650,mana:520,damage:28,armor:1,range:7,speed:4.1,interval:1.35,skill:'bolt',description:'Aprendeu magia lendo as estrelas. Orelhas atentas e um repertório de tempestades.'},
+ ranger: {name:'Faísca',animal:'Raposa patrulheira',role:'AGILIDADE · À DISTÂNCIA',color:0x6fbd8b,hp:740,mana:340,damage:30,armor:2,range:8,speed:4.9,interval:.85,skill:'multishot',description:'Nenhuma flecha desperdiçada. Nenhum passo por acaso. A mais veloz das trilhas.'}
 };
 export const SKILLS = {
  bolt:{name:'Raio arcano',icon:'ϟ',kind:'active',cost:140,mana:45,cooldown:5,target:'enemy',description:'Atinge um inimigo com 110 de dano mágico.'},

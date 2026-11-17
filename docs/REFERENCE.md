@@ -23,6 +23,10 @@ Obter mapa/patch e registrar origem de cada regra. Para cada skill: níveis, cus
 
 ## Arquitetura
 
+### Polimento do coliseu
+
+O universo de Aurélia, os Ecos mágicos e o arauto Orfeu são narrativa original deste projeto. Heróis, retratos e ícones são originais. O Hall da Fama é local, sem verificação ou sincronização global. Os controles agora incluem movimento na preparação, ataque ao mover, manter posição, seleção do herói e câmera livre. Não equivale ainda ao sistema completo de seleção, pathfinding e comandos de Warcraft III. Invocações continuam automáticas.
+
 Three.js é [uma biblioteca 3D, não uma engine de jogos](https://threejs.org/manual/pages/game.html). Foi escolhido por priorizar navegador, assets leves e compartilhamento da simulação JS com Node. [Godot exporta para web](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html), mas suas características de exportação e rede precisariam ser consideradas; ele não está descartado por incapacidade.
 
 Arte voxel original inspirada no aspecto de diorama de Crossy Road, sem copiar personagens. Câmera inclinada, cores chapadas, iluminação quente e animação limitada. Próxima etapa artística: modelos com paleta em vertex colors, clipes baked em poses discretas, malhas agrupadas/instanciadas e comparação de draw calls antes de introduzir pós-processamento.
