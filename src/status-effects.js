@@ -7,6 +7,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 let cache=null,users=0;
 const vertex=`
  uniform float uTime;
+ uniform float uBillboard;
  attribute float aKind;
  attribute float aPhase;
  varying vec2 vUv;
@@ -28,7 +29,14 @@ const vertex=`
    p.x+=sin(uTime*1.4+aPhase*15.0)*.09;
    p.z+=cos(uTime*1.2+aPhase*18.0)*.09;
   }
-  vec4 viewPosition=modelViewMatrix*vec4(p,1.0);
+  vec4 viewPosition;
+  if(uBillboard>.5){
+   // Anchor in world space, then offset in camera space. Actor rotation is
+   // intentionally excluded; world scale still follows size and Avatar.
+   vec2 size=vec2(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz));
+   viewPosition=modelViewMatrix*vec4(0.0,0.0,0.0,1.0);
+   viewPosition.xy+=p.xy*size;
+  }else viewPosition=modelViewMatrix*vec4(p,1.0);
   vNormal=normalize(normalMatrix*normal);
   vView=-viewPosition.xyz;
   gl_Position=projectionMatrix*viewPosition;
@@ -37,17 +45,8 @@ const vertex=`
 const fireFragment=`
  uniform float uTime;
  varying vec2 vUv;
- varying float vKind;
- varying float vPhase;
  float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
  void main(){
-  if(vKind>.5){
-   float life=fract(uTime*.52+vPhase);
-   float alpha=(1.0-life)*.95;
-   vec2 square=abs(vUv-.5);
-   if(max(square.x,square.y)>.45||alpha<.08)discard;
-   gl_FragColor=vec4(mix(vec3(1.0,.39,.045),vec3(1.0,.94,.43),1.0-life),alpha);
-  }else{
    vec2 cell=floor(vUv*vec2(11.0,15.0));
    float noise=hash(vec2(cell.x,cell.y-floor(uTime*5.0)));
    float y=vUv.y;
@@ -57,12 +56,22 @@ const fireFragment=`
    float edge=width-x;
    float alpha=smoothstep(0.0,.06,edge)*smoothstep(0.0,.1,y)*(.55+(1.0-y)*.45)*.96;
    alpha*=(1.0-smoothstep(.88,1.0,y))*(.8+noise*.2);
-   if(alpha<.035)discard;
    float core=clamp((width-x)*3.0+(1.0-y)*.3,0.0,1.0);
    vec3 colour=mix(vec3(1.0,.27,.025),vec3(1.0,.86,.25),core);
    colour=mix(colour,vec3(1.0,.97,.69),core*core*.55);
+   // Embers are drawn inside this same sprite, not on additional planes.
+   float ember=0.0;
+   for(int i=0;i<7;i++){
+    float seed=float(i),life=fract(uTime*.52+seed/7.0);
+    vec2 centre=vec2(.16+hash(vec2(seed,3.0))*.68+sin(uTime*1.5+seed)*.025,.3+life*.66);
+    vec2 delta=abs(vUv-centre);
+    float square=1.0-smoothstep(.009,.018,max(delta.x,delta.y));
+    ember=max(ember,square*(1.0-life)*.95);
+   }
+   colour=mix(colour,vec3(1.0,.93,.52),ember);
+   alpha=max(alpha,ember);
+   if(alpha<.035)discard;
    gl_FragColor=vec4(colour,alpha);
-  }
  }
 `;
 const frostFragment=`
@@ -104,12 +113,8 @@ function tagged(geometry,kind,phase=0){
 }
 function merge(parts){const g=mergeGeometries(parts,false);for(const p of parts)p.dispose();g.computeBoundingSphere();return g;}
 function createFireGeometry(){
- const parts=[];
- // Offset panels surround the opaque body instead of intersecting its centre.
- // This leaves visible flames at the sides and above the head at play distance.
- for(const [angle,x,z]of [[0,0,.86],[0,0,-.86],[Math.PI/2,.68,0],[Math.PI/2,-.68,0]]){const p=tagged(new T.PlaneGeometry(2.0,2.65),0);p.rotateY(angle);p.translate(x,1.45,z);parts.push(p);}
- for(let i=0;i<7;i++){const a=i*2.399,p=tagged(new T.PlaneGeometry(.1+(i%3)*.025,.11+(i%3)*.025),1,i/7);p.rotateY(i%2?Math.PI/2:0);p.translate(Math.sin(a)*.85,1.0+(i%3)*.15,Math.cos(a)*.85);parts.push(p);}
- return merge(parts);
+ const geometry=tagged(new T.PlaneGeometry(2.1,2.8),0);
+ geometry.computeBoundingSphere();return geometry;
 }
 function createFrostGeometry(){
  const parts=[];
@@ -125,13 +130,13 @@ function createPoisonGeometry(){
 function resources(){
  if(cache)return cache;
  const time={value:0};
- function shader(fragmentShader){return new T.ShaderMaterial({uniforms:{uTime:time},vertexShader:vertex,fragmentShader,transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false});}
- const fire=shader(fireFragment),frost=shader(frostFragment),poison=shader(poisonFragment);
+ function shader(fragmentShader,billboard=false){return new T.ShaderMaterial({uniforms:{uTime:time,uBillboard:{value:billboard?1:0}},vertexShader:vertex,fragmentShader,transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false});}
+ const fire=shader(fireFragment,true),frost=shader(frostFragment),poison=shader(poisonFragment);
  // Standard alpha blending preserves distinct orange/blue/green against bright
  // ice and sand as well as dark arenas; additive blending would wash them out.
  const fireGeometry=createFireGeometry(),frostGeometry=createFrostGeometry(),poisonGeometry=createPoisonGeometry();
  // Shader displacement must fit the CPU-side culling volumes too.
- fireGeometry.boundingSphere.radius+=1.8;poisonGeometry.boundingSphere.radius+=.8;
+ poisonGeometry.boundingSphere.radius+=.8;
  cache={time,fire,frost,poison,fireGeometry,frostGeometry,poisonGeometry};
  return cache;
 }
@@ -141,6 +146,7 @@ export function createStatusEffects(root,_baseGeometry){
  const data=resources();users++;
  const group=new T.Group();group.name='persistent-status-effects';group.visible=false;root.add(group);
  const fire=new T.Mesh(data.fireGeometry,data.fire),frost=new T.Mesh(data.frostGeometry,data.frost),poison=new T.Mesh(data.poisonGeometry,data.poison);
+ fire.position.y=1.45;
  for(const mesh of [fire,frost,poison]){mesh.visible=false;mesh.castShadow=false;mesh.receiveShadow=false;mesh.renderOrder=2;group.add(mesh);}
  let disposed=false;
  return{
