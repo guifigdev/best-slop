@@ -38,7 +38,7 @@ export const SKILLS={
  fireball:skill('Cometa de brasas','active',180,'ground',{damage:[100,170,240,310,380],radius:[2.5,2.8,3.1,3.4,3.7],burn:[8,12,16,20,24],mana:85,cooldown:10},'Explosão de fogo com queimadura por 4 segundos.'),
  frostnova:skill('Anel de inverno','active',170,'self',{damage:[70,120,170,220,270],radius:4,slow:.45,duration:[3,3.5,4,4.5,5],mana:80,cooldown:10},'Frio em área reduz movimento e causa dano.'),
  dash:skill('Salto de cauda','active',150,'ground',{damage:[60,100,140,180,220],distance:[4,5,6,7,8],mana:40,cooldown:7},'Salta até o ponto e causa dano físico na chegada.'),
- evasion:skill('Passos de névoa','passive',180,'self',{evasion:[.05,.10,.15,.20,.25]},'Chance adicional de esquiva; acumula com Sorte até o limite de 45%.'),
+ evasion:skill('Passos de névoa','passive',180,'self',{evasion:[.05,.10,.15,.20,.25]},'Esquiva comum adicional; acumula com AGI até 45%. Não altera esquiva perfeita.'),
  cleave:skill('Arco selvagem','passive',180,'self',{cleave:[.15,.25,.35,.45,.55]},'Ataques corpo a corpo atingem vizinhos do alvo.'),
  poison:skill('Presas de musgo','passive',170,'self',{poison:[4,7,10,13,16],duration:4},'Ataques aplicam veneno por quatro segundos, sem acumular no mesmo alvo.'),
  drain:skill('Sopro voraz','active',170,'enemy',{damage:[100,160,220,280,340],mana:75,cooldown:10},'Drena vida do inimigo e cura metade do dano efetivo.'),
