@@ -4,7 +4,7 @@ const EPS=.0001;
 const BUCKET=4;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export function unitRadius(u){return clamp(Number.isFinite(u?.collisionRadius)?u.collisionRadius:.48*(Number.isFinite(u?.size)?u.size:1),.2,1.6);}
-const space=u=>u.lineLane!==undefined?`line:${u.lineLane}`:u.cell?`cell:${u.cell.x}:${u.cell.z}:${u.cell.r}`:u.challenge?`trial:${u.challenge}`:'world';
+const space=u=>u.cell?`cell:${u.cell.x}:${u.cell.z}:${u.cell.r}`:u.lineLane!==undefined?`line:${u.lineLane}`:u.challenge?`trial:${u.challenge}`:'world';
 const layer=u=>u.flying?'air':'ground';
 const compatible=(a,b)=>space(a)===space(b)&&layer(a)===layer(b);
 const live=u=>u.alive&&!u.noCollision&&Number.isFinite(u.x)&&Number.isFinite(u.z);

@@ -11,6 +11,7 @@ export function hoverRelation(unit,owner,state){
  const summoner=unit.summoner!=null?state?.units?.find(candidate=>candidate.id===unit.summoner):null;
  if(summoner&&(owned(summoner.owner)||owned(summoner.summonOwner)))return 'ally';
  if(state?.options?.mode==='linewars'){
+  if(state.options.lineTeams)return own&&unit.team===own.team?'ally':'enemy';
   if(owned(unit.lineAttacker)||owned(summoner?.lineAttacker))return 'ally';
   // Every other army is hostile from our perspective, including incoming creeps
   // whose simulation team is derived from the lane rather than its recruiter.

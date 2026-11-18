@@ -1,3 +1,4 @@
+import {lineAllies} from '../shared/line-team-rules.js';
 import * as T from 'three';
 import {LINE_UNITS} from '../shared/line-units.js';
 import {armyPortrait} from './army-art.js';
@@ -55,7 +56,7 @@ export function createLineWarView({scene,voxel,bake,overlay,onSend=()=>{}}){
   tooltip.innerHTML=armyPortrait(r.kind)+`<b>${escapeHTML(r.name)}</b><p>${escapeHTML(r.role)}</p><p>◆ ${r.cost} · renda +${r.income}<br>Vida ${r.hp} · ATQ ${r.damage} · Armadura ${r.armor}<br>Velocidade ${decimal(r.speed)} · Alcance ${decimal(r.range)}<br>${r.flying?'Voador':'Terrestre'} · Portal −${r.lifeDamage}</p><small>Selecione a casinha para abrir a ficha. A tropa só entra na fila quando você confirmar.</small>`;
   label.setAttribute('aria-label',r.name+', '+r.cost+' ouro, renda mais '+r.income+'. Abrir ficha de recrutamento neste campo inimigo.');
  }
- label.onpointerdown=e=>e.stopPropagation();label.onclick=e=>{e.preventDefault();e.stopPropagation();if(recruitEnabled&&activeEntry)onSend({building:activeEntry.id,unitKey:activeEntry.building.unitKey,target:currentFocus});};
+ label.onpointerdown=e=>e.stopPropagation();label.onclick=e=>{e.preventDefault();e.stopPropagation();if(recruitEnabled&&activeEntry)onSend({building:activeEntry.id,unitKey:activeEntry.building.unitKey,target:activeEntry.building.owner});};
  label.onpointerenter=()=>{domHovered=true;keepHovered();};label.onpointerleave=()=>{domHovered=false;releaseHovered();};
  label.onfocus=()=>{domFocused=true;keepHovered();};label.onblur=()=>{domFocused=false;releaseHovered();};
  tooltip.onpointerenter=()=>{domHovered=true;keepHovered();};tooltip.onpointerleave=()=>{domHovered=false;releaseHovered();};
@@ -67,12 +68,13 @@ export function createLineWarView({scene,voxel,bake,overlay,onSend=()=>{}}){
   update(state,camera,container,focusOwner,{interactive:allowInteraction=true,selected=null,commanderId=focusOwner}={}){
    if(disposed)return;currentState=state;currentFocus=focusOwner;currentCommander=commanderId;interactive=!!allowInteraction;active=state?.options?.mode==='linewars'&&!!state.voxelMap;root.visible=active;labels.hidden=!active;
    if(!active){if(signature){clearWorld();signature='';}return;}
-   currentMap=state.voxelMap;enemyView=focusOwner!==commanderId;currentLane=state.lineWars?.lanes?.find(lane=>lane.owner===focusOwner)||null;
+   currentMap=state.voxelMap;enemyView=!lineAllies(state,focusOwner,commanderId);currentLane=state.lineWars?.lanes?.find(lane=>lane.owner===focusOwner)||null;
    const commanderLane=state.lineWars?.lanes?.find(lane=>lane.owner===commanderId);recruitEnabled=enemyView&&interactive&&state.phase==='wave'&&currentLane?.alive!==false&&commanderLane?.alive!==false;
-   const available=(state.lineWars?.buildings||[]).filter(building=>building.owner===focusOwner),visibleBuildings=enemyView?available:[];
+   const available=(state.lineWars?.buildings||[]).filter(building=>building.owner===focusOwner||state.options.lineTeams&&lineAllies(state,building.owner,focusOwner)),visibleBuildings=enemyView?available:[];
    fountain=currentLane?.fountain||currentMap.markers?.fountain||null;const portal=currentLane?.portal||currentMap.markers?.portal,routes=currentLane?.routes||currentMap.markers?.routes||[];
+   const portals=state.options.lineTeams?(state.lineWars?.lanes||[]).filter(l=>lineAllies(state,l.owner,focusOwner)).map(l=>l.portal).filter(Boolean):portal?[portal]:[],allRoutes=state.options.lineTeams?currentMap.markers.routes:routes;
    const nextSignature=[focusOwner,commanderId,enemyView,currentMap.id,currentMap.name,currentMap.width,currentMap.height,currentMap.seed,currentMap.tileSize,currentMap.origin?.x,currentMap.origin?.z,fountain?.x,fountain?.z,portal?.x,portal?.z,visibleBuildings.map(b=>b.id+','+b.x+','+b.z+','+b.unitKey).join(';')].join('|');
-   if(nextSignature!==signature){signature=nextSignature;clearWorld();terrain=buildVoxelTerrain(currentMap);root.add(terrain);markerModel(fountain,true,'line-fountain');markerModel(portal,false,'line-portal');for(const [i,route]of routes.entries())entranceModel(route,i);visibleBuildings.forEach(buildHouse);}
+   if(nextSignature!==signature){signature=nextSignature;clearWorld();terrain=buildVoxelTerrain(currentMap);root.add(terrain);markerModel(fountain,true,'line-fountain');for(const [i,p]of portals.entries())markerModel(p,false,'line-portal-'+i);for(const [i,route]of allRoutes.entries())entranceModel(route,i);visibleBuildings.forEach(buildHouse);}
    else for(const building of visibleBuildings){const entry=houses.get(building.id);if(entry)entry.building=building;}
    selectedId=selected&&typeof selected==='object'?selected.id||selected.building:selected;if(!houses.has(selectedId))selectedId=null;
    const highlighted=houses.get(selectedId||hoveredId);selectedRing.visible=!!highlighted&&enemyView;if(highlighted){selectedRing.position.set(highlighted.building.x,terrainHeight(currentMap,highlighted.building.x,highlighted.building.z)+.06,highlighted.building.z);ringMaterial.color.setHex(selectedId?0xf0d494:0xb6d9db);}

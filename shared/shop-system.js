@@ -19,7 +19,7 @@ export const shopMethods={
   if(this.time<(u.botBuyAt||0))return;u.botBuyAt=this.time+2;this.allocateBot(u);this.learnBotSkills(u);
   const count=u.inventory.filter(Boolean).length,weapon=u.inventory.findIndex(s=>s&&isEnchantable(s.key)&&!s.enchantment),enchantment=['fire','frost','poison'][u.seat%3];let command=null,npc=null;
   if(count>=3&&weapon>=0&&u.gold>=enchantPrice(enchantment,u.inventory[weapon].level||1)){command={type:'enchantItem',slot:weapon,enchantment};npc='enchanter';}
-  else{const item=count<6&&Object.keys(ITEMS).find(k=>!ITEMS[k].consumable&&this.stock[k]>0&&u.gold>=ITEMS[k].cost&&!u.inventory.some(i=>i?.key===k));if(item){command={type:'item',item};npc=shopForItem(item);}else{const slot=u.inventory.findIndex(s=>s&&!ITEMS[s.key].consumable&&(s.level||1)<ITEM_MAX_LEVEL&&u.gold>=itemUpgradePrice(s.key,s.level||1));if(slot>=0){command={type:'upgradeItem',slot};npc='smith';}}}
+  else{const item=count<6&&Object.keys(ITEMS).find(k=>!ITEMS[k].consumable&&this.stockFor(u)[k]>0&&u.gold>=ITEMS[k].cost&&!u.inventory.some(i=>i?.key===k));if(item){command={type:'item',item};npc=shopForItem(item);}else{const slot=u.inventory.findIndex(s=>s&&!ITEMS[s.key].consumable&&(s.level||1)<ITEM_MAX_LEVEL&&u.gold>=itemUpgradePrice(s.key,s.level||1));if(slot>=0){command={type:'upgradeItem',slot};npc='smith';}}}
   if(command){u.pendingPurchase={npc,command};this.interactShop(u,npc);}
  }
 };

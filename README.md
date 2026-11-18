@@ -6,7 +6,12 @@ Jogo independente para navegador, com combate RTS e animais voxel originais. Art
 
 O menu agora tem três jogos. **Castle Fight** usa uma simulação de construção separada, com duas equipes de dois jogadores, uma ou duas lanes, construtor invulnerável sem técnicas/atributos de combate, Blink, demolição, evoluções, construções produtoras e tropas automáticas. A referência fixada é **v1.14b**: dez raças jogáveis, 161 registros de construções (incluindo evoluções), 107 tropas, nove itens da loja original e a matriz de ataque/armadura foram lidos do mapa. As estruturas disponíveis incluem produtores, torres, cura e economia; efeitos complexos ainda ausentes ficam desabilitados. O catálogo não significa reprodução integral da engine original. Consulte [fontes e limites](docs/CASTLE_FIGHT_REFERENCE.md) e [regras da adaptação](docs/CASTLE_FIGHT.md).
 
+No Castle Fight, cada animal tem raça fixa e descrição própria: capivara humana, coelha da União Élfica, raposa dos Elfos Noturnos, tartaruga naga, coruja nórdica e guaxinim mecânico. Escolher o personagem define o catálogo; o seletor de raça independente foi removido.
+
 O Line Wars conserva seu campo de 63 × 112 metros, agora com **exatamente dois corredores**, sem distrito lateral paralelo. Oito casas ficam em cada terraço atrás da entrada correspondente. O campo do Survival cresceu de 16 para 18 metros de raio jogável. Pinheiros, bétulas, pedras e pedras rúnicas são assets voxel compartilhados pelos três jogos, com colisões reais e geração determinística; as arenas isoladas recebem o mesmo arranjo relativo para preservar a comparação entre competidores.
+
+Line Wars também oferece **Duplas 2×2**: dois heróis por campo, uma lane e um portal por defensor, fonte compartilhada, passagem entre os corredores e estoque de itens separado por equipe. Cada dupla começa com pelo menos uma unidade de cada item. Envios só atingem os dois adversários; a equipe vence quando ambos os portais inimigos caem. Os bots observam as duas rotas e coordenam interceptação e ajuda. As bordas de neve do campo foram substituídas por relva e pedra.
+
 
 O menu separa **Custom Hero Survival** e **Custom Hero Line Wars**. Survival conserva campanha, Best of All, torre cooperativa e guerra de equipes; Line Wars começa com um modo de linhas e casinhas. A direção de arte é nórdica, mantendo os animais e misturando bestas de outras mitologias. Nomes e ilustrações são originais; isso é uma adaptação, não a reprodução verificada de um patch histórico.
 

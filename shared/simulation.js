@@ -1,3 +1,5 @@
+import {freshShopStock,stockForHero} from './shop-stock.js';
+import {lineDefenseThink} from './line-defense.js';
 import {canUseSkill} from './archetypes.js';
 import {CastleFightMethods} from './castle-fight.js';
 import {generateScenery,sceneryObstacles} from './scenery.js';
@@ -33,7 +35,7 @@ const BATTLE=new Set(['wave','bonus','final']);
 const TERMINAL=new Set(['victory','defeat']);
 export class Game {
  constructor(seed=7381,options={}){
-  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.voxelMap=this.options.mode==='linewars'?lineMap(options.voxelMap):null;this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
+  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.voxelMap=this.options.mode==='linewars'?lineMap(options.voxelMap,this.options):null;this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
   this.worldSeed=seed;this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
   this.arena='forest';this.zones=[];this.nextWeather=8;this.stock={};this.shopVisit=0;this.bonusResults=[];this.winner=null;this.restock();
  }
@@ -46,10 +48,11 @@ export class Game {
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
   const h=HEROES[type],i=Object.keys(this.players).length,startSkill=h.skill;
   const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
-  recompute(u,this.time);if(this.options.mode==='castlefight')this.setupCastleBuilder(u);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const point=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
+  recompute(u,this.time);if(this.options.mode==='castlefight')this.setupCastleBuilder(u);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const home=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain,route=this.voxelMap.markers.routes[i%2],point=this.options.lineTeams?{x:route?.portal?.x??route?.spawn.x??home.x,z:home.z}:home;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
- restock(){this.stock=Object.fromEntries(Object.entries(ITEMS).map(([key,v])=>[key,v.stock]));this.shopVisit++;}
+ restock(){this.stock=freshShopStock();this.teamStock=this.options.mode==='linewars'&&this.options.lineTeams?{1:freshShopStock(true),2:freshShopStock(true)}:null;this.shopVisit++;}
+ stockFor(u){return stockForHero(this,u);}
  auraFor(u,key){let best=null;const group=unit=>unit.challenge||(this.phase==='bonus'?unit.owner:null);for(const ally of this.units)if(ally.alive&&ally.team===u.team&&group(ally)===group(u)&&distance(ally,u)<=9&&levelOf(ally,key)&&canUseSkill(ally,key)){const s=skillAt(key,levelOf(ally,key));if(!best||s.level>best.level)best=s;}return best;}
  refresh(u){if(!u.hero)return this.refreshMonsterStats(u);recompute(u,this.time,Object.fromEntries(['endurance','devotion','brilliance'].map(k=>[k,this.auraFor(u,k)])));}
  canTarget(u,t){if(this.options.mode==='linewars'&&this.lineWars)return this.lineCanTarget(u,t);if(!t||!t.alive||u.id===t.id||u.team===t.team)return false;if(this.phase==='wave'&&privateTrials(this.options.mode))return !!(u.challenge&&u.challenge===t.challenge);if(this.phase==='bonus')return !!(t.challenge&&t.challenge===u.owner||u.challenge&&u.challenge===t.owner);return true;}
@@ -79,11 +82,11 @@ export class Game {
    u.skillPoints--;if(!level)u.skills.push(c.skill);u.skillLevels[c.skill]=next;this.refresh(u);return true;
   }
   if(c.type==='item'){
-   const s=Object.hasOwn(ITEMS,c.item)?ITEMS[c.item]:null;
-   if(!s||!this.atShop(u,shopForItem(c.item))||u.gold<s.cost||!(this.stock[c.item]>0))return false;
+   const s=Object.hasOwn(ITEMS,c.item)?ITEMS[c.item]:null,stock=this.stockFor(u);
+   if(!s||!this.atShop(u,shopForItem(c.item))||u.gold<s.cost||!(stock[c.item]>0))return false;
    const stack=s.consumable&&u.inventory.find(slot=>slot?.key===c.item&&!slot.xpValue&&slot.charges<3),empty=u.inventory.findIndex(slot=>!slot);
    if(!stack&&empty===-1&&u.inventory.length>=6)return false;
-   u.gold-=s.cost;this.stock[c.item]--;
+   u.gold-=s.cost;stock[c.item]--;
    if(stack)stack.charges++;else{const slot={key:c.item,charges:1,...(!s.consumable?{level:1,invested:s.cost}:{})};if(empty>=0)u.inventory[empty]=slot;else u.inventory.push(slot);}
    this.refresh(u);return true;
   }
@@ -176,7 +179,7 @@ export class Game {
   this.fx('damage',t.x,t.z,{amount:Math.round(actual),magic,critical,source:source?.id,target:t.id,environment,element});
   if(critical)this.fx('critical',t.x,t.z,{source:source?.id,target:t.id});
   // Resolve death once before retaliation to prevent duplicate kills and reflection recursion.
-  if(t.hp<=0){t.alive=false;t.died=this.time;this.cancelChannel(t);this.monsterLoot(t,source);if(source&&t.team!==source.team){const p=this.player(source.owner);if(p){p.gold+=t.lineBounty??12+this.wave;p.kills++;}if(!t.hero&&!t.summon)for(const h of this.heroes().filter(h=>!t.challenge||this.groupKey(h)===t.challenge||t.lineLane&&h.lineLane===t.lineLane))this.gainXp(h,12);}}
+  if(t.hp<=0){t.alive=false;t.died=this.time;this.cancelChannel(t);this.monsterLoot(t,source);if(source&&t.team!==source.team){const p=this.player(source.owner);if(p){p.gold+=t.lineBounty??12+this.wave;p.kills++;}if(!t.hero&&!t.summon)for(const h of this.heroes().filter(h=>!t.challenge||this.groupKey(h)===t.challenge||t.lineLane&&(h.lineLane===t.lineLane||this.options.lineTeams&&h.team!==t.team&&h.cell&&t.cell&&h.cell.x===t.cell.x&&h.cell.z===t.cell.z)))this.gainXp(h,12);}}
   const leecher=source?.id?this.units.find(unit=>unit.id===source.id)||source:source;if(!reflect&&!environment&&damageKind==='direct'&&leecher?.alive&&leecher.team!==t.team&&leecher.lifesteal>0){const h=Math.min(leecher.maxHp-leecher.hp,actual*leecher.lifesteal);leecher.hp+=h;if(h>0)this.fx('lifesteal',leecher.x,leecher.z,{amount:Math.round(h),source:leecher.id,tx:t.x,tz:t.z});}
   if(!reflect&&!environment&&source?.alive&&source.team!==t.team&&(t.itemReflectUntil||0)>this.time){this.hit(source,actual*t.itemReflect,t,true,true);this.fx('mirror',t.x,t.z,{source:t.id,tx:source.x,tz:source.z});}
   if(!magic&&!reflect&&source?.alive&&source.range<3&&(t.reflect||0)>0){this.hit(source,actual*t.reflect,t,true,true);this.fx('thorns',t.x,t.z,{source:t.id,tx:source.x,tz:source.z});}
@@ -235,6 +238,7 @@ export class Game {
   if(u.hp<u.maxHp*.45){const slot=u.inventory.findIndex(i=>ITEMS[i?.key]?.heal);if(slot>=0)this.command(u.owner,{type:'use',slot});}
   for(const slot of u.inventory)if(slot&&ITEMS[slot.key]?.active&&(slot.key==='mirror'&&u.hp<u.maxHp*.7||slot.key==='restoration'&&this.heroes().some(h=>h.alive&&h.team===u.team&&h.hp<h.maxHp*.6)))this.activateEquipment(u,slot);
   const target=this.enemies(u,12)[0];for(const [slot,key]of u.skills.entries()){const s=skillFor(u,key);if(s.kind!=='active'||s.heal&&u.hp>u.maxHp*.65)continue;if(!target&&s.target!=='self')continue;if(this.cast(u,{slot,target:target?.id,x:target?.x,z:target?.z}))break;}
+  lineDefenseThink(this,u);
  }
  environment(u,dt){
   if(!BATTLE.has(this.phase)||u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode))return;const active=this.zones.filter(z=>distance(u,z)<z.r&&(!u.flying||z.type==='lightning'));u.sliding=active.some(z=>z.type==='ice');u.wading=active.some(z=>z.type==='water');
@@ -249,6 +253,7 @@ export class Game {
   const previousObstacles=this.obstacles.length;this.obstacles=this.obstacles.filter(o=>!o.expires||o.expires>this.time);if(previousObstacles!==this.obstacles.length)this.obstacleRevision++;
   this.effects=this.effects.filter(e=>this.time-e.time<(e.duration|| (e.type==='blizzard'?16:1.1)));
   if(!this.heroes().length||TERMINAL.has(this.phase))return;
+  if(this.options.mode==='linewars'&&this.options.lineTeams&&this.phase==='preparation'&&this.heroes().length<4){this.timer=Math.max(3+dt,this.timer);this.message='Aguardando '+(4-this.heroes().length)+' defensor(es) para formar as duas equipes.';}
   if(['preparation','intermission','bonusResults','finalCountdown'].includes(this.phase)){this.timer-=dt;if(this.timer<=0){if(this.phase==='bonusResults')this.openShop();else if(this.phase==='finalCountdown')this.startFinal();else this.spawnWave();}}
   if(this.arena==='tempest'&&BATTLE.has(this.phase)&&this.time>=this.nextWeather){this.nextWeather=this.time+7;this.weatherStrike();}this.zones=this.zones.filter(z=>!z.expires||z.expires>this.time);
   for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true,false,false,false,'ice','dot');if(e.pulses===0){owner.channel=null;owner.order='auto';}}
@@ -276,7 +281,7 @@ export class Game {
   if(this.phase==='final'&&this.options.mode==='campaign'){const alive=this.heroes().filter(u=>u.alive);if(alive.length<=1)this.finishFinal(alive[0]);else if(this.time-this.finalStarted>60){for(const u of alive)this.hit(u,u.maxHp*.02*dt,null,true,true,false,true);if(this.time-this.finalStarted>120)this.finishFinal(alive.sort((a,b)=>b.hp/b.maxHp-a.hp/a.maxHp||a.id-b.id)[0]);}}
   this.units=this.units.filter(u=>u.hero||u.alive||this.time-(u.died||0)<1);
  }
- snapshot(){if(this.options.mode==='castlefight'){const castleFight=this.snapshotCastleFight();return {castleFight,voxelMap:castleFight?.map?.terrain||null,options:this.options,bounds:this.bounds,time:this.time,units:[...this.units,...(castleFight?.units||[])],players:this.players,effects:this.effects,obstacles:this.obstacles,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,winner:this.winner,winningOwners:this.winningOwners,arena:this.arena,zones:[],drops:[],projectiles:[],cells:[],standings:this.standings(),stock:{},skillOwners:{}};}return {voxelMap:this.voxelMap,lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
+ snapshot(){if(this.options.mode==='castlefight'){const castleFight=this.snapshotCastleFight();return {castleFight,voxelMap:castleFight?.map?.terrain||null,options:this.options,bounds:this.bounds,time:this.time,units:[...this.units,...(castleFight?.units||[])],players:this.players,effects:this.effects,obstacles:this.obstacles,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,winner:this.winner,winningOwners:this.winningOwners,arena:this.arena,zones:[],drops:[],projectiles:[],cells:[],standings:this.standings(),stock:{},skillOwners:{}};}return {voxelMap:this.voxelMap,lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,teamStock:this.teamStock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
 }
 
 Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods,ownershipMethods,instanceMethods,bossMethods,nordicMethods,LineWarsMethods,permanentMethods,mapMethods,AbilityMethods,CastleFightMethods);

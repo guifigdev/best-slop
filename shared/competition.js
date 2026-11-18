@@ -3,7 +3,7 @@ import {ARENAS} from './arenas.js';
 import {homeCell,privateTrials} from './instances.js';
 import {generateField} from './field.js';
 export const competitionMethods={
- homeTeam(u){return this.options.mode==='war'?u.squad:['campaign','best'].includes(this.options.mode)?10+u.seat:1;},
+ homeTeam(u){if(this.options.mode==='linewars'&&this.options.lineTeams)return 11+Math.floor(u.seat/2);return this.options.mode==='war'?u.squad:['campaign','best'].includes(this.options.mode)?10+u.seat:1;},
  groupKey(u){return ['campaign','best'].includes(this.options.mode)?u.owner:this.options.mode==='war'?`team-${u.squad}`:null;},
  weatherStrike(){const x=this.random()*20-10,z=this.random()*20-10,places=this.phase==='wave'&&this.cells?.length?this.cells.map(cell=>({x:cell.x+x*cell.r/ARENA_BOUNDS,z:cell.z+z*cell.r/ARENA_BOUNDS,r:2.2*cell.r/ARENA_BOUNDS})):[{x,z,r:2.2}];for(const point of places)this.zones.push({id:this.id(),type:'lightning',...point,strike:this.time+2,expires:this.time+3});},
  standings(){if(this.options.mode==='war'){const teams=new Map();for(const u of this.heroes()){const row=teams.get(u.squad)||{team:u.squad,name:`Equipe ${u.squad}`,score:0};row.score+=u.score||0;teams.set(u.squad,row);}return [...teams.values()].sort((a,b)=>b.score-a.score||a.team-b.team);}return this.heroes().map(u=>({owner:u.owner,name:u.name,score:u.score||0,team:u.squad})).sort((a,b)=>b.score-a.score||a.owner.localeCompare(b.owner));},

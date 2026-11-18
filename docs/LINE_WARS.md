@@ -1,5 +1,24 @@
 # Custom Hero Line Wars — Portais dos Nove Fiordes
 
+## Duplas 2×2
+
+O menu de Line Wars oferece **Cada um por si** e **Duplas 2×2**. Nas duplas são quatro heróis, dois por equipe: as duas primeiras entradas na sala formam a equipe azul; as seguintes, a vermelha. O treino completa as vagas com IA. Uma sala incompleta aguarda quatro participantes antes de iniciar.
+
+Cada dupla compartilha um campo com duas lanes, um portal por defensor e uma fonte comum. A passagem transversal no centro do divisor permite cruzar para ajudar o parceiro. O mapa individual também recebeu essa passagem. As antigas faixas brancas eram neve; as bordas agora usam relva e pedra, sem frost nessas faixas.
+
+Cada lane tem suas dezesseis casinhas atrás da entrada. Para recrutar, visite o campo inimigo e escolha a lane de destino; a unidade entra sempre na rota daquele defensor. O servidor rejeita alvos aliados. O campo da própria equipe mostra combate, portais, fonte e serviços. Clicar no aliado move a câmera sem transferir o controle do seu herói; no campo inimigo, os comandos de combate continuam bloqueados.
+
+Os estoques de itens são independentes por equipe, com pelo menos uma unidade inicial de cada item. Parceiros compartilham o estoque da dupla; compras inimigas não o alteram. O modo individual conserva seu estoque comum anterior. A fonte comum cura aliados uma vez por atualização, sem duplicar a regeneração por existir um portal para cada defensor.
+
+O portal destruído elimina seu defensor e encerra seus próprios envios; as tropas já enviadas continuam. A equipe só perde ao cair seu segundo portal. A vitória inclui os dois parceiros, mesmo que um já tenha perdido o portal.
+
+## Defesa dos bots
+
+A IA consulta invasores de ambas as rotas no próprio campo, mesmo longe do alcance de aquisição de combate. Prioriza tempo restante até o portal, vida, dano e tamanho da ameaça. No 2×2, coordena os dois defensores e considera o parceiro humano; uma lane vazia permite ajuda à outra. A IA atravessa pela abertura usando movimento e navegação normais, preservando canalizações e compras. Sem invasores, patrulha as rotas. O diagnóstico serializável `hero.lineDefense` registra a rota, alvo e motivo da decisão.
+
+As regras abaixo descrevem a base compartilhada e o formato individual, salvo indicação contrária.
+
+
 Segundo jogo independente, com dois a quatro jogadores em linhas isoladas. Cada herói protege seu portal e usa casinhas de recrutamento para enviar tropas à linha adversária escolhida ao visitar o campo rival. O visual nórdico usa os animais voxel originais do projeto. As fórmulas e a distribuição de atributos dos heróis continuam no sistema compartilhado.
 
 ## Referência e limites de fidelidade
