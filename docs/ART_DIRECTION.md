@@ -48,3 +48,7 @@ Grifo, quimera, dragão e os novos voadores devolvem asas separadas pelo contrat
 As cinco lojas usam as posições, nomes e serviços de `shared/shops.js`, compartilhados com a simulação. `src/market.js` desenha Brás, a capivara do arsenal; Cora, a coelha da botica; Orfeu, a coruja dos livros; Nico, o guaxinim ferreiro; e Faísca, a raposa encantadora. Cada balcão tem toldo próprio e produtos reconhecíveis: armas e escudo, frascos coloridos, estante de livros, bigorna e fornalha, ou cristais e grimórios.
 
 Cada loja usa duas meshes consolidadas: cenário estático e animal com balanço discreto em oito poses. Assim os toldos ficam imóveis enquanto o comerciante parece vivo. Os cinco NPCs não entram na lista de combatentes, não têm vida nem recebem ataques. Os rótulos são botões DOM projetados acima dos personagens, com nome, serviço e indicação da distância de conversa. Fora da preparação, cenário e rótulos se ocultam. Alcance, estoque, compras e melhorias continuam validados pela simulação, não pelo componente visual.
+
+## Pré-seleção por mouse
+
+O modelo sob o mouse recebe contorno verde para aliado ou vermelho para inimigo, acompanhado de anel no chão e nome com o mesmo código de cor. A relação usa o jogador real, inclusive suas invocações e tropas enviadas a um campo rival. Corpo, pernas e asas usam a mesma geometria animada; o contorno não altera as cores de vértice e só é desenhado para o alvo do mouse.

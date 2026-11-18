@@ -3,7 +3,7 @@ export const SHORTCUTS=[
  ['Comandos','Botão direito','Mover no chão / atacar inimigo'],['Comandos','A + clique','Atacar ao mover'],['Comandos','M + clique','Mover'],['Comandos','G','Falar com o comerciante mais próximo'],['Comandos','S','Parar / interromper canalização'],['Comandos','H','Manter posição'],
  ['Técnicas','Botão direito na técnica','Ativar / desativar conjuração automática'],['Câmera','Avatar de jogador','Observar a linha dele no Line Wars'],['Técnicas','Q W E R D F C','Usar os sete espaços de técnicas'],['Técnicas','1 2 3 4 5 6','Usar consumível no espaço da mochila'],['Técnicas','I','Abrir atributos e equipamentos'],['Técnicas','L','Abrir espólios e trocar técnicas especiais'],['Técnicas','Shift + clique no item','Vender equipamento/consumível na loja'],
  ['Comandos','T','Examinar próximo inimigo'],['Comandos','Clique esquerdo no inimigo','Consultar atributos e técnicas'],
- ['Câmera','Roda do mouse','Aproximar / afastar'],['Câmera','Meio + arraste','Girar'],['Câmera','Shift + meio + arraste','Deslocar'],['Câmera','Setas','Deslocar câmera'],['Câmera','Espaço / F1','Selecionar e centralizar herói'],
+ ['Câmera','Roda do mouse','Aproximar / afastar'],['Câmera','Meio + arraste','Deslocar o mapa'],['Câmera','Ctrl + meio + arraste','Girar'],['Câmera','Setas','Deslocar câmera'],['Câmera','Espaço / F1','Selecionar e centralizar herói'],
  ['Diálogos','Enter / Espaço','Revelar texto; se completo, avançar'],['Diálogos','Esc','Fechar diálogo / cancelar mira / fechar modal'],['Interface','? / F2','Mostrar todos os atalhos']
 ];
 // Framework-independent input hook. Returns cleanup, shares context with the store.

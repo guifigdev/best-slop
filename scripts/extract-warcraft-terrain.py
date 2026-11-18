@@ -221,7 +221,8 @@ def main():
     args=parser.parse_args();result,report=generate(args.input)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
-    args.output.with_suffix('.js').write_text("import preset from './"+args.output.name+"' with {type:'json'};\nimport {normalizeVoxelMap} from '../voxel-map.js';\nexport const LINE_WARS_MAP_PRESET=preset;\nexport function defaultLineWarsMap(){return normalizeVoxelMap(preset);}\n",encoding='utf-8')
+    # The historical JSON is data. Never overwrite the authored default-map
+    # module when reproducing the extraction of the archived CHLW terrain.
     try:
         from PIL import Image, ImageDraw
         image=Image.new('RGB',(64,64));pixels=image.load()

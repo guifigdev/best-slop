@@ -1,7 +1,10 @@
+import {mapCellBounds} from './map-runtime.js';
 import {LINE_UNITS,LINE_UNIT_ORDER,LINE_START_LIVES,LINE_START_INCOME,LINE_INCOME_INTERVAL,LINE_MAX_POPULATION,LINE_LANE_SPACING,LINE_LANE_HALF,LINE_START_Z,LINE_PORTAL_Z} from './line-units.js';
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const laneByOwner=(game,owner)=>game.lineWars?.lanes.find(lane=>lane.owner===owner);
+const ownBuilding=(game,u,c)=>game.lineWars?.buildings.find(b=>b.owner===u.owner&&(c.building!==undefined?b.id===c.building:typeof c.unitKey==='string'&&b.unitKey===c.unitKey));
+const orderTarget=(game,u,c)=>Object.hasOwn(c,'target')?(typeof c.target==='string'&&c.target!==u.owner?game.lineWars?.lanes.find(l=>l.owner===c.target&&l.alive):null):game.lineTargetFor(u.owner);
 export const LINE_QUEUE_LIMIT=50;
 
 export const LineWarsMethods={
@@ -9,20 +12,21 @@ export const LineWarsMethods={
  initLineWars(){
   if(this.lineWars)return true;const heroes=this.heroes();if(heroes.length<2||heroes.length>4){this.message='Line Wars precisa de dois a quatro defensores antes do primeiro sino.';return false;}
   this.units=heroes;this.effects=[];this.projectiles=[];this.specials=[];this.drops=[];this.obstacles=[];this.zones=[];this.wave=1;this.phase='wave';this.timer=0;this.winner=null;this.winningOwners=[];
-  const lanes=heroes.map((u,index)=>{const x=(index-(heroes.length-1)/2)*LINE_LANE_SPACING,cell={x,z:0,r:LINE_LANE_HALF},lane={owner:u.owner,heroId:u.id,name:u.name,index,x,z:0,cell,lives:LINE_START_LIVES,maxLives:LINE_START_LIVES,income:LINE_START_INCOME,alive:true,sent:0,defeated:0,leaks:0,breaches:0,incomeEarned:0,nextSendAt:0,nextBotSendAt:this.time+4+index,queue:[],queueStatus:null,fountain:{x,z:13.8,radius:2.6,hpRate:.06,manaRate:.04},portal:{x,z:LINE_PORTAL_Z},entrance:{x,z:LINE_START_Z}};
+  const shape=this.voxelMap?mapCellBounds(this.voxelMap):{r:LINE_LANE_HALF},spacing=this.voxelMap?shape.maxX-shape.minX+16:LINE_LANE_SPACING;
+  const lanes=heroes.map((u,index)=>{const x=(index-(heroes.length-1)/2)*spacing,cell={x,z:0,...shape},lane={owner:u.owner,heroId:u.id,name:u.name,index,x,z:0,cell,lives:LINE_START_LIVES,maxLives:LINE_START_LIVES,income:LINE_START_INCOME,alive:true,sent:0,defeated:0,leaks:0,breaches:0,incomeEarned:0,nextSendAt:0,nextBotSendAt:this.time+4+index,queue:[],queueStatus:null,fountain:{x,z:13.8,radius:2.6,hpRate:.06,manaRate:.04},portal:{x,z:LINE_PORTAL_Z},entrance:{x,z:LINE_START_Z}};
    this.closeShop?.(u);u.lineLane=u.owner;u.challenge=`line-${u.owner}`;u.cell=cell;u.team=10+index;u.x=x;u.z=8;u.alive=true;u.stageDone=false;u.lineEliminated=false;u.lineRespawnAt=null;u.destination=null;u.target=null;u.order='auto';u.stun=0;u.dots={};u.vx=u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=u.maxHp;u.mana=u.maxMana;return lane;});
-  this.bounds=Math.max(...lanes.map(lane=>Math.abs(lane.x)+LINE_LANE_HALF+4));this.cells=lanes.map(lane=>({...lane.cell,key:lane.owner}));
+  this.bounds=Math.max(...lanes.map(lane=>Math.max(Math.abs(lane.x+(shape.minX??-shape.r)),Math.abs(lane.x+(shape.maxX??shape.r)),Math.abs(shape.minZ??-shape.r),Math.abs(shape.maxZ??shape.r))+4));this.cells=lanes.map(lane=>({...lane.cell,key:lane.owner}));
   const buildings=lanes.flatMap(lane=>LINE_UNIT_ORDER.map((unitKey,index)=>({id:`line-${lane.index}-${unitKey}`,owner:lane.owner,unitKey,x:lane.x+[-13,-9,9,13][index%4],z:-9+Math.floor(index/4)*6,readyAt:0})));
   this.lineWars={startedAt:this.time,nextIncomeAt:this.time+LINE_INCOME_INTERVAL,incomeInterval:LINE_INCOME_INTERVAL,maxPopulation:LINE_MAX_POPULATION,lanes,buildings,elapsed:0};
-  this.setupLineTerrain?.();this.message='Line Wars começou! Clique nas suas casinhas: envie tropas à próxima linha inimiga e aumente sua renda.';this.fx('lineStart',lanes[0].x,0,{players:heroes.length});return true;
+  this.setupLineTerrain?.();this.message='Line Wars começou! Visite o campo de um rival e escolha as tropas que invadirão aquela base. Proteja seu próprio portal e use a fonte para recuperar e comprar.';this.fx('lineStart',lanes[0].x,0,{players:heroes.length});return true;
  },
 
  lineTargetFor(owner){const lanes=this.lineWars?.lanes||[],own=lanes.findIndex(lane=>lane.owner===owner);if(own<0)return null;for(let step=1;step<lanes.length;step++){const lane=lanes[(own+step)%lanes.length];if(lane.alive)return lane;}return null;},
 
  queueLineUnit(u,c){
-  const state=this.lineWars,lane=laneByOwner(this,u?.owner);if(!state||this.phase!=='wave'||!u?.hero||u.summon||!lane?.alive||!this.lineTargetFor(u.owner))return false;
-  const building=state.buildings.find(entry=>entry.id===c.building&&entry.owner===u.owner);if(!building||!LINE_UNITS[building.unitKey])return false;lane.queue||=[];if(lane.queue.length>=LINE_QUEUE_LIMIT)return false;
-  const entry={id:this.id(),building:building.id,unitKey:building.unitKey,queuedAt:this.time};lane.queue.push(entry);this.fx('lineQueued',building.x,building.z,{source:u.id,entryId:entry.id,building:building.id,unit:entry.unitKey,position:lane.queue.length});return true;
+  const state=this.lineWars,lane=laneByOwner(this,u?.owner);if(!state||this.phase!=='wave'||!u?.hero||u.summon||!lane?.alive)return false;
+  const building=ownBuilding(this,u,c),target=orderTarget(this,u,c);if(!building||!LINE_UNITS[building.unitKey]||!target)return false;lane.queue||=[];if(lane.queue.length>=LINE_QUEUE_LIMIT)return false;
+  const entry={id:this.id(),building:building.id,unitKey:building.unitKey,queuedAt:this.time,...(Object.hasOwn(c,'target')?{target:target.owner}:{})};lane.queue.push(entry);this.fx('lineQueued',building.x,building.z,{source:u.id,entryId:entry.id,building:building.id,unit:entry.unitKey,target:target.owner,targetName:target.name,position:lane.queue.length});return true;
  },
 
  cancelLineQueue(u,c){
@@ -31,10 +35,10 @@ export const LineWarsMethods={
  },
 
  processLineQueue(u,lane){
-  lane.queue||=[];lane.queueStatus=null;const entry=lane.queue[0];if(!entry)return;const building=this.lineWars.buildings.find(b=>b.id===entry.building&&b.owner===u.owner),recipe=building&&LINE_UNITS[building.unitKey],target=this.lineTargetFor(u.owner);
+  lane.queue||=[];lane.queueStatus=null;while(lane.queue.length&&Object.hasOwn(lane.queue[0],'target')&&!orderTarget(this,u,lane.queue[0])){const removed=lane.queue.shift();this.fx('lineQueueCancelled',u.x,u.z,{source:u.id,entryId:removed.id,unit:removed.unitKey,target:removed.target,reason:'targetEliminated'});}const entry=lane.queue[0];if(!entry)return;const building=ownBuilding(this,u,entry),recipe=building&&LINE_UNITS[building.unitKey],target=orderTarget(this,u,entry);
   if(!recipe||!target){lane.queueStatus='unavailable';return;}if(u.gold<recipe.cost){lane.queueStatus='gold';return;}if(this.time<building.readyAt||this.time<lane.nextSendAt){lane.queueStatus='cooldown';return;}
   if(this.units.filter(unit=>unit.alive&&unit.lineCreep&&unit.lineLane===target.owner).length>=LINE_MAX_POPULATION){lane.queueStatus='population';return;}
-  if(this.sendLineUnit(u,{building:entry.building})){lane.queue.shift();this.fx('lineQueueSent',building.x,building.z,{source:u.id,entryId:entry.id,unit:entry.unitKey});}else lane.queueStatus='unavailable';
+  if(this.sendLineUnit(u,{building:entry.building,...(Object.hasOwn(entry,'target')?{target:entry.target}:{})})){lane.queue.shift();this.fx('lineQueueSent',building.x,building.z,{source:u.id,entryId:entry.id,unit:entry.unitKey,target:target.owner});}else lane.queueStatus='unavailable';
  },
 
  tickLineFountains(dt){
@@ -49,17 +53,18 @@ export const LineWarsMethods={
 
  sendLineUnit(u,c){
   const state=this.lineWars,lane=laneByOwner(this,u?.owner);if(!state||this.phase!=='wave'||!u?.hero||u.summon||!lane?.alive)return false;
-  const building=state.buildings.find(entry=>entry.id===c.building&&entry.owner===u.owner),recipe=building&&LINE_UNITS[building.unitKey],target=this.lineTargetFor(u.owner);
+  const building=ownBuilding(this,u,c),recipe=building&&LINE_UNITS[building.unitKey],target=orderTarget(this,u,c);
   if(!recipe||!target||u.gold<recipe.cost||this.time<building.readyAt||this.time<lane.nextSendAt)return false;
   if(this.units.filter(unit=>unit.alive&&unit.lineCreep&&unit.lineLane===target.owner).length>=LINE_MAX_POPULATION)return false;
-  const elapsed=this.time-state.startedAt,level=1+Math.floor(elapsed/30),rank=clamp(1+Math.floor((level-1)/10),1,5),hp=recipe.hp*(1+elapsed/300),damage=recipe.damage*(1+elapsed/600),x=target.entrance.x;
-  const unit=this.spawnEnemy(recipe.kind,x,target.entrance.z,{lineCreep:true,hp,damage,armor:recipe.armor,range:recipe.range,speed:recipe.speed,interval:recipe.interval,accuracy:recipe.accuracy,evasion:recipe.evasion,critChance:recipe.critChance,critMultiplier:recipe.critMultiplier,level,skills:[...recipe.skills],skillLevels:Object.fromEntries(recipe.skills.map(key=>[key,rank])),variantRoll:.999999,team:1000+target.index,owner:`line-creep:${u.owner}`,challenge:`line-${target.owner}`,cell:target.cell});
+  const routes=target.routes||[],route=routes.find(r=>r.id===building.routeId)||routes[LINE_UNIT_ORDER.indexOf(building.unitKey)%Math.max(1,routes.length)],entry=route?.spawn||target.entrance;
+  const elapsed=this.time-state.startedAt,level=1+Math.floor(elapsed/30),rank=clamp(1+Math.floor((level-1)/10),1,5),hp=recipe.hp*(1+elapsed/300),damage=recipe.damage*(1+elapsed/600),x=entry.x;
+  const unit=this.spawnEnemy(recipe.kind,x,entry.z,{lineCreep:true,hp,damage,armor:recipe.armor,range:recipe.range,speed:recipe.speed,interval:recipe.interval,accuracy:recipe.accuracy,evasion:recipe.evasion,critChance:recipe.critChance,critMultiplier:recipe.critMultiplier,level,skills:[...recipe.skills],skillLevels:Object.fromEntries(recipe.skills.map(key=>[key,rank])),variantRoll:.999999,team:1000+target.index,owner:`line-creep:${u.owner}`,challenge:`line-${target.owner}`,cell:target.cell});
   // SpawnEnemy shares the combat engine but species modifiers must not silently
   // change a priced Line Wars recipe. Keep its explicitly advertised profile.
-  Object.assign(unit,{name:recipe.name,hp,maxHp:hp,damage,armor:recipe.armor,speed:recipe.speed,interval:recipe.interval,range:recipe.range,size:recipe.size,flying:recipe.flying,altitude:recipe.altitude,element:recipe.element||null,resistances:{},lineCreep:true,lineLane:target.owner,lineAttacker:u.owner,lineKey:building.unitKey,lineBounty:recipe.bounty,linePortalDamage:recipe.lifeDamage,lineResolved:false,rarity:'line',acquireRange:6,destination:{...target.entrance},order:'attackMove',target:null});
+  Object.assign(unit,{name:recipe.name,hp,maxHp:hp,damage,armor:recipe.armor,speed:recipe.speed,interval:recipe.interval,range:recipe.range,size:recipe.size,flying:recipe.flying,altitude:recipe.altitude,element:recipe.element||null,resistances:{},lineCreep:true,lineLane:target.owner,lineAttacker:u.owner,lineKey:building.unitKey,lineRoute:route?.id||'main',lineEntryName:route?.name||'Entrada principal',lineBounty:recipe.bounty,linePortalDamage:recipe.lifeDamage,lineResolved:false,rarity:'line',acquireRange:6,destination:{...entry},order:'attackMove',target:null});
   unit.monsterBase=Object.freeze({...unit.monsterBase,hp,damage,armor:recipe.armor,speed:recipe.speed,interval:recipe.interval,accuracy:recipe.accuracy,evasion:recipe.evasion,critChance:recipe.critChance,critMultiplier:recipe.critMultiplier,magicPower:.65});this.refresh(unit);unit.hp=unit.maxHp;
   u.gold-=recipe.cost;lane.income+=recipe.income;lane.sent++;lane.nextSendAt=this.time+.35;building.readyAt=this.time+clamp(1.5+recipe.cost/180,1.5,6);
-  this.fx('lineSend',building.x,building.z,{source:u.id,unit:building.unitKey,target:target.owner,cost:recipe.cost,income:recipe.income});this.fx('lineArrival',unit.x,unit.z,{source:unit.id,unit:building.unitKey});return true;
+  this.fx('lineSend',building.x,building.z,{source:u.id,unit:building.unitKey,target:target.owner,route:unit.lineRoute,entryName:unit.lineEntryName,cost:recipe.cost,income:recipe.income});this.fx('lineArrival',unit.x,unit.z,{source:unit.id,unit:building.unitKey});return true;
  },
 
  eliminateLineLane(lane){
@@ -87,6 +92,6 @@ export const LineWarsMethods={
  },
 
  snapshotLineWars(){
-  const state=this.lineWars;if(!state)return null;return{startedAt:state.startedAt,elapsed:state.elapsed,nextIncomeAt:state.nextIncomeAt,incomeInterval:state.incomeInterval,maxPopulation:state.maxPopulation,lanes:state.lanes.map(lane=>({...lane,target:this.lineTargetFor(lane.owner)?.owner||null,population:this.units.filter(unit=>unit.alive&&unit.lineCreep&&unit.lineLane===lane.owner).length})),buildings:state.buildings};
+  const state=this.lineWars;if(!state)return null;return{startedAt:state.startedAt,elapsed:state.elapsed,nextIncomeAt:state.nextIncomeAt,incomeInterval:state.incomeInterval,maxPopulation:state.maxPopulation,lanes:state.lanes.map(lane=>({...lane,queue:(lane.queue||[]).map(entry=>{const target=Object.hasOwn(entry,'target')?laneByOwner(this,entry.target):this.lineTargetFor(lane.owner);return{...entry,target:target?.owner||entry.target||null,targetName:target?.name||null,explicitTarget:Object.hasOwn(entry,'target')};}),target:this.lineTargetFor(lane.owner)?.owner||null,population:this.units.filter(unit=>unit.alive&&unit.lineCreep&&unit.lineLane===lane.owner).length})),buildings:state.buildings};
  }
 };

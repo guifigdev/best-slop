@@ -1,10 +1,10 @@
 # Custom Hero Line Wars — Portais dos Nove Fiordes
 
-Segundo jogo independente, com dois a quatro jogadores em linhas isoladas. Cada herói protege seu portal e usa casinhas de recrutamento para enviar tropas à próxima linha adversária viva. O visual nórdico usa os animais voxel originais do projeto. As fórmulas e a distribuição de atributos dos heróis continuam no sistema compartilhado.
+Segundo jogo independente, com dois a quatro jogadores em linhas isoladas. Cada herói protege seu portal e usa casinhas de recrutamento para enviar tropas à linha adversária escolhida ao visitar o campo rival. O visual nórdico usa os animais voxel originais do projeto. As fórmulas e a distribuição de atributos dos heróis continuam no sistema compartilhado.
 
 ## Referência e limites de fidelidade
 
-Referência histórica do mapa: [arquivo da wiki Custom Hero Line Wars](http://customherolinewars.pbworks.com/). O terreno e a passagem do arquivo v1.6a foram consultados; o cenário voxel adapta seu corredor superior e adiciona um anexo próprio de mercado. A matriz e a proveniência estão em [MAP_IMPORT.md](MAP_IMPORT.md). Os valores de unidades e habilidades permanecem próprios. A mecânica de enviar tropas, desenvolver renda e defender linhas é a base desta adaptação; preços, unidades, escalas e regras abaixo são próprios e precisam de partidas humanas para balanceamento.
+Referência histórica do mapa: [arquivo da wiki Custom Hero Line Wars](http://customherolinewars.pbworks.com/). O terreno e a passagem do arquivo v1.6a foram consultados; o recorte voxel do corredor superior é preservado como referência histórica. O campo padrão atual, Portais dos Fiordes, é uma adaptação própria maior, com duas entradas e distrito lateral. A matriz e a proveniência estão em [MAP_IMPORT.md](MAP_IMPORT.md). Os valores de unidades e habilidades permanecem próprios. A mecânica de enviar tropas, desenvolver renda e defender linhas é a base desta adaptação; preços, unidades, escalas e regras abaixo são próprios e precisam de partidas humanas para balanceamento.
 
 As quatro famílias de papéis militares são inspiradas nas unidades do guia clássico da Blizzard, consultado em 18/11/2026. Foram verificadas fontes primárias para [Footman](https://classic.battle.net/war3/human/units/footman.shtml), [Grunt](https://classic.battle.net/war3/orc/units/grunt.shtml), [Huntress](https://classic.battle.net/war3/nightelf/units/huntress.shtml) e [Crypt Fiend](https://classic.battle.net/war3/undead/units/cryptfiend.shtml). Seus índices também relacionam as demais unidades das respectivas raças. Cada receita guarda seu próprio link de referência no catálogo. Nenhum modelo, textura, sprite ou texto descritivo da Blizzard foi copiado.
 
@@ -13,8 +13,8 @@ As quatro famílias de papéis militares são inspiradas nas unidades do guia cl
 - A preparação inicial permite escolher o herói e usar o mercado existente. A guerra começa quando o motor chama `initLineWars()` com pelo menos dois jogadores.
 - Cada portal começa com 30 vidas. A renda começa em 20 moedas a cada 10 segundos, além do ouro inicial do herói.
 - Um envio cobra seu preço imediatamente e aumenta a renda permanente do remetente. A renda não diminui quando a tropa morre.
-- O alvo é a próxima linha adversária viva, em ordem circular. Quando uma base cai, o anel pula esse jogador.
-- Cada casinha tem recarga de aproximadamente 1,8–5,7 segundos, conforme o preço. Há também um intervalo geral de 0,35 segundo entre envios do mesmo jogador.
+- A interface usa o rival escolhido como alvo explícito. O destino é guardado em cada pedido e não muda quando a câmera muda. Pedidos de um alvo eliminado são cancelados sem custo. Os bots e comandos legados usam o próximo rival vivo no anel.
+- Cada receita tem recarga própria por comprador, compartilhada entre todos os destinos. Cada casinha tem recarga de aproximadamente 1,8–5,7 segundos, conforme o preço. Há também um intervalo geral de 0,35 segundo entre envios do mesmo jogador.
 - Cada linha admite até 32 invasores vivos. Um envio recusado por limite, preço, recarga ou proprietário não cobra ouro nem aumenta renda.
 - As tropas nascem em `z=-12` e procuram o portal em `z=12`. Adquirem defensores próximos, sem perseguir indefinidamente um herói que abandone a estrada.
 - Um invasor que atravessa o portal tira de uma a cinco vidas, conforme a receita. Não concede XP ou recompensa de morte ao defensor.
@@ -61,7 +61,7 @@ O catálogo `shared/line-units.js` é a autoridade desses valores. As receitas u
 6. Ao matar um invasor, usar `t.lineBounty` como recompensa de ouro e conceder XP somente aos heróis da `lineLane` do alvo. Uma fuga não passa por `hit`, portanto não recebe recompensa de morte.
 7. Adicionar `lineWars: snapshotLineWars()` ao snapshot. Este contém linhas, portais, renda, população, alvo atual, casinhas e recargas. Os campos do herói incluem `lineLane`, `lineRespawnAt` e `lineEliminated`.
 
-As linhas têm centros separados por 52 unidades em X e células de raio 16. O servidor guarda coordenadas globais; a apresentação pode converter a célula própria para uma origem local e mostrar as demais linhas por um seletor. Os edifícios são pontos de recrutamento, não unidades atacáveis.
+As linhas usam células retangulares do tamanho da matriz; o preset de 63 × 112 tem centros separados por 79 unidades em X. O servidor guarda coordenadas globais; a apresentação pode converter a célula própria para uma origem local e mostrar as demais linhas por um seletor. Os edifícios são pontos de recrutamento, não unidades atacáveis.
 
 ## Validação
 
@@ -71,6 +71,12 @@ Isso valida comportamento e consistência. Não demonstra equilíbrio competitiv
 
 ## Fila, fonte e observação
 
-`queueLineUnit` aceita até 50 entradas, inclusive sem ouro ou em recarga. `cancelLineQueue` remove uma entrada sem custo; `processLineQueue` só paga quando realiza o envio da primeira entrada. A fonte recupera6%HPmáximo/s e4%mana máxima/s em raio2,6m para herói e invocações da mesma linha.
+`queueLineUnit` aceita até 50 entradas, inclusive sem ouro ou em recarga. `cancelLineQueue` remove uma entrada sem custo; `processLineQueue` só paga quando realiza o envio da primeira entrada. A fonte recupera6%HPmáximo/s e4%mana máxima/s em raio de 5m para herói e invocações da mesma linha.
 
-A barra de avatares mostraHPdo herói e vidas do portal de todos. Clicar seleciona apenas a instância apresentada pela câmera; Espaço/F1 retorna ao próprio jogador. Enquanto observa, compras em casinhas/NPCs rivais e ordens de chão ficam bloqueadas na interface. O servidor continua validando proprietário. As prévias de tropas mostram retratos originais antes da compra.
+A barra de avatares mostraHPdo herói e vidas do portal de todos. Clicar seleciona apenas a instância apresentada pela câmera; Espaço/F1 retorna ao próprio jogador. Ao visitar um rival, suas casinhas permitem preparar envios contra ele. Compras nos NPCs de itens do rival e ordens sobre os personagens dele continuam bloqueadas. O servidor continua validando proprietário. As prévias de tropas mostram retratos originais antes da compra.
+
+## Navegação e interface por contexto
+
+Meio + arraste desloca o mapa; Ctrl + meio gira. Os controles usam os limites retangulares reais, inclusive os trechos distantes. Avatares escolhem o campo rival e os botões levam à defesa, recrutamento, fonte ou vista completa. A fila abre detalhes sob demanda. Placas de casinhas e lojas aparecem por contexto; o campo próprio não desenha os recrutadores. As habilidades iniciais dos seis heróis são compartilhadas entre jogadores, com uma cópia por herói; as demais permanecem exclusivas.
+
+A fonte é um ponto físico de compra universal; a sessão `fountain` atende todas as categorias e serviços, apenas na própria instância de Line Wars e dentro de 5m. O estoque e os seis espaços continuam autoritativos.

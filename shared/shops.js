@@ -8,7 +8,8 @@ export const SHOPS={
  books:{id:'books',name:'Arquivo de Hugin',role:'Livros de experiência',npc:'Hugin',hero:'owl',color:0x9ab4c5,x:-2.5,z:-10.8,range:2.7,service:'books'},
  smith:{id:'smith',name:'Forja de Sindri',role:'Melhorias de equipamento',npc:'Sindri',hero:'raccoon',color:0xb68a66,x:2.5,z:-10.8,range:2.7,service:'smith'},
  enchanter:{id:'enchanter',name:'Ateliê de Freya',role:'Encantamentos de armas',npc:'Freya',hero:'ranger',color:0x83ae88,x:7.5,z:-10.8,range:2.7,service:'enchanter'},
- runemaster:{id:'runemaster',name:'Runas de Skuld',role:'Runas permanentes',npc:'Skuld',hero:'owl',color:0x986fe0,x:12.5,z:-10.8,range:2.7,service:'runemaster'}
+ runemaster:{id:'runemaster',name:'Runas de Skuld',role:'Runas permanentes',npc:'Skuld',hero:'owl',color:0x986fe0,x:12.5,z:-10.8,range:2.7,service:'runemaster'},
+ fountain:{id:'fountain',name:'Fonte do clã',role:'Mercado e recuperação',npc:'Fonte do clã',hero:'mage',color:0x83cdd1,x:0,z:46,range:5,service:'fountain',universal:true,lineWarsOnly:true}
 };
 
 export function shopForItem(key){

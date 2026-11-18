@@ -2,13 +2,13 @@ const LABELS={learn:'NOVA TÉCNICA',upgrade:'TÉCNICA EVOLUÍDA',item:'EQUIPAMEN
 const SYMBOLS={learn:'✦',upgrade:'↑',item:'◆',equipment:'↑',enchant:'✧',activate:'✧',gold:'◆',essence:'◈',level:'✧',attribute:'+',error:'!'};
 
 /** Presentation only. Call after an authoritative command/snapshot confirms a change. */
-export function createFeedback({host=document.body}={}){
+export function createFeedback({host=document.body,schedule=setTimeout,cancel=clearTimeout}={}){
  const root=document.createElement('div');root.className='game-feedback';root.setAttribute('aria-hidden','true');host.append(root);
  if(host===document.body)root.classList.add('game-feedback-fixed');
  const live=document.createElement('div');live.className='feedback-announcer';live.setAttribute('role','status');live.setAttribute('aria-live','polite');live.setAttribute('aria-atomic','true');host.append(live);
  const timers=new Set(),cards=[],reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
- let gold=0,goldTimer=null,destroyed=false,lastAttribute=0;
- function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);if(!destroyed)fn();},ms);timers.add(id);return id;}
+ let gold=0,goldTimer=null,goldDelta=null,goldShown=0,goldHideTimer=null,destroyed=false,lastAttribute=0;
+ function later(fn,ms){const id=schedule(()=>{timers.delete(id);if(!destroyed)fn();},ms);timers.add(id);return id;}
  function removeCard(card){const i=cards.indexOf(card);if(i>=0)cards.splice(i,1);card.remove();}
  function pulse(element,kind){if(!element)return;element.classList.remove('feedback-flash','feedback-gold-flash');void element.offsetWidth;element.classList.add(kind==='gold'?'feedback-gold-flash':'feedback-flash');later(()=>element.classList.remove('feedback-flash','feedback-gold-flash'),800);}
  function announce(text){live.textContent='';later(()=>{live.textContent=text;},35);}
@@ -26,10 +26,21 @@ export function createFeedback({host=document.body}={}){
   if(kind!=='gold')announce([title,detail].filter(Boolean).join('. '));
   later(()=>{card.classList.add('feedback-leaving');later(()=>removeCard(card),220);},kind==='gold'?1800:3400);
  }
- function showGold(){goldTimer=null;const amount=Math.round(gold);gold=0;if(amount<=0)return;show({kind:'gold',amount});const wallet=document.querySelector('.wallet strong');pulse(wallet,'gold');if(wallet){const old=wallet.querySelector('.wallet-delta');old?.remove();const delta=document.createElement('span');delta.className='wallet-delta';delta.textContent=`+${amount}`;wallet.append(delta);later(()=>delta.remove(),1500);}}
+ function showGold(){
+  goldTimer=null;const amount=Math.round(gold);gold=0;if(amount<=0)return;
+  // Income and kill bounties never enter the large notification stack, never
+  // displace an upgrade card and never announce each coin to a screen reader.
+  const wallet=document.querySelector('.wallet strong')||document.querySelector('[data-gold-feedback]')||document.getElementById('gold')?.parentElement;if(!wallet)return;
+  pulse(wallet,'gold');
+  if(!goldDelta||goldDelta.parentElement!==wallet){goldDelta?.remove();goldShown=0;goldDelta=document.createElement('span');goldDelta.className='wallet-delta';goldDelta.setAttribute('aria-hidden','true');wallet.append(goldDelta);}
+  goldShown+=amount;goldDelta.textContent='+'+goldShown.toLocaleString('pt-BR');
+  // Keep one compact, bounded display window instead of restarting a floating
+  // animation every time another small bounty arrives.
+  if(!goldHideTimer)goldHideTimer=later(()=>{goldHideTimer=null;goldDelta?.remove();goldDelta=null;goldShown=0;},1600);
+ }
  function play(event={}){
   if(destroyed)return;const kind=Object.hasOwn(LABELS,event.kind)?event.kind:'learn';
-  if(kind==='gold'){if(!(event.amount>0))return;gold+=event.amount;if(!goldTimer)goldTimer=later(showGold,260);return;}
+  if(kind==='gold'){if(!Number.isFinite(event.amount)||event.amount<=0)return;gold+=event.amount;if(!goldTimer)goldTimer=later(showGold,600);return;}
   if(kind==='attribute'){const now=Date.now();pulse(document.querySelector('.attribute-title'));if(now-lastAttribute<350)return;lastAttribute=now;}
   show({...event,kind});
   if(event.key){const button=[...document.querySelectorAll('[data-buy]')].find(b=>b.dataset.buy===event.key);pulse(button);}
@@ -38,5 +49,5 @@ export function createFeedback({host=document.body}={}){
  }
  function pointerFeedback(event){if(reduced||event.button!==0)return;const button=event.target.closest?.('.shop-item:not(:disabled),.attribute-row button:not(:disabled),.inventory-slot:not(:disabled),.ability:not(:disabled),.primary:not(:disabled)');if(!button)return;const rect=button.getBoundingClientRect(),ripple=document.createElement('span');ripple.className='feedback-ripple';ripple.style.left=`${event.clientX-rect.left}px`;ripple.style.top=`${event.clientY-rect.top}px`;button.append(ripple);later(()=>ripple.remove(),550);}
  document.addEventListener('pointerdown',pointerFeedback);
- return{play,destroy(){destroyed=true;for(const id of timers)clearTimeout(id);timers.clear();document.removeEventListener('pointerdown',pointerFeedback);root.remove();live.remove();for(const el of document.querySelectorAll('.feedback-flash,.feedback-gold-flash'))el.classList.remove('feedback-flash','feedback-gold-flash');for(const el of document.querySelectorAll('.wallet-delta,.feedback-ripple'))el.remove();}};
+ return{play,destroy(){destroyed=true;for(const id of timers)cancel(id);timers.clear();document.removeEventListener('pointerdown',pointerFeedback);root.remove();live.remove();goldDelta?.remove();goldDelta=null;for(const el of document.querySelectorAll('.feedback-flash,.feedback-gold-flash'))el.classList.remove('feedback-flash','feedback-gold-flash');for(const el of document.querySelectorAll('.wallet-delta,.feedback-ripple'))el.remove();}};
 }

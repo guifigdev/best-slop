@@ -1,0 +1,2 @@
+// Presentation reflects the current authoritative NPC session. Distance is checked by the server.
+export function shopSessionAllows(p,state,vendor=null){const open=state?.phase==='preparation'||state?.options?.mode==='linewars'&&state?.phase==='wave';return !!(open&&p?.alive&&p.shopInteraction&&(!vendor||p.shopInteraction===vendor||state.options?.mode==='linewars'&&p.shopInteraction==='fountain'));}

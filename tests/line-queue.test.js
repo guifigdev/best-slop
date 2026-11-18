@@ -8,6 +8,26 @@ function setup(bots=false){const g=new Game(81,{mode:'linewars'});g.addPlayer('a
 const house=(g,u,key='shieldling')=>g.lineWars.buildings.find(b=>b.owner===u.owner&&b.unitKey===key);
 const queue=(g,u,key='shieldling')=>g.queueLineUnit(u,{building:house(g,u,key).id});
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
+function fourPlayers(){const g=new Game(81,{mode:'linewars'});for(const id of ['a','b','c','d'])g.addPlayer(id,'knight',id.toUpperCase());g.initLineWars();return g;}
+
+test('two attackers explicitly buy their own recipes for the same enemy without sharing ownership or cooldown',()=>{
+ const g=fourPlayers(),a=g.player('a'),c=g.player('c'),target=g.lineWars.lanes.find(l=>l.owner==='d');
+ for(const u of [a,c]){assert.equal(g.command(u.owner,{type:'queueLineUnit',unitKey:'shieldling',target:'d'}),true);const lane=g.lineWars.lanes.find(l=>l.owner===u.owner);assert.equal(lane.queue[0].target,'d');assert.equal(lane.queue[0].building,house(g,u).id);}
+ const snapshot=g.snapshotLineWars();assert.equal(snapshot.lanes[0].queue[0].targetName,'D');assert.equal(snapshot.lanes[0].queue[0].explicitTarget,true);g.tickLineWars(.1);
+ const creeps=g.units.filter(u=>u.lineCreep);assert.equal(creeps.length,2);assert.deepEqual(creeps.map(u=>u.lineAttacker).sort(),['a','c']);for(const unit of creeps){assert.equal(unit.lineLane,'d');assert.equal(unit.cell,target.cell);assert.equal(unit.owner,`line-creep:${unit.lineAttacker}`);}assert.equal(g.lineCanTarget(creeps[0],creeps[1]),false);assert.equal(a.gold,1100-LINE_UNITS.shieldling.cost);assert.equal(c.gold,1100-LINE_UNITS.shieldling.cost);assert.equal(g.player('d').gold,1100);assert.ok(house(g,a).readyAt>0&&house(g,c).readyAt>0);
+});
+
+test('explicit dead-target orders cancel freely instead of retargeting, then the next live order executes',()=>{
+ const g=fourPlayers(),u=g.player('a'),own=g.lineWars.lanes[0],dead=g.lineWars.lanes[1];assert.equal(g.queueLineUnit(u,{unitKey:'winterwyrm',target:'b'}),true);assert.equal(g.queueLineUnit(u,{unitKey:'shieldling',target:'d'}),true);const id=own.queue[0].id;g.eliminateLineLane(dead);const before=u.gold;g.processLineQueue(u,own);assert.equal(own.queue.length,0);assert.equal(own.sent,1);assert.equal(u.gold,before-LINE_UNITS.shieldling.cost);const units=g.units.filter(unit=>unit.lineCreep);assert.equal(units.length,1);assert.equal(units[0].lineLane,'d');assert.equal(g.effects.find(fx=>fx.type==='lineQueueCancelled'&&fx.entryId===id).reason,'targetEliminated');assert.equal(g.sendLineUnit(u,{unitKey:'winterwyrm',target:'b'}),false);
+});
+
+test('forged self, missing, dead and foreign-building targets never reserve or spend money',()=>{
+ const g=fourPlayers(),u=g.player('a'),lane=g.lineWars.lanes[0],before=u.gold;for(const target of ['a','unknown',null,undefined,{},4]){assert.equal(g.queueLineUnit(u,{unitKey:'shieldling',target}),false);assert.equal(g.sendLineUnit(u,{unitKey:'shieldling',target}),false);}assert.equal(g.queueLineUnit(u,{building:house(g,g.player('b')).id,target:'d'}),false);assert.equal(g.sendLineUnit(u,{building:house(g,g.player('b')).id,target:'d'}),false);assert.equal(g.queueLineUnit(u,{unitKey:'__proto__',target:'d'}),false);g.eliminateLineLane(g.lineWars.lanes[1]);assert.equal(g.queueLineUnit(u,{unitKey:'shieldling',target:'b'}),false);assert.equal(lane.queue.length,0);assert.equal(lane.sent,0);assert.equal(u.gold,before);assert.equal(lane.income,20);
+});
+
+test('explicit opponent changes still use the sender single recipe cooldown and the target shared population cap',()=>{
+ const g=fourPlayers(),u=g.player('a'),lane=g.lineWars.lanes[0];g.queueLineUnit(u,{unitKey:'shieldling',target:'b'});g.queueLineUnit(u,{unitKey:'shieldling',target:'d'});g.processLineQueue(u,lane);g.time=.5;g.processLineQueue(u,lane);assert.equal(lane.sent,1);assert.equal(lane.queueStatus,'cooldown');g.time=house(g,u).readyAt;for(let i=0;i<LINE_MAX_POPULATION;i++)g.units.push({id:g.id(),alive:true,lineCreep:true,lineLane:'d',lineAttacker:'c'});g.processLineQueue(u,lane);assert.equal(lane.queueStatus,'population');assert.equal(lane.sent,1);assert.equal(lane.queue[0].target,'d');
+});
 
 test('plans queue without gold or ready cooldown and never reserve money or raise income early',()=>{const {g,p,lane}=setup();p.gold=0;house(g,p).readyAt=50;lane.nextSendAt=20;assert.equal(queue(g,p),true);assert.equal(lane.queue.length,1);assert.equal(p.gold,0);assert.equal(lane.income,20);g.tickLineWars(.1);assert.equal(lane.queue.length,1);assert.equal(lane.queueStatus,'gold');assert.equal(lane.sent,0);assert.equal(g.snapshotLineWars().lanes[0].queue[0].unitKey,'shieldling');});
 

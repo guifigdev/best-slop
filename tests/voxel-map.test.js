@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DEFAULT_MAP_PALETTE,convertMapPixels,normalizeVoxelMap,mapTileAt,mapObstacles,validateMapPath} from '../shared/voxel-map.js';
-import {defaultLineWarsMap} from '../shared/maps/line-wars-map.js';
+import {defaultLineWarsMap,historicalLineWarsMap} from '../shared/maps/line-wars-map.js';
+import {limitPoint} from '../shared/field.js';
+import {unitBlocked} from '../shared/unit-collision.js';
 import {blocked} from '../shared/field.js';
 import {Game} from '../shared/simulation.js';
 import {LINE_UNIT_ORDER} from '../shared/line-units.js';
@@ -71,7 +73,7 @@ test('route validation detects disconnected portals and unreachable shop markers
 });
 
 test('the original-derived preset has a real connected route, reachable services and reproducible independent copies',()=>{
- const a=defaultLineWarsMap(),b=defaultLineWarsMap(),result=validateMapPath(a);assert.deepEqual(a,b);assert.equal(a.width,64);assert.equal(a.height,64);assert.equal(a.tileSize,.5);assert.equal(result.valid,true,result.errors.join('; '));assert.ok(result.path.length>30);assert.equal(a.markers.shops.length,6);assert.equal(a.markers.fountain.z,13.8);assert.ok(a.markers.spawn.x<a.markers.portal.x);assert.equal(a.source.entryRegion,'OI');assert.equal(a.source.portalRegion,'BI');assert.equal(a.heightSource,'warcraft-w3e-derived');for(const hash of Object.values(a.source.hashes))assert.match(hash,/^[a-f0-9]{64}$/);a.markers.path[0].x=99;assert.notEqual(defaultLineWarsMap().markers.path[0].x,99);
+ const a=historicalLineWarsMap(),b=historicalLineWarsMap(),result=validateMapPath(a);assert.deepEqual(a,b);assert.equal(a.width,64);assert.equal(a.height,64);assert.equal(a.tileSize,.5);assert.equal(result.valid,true,result.errors.join('; '));assert.ok(result.path.length>30);assert.equal(a.markers.shops.length,6);assert.equal(a.markers.fountain.z,13.8);assert.ok(a.markers.spawn.x<a.markers.portal.x);assert.equal(a.source.entryRegion,'OI');assert.equal(a.source.portalRegion,'BI');assert.equal(a.heightSource,'warcraft-w3e-derived');for(const hash of Object.values(a.source.hashes))assert.match(hash,/^[a-f0-9]{64}$/);a.markers.path[0].x=99;assert.notEqual(historicalLineWarsMap().markers.path[0].x,99);
 });
 
 test('the selected source route and required markers clear a ground collision radius of 0.8',()=>{
@@ -85,5 +87,26 @@ test('a hero walks from the imported hero spawn to every merchant before and dur
  for(const start of [false,true])for(const id of Object.keys(SHOPS)){const game=runtimeGame(start),hero=game.player('a');hero.collisionRadius=.8;assert.equal(hero.x-hero.cell.x,game.voxelMap.markers.heroSpawn.x);assert.equal(hero.z-hero.cell.z,game.voxelMap.markers.heroSpawn.z);assert.equal(game.unitTerrainBlocked(hero,hero,.8),false);assert.equal(game.command('a',{type:'interact',npc:id}),true);for(let i=0;i<1800&&!game.atShop(hero,id);i++)game.tick(1/30);const npc=merchantPosition(hero,SHOPS[id]);assert.equal(game.atShop(hero,id),true,`${game.phase}/${id}: hero (${hero.x},${hero.z}), NPC (${npc.x},${npc.z}), path ${JSON.stringify(hero.path)}`);assert.ok(Math.hypot(hero.x-npc.x,hero.z-npc.z)<=npc.range+.001);}
 });
 test('all sixteen purchased recipes traverse the imported route and breach its real portal',()=>{
- for(const key of LINE_UNIT_ORDER){const game=runtimeGame(),attacker=game.player('a'),lane=game.lineWars.lanes[1];for(const h of game.heroes()){h.x=h.cell.x;h.z=13.8;h.order='stop';}attacker.gold=100000;const building=game.lineWars.buildings.find(b=>b.owner==='a'&&b.unitKey===key);assert.equal(game.sendLineUnit(attacker,{building:building.id}),true);const unit=game.units.at(-1);unit.collisionRadius=.8;const lives=lane.lives;for(let i=0;i<2400&&!unit.lineResolved;i++)game.tick(1/30);assert.equal(unit.escaped,true,`${key}: (${unit.x},${unit.z}), waypoint ${unit.lineWaypoint}, path ${JSON.stringify(unit.path)}`);assert.equal(lane.lives,lives-unit.linePortalDamage);assert.equal(lane.leaks,1);assert.equal(game.phase,'wave');}
+ for(const routeId of ['west','east'])for(const key of LINE_UNIT_ORDER){const game=runtimeGame(),attacker=game.player('a'),lane=game.lineWars.lanes[1];for(const h of game.heroes()){h.x=h.cell.x;h.z=46;h.order='stop';}attacker.gold=100000;const building=game.lineWars.buildings.find(b=>b.owner==='a'&&b.unitKey===key);building.routeId=routeId;assert.equal(game.sendLineUnit(attacker,{building:building.id}),true);const unit=game.units.at(-1);unit.collisionRadius=.8;assert.equal(unit.lineRoute,routeId);const lives=lane.lives;for(let i=0;i<3000&&!unit.lineResolved;i++)game.tick(1/30);assert.equal(unit.escaped,true,`${routeId}/${key}: (${unit.x},${unit.z}), waypoint ${unit.lineWaypoint}, path ${JSON.stringify(unit.path)}`);assert.equal(lane.lives,lives-unit.linePortalDamage);assert.equal(lane.leaks,1);assert.equal(game.phase,'wave');}
+});
+
+
+test('the enlarged fjord battlefield has two long validated routes and a separate recruitment district',()=>{
+ const map=defaultLineWarsMap();assert.equal(map.name,'Portais dos Fiordes');assert.equal(map.width*map.tileSize,63);assert.equal(map.height*map.tileSize,112);assert.equal(validateMapPath(map).valid,true);assert.equal(map.markers.routes.length,2);assert.equal(map.markers.buildings.length,16);assert.equal(new Set(map.markers.buildings.map(b=>b.routeId)).size,2);for(const route of map.markers.routes){const length=route.path.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-route.path[i-1].x,p.z-route.path[i-1].z):0),0);assert.ok(length>=70);assert.ok(route.spawn.x<0);for(const b of map.markers.buildings)assert.ok(b.x>10);}
+ const copy=normalizeVoxelMap(JSON.parse(JSON.stringify(map)));assert.deepEqual(copy.markers.routes,map.markers.routes);copy.markers.routes[0].path[0].x=99;assert.notEqual(map.markers.routes[0].path[0].x,99);
+ assert.throws(()=>normalizeVoxelMap({...map,markers:{...map.markers,routes:[map.markers.routes[0],map.markers.routes[0]]}}));
+});
+
+test('four rectangular home cells and active lanes cannot overlap and enforce their actual edges',()=>{
+ const game=new Game(160,{mode:'linewars'});for(let i=0;i<4;i++)assert.equal(game.addPlayer(`p${i}`),true);
+ function inspect(){const heroes=game.heroes().sort((a,b)=>a.cell.x-b.cell.x);assert.equal(heroes.length,4);for(let i=0;i<heroes.length;i++){const u=heroes[i],c=u.cell;assert.equal(c.maxX-c.minX,63);assert.equal(c.maxZ-c.minZ,112);assert.ok(game.bounds>=Math.abs(c.x+c.maxX));if(i)assert.ok(heroes[i-1].cell.x+heroes[i-1].cell.maxX<c.x+c.minX);const capped=limitPoint(game,u,{x:c.x+1000,z:1000});assert.equal(capped.x,c.x+c.maxX);assert.equal(capped.z,c.z+c.maxZ);assert.equal(unitBlocked(game,u,{x:c.x+c.maxX+.1,z:0}),true);}}
+ inspect();assert.equal(game.initLineWars(),true);inspect();
+});
+
+test('newbie bots visibly use both invasion entrances within the opening twenty seconds',()=>{
+ for(const seed of [160,7381,71]){const game=new Game(seed,{mode:'linewars'});game.addBots(2);assert.equal(game.initLineWars(),true);for(let i=0;i<600;i++)game.tick(1/30);for(const lane of game.lineWars.lanes){const routes=new Set(game.units.filter(u=>u.lineCreep&&u.lineAttacker===lane.owner).map(u=>u.lineRoute));assert.deepEqual([...routes].sort(),['east','west'],`seed ${seed}/${lane.owner}`);}}
+});
+
+test('historical 32-unit imports retain a single working route and their original rectangular extent',()=>{
+ const game=new Game(160,{mode:'linewars',voxelMap:historicalLineWarsMap()});game.addPlayer('a');game.addPlayer('b','mage');assert.equal(game.initLineWars(),true);const lane=game.lineWars.lanes[1];assert.equal(lane.cell.maxX-lane.cell.minX,32);assert.equal(lane.routes.length,1);assert.equal(lane.routes[0].id,'main');const hero=game.player('a');hero.gold=10000;for(const h of game.heroes()){h.x=h.cell.x;h.z=13.8;h.order='stop';}assert.equal(game.sendLineUnit(hero,{building:game.lineWars.buildings.find(b=>b.owner==='a').id}),true);const creep=game.units.at(-1);for(let i=0;i<1800&&!creep.lineResolved;i++)game.tick(1/30);assert.equal(creep.escaped,true);
 });

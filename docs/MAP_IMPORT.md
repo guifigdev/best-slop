@@ -50,7 +50,8 @@ O esquema atual tem versão 1:
   palette: [],
   markers: {
     spawn, portal, fountain, heroSpawn,
-    shops: [], buildings: [], path: []
+    shops: [], buildings: [], path: [],
+    routes: [{ id: 'west', name: 'Passagem do Poente', spawn, path: [] }]
   },
   id, name, seed, heightSource, source
 }
@@ -102,7 +103,7 @@ O formato de alturas segue a [documentação dos autores do HiveWE](https://gith
 
 ### Preset derivado e adaptações declaradas
 
-`shared/maps/line-wars-map.json` contém o preset de 64 × 64, tile de 0,5 e extensão de 32 × 32 unidades. `defaultLineWarsMap()` em `shared/maps/line-wars-map.js` retorna uma cópia normalizada. O corredor superior original foi recortado entre X −7.424…7.168 e Y 2.048…6.912, incluindo sua forma em U e a faixa de town halls. É projetado nas primeiras 44 linhas; as 20 linhas inferiores são um **anexo novo de mercado**.
+`shared/maps/line-wars-map.json` preserva o preset histórico de 64 × 64, tile de 0,5 e extensão de 32 × 32 unidades. `historicalLineWarsMap()` em `shared/maps/line-wars-map.js` retorna sua cópia normalizada. O corredor superior original foi recortado entre X −7.424…7.168 e Y 2.048…6.912, incluindo sua forma em U e a faixa de town halls. É projetado nas primeiras 44 linhas; as 20 linhas inferiores são um **anexo novo de mercado**. Esse arquivo já não é o campo padrão.
 
 O preset não é uma reconstrução métrica 1:1. A projeção de X/Z tem escalas distintas, a matriz tem resolução reduzida, a rota selecionada é alargada para os corpos voxel e há um conector novo para o mercado. O anexo e esse conector são nivelados; alturas relativas do terreno amostrado são preservadas no restante. As casas de envio adicionais e os seis NPCs são uma adaptação da nossa jogabilidade, não uma alegação de que o original possuía essas mesmas construções. `source.exactHeights` é deliberadamente `false`, e `source.adaptations` enumera as alterações.
 
@@ -145,3 +146,23 @@ A seed do preset é 160; o processo não usa sorteio nem timestamps na matriz. G
 Os testes de integração criam `Game` diretamente no modo Line Wars, sem trocar o modo depois da construção: um herói de raio 0,8 sai do marcador de nascimento e caminha até cada um dos seis NPCs, tanto na preparação quanto durante a partida. Todas as 16 receitas compradas percorrem a rota usando os ticks reais e descontam exatamente seu custo de vidas no portal; as unidades terrestres também são verificadas com raio 0,8. Os defensores ficam fora do caminho neste teste para medir trânsito, sem interferência de combate.
 
 O botão **Mapas** abre o editor. O cenário aplicado é normalizado e salvo localmente; vale para a próxima partida de Line Wars, incluindo a configuração enviada ao criar uma sala online. Outros modos continuam usando seu cenário próprio. Um arquivo salvo inválido é ignorado na inicialização.
+
+## Campo padrão: Portais dos Fiordes
+
+`defaultLineWarsMap()` agora cria o campo autoral em `shared/maps/fjord-portals-map.js`: **36 × 64 tiles de 1,75**, ou **63 × 112 unidades**. Sua seed é 1602. O campo mantém a inspiração nórdica/Dalaran e registra `source.kind: authored-adaptation`; não apresenta a geometria nova como reconstrução do mapa de Baka-Ranger.
+
+Há duas entradas: Poente em (−18, −49) e Aurora em (−3, −49). Cada corredor avança 75 unidades antes de virar em direção ao portal (−10, 35), produzindo percursos de aproximadamente 87 unidades. Uma elevação divide as rotas e outra separa o distrito de recrutamento, a leste. As 16 casinhas ficam em X 13…28, Z −12…12. Cada casinha tem `routeId`; grupos alternam a entrada e incluem tropas baratas nas duas rotas. A tropa enviada conserva `lineRoute` e `lineEntryName`.
+
+A fonte fica em (0, 46), com raio de recuperação de 5 unidades. Os seis serviços ficam ao redor dela; a própria fonte também oferece o comércio universal de Line Wars. O herói nasce em (−10, 31), perto da confluência defensiva.
+
+`markers.routes` aceita até oito rotas com ids únicos, entrada e 2…4.096 pontos. Todas as rotas e serviços precisam alcançar o portal por tiles transitáveis. `markers.path` continua representando a rota principal para consumidores antigos. Mapas históricos sem `routes` recebem uma rota `main`, preservando importações antigas.
+
+As células de Line Wars usam limites retangulares locais `minX/maxX/minZ/maxZ`, além de `halfWidth`, `halfDepth` e `r` para compatibilidade visual. O campo padrão usa X ±31,5 e Z ±56. A distância entre instâncias é a largura do mapa mais 16 unidades, tanto na preparação quanto durante a partida. Movimento, colisão e navegação respeitam esses limites. Outros modos mantêm seus limites anteriores. O runtime aceita extensões contidas em X/Z ±128 e continua limitado a matrizes de 64 × 64.
+
+A regressão física percorre **as 16 receitas nas duas entradas**, incluindo raio terrestre de 0,8, quatro instâncias sem sobreposição, visitas a todos os serviços antes/durante a batalha e bots usando as duas entradas até os primeiros 20 segundos. O preset histórico também conserva um teste completo de trânsito.
+
+### Alvo escolhido ao visitar o rival
+
+O comando de compra é `{type:'queueLineUnit', unitKey, target: rivalOwner}`. O servidor valida que o alvo existe, está vivo e pertence a outro jogador. Ele encontra a casinha interna da receita **do comprador**, preservando seu ouro, renda e cooldown; clicar no campo de outro jogador não concede controle das construções daquele jogador. Dois compradores podem atacar a mesma base. O limite de população considera a soma dos invasores naquela base.
+
+O pedido conserva `target`; o snapshot inclui `targetName` e `explicitTarget` para exibição. Se o rival for eliminado antes do envio, o pedido é removido sem cobrar ouro, com evento `lineQueueCancelled` e `reason:'targetEliminated'`; a próxima entrada pode executar no mesmo tick. O servidor nunca troca automaticamente o alvo de um pedido explícito. O formato legado `{building}` continua usando o próximo rival vivo, para a IA e integrações anteriores. `sendLineUnit` também aceita `{unitKey,target}` e aplica as mesmas regras para envio imediato.

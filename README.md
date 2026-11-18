@@ -8,7 +8,7 @@ O menu separa **Custom Hero Survival** e **Custom Hero Line Wars**. Survival con
 
 Campanha e Best of All dão a cada competidor um cenário físico separado, inclusive no mercado. Equipes compartilham sua arena; cooperação compartilha o campo. O cliente mostra a instância local e converte os comandos de volta para as coordenadas do servidor. Os rivais se reúnem somente nos confrontos PvP. Ao passar o mouse, o nome aparece acima da vida com a cor da equipe: vermelho, azul, amarelo, ciano e magenta.
 
-Cada técnica pode pertencer a **um único herói por partida**. Melhorar a própria técnica continua permitido; substituí-la libera a antiga. A primeira técnica também respeita a reserva global, então escolher o mesmo animal pode dar uma técnica inicial disponível diferente. Técnicas de monstros e invocações não consomem reservas de jogadores.
+As seis técnicas iniciais dos heróis são **compartilhadas entre jogadores**: Passo do Jotun, Martelo de Thor, Flechas de Skadi, Espinhos de Yggdrasil, Corrente de Mjolnir e Corte do Einherjar. Cada animal sempre começa com a sua técnica original. Cada herói mantém apenas uma cópia de cada técnica, com melhorias independentes. As demais técnicas pertencem a **um único herói por partida**; substituir uma delas libera sua reserva. Técnicas de monstros e invocações não consomem reservas de jogadores.
 
 Espólios têm cinco raridades: Comum, Raro, Épico, Lendário e Heroico. A potência cresce em 0/5/10/15/20%, incluindo dano, cura, invocações, passivas, barreiras e alcance de deslocamentos; técnicas ativas também recarregam proporcionalmente mais rápido. A raridade não aumenta a duração de atordoamentos nem muda as fórmulas de atributos. Um fragmento superior pode melhorar a raridade de uma técnica que já está N5. Reciclar rende 1/2/3/5/8 essências. Se já conhece a técnica, pode convertê-la em um tomo físico de 40/70/110/180/280 XP: ele ocupa a mochila e é consumido no mercado. Herança de nível por essências não herda a raridade anterior.
 
@@ -16,7 +16,7 @@ Skuld é a sexta comerciante e grava **22 runas permanentes** no equipamento. Ch
 
 Chefes alternam círculos, anéis com centro seguro, cones e faixas de arena. A área é preenchida em vermelho e o impacto só ocorre após 2,2s; sair da forma evita o golpe, e atordoar o chefe interrompe o ritual. As oito técnicas nórdicas novas incluem quatro famílias de invocações independentes: corvos, bodes, lince e cão espectral, além dos lobos existentes.
 
-Line Wars usa 16 receitas inspiradas em papéis das quatro raças de Warcraft III. Cada defensor tem sua linha, 30 vidas e renda a cada 10s. Clicar na própria casinha adiciona uma tropa à fila FIFO, mesmo sem ouro ou durante a recarga. O envio automático cobra ouro e aumenta renda quando houver recursos e espaço na próxima linha inimiga viva. A fila permite cancelar entradas. Cada casinha mostra retrato, nome, preço e prévia de atributos antes do clique. Invasores que atravessam o portal removem vidas; o último portal vivo vence. Há fonte de recuperação, colisões por tamanho, observação da linha rival pelos avatares, limite de tropas, renascimento e IA, com os mesmos heróis, habilidades e equipamentos. Consulte `docs/LINE_WARS.md` para regras, fontes e diferenças da referência.
+Line Wars usa 16 receitas inspiradas em papéis das quatro raças de Warcraft III. Cada defensor tem sua linha, 30 vidas e renda a cada 10s. Clique no avatar de um adversário para visitar o campo dele. As casinhas de recrutamento aparecem somente nos campos rivais; escolha uma tropa e adicione-a à fila FIFO com esse adversário como destino, mesmo sem ouro ou durante a recarga. O envio automático cobra ouro e aumenta renda quando houver recursos e espaço na linha inimiga escolhida. Pedidos explícitos de um alvo eliminado são cancelados sem custo. A fila permite cancelar entradas. A placa e a prévia de cada casinha aparecem apenas por hover, foco ou seleção; o catálogo completo fica no contexto de recrutamento. Invasores que atravessam o portal removem vidas; o último portal vivo vence. Há fonte de recuperação, colisões por tamanho, observação da linha rival pelos avatares, limite de tropas, renascimento e IA, com os mesmos heróis, habilidades e equipamentos. Consulte `docs/LINE_WARS.md` para regras, fontes e diferenças da referência.
 
 ## Executar
 
@@ -90,7 +90,7 @@ Perigos afetam heróis e inimigos, e ficam inativos nos intervalos/mercado. Obsi
 
 - Direito: mover/atacar. A + clique: atacar ao mover. M + clique: mover. S: parar/interromper canalização. H: manter posição.
 - Q W E R D F C: técnicas. 1–6: consumíveis. I: atributos.
-- Roda: zoom. Meio + arraste: girar. Shift + meio: deslocar. Setas: deslocar. Espaço/F1: centralizar.
+- Roda: zoom. Meio + arraste: deslocar. Ctrl + meio: girar. Setas: deslocar. Espaço/F1: centralizar.
 - Guia, F2 ou `?`: modal completo de atalhos.
 - Diálogo: texto gradual; **Mostrar tudo** completa a fala; **Continuar** avança. Enter/Espaço revela primeiro e avança quando completo. Esc fecha/cancela. Preferência de movimento reduzido mostra o texto imediatamente.
 
@@ -184,3 +184,5 @@ O botão **Mapas** abre o editor de imagem/altura para matriz voxel, com correç
 Botão direito numa técnica ativa alterna **AUTO**. A conjuração automática usa mana, recarga e alvos válidos, e respeita movimento e mira manual. Magias escalam com MATK, golpes físicos com ATK; há novas pegadas de fogo/gelo e auras mágicas. Consulte `docs/SCALING.md`.
 
 O catálogo distingue técnicas disponíveis, em evolução, exclusivas de outro herói, sem pontos, sem espaço, apenas de espólio e no nível máximo. Sete **ultimates** exigem nível mínimo de herói (10,12ou15) e requisitos crescentes para cada melhoria; os bloqueios são validados também em espólios e descobertas. Consulte `docs/ULTIMATES.md`.
+
+O campo padrão de Line Wars tem **63 × 112 unidades**, dois corredores de invasão com mais de 80 unidades e um distrito lateral de recrutamento. No campo próprio aparecem a defesa, a fonte e os serviços. A fonte vende todos os itens e oferece melhorias, venda, imbuições e runas. A fila guarda o alvo por entrada. A barra compacta de jogadores pode ser expandida; os botões Meu herói, Atacar rival, Fonte e lojas e Mapa movem a câmera. Ouro recebido usa apenas um pequeno delta junto à carteira.

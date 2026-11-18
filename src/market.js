@@ -10,7 +10,7 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{},interactive
  // Combat-number overlays may be aria-hidden; merchant buttons must be their
  // siblings so keyboard and assistive technology can reach the shop services.
  (overlay.parentElement||overlay).append(labels);
- const stores=[],ownedGeometry=new Set();let state=null,disposed=false,marketInteractive=!!initialInteractive;
+ const stores=[],ownedGeometry=new Set();let hoveredShop=null;let state=null,disposed=false,marketInteractive=!!initialInteractive;
  const neutralWood=0xa58c64,lightWood=0xc6ad7c,darkWood=0x746448,cream=0xe9dfbd;
  const box=(parent,x,y,z,w,h,d,color)=>voxel(parent,x,y,z,w,h,d,color);
  function consolidate(group,key){const mesh=bake(group);if(mesh){mesh.name=key;if(mesh.geometry)ownedGeometry.add(mesh.geometry);}return mesh;}
@@ -44,7 +44,7 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{},interactive
  }
  function isOpen(next){return !next||next.phase==='preparation'||next.options?.mode==='linewars'&&next.phase==='wave';}
  function locationFor(unit,shop){const layout=unit?.marketShops,marker=Array.isArray(layout)?layout.find(p=>p.id===shop.id):layout?.[shop.id];return{...shop,x:Number.isFinite(marker?.x)?marker.x:shop.x,z:Number.isFinite(marker?.z)?marker.z:shop.z};}
- for(const shop of Object.values(SHOPS)){
+ for(const shop of Object.values(SHOPS).filter(s=>s.id!=='fountain')){
   const stand=new T.Group();root.add(stand);stand.position.set(shop.x,0,shop.z);const cloth=Number.isFinite(shop.color)?shop.color:0x7a987e;
   box(stand,0,.24,-1.1,3.9,.12,3.0,0x9eac81);box(stand,0,.91,-1.8,3.35,1.15,.78,neutralWood);box(stand,0,1.54,-1.8,3.65,.16,.94,lightWood);box(stand,0,.7,-1.37,3.3,.15,.08,darkWood);
   for(const side of [-1,1]){box(stand,side*1.67,1.57,-1.9,.14,2.7,.14,lightWood);box(stand,side*1.67,1.57,-2.6,.14,2.7,.14,darkWood);}
@@ -63,13 +63,14 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{},interactive
    for(const [i,entry]of stores.entries()){
     const {shop,npc,stand,button,hint,position}=entry,location=locationFor(own,shop),frame=Math.floor(time*8+i*2)%8;entry.location=location;stand.position.set(location.x,0,location.z);npc.position.x=location.x;npc.position.z=location.z;
     if(frame!==entry.lastFrame){entry.lastFrame=frame;npc.position.y=.18+[0,.018,.035,.018,0,-.012,-.018,-.012][frame];npc.rotation.z=[0,.012,.016,.008,0,-.008,-.012,-.008][frame];}
-    position.set(location.x,Math.max(3.25,(entry.model?.height||2.5)+.55),location.z+.18).project(camera);const onscreen=position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;button.hidden=!onscreen;
+    position.set(location.x,Math.max(3.25,(entry.model?.height||2.5)+.55),location.z+.18).project(camera);const nearHero=own&&Math.hypot(own.x-location.x,own.z-location.z)<7,contextual=state?.options?.mode!=='linewars'||marketInteractive&&(nearHero||hoveredShop===shop.id||own?.shopInteraction===shop.id);const onscreen=contextual&&position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;button.hidden=!onscreen;
     const screen=entry.screenNpc;position.set(location.x,entry.model?.eyeLine||1.3,location.z).project(camera);screen.x=(position.x*.5+.5)*width;screen.y=(-position.y*.5+.5)*height;screen.visible=position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;
     button.disabled=!marketInteractive;button.tabIndex=marketInteractive?0:-1;button.style.pointerEvents=marketInteractive?'auto':'none';button.classList.toggle('npc-observed',!marketInteractive);if(!onscreen)continue;
     position.set(location.x,Math.max(3.25,(entry.model?.height||2.5)+.55),location.z+.18).project(camera);button.style.left=((position.x*.5+.5)*width)+'px';button.style.top=((-position.y*.5+.5)*height)+'px';
     const distance=own?Math.hypot(own.x-location.x,own.z-location.z):null,near=distance!==null&&distance<=shop.range+(own?.shopInteraction===shop.id ? .35 : 0);button.classList.toggle('npc-near',marketInteractive&&near);button.classList.toggle('npc-engaged',marketInteractive&&own?.shopInteraction===shop.id);hint.textContent=!marketInteractive?'Apenas observando':distance===null?'Conhecer':near?'Conversar · ao alcance':'Aproximar · '+distance.toFixed(1)+'m';button.title=shop.npc+' · '+shop.role+'. Alcance de atendimento: '+shop.range+'m.';
    }
   },
+  setHovered(id){hoveredShop=id;},
   setInteractive(value){marketInteractive=!!value;},
   getShops(){return stores.map(entry=>({...entry.location}));},
   pick(point){if(disposed||!marketInteractive||!isOpen(state)||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;return stores.filter(s=>Math.hypot(point.x-s.location.x,point.z-s.location.z)<1.1).sort((a,b)=>Math.hypot(point.x-a.location.x,point.z-a.location.z)-Math.hypot(point.x-b.location.x,point.z-b.location.z))[0]?.shop.id||null;},

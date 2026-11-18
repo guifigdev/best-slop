@@ -1,5 +1,6 @@
 import {SKILLS,HEROES,skillAt,skillDescription,levelOf} from '../shared/catalog.js';
 import {skillRequirement} from '../shared/skill-access.js';
+import {isSharedStarter} from '../shared/skill-ownership.js';
 import {icon,portrait} from './art.js';
 
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,7 +8,7 @@ const amount=value=>Number.isFinite(value)?Math.max(0,Math.floor(value)):0;
 const paths={available:'M10 4v12M4 10h12',upgrade:'m4 10 6-6 6 6M10 4v12',occupied:'M5 9h10v8H5zM7 9V6a3 3 0 0 1 6 0v3',level:'M3 16h4v-4h4V8h5V4M12 4h4v4',points:'m10 2 7 8-7 8-7-8zM4 16 16 4',slots:'M3 3h5v5H3zm9 0h5v5h-5zM3 12h5v5H3zm9 0h5v5h-5z',drop:'m10 2 7 7-3 8H7L3 9zM10 2v15M3 9h14',max:'M17 10a7 7 0 1 1-2-5M6 10l3 3 7-8',hero:'M4 17V9l6-6 6 6v8M7 17v-6h6v6',ended:'M4 4h12v12H4zM7 7l6 6m0-6-6 6',ultimate:'m3 15-1-9 5 4 3-7 3 7 5-4-1 9zM4 17h12'};
 function glyph(key){return `<svg viewBox="0 0 20 20" aria-hidden="true" class="skill-state-glyph"><path d="${paths[key]||paths.available}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
 function minimumLevel(key,rank,base){const schedule=base.rankHeroLevels?.[rank-1],requirement=skillRequirement(key,rank);return Math.max(requirement,Number.isFinite(schedule)?schedule:1,Number.isFinite(base.minHeroLevel)?base.minHeroLevel:1);}
-function holderFor(p,key,state){const entry=state?.skillOwners?.[key];if(!entry||entry.owner===p?.owner)return null;const unit=state?.units?.find(u=>u.owner===entry.owner&&u.hero&&!u.summon),hero=unit?.hero||entry.hero;return{name:entry.name||unit?.name||'outro herói',hero:Object.hasOwn(HEROES,hero)?hero:null};}
+function holderFor(p,key,state){if(isSharedStarter(key))return null;const entry=state?.skillOwners?.[key];if(!entry||entry.owner===p?.owner)return null;const unit=state?.units?.find(u=>u.owner===entry.owner&&u.hero&&!u.summon),hero=unit?.hero||entry.hero;return{name:entry.name||unit?.name||'outro herói',hero:Object.hasOwn(HEROES,hero)?hero:null};}
 function holderMarkup(holder){const avatar=holder.hero?portrait(holder.hero):'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v8H8zM4 15h16v6H4z" fill="currentColor"/></svg>';return `<span class="skill-owner"><span class="skill-owner-avatar">${avatar}</span><span><small>Reservada a</small><b>${escapeHTML(holder.name)}</b></span>${glyph('occupied')}</span>`;}
 
 /** Catalog cards only. The caller binds data-buy after authoritative rendering. */
@@ -24,7 +25,9 @@ export function skillShopMarkup(p,state={}){
   else if(slotsLocked){access='slots';label='Sete espaços ocupados';reason='Sua build já tem sete técnicas. Substituições são feitas nos espólios; melhorar uma técnica atual não exige novo espaço.';}
   else if(pointsLocked){access='points';label='Sem pontos de habilidade';reason='Ao subir de nível, você ganha 1 ponto para aprender ou melhorar uma técnica.';}
   else if(rank){access='upgrade';reason=`Melhorar para o nível ${next} custa 1 ponto e mantém o mesmo espaço da build.`;}
-  const enabled=access==='available'||access==='upgrade',alias=key==='critical'?'Golpe crítico':'',details=skillDescription(key,next),stateName=max?'max':rank?'upgrade':'learn',requirements=[];
+  const enabled=access==='available'||access==='upgrade',shared=isSharedStarter(key),alias=key==='critical'?'Golpe crítico':'',details=skillDescription(key,next),stateName=max?'max':rank?'upgrade':'learn',requirements=[];
+  if(shared)requirements.push('<span class="skill-badge skill-badge-owned skill-badge-shared">Inicial compartilhada · 1 cópia por herói</span>');
+  if(shared&&enabled)reason=rank?`Melhorar para o nível ${next} custa 1 ponto. Esta técnica inicial é compartilhada e não bloqueia outros heróis.`:'Técnica inicial compartilhada: cada herói pode aprender uma cópia. Custa 1 ponto de habilidade.';
   if(base.ultimate)requirements.push(`<span class="skill-badge skill-badge-ultimate">${glyph('ultimate')} Ultimate · Nv. ${required}</span>`);
   else if(required>1)requirements.push(`<span class="skill-badge skill-badge-level">${glyph('level')} Nv. ${required}</span>`);
   if(rank&&!max)requirements.push(`<span class="skill-badge skill-badge-owned">Sua técnica · Nv. ${rank}</span>`);

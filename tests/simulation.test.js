@@ -1,8 +1,9 @@
+import {isSharedStarter} from '../shared/skill-ownership.js';
 import {transact} from './shop-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
-import {SKILLS,ITEMS,skillAt,levelOf,upgradePrice} from '../shared/catalog.js';
+import {HEROES,SKILLS,ITEMS,skillAt,levelOf,upgradePrice} from '../shared/catalog.js';
 const advance=(g,seconds)=>{for(let i=0;i<Math.ceil(seconds*30);i++)g.tick(1/30);};
 function isolated(arena='forest'){const g=new Game(7381,{mode:'tower'});g.startingArena=arena;g.addPlayer('p');g.spawnWave();g.units=g.units.filter(u=>u.hero);const enemy=g.spawnEnemy('frog',14,14,{hp:1e6,damage:0});enemy.speed=0;return g;}
 
@@ -32,14 +33,15 @@ test('seeded autonomous combat stays deterministic and produces real hero action
 // normally, while controlled hits finish each encounter. This is not a claim
 // that the default bot builds can win a competitive fifty-wave campaign.
  test('assisted combat completes fifty campaign waves, nine bonuses, five themes, real shops and the final',()=>{
-  const g=new Game();g.addPlayer('p','knight','Bento',true);g.addBots(3);const themes=new Set(),bonusBlocks=new Set(),visitedShops=new Set();let assistedKills=0;
+  const g=new Game();g.addPlayer('p','knight','Bento',true);g.addBots(3);for(const h of g.heroes())assert.deepEqual(h.skills,[HEROES[h.hero].skill]);const themes=new Set(),bonusBlocks=new Set(),visitedShops=new Set();let assistedKills=0;
   for(let i=0;i<40000&&!['victory','defeat'].includes(g.phase);i++){
    if(['wave','bonus','final'].includes(g.phase))for(const h of g.heroes())if(h.alive)g.heal(h,h.maxHp);
    g.tick(.1);themes.add(g.arena);if(g.phase==='bonus')bonusBlocks.add(g.wave);for(const e of g.effects)if(e.type==='shopOpen')visitedShops.add(e.npc);
    const encounterReady=g.phase==='wave'&&g.time-g.waveStarted>=2||g.phase==='bonus'&&g.time-g.bonusStarted>=2;
    if(encounterReady)for(const enemy of g.units.filter(u=>!u.hero&&!u.summon&&u.alive)){const source=g.heroes().find(h=>h.alive&&g.canTarget(h,enemy));assert.ok(source,'each encounter must have its own living defender');g.hit(enemy,enemy.maxHp*1000,source,false,true);assistedKills++;}
    if(g.phase==='final'&&g.time-g.finalStarted>=3){const winner=g.heroes().find(h=>h.alive);assert.ok(winner);for(const opponent of g.heroes().filter(h=>h.alive&&h.id!==winner.id))g.hit(opponent,opponent.maxHp*1000,winner,false,true);}
-   const keys=g.heroes().flatMap(h=>h.skills);assert.equal(new Set(keys).size,keys.length,'techniques must remain unique across all players');
+   for(const h of g.heroes())assert.equal(new Set(h.skills).size,h.skills.length,'each hero must keep one copy of each technique');
+   const exclusiveKeys=g.heroes().flatMap(h=>h.skills).filter(key=>!isSharedStarter(key));assert.equal(new Set(exclusiveKeys).size,exclusiveKeys.length,'non-starter techniques must remain unique across players');
   }
   assert.equal(g.phase,'victory');assert.equal(g.wave,50);assert.equal(themes.size,5);assert.equal(bonusBlocks.size,9);assert.ok(g.winner);assert.equal(g.shopVisit,10);assert.equal(g.heroes().filter(u=>u.alive).length,1);
   assert.ok(assistedKills>500);assert.ok(visitedShops.has('equipment'));assert.ok(visitedShops.has('smith'));assert.ok(g.heroes().every(h=>h.inventory.some(Boolean)));assert.ok(g.heroes().some(h=>h.inventory.some(slot=>(slot?.level||0)>1)));assert.ok(g.heroes().every(h=>Object.values(h.attributes).reduce((n,v)=>n+v,0)>37));assert.ok(g.heroes().some(h=>Object.values(h.skillLevels).some(rank=>rank>1)));

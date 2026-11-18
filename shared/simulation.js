@@ -41,7 +41,7 @@ export class Game {
  player(id){return this.units.find(u=>u.id===this.players[id]);}
  addPlayer(id,type='knight',name='Aventureiro',bot=false,squad=null){
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
-  const h=HEROES[type],i=Object.keys(this.players).length,startSkill=this.skillAvailable(null,h.skill)?h.skill:Object.keys(SKILLS).find(k=>!SKILLS[k].dropOnly&&canLearnSkill({level:1},k)&&this.skillAvailable(null,k));if(!startSkill)return false;
+  const h=HEROES[type],i=Object.keys(this.players).length,startSkill=h.skill;
   const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
   recompute(u,this.time);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const point=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
  }

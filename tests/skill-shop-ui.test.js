@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {skillShopMarkup} from '../src/skill-shop-ui.js';
 import {lootMarkup} from '../src/loot-ui.js';
+import {SHARED_STARTERS} from '../shared/skill-ownership.js';
 
 const hero=extra=>({owner:'self',hero:'knight',name:'Bjorn',alive:true,level:1,skills:['stomp'],skillLevels:{stomp:1},skillPoints:1,essence:3,inventory:[],...extra});
 function buttons(html){return [...html.matchAll(/<button\b([^>]*)>/g)].map(([,source])=>{const attributes={};for(const [,key,value]of source.matchAll(/([:\w-]+)(?:\s*=\s*"([^"]*)")?/g))attributes[key]=value??true;return attributes;});}
@@ -11,6 +12,12 @@ const catalogButton=(html,key)=>action(html,{'data-buy':key});
 test('catalog gives exclusive ownership priority and safely identifies the actual holder',()=>{
  const p=hero({skillPoints:0}),state={phase:'wave',skillOwners:{blizzard:{owner:'rival',name:'<img src=x onerror=evil> "Rival"'}},units:[{owner:'rival',hero:'mage'}]};
  const markup=skillShopMarkup(p,state),button=catalogButton(markup,'blizzard');assert.equal(button['data-access'],'occupied');assert.equal(button.disabled,true);assert.ok(markup.includes('&lt;img src=x onerror=evil&gt; &quot;Rival&quot;'));assert.equal(markup.includes('<img src=x'),false);assert.ok(markup.includes('skill-owner-avatar'));assert.ok(markup.includes('viewBox="0 0 120 120"'),'holder has the real animal portrait');
+});
+test('all six starter techniques remain shared even when a legacy snapshot reserves them to rivals',()=>{
+ assert.equal(SHARED_STARTERS.length,6);const p=hero({skills:[],skillLevels:{}}),skillOwners=Object.fromEntries(SHARED_STARTERS.map(key=>[key,{owner:'rival',name:'Antigo dono'}])),markup=skillShopMarkup(p,{phase:'wave',skillOwners,units:[{owner:'rival',hero:'mage'}]});
+ for(const key of SHARED_STARTERS){const button=catalogButton(markup,key);assert.equal(button.disabled,undefined,key);assert.equal(button['data-access'],'available',key);assert.ok(button['aria-label'].includes('compartilhada'),key);}
+ assert.equal(markup.includes('Antigo dono'),false);assert.ok(markup.includes('Inicial compartilhada · 1 cópia por herói'));
+ const learned=hero({skills:['critical'],skillLevels:{critical:1}}),upgraded=catalogButton(skillShopMarkup(learned,{phase:'wave',skillOwners}),'critical');assert.equal(upgraded['data-access'],'upgrade');assert.equal(upgraded.disabled,undefined);
 });
 test('ultimate acquisition and later upgrades unlock at their distinct hero levels',()=>{
  assert.equal(catalogButton(skillShopMarkup(hero({level:9}),{phase:'wave'}),'blizzard').disabled,true);

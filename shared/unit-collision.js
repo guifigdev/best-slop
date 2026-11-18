@@ -11,7 +11,7 @@ const live=u=>u.alive&&!u.noCollision&&Number.isFinite(u.x)&&Number.isFinite(u.z
 const order=(a,b)=>typeof a.id==='number'&&typeof b.id==='number'?a.id-b.id:String(a.id).localeCompare(String(b.id));
 
 function bounded(game,u,p){const r=unitRadius(u),b=game.bounds||ARENA_BOUNDS,c=u.cell,half=c?.r||b,cx=c?.x||0,cz=c?.z||0;
- const point={x:clamp(p.x,Math.max(-b,c?cx-half:-b)+r,Math.min(b,c?cx+half:b)-r),z:clamp(p.z,Math.max(-b,c?cz-half:-b)+r,Math.min(b,c?cz+half:b)-r)},radius=half+2.5-r,dx=point.x-cx,dz=point.z-cz,d=Math.hypot(dx,dz);if(game.options?.mode!=='linewars'&&(c||b===ARENA_BOUNDS)&&d>radius){point.x=cx+dx*radius/d;point.z=cz+dz*radius/d;}return point;}
+ const point={x:clamp(p.x,Math.max(-b,c?cx+(c.minX??-half):-b)+r,Math.min(b,c?cx+(c.maxX??half):b)-r),z:clamp(p.z,Math.max(-b,c?cz+(c.minZ??-half):-b)+r,Math.min(b,c?cz+(c.maxZ??half):b)-r)},radius=half+2.5-r,dx=point.x-cx,dz=point.z-cz,d=Math.hypot(dx,dz);if(game.options?.mode!=='linewars'&&(c||b===ARENA_BOUNDS)&&d>radius){point.x=cx+dx*radius/d;point.z=cz+dz*radius/d;}return point;}
 function wallBlocked(game,u,p){const r=unitRadius(u);return (game.obstacles||[]).some(o=>!(u.flying&&o.map)&&Math.abs(p.x-o.x)<o.w/2+r-EPS&&Math.abs(p.z-o.z)<o.d/2+r-EPS)||!!game.unitTerrainBlocked?.(u,p,r);}
 function solidBlocked(game,u,p){if(!Number.isFinite(p?.x)||!Number.isFinite(p?.z))return true;const limit=bounded(game,u,p);return Math.hypot(limit.x-p.x,limit.z-p.z)>EPS||wallBlocked(game,u,p);}
 const ignored=(id,ignore)=>Array.isArray(ignore)?ignore.includes(id):ignore instanceof Set?ignore.has(id):ignore!==undefined&&id===ignore;
