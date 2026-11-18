@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {capacity,modeOptions} from '../shared/modes.js';
-import {CASTLE_RACES,CASTLE_BUILDINGS} from '../shared/castle-catalog.js';
+import {CASTLE_RACES,CASTLE_BUILDINGS,CASTLE_LAYOUT} from '../shared/castle-catalog.js';
 import {castleBuildingCard,castleCounters} from '../src/castle-ui.js';
 import {sceneState} from '../src/scene-state.js';
 
@@ -15,4 +15,7 @@ test('Castle snapshot exposes automatic troops to the shared renderer without is
 });
 test('building cards expose attack/armor counters and refuse unsupported reference structures',()=>{
  const entries=Object.entries(CASTLE_BUILDINGS),[key,b]=entries.find(([,b])=>b.unit&&b.race==='human'),html=castleBuildingCard(key,b,10000);assert.match(html,/data-cf-build=/);assert.match(html,/HP /);assert.match(html,/ATQ /);assert.match(castleCounters({attackType:'normal'}),/média/);const unsupported=entries.find(([,b])=>b.playable===false);if(unsupported)assert.match(castleBuildingCard(...unsupported,10000),/disabled/);assert.equal(Object.keys(CASTLE_RACES).length,10);
+});
+test('the playable Castle scene actually receives the extracted terrain and original tree/rock locations',()=>{
+ const g=new Game(993,{mode:'castlefight'});g.addPlayer('a');g.addPlayer('b');g.initCastleFight();const s=g.snapshot(),map=s.voxelMap;assert.equal(map.width,48);assert.equal(map.height,32);assert.equal(map.palette.length,9);assert.deepEqual(map.biomes,CASTLE_LAYOUT.terrain.biomes);assert.deepEqual(map.heights,CASTLE_LAYOUT.terrain.heights);assert.ok(s.obstacles.length>150);for(const prop of s.obstacles.filter(o=>o.scenery)){assert.ok(CASTLE_LAYOUT.doodads.some(d=>d.rawId===prop.nativeRawId&&d.x===prop.x&&d.z===prop.z));assert.ok(Math.hypot(prop.x,prop.z)>3);}assert.ok(Math.max(...map.heights)>2);
 });

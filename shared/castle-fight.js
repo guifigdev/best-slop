@@ -1,6 +1,6 @@
 import {sceneryObstacles} from './scenery.js';
 import {CASTLE_RACES,CASTLE_BUILDINGS,CASTLE_UNITS,CASTLE_ITEMS,CASTLE_ECONOMY_REFERENCE,castleDamageMultiplier} from './castle-catalog.js';
-import {castleMap,castlePoint,castleBuildPosition,castleOverlap} from './castle-map.js';
+import {castleReferenceScenery,castleMap,castlePoint,castleBuildPosition,castleOverlap} from './castle-map.js';
 
 export const CASTLE_START_GOLD=CASTLE_ECONOMY_REFERENCE.defaultStartingGold;
 export const CASTLE_START_LUMBER=CASTLE_ECONOMY_REFERENCE.defaultStartingLumber;
@@ -35,7 +35,7 @@ export const CastleFightMethods={
   cf.shop.nextStock={};cf.shop.availableAt=Object.fromEntries(Object.entries(CASTLE_ITEMS).map(([key,item])=>[key,item.initialDelay??item.sourceStats?.stockInitialDelay??0]));for(const[key,item]of Object.entries(CASTLE_ITEMS))cf.shop.stock[key]=item.stock??item.sourceStats?.stockMaximum??null;
   cf.teams=map.castles.map(castle=>({...castle,id:this.id(),castleStructure:true,castle:true,name:'Castelo do clã',hp:map.castleHp,maxHp:map.castleHp,armor:map.castleArmor,armorType:map.castleArmorType,alive:true}));
   for(const [seat,u]of heroes.entries()){this.setupCastleBuilder(u);const team=seat%2+1,race=own(CASTLE_RACES,u.castleRace)?u.castleRace:!u.bot&&own(CASTLE_RACES,this.options.race)?this.options.race:races[seat%races.length];cf.players[u.owner]={owner:u.owner,team,race,income:CASTLE_BASE_INCOME,baseIncomeRate:CASTLE_ECONOMY_REFERENCE.baseIncomeRate,incomeMultiplier:CASTLE_ECONOMY_REFERENCE.defaultPlayerMultiplier,cooldowns:{},items:{},legendarySlots:1,hasBuilt:false,nextBot:seat*.65};u.castleBuilder=true;u.castleTeam=team;u.castleRace=race;u.team=team;u.gold=CASTLE_START_GOLD;u.lumber=CASTLE_START_LUMBER;u.x=team===1?-16.5:16.5;u.z=(Math.floor(seat/2)-.5)*3;u.speed=7;u.order='stop';u.destination=null;u.target=null;u.mana=u.maxMana=0;u.castleBlinkUntil=0;u.ready=false;delete u.cell;delete u.challenge;}
-  this.phase='wave';this.wave=0;this.timer=0;this.bounds=map.maxX;cf.scenery=[...[-3,3].flatMap(x=>[-1.6,1.6].map(z=>({id:`castle-center-${x}-${z}`,kind:'pine',x,z,scale:.9,rotation:0}))),...[-22,-18,-10,-5,5,10,18,22].flatMap((x,i)=>[-15,15].map(z=>({id:`castle-scenery-${i}-${z}`,kind:i%3===0?'boulder':'pine',x,z,scale:.85,rotation:0}))),{id:'castle-rune-north',kind:'runestone',x:0,z:-12,scale:1,rotation:0},{id:'castle-rune-south',kind:'runestone',x:0,z:12,scale:1,rotation:0}];cf.obstacles=sceneryObstacles(cf.scenery);this.obstacles=cf.obstacles;this.zones=[];this.units=heroes;this.message='Castle Fight: construa seu exército. As tropas lutam sozinhas; vença destruindo o castelo inimigo.';return true;
+  this.phase='wave';this.wave=0;this.timer=0;this.bounds=map.maxX;cf.scenery=castleReferenceScenery(map);cf.obstacles=sceneryObstacles(cf.scenery);this.obstacles=cf.obstacles;this.zones=[];this.units=heroes;this.message='Castle Fight: construa seu exército. As tropas lutam sozinhas; vença destruindo o castelo inimigo.';return true;
  },
 
  castleCommand(u,c){
