@@ -90,7 +90,7 @@ Perigos afetam heróis e inimigos, e ficam inativos nos intervalos/mercado. Obsi
 
 - Direito: mover/atacar. A + clique: atacar ao mover. M + clique: mover. S: parar/interromper canalização. H: manter posição.
 - Q W E R D F C: técnicas. 1–6: consumíveis. I: atributos.
-- Roda: zoom. Meio + arraste: deslocar. Ctrl + meio: girar. Setas: deslocar. Espaço/F1: centralizar.
+- Roda: zoom. Arraste: puxar o terreno. Botão Mover/Girar: alternar rotação, sem teclado. No celular, um dedo arrasta e dois fazem zoom. Setas: deslocar. Espaço/F1: centralizar.
 - Guia, F2 ou `?`: modal completo de atalhos.
 - Diálogo: texto gradual; **Mostrar tudo** completa a fala; **Continuar** avança. Enter/Espaço revela primeiro e avança quando completo. Esc fecha/cancela. Preferência de movimento reduzido mostra o texto imediatamente.
 

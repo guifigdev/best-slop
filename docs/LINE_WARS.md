@@ -77,6 +77,6 @@ A barra de avatares mostraHPdo herói e vidas do portal de todos. Clicar selecio
 
 ## Navegação e interface por contexto
 
-Meio + arraste desloca o mapa; Ctrl + meio gira. Os controles usam os limites retangulares reais, inclusive os trechos distantes. Avatares escolhem o campo rival e os botões levam à defesa, recrutamento, fonte ou vista completa. A fila abre detalhes sob demanda. Placas de casinhas e lojas aparecem por contexto; o campo próprio não desenha os recrutadores. As habilidades iniciais dos seis heróis são compartilhadas entre jogadores, com uma cópia por herói; as demais permanecem exclusivas.
+O arrasto acompanha o terreno sob o cursor ou dedo, com projeção no chão e sensibilidade proporcional ao zoom. O botão Mover/Girar alterna o gesto de um dedo ou mouse; dois dedos fazem zoom e deslocamento, sem Ctrl. Os controles usam os limites retangulares reais, inclusive os trechos distantes. Avatares escolhem o campo rival e os botões levam à defesa, recrutamento, fonte ou vista completa. A fila abre detalhes sob demanda. Placas de casinhas e lojas aparecem por contexto; o campo próprio não desenha os recrutadores. As habilidades iniciais dos seis heróis são compartilhadas entre jogadores, com uma cópia por herói; as demais permanecem exclusivas.
 
 A fonte é um ponto físico de compra universal; a sessão `fountain` atende todas as categorias e serviços, apenas na própria instância de Line Wars e dentro de 5m. O estoque e os seis espaços continuam autoritativos.
