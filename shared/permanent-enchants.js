@@ -64,7 +64,7 @@ export function rollPermanentEnchant(itemKey,random){
 
 function bestEffects(u,entries=permanentEntries(u)){const byType=new Map();for(const definition of entries){const effect=definition.effect;if(!effect)continue;const old=byType.get(effect.type),power=(effect.damage||effect.heal||0)*(effect.chance||1);if(!old||power>(old.effect.damage||old.effect.heal||0)*(old.effect.chance||1))byType.set(effect.type,definition);}return [...byType.values()];}
 function weatherDamage(game,damage,element){return damage*(ARENAS[game.arena]?.[element]||1);}
-function directDamage(game,u,target,damage,element){const resist=element==='fire'?target.fireResist||0:element==='ice'?target.coldResist||0:0;return game.hit(target,weatherDamage(game,damage,element)*(1-resist),u,true,false,false,false,element);}
+function directDamage(game,u,target,damage,element){const resist=element==='fire'?target.fireResist||0:element==='ice'?target.coldResist||0:0;return game.hit(target,weatherDamage(game,damage,element)*(1-resist),u,true,false,false,false,element,'proc');}
 function isActive(game,u){return u?.alive&&BATTLE.has(game.phase)&&!(u.stageDone&&game.phase==='wave');}
 
 export const permanentMethods={

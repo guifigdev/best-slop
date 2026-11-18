@@ -17,12 +17,16 @@ for(const [key,name,description]of [
  ['owl','Vidar','Coruja dos pinheiros de Asgard. Escuta o trovão entre os galhos antes que a primeira faísca apareça.'],
  ['raccoon','Eirik','Guaxinim viajante dos Nove Reinos. Lê as marcas das Nornas e escolhe o instante exato para atacar.']
 ])Object.assign(HEROES[key],{name,description});
+for(const [key,archetype,combatRole]of [
+ ['knight','physical_melee','guardian'],['turtle','physical_melee','tank'],['raccoon','physical_melee','assassin'],
+ ['ranger','physical_ranged','archer'],['mage','magic','arcanist'],['owl','magic','controller']
+])Object.assign(HEROES[key],{archetype,combatRole,attackType:archetype==='magic'?'magic':'physical'});
 export const ATTRIBUTES={
  str:{name:'Força',short:'STR',description:'+1,2 ATQ físico/ponto; +5% dano físico a cada 10.'},
- int:{name:'Inteligência',short:'INT',description:'+2,5% poder mágico/ponto; +0,8 mana/s a cada 6; +8 mana/ponto.'},
+ int:{name:'Inteligência',short:'INT',description:'+2,5% poder mágico, +1 defesa mágica e +8 mana/ponto; +0,8 mana/s a cada 6.'},
  dex:{name:'Destreza',short:'DEX',description:'+1,5 ATQ à distância/ponto; +0,5% precisão/ponto e +2% a cada 5.'},
  luk:{name:'Sorte',short:'LUK',description:'+1% crítico a cada 3; +1% esquiva perfeita a cada 10 (DEX não reduz).'},
- vit:{name:'Vitalidade',short:'VIT',description:'+20 vida/ponto; +1 armadura a cada 5; +0,1% da vida máxima/s a cada 10.'},
+ vit:{name:'Vitalidade',short:'VIT',description:'+20 vida e +1 armadura física/ponto; +1 defesa mágica a cada 5; +0,1% da vida máxima/s a cada 10.'},
  agi:{name:'Agilidade',short:'AGI',description:'+1% vel. ataque e +0,3% esquiva comum/ponto; +5% vel. ataque a cada 10.'}
 };
 const urls={mk:'https://classic.battle.net/war3/human/units/mountainking.shtml',tc:'https://classic.battle.net/war3/orc/units/taurenchieftain.shtml',pal:'https://classic.battle.net/war3/human/units/paladin.shtml',far:'https://classic.battle.net/war3/orc/units/farseer.shtml',bm:'https://classic.battle.net/war3/orc/units/blademaster.shtml',am:'https://classic.battle.net/war3/human/units/archmage.shtml',dl:'https://classic.battle.net/war3/undead/units/dreadlord.shtml',kg:'https://classic.battle.net/war3/nightelf/units/keepergrove.shtml'};
@@ -89,13 +93,25 @@ const physicalRatio=[.5,.625,.75,.875,1],magicRatio=[.4,.525,.65,.775,.9];
 const scaling={
  multishot:['physical',physicalRatio],dash:['physical',physicalRatio],hornrush:['physical',physicalRatio],bash:['physical',[.15,.2,.25,.3,.35]],
  bolt:['magic',magicRatio],drain:['magic',magicRatio],hook:['magic',magicRatio],warlockfire:['magic',magicRatio],warlockfrost:['magic',magicRatio],chain:['magic',magicRatio],
- shockwave:['magic',[.3,.375,.45,.525,.6]],fireball:['magic',[.35,.45,.55,.65,.75]],frostnova:['magic',[.3,.3875,.475,.5625,.65]],stomp:['magic',[.2,.25,.3,.35,.4]],
+ shockwave:['physical',[.3,.375,.45,.525,.6]],fireball:['magic',[.35,.45,.55,.65,.75]],frostnova:['magic',[.3,.3875,.475,.5625,.65]],stomp:['physical',[.2,.25,.3,.35,.4]],
  forcepush:['magic',[.25,.3125,.375,.4375,.5]],flamebreath:['magic',[.3,.3875,.475,.5625,.65]],stormdive:['magic',[.25,.325,.4,.475,.55]],
  gungnir:['magic',[.3,.375,.45,.525,.6]],thorsjudgment:['magic',[.3,.3875,.475,.5625,.65]],helsfrost:['magic',[.3,.3875,.475,.5625,.65]],
  blizzard:['magic',magicRatio.map((value,i)=>value/SKILLS.blizzard.levels[i].pulses)],gravity:['magic',magicRatio.map((value,i)=>value/SKILLS.gravity.levels[i].duration)],venomcloud:['magic',[.06,.0775,.095,.1125,.13]],
  firesteps:['magic',[.025,.035,.045,.055,.065]],froststeps:['magic',[.015,.0225,.03,.0375,.045]],auraflame:['magic',[.015,.02,.025,.03,.035]],icepulse:['magic',[.01,.015,.02,.025,.03]]
 };
 for(const [key,[type,ratios]]of Object.entries(scaling)){SKILLS[key].damageType=type;for(const [i,rank]of SKILLS[key].levels.entries())rank[type==='physical'?'atkCoefficient':'matkCoefficient']=ratios[i];}
+// Access is explicit for every skill. Attack range never decides whether a
+// hero is a physical archer or a spellcaster.
+const archetypeSets={all:['physical_melee','physical_ranged','magic'],physical:['physical_melee','physical_ranged'],melee:['physical_melee'],ranged:['physical_ranged'],magic:['magic']};
+const skillGroups={
+ melee:['cleave'],ranged:['multishot','bounce'],
+ physical:['stomp','shockwave','bash','dash','hornrush','critical','avatar','battlecry','rage'],
+ all:['vampiric','endurance','devotion','evasion','thorns','stonehide'],
+ magic:['heal','freyjasgrace','shield','brilliance','blink','swap','icewall','bolt','chain','blizzard','summon','fireball','frostnova','forcepush','hook','gravity','poison','drain','flamebreath','venomcloud','stormdive','warlockfire','warlockfrost','odinsravens','thorsgoats','freyjascat','helguard','gungnir','thorsjudgment','helsfrost','firesteps','froststeps','auraflame','icepulse']
+};
+const compatibilityLabels={all:'Comum',physical:'Físico',melee:'Físico corpo a corpo',ranged:'Físico à distância',magic:'Mágico'};
+for(const [group,keys]of Object.entries(skillGroups))for(const key of keys){if(!Object.hasOwn(SKILLS,key)||SKILLS[key].allowedArchetypes)throw Error(`Classificação de habilidade inválida: ${key}`);Object.assign(SKILLS[key],{allowedArchetypes:Object.freeze([...archetypeSets[group]]),skillStyle:group==='all'?'utility':group==='magic'?'magic':'physical',compatibilityLabel:compatibilityLabels[group]});}
+for(const [key,entry]of Object.entries(SKILLS))if(!entry.allowedArchetypes)throw Error(`Classifique o arquétipo da habilidade ${key}.`);
 // Original Nordic fiction layered over stable simulation IDs. Historical skill
 // sources remain metadata for reference documentation, never in player copy.
 const NORDIC_SKILL_NAMES={bolt:'Martelo de Thor',stomp:'Passo do Jotun',heal:'Luz de Eir',chain:'Corrente de Mjolnir',blizzard:'Inverno de Niflheim',summon:'Lobos de Fenrir',multishot:'Flechas de Skadi',avatar:'Juramento de Tyr',critical:'Corte do Einherjar',vampiric:'Sede de Hel',endurance:'Fôlego de Sleipnir',thorns:'Espinhos de Yggdrasil',shockwave:'Tremor de Midgard',bash:'Impacto do Trovão',devotion:'Égide de Asgard',brilliance:'Fonte de Mimir',fireball:'Brasa de Muspelheim',frostnova:'Círculo de Skadi',dash:'Salto de Ratatosk',evasion:'Passos de Loki',cleave:'Corte do Jotun',bounce:'Lâminas de Sif',blink:'Travessia de Bifrost',swap:'Fios das Nornas',icewall:'Muralha de Niflheim',forcepush:'Sopro de Njord',hook:'Grilhão de Gleipnir',gravity:'Poço de Ginnungagap',poison:'Presas de Jormungand',drain:'Toque de Hel',shield:'Manto de Frigg',flamebreath:'Sopro de Surtr',venomcloud:'Névoa de Nidhogg',stormdive:'Mergulho da Valquíria',stonehide:'Pele de Jotun',battlecry:'Brado de Heimdall',hornrush:'Investida de Tanngrisnir',warlockfire:'Orbe de Muspelheim',warlockfrost:'Orbe de Niflheim',rage:'Fúria de Berserker'};
@@ -105,6 +121,9 @@ SKILLS.blink.description='Cruza um trecho do campo até um ponto livre, sem caus
 SKILLS.icewall.description='Ergue uma parede temporária de gelo que bloqueia o movimento de todos. Contorne a muralha ou use Travessia de Bifrost.';
 SKILLS.hook.description='Um grilhão rúnico puxa o inimigo em sua direção; obstáculos e limites interrompem a passagem.';
 SKILLS.gravity.description='Abre um campo que puxa inimigos para o centro e causa dano por segundo. O Juramento de Tyr resiste ao puxão.';
+SKILLS.vampiric.description='Recupera vida com dano direto elegível de ataques físicos ou mágicos. Funciona em todos os arquétipos; não reaplica em dano periódico ou efeitos derivados.';
+SKILLS.stomp.description='Pisada física em área que atordoa; duração menor contra heróis. Escala com ATQ físico.';
+SKILLS.shockwave.description='Uma onda de força física atravessa até 12 inimigos. Escala com ATQ físico.';
 for(const key of ['flamebreath','venomcloud','stormdive','stonehide','battlecry','hornrush'])SKILLS[key].dropOnly=true;
 const balanceNotes={
  stomp:'Atordoamento e recarga balanceados para o coliseu; dano base clássico preservado.',

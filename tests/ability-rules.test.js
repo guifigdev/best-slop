@@ -1,9 +1,10 @@
+import {canUseSkill} from '../shared/archetypes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {SKILLS,skillAt} from '../shared/catalog.js';
 import {AbilityMethods,physicalSkillDamage,magicSkillDamage,abilityScaling} from '../shared/ability-rules.js';
-function setup(keys=['bolt']){const g=new Game(13,{mode:'tower'});g.addPlayer('p','knight');g.phase='wave';g.wave=1;const p=g.player('p');p.x=p.z=0;p.skills=[...keys];p.skillLevels=Object.fromEntries(keys.map(key=>[key,1]));p.mana=p.maxMana=10000;p.magicAttack=100;const e=g.spawnEnemy('frog',0,4,{hp:10000,damage:0,speed:0,skills:[],variantRoll:.99});return{g,p,e};}
+function setup(keys=['bolt']){const g=new Game(13,{mode:'tower'});g.addPlayer('p',keys[0]&&canUseSkill({hero:'mage'},keys[0])?'mage':'knight');g.phase='wave';g.wave=1;const p=g.player('p');p.x=p.z=0;p.skills=[...keys];p.skillLevels=Object.fromEntries(keys.map(key=>[key,1]));p.mana=p.maxMana=10000;p.magicAttack=100;p.cd=9999;const e=g.spawnEnemy('frog',0,4,{hp:10000,damage:0,speed:0,skills:[],variantRoll:.99});return{g,p,e};}
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 
 test('the integrated Game tick performs autocast through real command, cost, cooldown and elemental damage',()=>{const {g,p,e}=setup();g.refresh(p);p.order='hold';e.order='stop';e.damage=0;const before=e.hp,mana=p.mana,s=skillAt('bolt',1),expected=g.spellDamage(p,s.damage,'lightning','bolt');assert.equal(g.command('p',{type:'toggleAutocast',slot:0}),true);g.tick(.02);close(before-e.hp,expected);assert.ok(p.mana<mana);assert.ok(p.cooldowns.bolt>0);assert.ok(e.stun>0);const after=e.hp;g.tick(.02);assert.equal(e.hp,after);});
@@ -12,7 +13,7 @@ test('INT raises actual Game spell damage and calculated MATK without multiplyin
 
 test('real Game movement and cast produce damaging fire footprints without canceling a manual move',()=>{const {g,p,e}=setup(['firesteps']);g.refresh(p);e.order='stop';e.x=0;e.z=1;p.order='hold';assert.equal(g.cast(p,{slot:0}),true);assert.ok(p.abilityTrail);assert.equal(g.command('p',{type:'move',x:0,z:7}),true);const before=e.hp;for(let i=0;i<40;i++)g.tick(.025);assert.ok(g.abilityFields.length>0);assert.ok(e.hp<before);assert.equal(p.order,'move');assert.ok(p.z>0);});
 
-test('melee engagement accounts for both hitboxes so a giant can be attacked without overlap',()=>{const {g,p,e}=setup([]);p.order='hold';p.skills=[];p.accuracy=1;p.damage=100;e.order='stop';e.x=0;e.z=2.5;e.size=3;e.armor=0;e.evasion=0;const before=e.hp;assert.ok(Math.hypot(e.x-p.x,e.z-p.z)>p.range);assert.ok(g.attackReach(p,e)>=2.5);g.tick(.02);assert.ok(e.hp<before);});
+test('melee engagement accounts for both hitboxes so a giant can be attacked without overlap',()=>{const {g,p,e}=setup([]);p.cd=0;p.order='hold';p.skills=[];p.accuracy=1;p.damage=100;e.order='stop';e.x=0;e.z=2.5;e.size=3;e.armor=0;e.evasion=0;const before=e.hp;assert.ok(Math.hypot(e.x-p.x,e.z-p.z)>p.range);assert.ok(g.attackReach(p,e)>=2.5);g.tick(.02);assert.ok(e.hp<before);});
 
 test('physical additions use current ATK once and magical additions do not multiply MATK by INT a second time',()=>{const u={hero:'knight',damage:80,magicPower:2,magicAttack:150};assert.equal(physicalSkillDamage(u,100,.5),140);assert.equal(magicSkillDamage(u,100,.5),275);assert.equal(magicSkillDamage({...u,magicPower:3},100,.5),375);assert.equal(physicalSkillDamage({damage:999,magicPower:.55},100,1),100);close(magicSkillDamage({magicPower:.55,magicAttack:999},100,.9),55);});
 

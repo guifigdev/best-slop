@@ -1,3 +1,4 @@
+import {HEROES} from '../shared/catalog.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {skillShopMarkup} from '../src/skill-shop-ui.js';
@@ -10,29 +11,29 @@ function action(html,attributes){const result=buttons(html).find(button=>Object.
 const catalogButton=(html,key)=>action(html,{'data-buy':key});
 
 test('catalog gives exclusive ownership priority and safely identifies the actual holder',()=>{
- const p=hero({skillPoints:0}),state={phase:'wave',skillOwners:{blizzard:{owner:'rival',name:'<img src=x onerror=evil> "Rival"'}},units:[{owner:'rival',hero:'mage'}]};
+ const p=hero({hero:'mage',skillPoints:0}),state={phase:'wave',skillOwners:{blizzard:{owner:'rival',name:'<img src=x onerror=evil> "Rival"'}},units:[{owner:'rival',hero:'mage'}]};
  const markup=skillShopMarkup(p,state),button=catalogButton(markup,'blizzard');assert.equal(button['data-access'],'occupied');assert.equal(button.disabled,true);assert.ok(markup.includes('&lt;img src=x onerror=evil&gt; &quot;Rival&quot;'));assert.equal(markup.includes('<img src=x'),false);assert.ok(markup.includes('skill-owner-avatar'));assert.ok(markup.includes('viewBox="0 0 120 120"'),'holder has the real animal portrait');
 });
 test('all six starter techniques remain shared even when a legacy snapshot reserves them to rivals',()=>{
  assert.equal(SHARED_STARTERS.length,6);const p=hero({skills:[],skillLevels:{}}),skillOwners=Object.fromEntries(SHARED_STARTERS.map(key=>[key,{owner:'rival',name:'Antigo dono'}])),markup=skillShopMarkup(p,{phase:'wave',skillOwners,units:[{owner:'rival',hero:'mage'}]});
- for(const key of SHARED_STARTERS){const button=catalogButton(markup,key);assert.equal(button.disabled,undefined,key);assert.equal(button['data-access'],'available',key);assert.ok(button['aria-label'].includes('compartilhada'),key);}
+ for(const key of SHARED_STARTERS){const type=Object.keys(HEROES).find(h=>HEROES[h].skill===key);const button=catalogButton(skillShopMarkup({...p,hero:type},{phase:'wave',skillOwners}),key);assert.equal(button.disabled,undefined,key);assert.equal(button['data-access'],'available',key);assert.ok(button['aria-label'].includes('compartilhada'),key);}
  assert.equal(markup.includes('Antigo dono'),false);assert.ok(markup.includes('Inicial compartilhada · 1 cópia por herói'));
  const learned=hero({skills:['critical'],skillLevels:{critical:1}}),upgraded=catalogButton(skillShopMarkup(learned,{phase:'wave',skillOwners}),'critical');assert.equal(upgraded['data-access'],'upgrade');assert.equal(upgraded.disabled,undefined);
 });
 test('ultimate acquisition and later upgrades unlock at their distinct hero levels',()=>{
- assert.equal(catalogButton(skillShopMarkup(hero({level:9}),{phase:'wave'}),'blizzard').disabled,true);
- assert.equal(catalogButton(skillShopMarkup(hero({level:10}),{phase:'wave'}),'blizzard').disabled,undefined);
- const trained=hero({level:14,skills:['blizzard'],skillLevels:{blizzard:1}});assert.equal(catalogButton(skillShopMarkup(trained,{phase:'wave'}),'blizzard')['data-access'],'level');
+ assert.equal(catalogButton(skillShopMarkup(hero({hero:'mage',level:9}),{phase:'wave'}),'blizzard').disabled,true);
+ assert.equal(catalogButton(skillShopMarkup(hero({hero:'mage',level:10}),{phase:'wave'}),'blizzard').disabled,undefined);
+ const trained=hero({hero:'mage',level:14,skills:['blizzard'],skillLevels:{blizzard:1}});assert.equal(catalogButton(skillShopMarkup(trained,{phase:'wave'}),'blizzard')['data-access'],'level');
  trained.level=15;const upgraded=catalogButton(skillShopMarkup(trained,{phase:'wave'}),'blizzard');assert.equal(upgraded.disabled,undefined);assert.equal(upgraded['data-access'],'upgrade');
 });
 test('a full build permits existing upgrades while preventing an eighth technique',()=>{
- const p=hero({level:40,skills:['stomp','heal','chain','critical','shield','cleave','poison'],skillLevels:{stomp:5,heal:1,chain:1,critical:1,shield:1,cleave:1,poison:1}}),markup=skillShopMarkup(p,{phase:'wave'});
- assert.equal(catalogButton(markup,'heal').disabled,undefined);assert.equal(catalogButton(markup,'heal')['data-access'],'upgrade');assert.equal(catalogButton(markup,'blink')['data-access'],'slots');assert.equal(catalogButton(markup,'blink').disabled,true);assert.equal(catalogButton(markup,'stomp')['data-access'],'max');
+ const p=hero({hero:'mage',level:40,skills:['bolt','heal','chain','blizzard','shield','frostnova','poison'],skillLevels:{bolt:5,heal:1,chain:1,blizzard:1,shield:1,frostnova:1,poison:1}}),markup=skillShopMarkup(p,{phase:'wave'});
+ assert.equal(catalogButton(markup,'heal').disabled,undefined);assert.equal(catalogButton(markup,'heal')['data-access'],'upgrade');assert.equal(catalogButton(markup,'blink')['data-access'],'slots');assert.equal(catalogButton(markup,'blink').disabled,true);assert.equal(catalogButton(markup,'bolt')['data-access'],'max');
 });
 test('no points, maximum rank and drop-only acquisition have separate actionable states',()=>{
  const noPoints=skillShopMarkup(hero({skillPoints:0}),{phase:'wave'});assert.equal(catalogButton(noPoints,'critical')['data-access'],'points');assert.ok(noPoints.includes('Golpe crítico'),'critical remains discoverable by its familiar name');
- const sourceOnly=skillShopMarkup(hero({level:40}),{phase:'wave'});assert.equal(catalogButton(sourceOnly,'flamebreath')['data-access'],'drop');assert.equal(catalogButton(sourceOnly,'flamebreath').disabled,true);
- const learned=hero({skills:['flamebreath'],skillLevels:{flamebreath:1}});assert.equal(catalogButton(skillShopMarkup(learned,{phase:'wave'}),'flamebreath').disabled,undefined);
+ const sourceOnly=skillShopMarkup(hero({hero:'mage',level:40}),{phase:'wave'});assert.equal(catalogButton(sourceOnly,'flamebreath')['data-access'],'drop');assert.equal(catalogButton(sourceOnly,'flamebreath').disabled,true);
+ const learned=hero({hero:'mage',skills:['flamebreath'],skillLevels:{flamebreath:1}});assert.equal(catalogButton(skillShopMarkup(learned,{phase:'wave'}),'flamebreath').disabled,undefined);
  learned.skillLevels.flamebreath=5;learned.skillPoints=0;assert.equal(catalogButton(skillShopMarkup(learned,{phase:'wave'}),'flamebreath')['data-access'],'max');
 });
 test('loot respects ultimate level requirements without blocking recycling or duplicate XP conversion',()=>{
@@ -45,10 +46,13 @@ test('a new ultimate fragment cannot bypass its first acquisition level',()=>{
  p.level=12;assert.ok(buttons(lootMarkup(p,[drop],1)).filter(button=>button['data-claim']==='43').every(button=>!button.disabled));
 });
 test('essence offers validate the inherited rank of each slot and cannot steal a reserved technique',()=>{
- const p=hero({level:10,skills:['stomp','heal','chain','critical','shield','cleave','poison'],skillLevels:{stomp:5,heal:1,chain:1,critical:1,shield:1,cleave:1,poison:1},techniqueOffers:['gungnir']}),markup=lootMarkup(p,[],1);
+ const p=hero({hero:'mage',level:10,skills:['bolt','heal','chain','blizzard','shield','frostnova','poison'],skillLevels:{bolt:5,heal:1,chain:1,blizzard:1,shield:1,frostnova:1,poison:1},techniqueOffers:['gungnir']}),markup=lootMarkup(p,[],1);
  assert.equal(action(markup,{'data-technique-choose':'gungnir','data-replace-slot':0}).disabled,true);assert.equal(action(markup,{'data-technique-choose':'gungnir','data-replace-slot':1}).disabled,undefined);
  const reserved=lootMarkup(p,[],1,{skillOwners:{gungnir:{owner:'rival',name:'Runa'}}});assert.equal(buttons(reserved).some(button=>button['data-technique-choose']==='gungnir'),false);assert.ok(reserved.includes('Runa'));
 });
 test('rendering access information does not mutate authoritative player or room state',()=>{
  const p=hero(),state={phase:'wave',skillOwners:{},units:[]},before=JSON.stringify({p,state});skillShopMarkup(p,state);lootMarkup(p,[],1,state);assert.equal(JSON.stringify({p,state}),before);
 });
+
+test('ranged exclusives, shared physical techniques and magic show their actual class restrictions',()=>{for(const type of ['knight','mage','ranger']){const markup=skillShopMarkup(hero({hero:type,level:40}),{phase:'wave'});assert.equal(catalogButton(markup,'multishot')['data-access'],type==='ranger'?'available':'archetype');assert.equal(catalogButton(markup,'shockwave')['data-access'],type==='mage'?'archetype':'available');assert.equal(catalogButton(markup,'vampiric')['data-access'],'available');}assert.match(skillShopMarkup(hero(),{phase:'wave'}),/Arquétipo incompatível/);});
+test('an incompatible fragment or forged offer cannot present a learn action, while recycling remains available',()=>{const p=hero({techniqueOffers:['fireball']}),markup=lootMarkup(p,[{id:55,skill:'fireball',expires:90,rarity:'epic'}],1);assert.equal(buttons(markup).some(b=>b['data-claim']==='55'),false);assert.equal(buttons(markup).some(b=>b['data-technique-choose']==='fireball'),false);assert.equal(action(markup,{'data-loot-recycle':55}).disabled,undefined);assert.match(markup,/incompatível/);});

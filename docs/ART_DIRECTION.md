@@ -13,6 +13,10 @@ Animais voxel originais, silhuetas compactas e legíveis e poses em passos de oi
 
 O estado de combate deve ter texto e forma, além da cor: fogo / frost / veneno no HUD; estrelas para atordoamento, cristais para frio e brasas para queimadura. Isso reduz a dependência da percepção de cores.
 
+Quando há exatamente **uma categoria negativa**, o corpo recebe uma tonalidade leve: laranja para fogo, azul para frost/lentidão, verde para veneno ou amarelo para atordoamento. Múltiplas fontes de fogo ou de frio contam uma vez. Com duas ou mais categorias, a pelagem retorna à cor normal e os efeitos individuais continuam visíveis; fúria, barreira e reflexão não contam como negativos. A mistura de 20% preserva as cores de vértice; com fúria ativa, mistura apenas 12% sobre o vermelho existente. O material por ator é criado sob demanda e reutilizado, sem texturas ou passes extras.
+
+Espólios no chão têm corpo, halo octogonal e marcador vertical com a cor da raridade: comum claro, raro azul, épico violeta, lendário dourado e heroico coral. O rótulo de hover inclui nome e raridade. As prévias das técnicas mostram círculo, cone, linha, barreira ou destino conforme o efeito real; azul/verde sinaliza região válida e vermelho indica bloqueio acompanhado de texto.
+
 ## Implementação dos efeitos persistentes
 
 `src/status-effects.js` exporta `createStatusEffects(root, baseGeometry?)`, com `update(unit, time, enabled)` e `dispose()`. A simulação continua sendo a autoridade: o módulo apenas lê `dots.burn`, `dots.lava`, `dots.frost`, `dots.poison`, `frostUntil` e `solarUntil`, sempre comparando os tempos de término. A aura solar renova um intervalo curto em `solarUntil` quando causa dano; o fogo do alvo desaparece quando esse intervalo acaba.
@@ -29,7 +33,7 @@ Ao remover um ator, chamar `statusEffects.dispose()` **antes** da limpeza genér
 2. Frost deve comunicar lentidão e frio, sem parecer um stun ou bloqueio de comandos.
 3. A câmera afastada deve mostrar a silhueta principal de cada estado. O HUD mantém os rótulos quando o efeito visual estiver fora do orçamento de distância.
 4. Eventos explosivos podem ter um pico breve de brilho; efeitos persistentes ficam menores para preservar a leitura de ataques e áreas perigosas.
-5. Mais detalhe não deve exigir mais texturas, sombras dinâmicas por partícula ou materiais exclusivos por personagem.
+5. Mais detalhe não deve exigir mais texturas ou sombras dinâmicas por partícula; reutilizar o material de tonalidade criado sob demanda por personagem.
 
 Os efeitos são apresentações procedurais em passos de 8 Hz, não animações exportadas de Blender/VAT. Não alteram dano, duração, resistência ou qualquer regra de atributos.
 

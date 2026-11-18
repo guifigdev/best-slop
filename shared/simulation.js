@@ -1,3 +1,4 @@
+import {canUseSkill} from './archetypes.js';
 import {canLearnSkill} from './skill-access.js';
 import {HEROES,SKILLS,ITEMS,ATTRIBUTES,levelOf,skillAt,itemUpgradePrice,ITEM_MAX_LEVEL} from './catalog.js';
 import {ARENAS,arenaForWave} from './arenas.js';
@@ -47,7 +48,7 @@ export class Game {
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
  restock(){this.stock=Object.fromEntries(Object.entries(ITEMS).map(([key,v])=>[key,v.stock]));this.shopVisit++;}
- auraFor(u,key){let best=null;const group=unit=>unit.challenge||(this.phase==='bonus'?unit.owner:null);for(const ally of this.units)if(ally.alive&&ally.team===u.team&&group(ally)===group(u)&&distance(ally,u)<=9&&levelOf(ally,key)){const s=skillAt(key,levelOf(ally,key));if(!best||s.level>best.level)best=s;}return best;}
+ auraFor(u,key){let best=null;const group=unit=>unit.challenge||(this.phase==='bonus'?unit.owner:null);for(const ally of this.units)if(ally.alive&&ally.team===u.team&&group(ally)===group(u)&&distance(ally,u)<=9&&levelOf(ally,key)&&canUseSkill(ally,key)){const s=skillAt(key,levelOf(ally,key));if(!best||s.level>best.level)best=s;}return best;}
  refresh(u){if(!u.hero)return this.refreshMonsterStats(u);recompute(u,this.time,Object.fromEntries(['endurance','devotion','brilliance'].map(k=>[k,this.auraFor(u,k)])));}
  canTarget(u,t){if(this.options.mode==='linewars'&&this.lineWars)return this.lineCanTarget(u,t);if(!t||!t.alive||u.id===t.id||u.team===t.team)return false;if(this.phase==='wave'&&privateTrials(this.options.mode))return !!(u.challenge&&u.challenge===t.challenge);if(this.phase==='bonus')return !!(t.challenge&&t.challenge===u.owner||u.challenge&&u.challenge===t.owner);return true;}
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
@@ -118,7 +119,7 @@ export class Game {
   if(slot.key==='restoration')for(const ally of this.heroes().filter(h=>h.alive&&h.team===u.team&&distance(u,h)<=s.radius))this.heal(ally,s.heal);
   this.fx('itemUse',u.x,u.z,{source:u.id,item:slot.key});return true;
  }
- equipmentTick(){if(!BATTLE.has(this.phase)||this.time<(this.nextEquipmentTick||0))return;this.nextEquipmentTick=this.time+.5;const sources=this.heroes().filter(h=>h.alive&&h.itemEffects?.solar&&!(h.stageDone&&this.phase==='wave'));for(const target of this.units.filter(u=>u.alive)){const teams=new Map();for(const owner of sources){const effect=equipmentEffectAt('solar',owner.itemEffects.solar);if(!this.canTarget(owner,target)||distance(owner,target)>effect.radius)continue;const old=teams.get(owner.team);if(!old||old.effect.damage<effect.damage)teams.set(owner.team,{owner,effect});}for(const {owner,effect}of teams.values()){if(this.hit(target,effect.damage*.5*(1-(target.fireResist||0)),owner,true,false,false,false,'fire')>0)target.solarUntil=this.time+.6;this.fx('solarHit',target.x,target.z,{source:owner.id});}}
+ equipmentTick(){if(!BATTLE.has(this.phase)||this.time<(this.nextEquipmentTick||0))return;this.nextEquipmentTick=this.time+.5;const sources=this.heroes().filter(h=>h.alive&&h.itemEffects?.solar&&!(h.stageDone&&this.phase==='wave'));for(const target of this.units.filter(u=>u.alive)){const teams=new Map();for(const owner of sources){const effect=equipmentEffectAt('solar',owner.itemEffects.solar);if(!this.canTarget(owner,target)||distance(owner,target)>effect.radius)continue;const old=teams.get(owner.team);if(!old||old.effect.damage<effect.damage)teams.set(owner.team,{owner,effect});}for(const {owner,effect}of teams.values()){if(this.hit(target,effect.damage*.5*(1-(target.fireResist||0)),owner,true,false,false,false,'fire','proc')>0)target.solarUntil=this.time+.6;this.fx('solarHit',target.x,target.z,{source:owner.id});}}
  }
  cancelChannel(u){u.channel=null;for(const e of this.effects)if(e.owner===u.id&&e.channel)e.pulses=0;}
  heal(u,amount){const actual=Math.min(u.maxHp-u.hp,amount);u.hp+=actual;if(actual>0)this.fx('heal',u.x,u.z,{amount:Math.round(actual),source:u.id});return actual;}
@@ -128,7 +129,7 @@ export class Game {
  attackReach(u,t){return u.range+(u.range<3?Math.max(0,unitRadius(u)+unitRadius(t)-.8):0);}
  cast(u,c){
   if(u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode))return false;
-  const key=u.skills[c.slot],s=skillFor(u,key);if(!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana||!BATTLE.has(this.phase)||u.stun>0||!u.alive)return false;
+  const key=u.skills[c.slot],s=skillFor(u,key);if(!s||!canUseSkill(u,key)||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana||!BATTLE.has(this.phase)||u.stun>0||!u.alive)return false;
   const t=this.units.find(t=>t.id===c.target&&(s.target==='unit'?t.alive&&t.id!==u.id&&(this.phase!=='wave'||!privateTrials(this.options.mode)||t.challenge===u.challenge):this.canTarget(u,t)));
   if(s.target==='unit'&&(!t||distance(u,t)>12))return false;
   if(['blink','dash'].includes(key)&&Number.isFinite(c.x)&&Number.isFinite(c.z)&&unitBlocked(this,u,c))return false;
@@ -138,7 +139,7 @@ export class Game {
   if(s.target==='ground'&&(!Number.isFinite(c.x)||!Number.isFinite(c.z)||distance(u,c)>14||distance(c,limitPoint(this,u,c))>.01))return false;
   this.cancelChannel(u);u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=this.time;u.castSkill=key;this.fx('cast',u.x,u.z,{source:u.id,skill:key});
   if(this.castSpecial(u,key,s,c,t)||this.castNordic(u,key,s,c,t)||this.castAbility(u,key,s))return true;
-  const hit=(v,n,element)=>this.hit(v,this.spellDamage(u,n,element,key),u,true,false,false,false,element||null),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
+  const hit=(v,n,element)=>s.damageType==='physical'?this.hit(v,physicalSkillDamage(u,n,s.atkCoefficient),u):this.hit(v,this.spellDamage(u,n,element,key),u,true,false,false,false,element||null),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
   if(key==='bolt'){hit(t,s.damage,'lightning');stun(t);this.fx('bolt',u.x,u.z,{tx:t.x,tz:t.z});}
   if(key==='stomp'){this.fx('stomp',u.x,u.z,{radius:s.radius});for(const e of this.enemies(u,s.radius)){hit(e,s.damage);stun(e);}}
   if(key==='heal')this.heal(u,s.heal*(u.magicPower||1));
@@ -163,36 +164,36 @@ export class Game {
  }
  displace(u,dx,dz){const n=Math.ceil(Math.hypot(dx,dz)/.2);for(let i=0;i<n;i++){const p=limitPoint(this,u,{x:u.x+dx/n,z:u.z+dz/n});if(blocked(p,this.obstacles))break;u.x=p.x;u.z=p.z;}u.vx=u.vz=0;u.pathKey=null;}
  applyDot(u,key,damage,duration,source=null){if(key==='burn')damage*=1-(u.fireResist||0);u.dots||={};const old=u.dots[key];const active=old&&old.until>=this.time;u.dots[key]={damage:active?Math.max(damage,old.damage):damage,until:active?Math.max(old.until,this.time+duration):this.time+duration,next:active?old.next:this.time+1,source:active&&old.damage>damage?old.source:source?.id,element:({burn:'fire',lava:'fire',frost:'ice',poison:'poison'})[key]||null};}
- hit(t,amount,source=null,magic=false,reflect=false,critical=false,environment=false,element=null){
+ hit(t,amount,source=null,magic=false,reflect=false,critical=false,environment=false,element=null,damageKind='direct'){
   if(!t?.alive||!Number.isFinite(amount)||amount<0)return 0;
   if(magic&&!environment&&(t.avatar||0)>this.time)return 0;
-  if(!environment)amount=this.permanentModifyDamage(t,amount,source);amount=this.elementDamage(t,amount,element);let dmg=magic?amount:amount/(1+.06*Math.max(0,t.armor||0));
+  if(!environment)amount=this.permanentModifyDamage(t,amount,source);amount=this.elementDamage(t,amount,element);let dmg=environment?amount:magic?amount/(1+.03*Math.max(0,t.magicDefense||0)):amount/(1+.06*Math.max(0,t.armor||0));
   if((t.shieldUntil||0)>this.time&&t.shield>0){const absorbed=Math.min(t.shield,dmg);t.shield-=absorbed;dmg-=absorbed;}
   const actual=Math.min(t.hp,Math.max(0,dmg));t.hp=Math.max(0,t.hp-dmg);t.hitAt=this.time;
   this.fx('damage',t.x,t.z,{amount:Math.round(actual),magic,critical,source:source?.id,target:t.id,environment,element});
   if(critical)this.fx('critical',t.x,t.z,{source:source?.id,target:t.id});
   // Resolve death once before retaliation to prevent duplicate kills and reflection recursion.
   if(t.hp<=0){t.alive=false;t.died=this.time;this.cancelChannel(t);this.monsterLoot(t,source);if(source&&t.team!==source.team){const p=this.player(source.owner);if(p){p.gold+=t.lineBounty??12+this.wave;p.kills++;}if(!t.hero&&!t.summon)for(const h of this.heroes().filter(h=>!t.challenge||this.groupKey(h)===t.challenge||t.lineLane&&h.lineLane===t.lineLane))this.gainXp(h,12);}}
-  if(!magic&&!reflect&&source?.alive&&source.lifesteal>0){const h=Math.min(source.maxHp-source.hp,actual*source.lifesteal);source.hp+=h;if(h>0)this.fx('lifesteal',source.x,source.z,{amount:Math.round(h),source:source.id,tx:t.x,tz:t.z});}
+  const leecher=source?.id?this.units.find(unit=>unit.id===source.id)||source:source;if(!reflect&&!environment&&damageKind==='direct'&&leecher?.alive&&leecher.team!==t.team&&leecher.lifesteal>0){const h=Math.min(leecher.maxHp-leecher.hp,actual*leecher.lifesteal);leecher.hp+=h;if(h>0)this.fx('lifesteal',leecher.x,leecher.z,{amount:Math.round(h),source:leecher.id,tx:t.x,tz:t.z});}
   if(!reflect&&!environment&&source?.alive&&source.team!==t.team&&(t.itemReflectUntil||0)>this.time){this.hit(source,actual*t.itemReflect,t,true,true);this.fx('mirror',t.x,t.z,{source:t.id,tx:source.x,tz:source.z});}
   if(!magic&&!reflect&&source?.alive&&source.range<3&&(t.reflect||0)>0){this.hit(source,actual*t.reflect,t,true,true);this.fx('thorns',t.x,t.z,{source:t.id,tx:source.x,tz:source.z});}
   return actual;
  }
  gainXp(u,amount){u.xp+=amount;while(u.xp>=u.level*55){u.xp-=u.level*55;u.level++;u.attributePoints+=attributePointsForLevel(u.level);u.skillPoints++;this.refresh(u);this.heal(u,80);this.fx('levelup',u.x,u.z,{source:u.id});}}
  attack(u,t){
-  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena],attackElement=!u.hero&&!u.summon?u.element||null:null;
-  if((t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
-  const crit=this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
+  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena],magicBasic=u.hero?HEROES[u.hero]?.attackType==='magic':!u.summon&&!!u.element,attackElement=magicBasic?(u.element||'arcane'):null;
+  if(!magicBasic&&(t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
+  const crit=!magicBasic&&this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
   this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});
-  if(!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
-  const baseDamage=u.damage*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?baseDamage*(weather[attackElement]||1):baseDamage,u,!!attackElement,false,crit,false,attackElement);
+  if(!magicBasic&&!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
+  const baseDamage=(u.hero&&magicBasic?(u.magicAttack||0)*.9:u.damage)*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?baseDamage*(weather[attackElement]||1):baseDamage,u,!!attackElement,false,crit,false,attackElement);
   this.permanentAttack(u,t,damage);
-  if(levelOf(u,'bash')){const s=skillFor(u,'bash');if(this.random()<s.chance&&t.alive){this.hit(t,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
-  if(levelOf(u,'cleave')&&u.range<3){const s=skillFor(u,'cleave');for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
-  if(levelOf(u,'bounce')&&u.range>=3){const s=skillFor(u,'bounce'),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
-  if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false,false,false,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
+  if(canUseSkill(u,'bash')&&levelOf(u,'bash')){const s=skillFor(u,'bash');if(this.random()<s.chance&&t.alive){this.hit(t,physicalSkillDamage(u,s.damage,s.atkCoefficient),u,false,false,false,false,null,'proc');t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
+  if(canUseSkill(u,'cleave')&&levelOf(u,'cleave')&&u.range<3){const s=skillFor(u,'cleave');for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
+  if(canUseSkill(u,'bounce')&&levelOf(u,'bounce')&&u.range>=3){const s=skillFor(u,'bounce'),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
+  if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false,false,false,'lightning','proc');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
   if(t.alive&&(t.avatar||0)<=this.time)for(const [key,rank]of Object.entries(u.enchantments||{})){const s=enchantAt(key,rank);if(key==='frost'){t.frostUntil=Math.max(t.frostUntil||0,this.time+s.duration);this.fx('frost',t.x,t.z,{source:u.id,enchantment:true});}else{this.applyDot(t,key==='fire'?'burn':'poison',s.damage,s.duration,u);this.fx(key==='fire'?'burn':'poison',t.x,t.z,{source:u.id,enchantment:true});}}
-  if(levelOf(u,'poison')&&t.alive){const s=skillFor(u,'poison');this.applyDot(t,'poison',s.poison,4,u);this.fx('poison',t.x,t.z);}
+  if(canUseSkill(u,'poison')&&levelOf(u,'poison')&&t.alive){const s=skillFor(u,'poison');this.applyDot(t,'poison',s.poison,4,u);this.fx('poison',t.x,t.z);}
  }
  setArena(key){this.arena=key;this.zones=ARENAS[key].zones.map((z,i)=>({...z,id:`${key}-${i}`}));this.nextWeather=this.time+8;}
  arenaAt(wave){const keys=Object.keys(ARENAS),start=Math.max(0,keys.indexOf(this.startingArena||'forest'));return keys[(start+Math.floor(Math.max(0,wave-1)/10))%keys.length];}
@@ -208,7 +209,7 @@ export class Game {
   const skills=data.summon?[]:Array.isArray(data.skills)?[...data.skills]:loadout.skills,skillLevels=Object.fromEntries(skills.map(key=>[key,data.skillLevels?.[key]||loadout.skillLevels[key]||loadout.rank]));
   const cd=data.cd??random(),size=data.size||clamp((species?.size||profile.size||1)*(boss?1.2:1),.55,2.1);
   const u={id:this.id(),kind,name:profile.name||'Criatura dos Nove Reinos',team:2,x,z,hp:data.hp,maxHp:data.hp,damage:data.damage,armor:data.armor||0,range:data.range||1.4,speed,interval,accuracy:data.accuracy??profile.accuracy??.9,evasion:data.evasion??profile.evasion??0,critChance:data.critChance??profile.critChance??0,critMultiplier:data.critMultiplier??profile.critMultiplier??1.5,cd,stun:0,alive:true,...data,boss,level,skills,skillLevels,speed,interval,size,cooldowns:{},rarity:loadout.rarity,monsterRank:loadout.rank};
-  u.monsterBase=Object.freeze({hp:u.maxHp,damage:u.damage,armor:u.armor,speed:u.speed,interval:u.interval,accuracy:u.accuracy,evasion:u.evasion,critChance:u.critChance,critMultiplier:u.critMultiplier,mana:260+u.level*12,manaRegen:2.5,hpRegen:0,magicPower:boss==='boss'?1:boss==='miniboss'?.8:.55});u.mana=u.maxMana=u.monsterBase.mana;this.units.push(u);this.refresh(u);return u;
+  u.monsterBase=Object.freeze({hp:u.maxHp,damage:u.damage,armor:u.armor,speed:u.speed,interval:u.interval,accuracy:u.accuracy,evasion:u.evasion,critChance:u.critChance,critMultiplier:u.critMultiplier,mana:260+u.level*12,manaRegen:2.5,hpRegen:0,magicDefense:Math.max(0,data.magicDefense||0),magicPower:boss==='boss'?1:boss==='miniboss'?.8:.55});u.mana=u.maxMana=u.monsterBase.mana;this.units.push(u);this.refresh(u);return u;
  }
  finishWave(){if(this.options.mode!=='campaign')return this.finishCompetitionWave();for(const h of this.heroes()){h.gold+=100+this.wave*12;this.gainXp(h,30);}this.units=this.units.filter(u=>u.hero&&!u.summon);if(this.wave===50){this.phase='finalCountdown';this.timer=12;this.message='50 ondas vencidas. Prepare-se: todos contra todos!';this.restoreHeroes();}
   else if(this.wave%5===0)this.startBonus();else{this.phase='intermission';this.timer=7;this.restoreHeroes(false);this.message='Respire. A próxima onda começa em instantes; loja a cada cinco ondas.';}}
@@ -236,7 +237,7 @@ export class Game {
   for(const z of active.filter(z=>z.type==='trap')){const cycle=Math.floor((this.time+z.offset)/z.period),age=(this.time+z.offset)%z.period;u.trapCycles||={};if(age>=1.5&&age<2&&u.trapCycles[z.id]!==cycle){u.trapCycles[z.id]=cycle;this.hit(u,90+this.wave*3,null,true,true,false,true);u.stun=Math.max(u.stun,.6);this.fx('thunder',z.x,z.z,{radius:z.r});}}
   if(active.some(z=>z.type==='lava'))this.applyDot(u,'lava',(12+u.maxHp*.015)*(1-(u.fireResist||0)),3);
   if(active.some(z=>z.type==='frost')){u.frostUntil=this.time+2;this.applyDot(u,'frost',(8+this.wave*.3)*(1-(u.coldResist||0)),2);}
-  for(const [key,dot]of Object.entries(u.dots||{})){if(dot.until<this.time){delete u.dots[key];continue;}if(dot.next<=this.time){dot.next+=1;const source=this.units.find(v=>v.id===dot.source);this.hit(u,dot.damage,source,true,false,false,!source,dot.element||({burn:'fire',lava:'fire',frost:'ice',poison:'poison'})[key]||null);this.fx(key,u.x,u.z);}}
+  for(const [key,dot]of Object.entries(u.dots||{})){if(dot.until<this.time){delete u.dots[key];continue;}if(dot.next<=this.time){dot.next+=1;const source=this.units.find(v=>v.id===dot.source);this.hit(u,dot.damage,source,true,false,false,!source,dot.element||({burn:'fire',lava:'fire',frost:'ice',poison:'poison'})[key]||null,'dot');this.fx(key,u.x,u.z);}}
   if(this.arena==='tempest')for(const z of active.filter(z=>z.type==='lightning'&&z.strike<=this.time&&!z.hit?.includes(u.id))){z.hit||=[];z.hit.push(u.id);this.hit(u,100+this.wave*2,null,true,true,false,true,'lightning');this.fx('thunder',z.x,z.z);}
  }
  tick(dt){
@@ -246,8 +247,8 @@ export class Game {
   if(!this.heroes().length||TERMINAL.has(this.phase))return;
   if(['preparation','intermission','bonusResults','finalCountdown'].includes(this.phase)){this.timer-=dt;if(this.timer<=0){if(this.phase==='bonusResults')this.openShop();else if(this.phase==='finalCountdown')this.startFinal();else this.spawnWave();}}
   if(this.arena==='tempest'&&BATTLE.has(this.phase)&&this.time>=this.nextWeather){this.nextWeather=this.time+7;this.weatherStrike();}this.zones=this.zones.filter(z=>!z.expires||z.expires>this.time);
-  for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true,false,false,false,'ice');if(e.pulses===0){owner.channel=null;owner.order='auto';}}
-  for(const e of this.effects.filter(e=>e.type==='gravity')){const owner=this.units.find(u=>u.id===e.owner);if(!owner)continue;for(const t of this.enemies(owner).filter(t=>distance(t,e)<e.radius)){const d=distance(t,e)||1;if((t.avatar||0)<=this.time)this.displace(t,(e.x-t.x)/d*dt*2.5,(e.z-t.z)/d*dt*2.5);if(this.time>=e.next)this.hit(t,e.damage,owner,true);}if(this.time>=e.next)e.next+=1;}
+  for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true,false,false,false,'ice','dot');if(e.pulses===0){owner.channel=null;owner.order='auto';}}
+  for(const e of this.effects.filter(e=>e.type==='gravity')){const owner=this.units.find(u=>u.id===e.owner);if(!owner)continue;for(const t of this.enemies(owner).filter(t=>distance(t,e)<e.radius)){const d=distance(t,e)||1;if((t.avatar||0)<=this.time)this.displace(t,(e.x-t.x)/d*dt*2.5,(e.z-t.z)/d*dt*2.5);if(this.time>=e.next)this.hit(t,e.damage,owner,true,false,false,false,null,'dot');}if(this.time>=e.next)e.next+=1;}
   this.tickLinePaths();
   for(const u of [...this.units]){
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}

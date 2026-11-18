@@ -10,7 +10,7 @@ import {blocked,limitPoint,moveUnit} from './field.js';
 const BATTLE=new Set(['wave','bonus','final']);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-const sourceData=u=>({id:u.id,owner:u.owner,team:u.team,x:u.x,z:u.z,altitude:u.flying?u.altitude||0:0,challenge:u.challenge,cell:u.cell,magicPower:u.magicPower||1});
+const sourceData=u=>({id:u.id,owner:u.owner,hero:u.hero,lineLane:u.lineLane,team:u.team,x:u.x,z:u.z,altitude:u.flying?u.altitude||0:0,challenge:u.challenge,cell:u.cell,magicPower:u.magicPower||1});
 function direction(u,p){const x=p.x-u.x,z=p.z-u.z,d=Math.hypot(x,z);return d>.001?{x:x/d,z:z/d}:{x:Math.sin(u.facing||0),z:Math.cos(u.facing||0)};}
 function lineClear(game,from,to){const d=distance(from,to),steps=Math.max(1,Math.ceil(d/.25));for(let i=1;i<=steps;i++)if(blocked({x:from.x+(to.x-from.x)*i/steps,z:from.z+(to.z-from.z)*i/steps},game.obstacles||[],.1))return false;return true;}
 function sameTrial(game,h,t){if(t.team===h.team)return false;if(t.challenge){if(game.phase==='bonus')return t.challenge===h.owner;if(['campaign','best','war'].includes(game.options.mode))return game.groupKey(h)===t.challenge;}return true;}
@@ -24,7 +24,7 @@ export const monsterMethods={
   u.damage=(base.damage+(avatar.damage||0))*(1+(rage.damage||0));u.armor=base.armor+(passive('stonehide').armor||0)+(devotion.armor||0)+(avatar.armor||0);
   u.speed=base.speed*(1+(fervor.moveSpeed||0));u.interval=base.interval;u.attackSpeed=Math.min(3,1+(fervor.attackSpeed||0)+(rage.attackSpeed||0));u.accuracy=base.accuracy;
   u.evasion=Math.min(.45,base.evasion+(passive('evasion').evasion||0));u.critChance=Math.min(.8,base.critChance+(passive('critical').chance||0));u.critMultiplier=Math.max(base.critMultiplier,passive('critical').multiplier||0);
-  u.lifesteal=u.range<3?passive('vampiric').lifesteal||0:0;u.reflect=passive('thorns').reflect||0;u.magicPower=base.magicPower;
+  u.lifesteal=passive('vampiric').lifesteal||0;u.magicDefense=base.magicDefense||0;u.attackType=u.element?'magic':'physical';u.basicDamage=u.damage;u.reflect=passive('thorns').reflect||0;u.magicPower=base.magicPower;
  },
 
  monsterThink(u,dt){
@@ -67,7 +67,7 @@ export const monsterMethods={
   const oldQuality=LOOT_RARITIES[u.skillRarities?.[drop.skill]]?.quality||1,newQuality=LOOT_RARITIES[drop.rarity]?.quality||1;if(rank){if(rank>=5&&newQuality<=oldQuality)return false;u.skillLevels[drop.skill]=Math.min(5,rank+1);}
   else{let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
    if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
-   replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);
+   replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);if(replaced===false)return false;
   }
   u.skillRarities||={};if(!rank||newQuality>oldQuality)u.skillRarities[drop.skill]=drop.rarity||'common';this.cancelChannel(u);this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,skill:drop.skill,level:u.skillLevels[drop.skill],replaced});return true;
  },

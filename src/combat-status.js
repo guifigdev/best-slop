@@ -8,3 +8,11 @@ export function combatStatuses(u,time){const statuses=[],burn=Math.max(u.dots?.b
  if((u.itemReflectUntil||0)>time)statuses.push({key:'reflect',label:'REFLEXÃO',until:u.itemReflectUntil});
  return statuses;
 }
+
+// Hue targets are blended into the existing vertex-colored animal at 20% by
+// the view. Positive effects never participate in the category count.
+const NEGATIVE_HUES=Object.freeze({fire:0xff6738,frost:0x67c5ff,poison:0x80c943,stun:0xffd34d});
+export function negativeTint(unit,time){
+ const negatives=combatStatuses(unit||{},time).filter(status=>Object.hasOwn(NEGATIVE_HUES,status.key));
+ return negatives.length===1?{key:negatives[0].key,color:NEGATIVE_HUES[negatives[0].key]}:null;
+}

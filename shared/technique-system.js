@@ -1,9 +1,10 @@
 import {canLearnSkill} from './skill-access.js';
+import {canUseSkill} from './archetypes.js';
 import {SKILLS,levelOf} from './catalog.js';
 
 export const TECHNIQUE_ROLL_COST=3;
 export const TECHNIQUE_OFFER_COUNT=3;
-export const canDistillSkillPoints=u=>!!(u?.skillPoints>=1&&u.skills?.length===7&&new Set(u.skills).size===7&&u.skills.every(key=>Object.hasOwn(SKILLS,key)&&levelOf(u,key)===5));
+export const canDistillSkillPoints=u=>!!(u?.skillPoints>=1&&u.skills?.length===7&&new Set(u.skills).size===7&&u.skills.every(key=>Object.hasOwn(SKILLS,key)&&canUseSkill(u,key)&&levelOf(u,key)===5));
 const available=(game,u)=>!!(u?.hero&&u.alive&&!u.summon&&!['victory','defeat'].includes(game.phase));
 
 export const techniqueMethods={
@@ -26,6 +27,7 @@ export const techniqueMethods={
  // Both direct loot and essence choices use the same replacement rules. Keep
  // cooldown history by key and carry the replaced slot's remaining cooldown.
  swapTechniqueSlot(u,key,slot,rank){
+  if(!canLearnSkill(u,key,rank)||!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length||u.skills.some((owned,i)=>owned===key&&i!==slot))return false;
   const replaced=u.skills[slot]||null;u.cooldowns||={};const oldCooldown=replaced?u.cooldowns[replaced]||0:0;
   if(replaced){if(u.autoSkills)delete u.autoSkills[replaced];if(u.abilityTrail?.key===replaced)u.abilityTrail=null;if(u.skillRarities)delete u.skillRarities[replaced];delete u.skillLevels[replaced];u.skills[slot]=key;
    if(replaced==='avatar'){u.avatar=0;u.avatarData=null;}
@@ -40,6 +42,6 @@ export const techniqueMethods={
   let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
   if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
   const inherited=u.skills[slot]?Math.max(1,Math.min(5,levelOf(u,u.skills[slot]))):1;if(!canLearnSkill(u,c.skill,inherited))return false;const replaced=this.swapTechniqueSlot(u,c.skill,slot,inherited);
-  u.techniqueOffers=[];this.cancelChannel(u);this.refresh(u);this.fx('techniqueClaim',u.x,u.z,{source:u.id,skill:c.skill,level:inherited,replaced,slot});return true;
+  if(replaced===false)return false;u.techniqueOffers=[];this.cancelChannel(u);this.refresh(u);this.fx('techniqueClaim',u.x,u.z,{source:u.id,skill:c.skill,level:inherited,replaced,slot});return true;
  }
 };
