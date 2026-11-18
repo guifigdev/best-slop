@@ -29,7 +29,7 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{}}){
   if(shop.id==='smith'){
    box(parent,1.02,1.14,-1.34,.48,.55,.48,0x707d79);box(parent,1.02,1.48,-1.34,1.03,.18,.56,0xa4b0a5);box(parent,1.57,1.48,-1.34,.35,.12,.32,0xc6cbbb);box(parent,-1.15,1.03,-1.71,.92,.91,.8,0x7b8275);box(parent,-1.15,1.1,-1.25,.67,.46,.08,0x534b3b);box(parent,-1.15,1.04,-1.19,.48,.25,.055,0xe5a157);box(parent,-1.15,1.12,-1.15,.21,.28,.045,0xffdb89);box(parent,-1.47,1.9,-1.82,.4,1.09,.42,0x7e8476);box(parent,-1.47,2.5,-1.82,.56,.16,.57,0xa8ad97);for(let i=0;i<3;i++)box(parent,-1.3+i*.14,1.46+(i%2)*.12,-1.22,.07,.12,.07,0xf1c578);
   }
-  if(shop.id==='enchanter'){
+  if(['enchanter','runemaster'].includes(shop.id)){
    crystal(parent,-1.12,1.68,-1.39,0xb9a3d2);crystal(parent,1.04,1.62,-1.39,0x8fc4c8);box(parent,.53,1.28,-1.43,.42,.13,.51,0x799688);box(parent,.53,1.4,-1.43,.42,.13,.51,0xc0ac75);box(parent,-1.13,2.12,-1.39,.12,.12,.12,0xe7d7b5);
   }
  }
@@ -52,12 +52,12 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{}}){
   box(stand,0,2.47,-1.37,1.27,.38,.12,darkWood);box(stand,0,2.47,-1.29,1.12,.25,.045,lightWood);box(stand,0,2.49,-1.255,.19,.18,.025,cloth);products(stand,shop);consolidate(stand,`npc-shop-stand-${shop.id}`);
   const npc=new T.Group();npc.position.set(shop.x,.18,shop.z);root.add(npc);animal(npc,shop);consolidate(npc,`npc-shop-animal-${shop.id}`);
   const button=document.createElement('button');button.type='button';button.className='npc-label';button.dataset.npc=shop.id;button.setAttribute('aria-label',`Falar com ${shop.npc} — ${shop.name}`);Object.assign(button.style,{position:'absolute',transform:'translate(-50%,-100%)',pointerEvents:'auto'});
-  const mark=document.createElement('span');mark.className='npc-label-mark';mark.textContent=shop.id==='smith'?'⚒':shop.id==='enchanter'?'✦':shop.id==='books'?'▤':shop.id==='consumables'?'✚':'◆';const text=document.createElement('span');text.className='npc-label-text';const name=document.createElement('b');name.textContent=shop.npc;const role=document.createElement('small');role.textContent=({equipment:'Equipamentos',consumables:'Poções',books:'Livros de XP',smith:'Ferreiro',enchanter:'Encantos'})[shop.id];const hint=document.createElement('em');hint.className='npc-label-hint';hint.textContent='Conversar';text.append(name,role,hint);button.append(mark,text);labels.append(button);
-  button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();});button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!state||state.phase==='preparation')onTalk(shop.id);});stores.push({shop,npc,stand,button,hint,position:new T.Vector3(),lastFrame:-1});
+  const mark=document.createElement('span');mark.className='npc-label-mark';mark.textContent=shop.id==='smith'?'⚒':['enchanter','runemaster'].includes(shop.id)?'✦':shop.id==='books'?'▤':shop.id==='consumables'?'✚':'◆';const text=document.createElement('span');text.className='npc-label-text';const name=document.createElement('b');name.textContent=shop.npc;const role=document.createElement('small');role.textContent=({equipment:'Equipamentos',consumables:'Poções',books:'Livros de XP',smith:'Ferreiro',enchanter:'Imbuições',runemaster:'Runas permanentes'})[shop.id];const hint=document.createElement('em');hint.className='npc-label-hint';hint.textContent='Conversar';text.append(name,role,hint);button.append(mark,text);labels.append(button);
+  button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();});button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!state||(state.phase==='preparation'||state.options?.mode==='linewars'&&state.phase==='wave'))onTalk(shop.id);});stores.push({shop,npc,stand,button,hint,position:new T.Vector3(),lastFrame:-1});
  }
  return{
   update(next,camera,container,playerId){
-   if(disposed)return;state=next;const visible=!state||state.phase==='preparation';root.visible=visible;labels.hidden=!visible;if(!visible)return;
+   if(disposed)return;state=next;const visible=!state||(state.phase==='preparation'||state.options?.mode==='linewars'&&state.phase==='wave');root.visible=visible;labels.hidden=!visible;if(!visible)return;
    const own=state?.units.find(u=>u.id===state.players[playerId]),time=state?.time??performance.now()/1000,width=container.clientWidth,height=container.clientHeight;
    for(const [i,entry]of stores.entries()){
     const {shop,npc,button,hint,position}=entry,frame=Math.floor(time*8+i*2)%8;if(frame!==entry.lastFrame){entry.lastFrame=frame;npc.position.y=.18+[0,.018,.035,.018,0,-.012,-.018,-.012][frame];npc.rotation.z=[0,.012,.016,.008,0,-.008,-.012,-.008][frame];}

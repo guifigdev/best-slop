@@ -7,7 +7,7 @@ export function generateField(seed=1){let s=seed>>>0;const random=()=>{s=(Math.i
  return{seed,bounds:WAR_BOUNDS,obstacles,zones};
 }
 export function blocked(point,obstacles,padding=.4){return obstacles.some(o=>Math.abs(point.x-o.x)<o.w/2+padding&&Math.abs(point.z-o.z)<o.d/2+padding);}
-export function limitPoint(game,u,p){const b=game.bounds||ARENA_BOUNDS,cell=u.cell;const point={x:clamp(p.x,cell?Math.max(-b,cell.x-cell.r):-b,cell?Math.min(b,cell.x+cell.r):b),z:clamp(p.z,cell?Math.max(-b,cell.z-cell.r):-b,cell?Math.min(b,cell.z+cell.r):b)};const radius=b+2.5,d=Math.hypot(point.x,point.z);if(b===ARENA_BOUNDS&&d>radius){point.x*=radius/d;point.z*=radius/d;}return point;}
+export function limitPoint(game,u,p){const b=game.bounds||ARENA_BOUNDS,cell=u.cell;const point={x:clamp(p.x,cell?Math.max(-b,cell.x-cell.r):-b,cell?Math.min(b,cell.x+cell.r):b),z:clamp(p.z,cell?Math.max(-b,cell.z-cell.r):-b,cell?Math.min(b,cell.z+cell.r):b)};const center=cell||{x:0,z:0},radius=(cell?.r||b)+2.5,dx=point.x-center.x,dz=point.z-center.z,d=Math.hypot(dx,dz);if((cell||b===ARENA_BOUNDS)&&d>radius){point.x=center.x+dx*radius/d;point.z=center.z+dz*radius/d;}return point;}
 export function moveUnit(game,u,p){if(!Number.isFinite(p?.x)||!Number.isFinite(p?.z))return;p=limitPoint(game,u,p);const obstacles=game.obstacles||[],dx=p.x-u.x,dz=p.z-u.z,steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.25));
  // Sweep in small increments so dashes or larger simulation steps cannot tunnel
  // through a thin ice wall. Blink intentionally uses validated teleportation.

@@ -44,3 +44,12 @@ Os efeitos dos equipamentos novos usam como referência conceitual os papéis de
 ## Variedade inspirada em Ragnarok
 
 Valquírias e harpias servem de referência conceitual de variedade; os animais, modelos, elementos e números deste jogo são próprios. Fontes primárias consultadas: [monstros do evento oficial](https://renewal.playragnarok.com/news/updatedetail.aspx?id=344), que inclui Harpy e afinidades elementais, e [evento oficial com Valkyrie](https://iro.ragnarokonline.com/news/eventdetail.aspx?id=167&p=43). Não se trata de uma importação da tabela de monstros ou das fórmulas do RO.
+
+
+## Direção nórdica e Line Wars — 18/11/2026
+
+O Pátio dos Nove Reinos é ficção original com animais. As 48 técnicas e 23 itens ganharam nomes e ilustrações nórdicos, mantendo os IDs e as referências históricas como metadados. Corvos de Odin, bodes de Thor, lince de Freya, cão de Hel, Gungnir, Julgamento de Thor, Graça de Freya e Selo de Hel são adaptações próprias. Grifos, quimeras, esfinges, harpias e basiliscos preservam a mistura de mitologias pedida; não há promessa de fidelidade religiosa ou a um patch de outro jogo.
+
+A descrição histórica do autor de Custom Hero Line Wars foi localizada no [wiki mantido por Baka](https://customherolinewars.pbworks.com/w/page/22995721/To-Do%20List), com documentação de heróis e invocações. O arquivo original `.w3x` não está disponível no projeto; a relação exata entre todas as tropas do mapa e seus números continua não verificada. A lista nova usa papéis documentados no guia clássico oficial de Warcraft III e os converte em animais originais. Cada receita guarda sua referência e o link primário; consulte [LINE_WARS.md](LINE_WARS.md). O funcionamento de casinhas, envios, renda e portais é uma implementação independente.
+
+A suíte da campanha valida todas as 50 ondas, nove bônus, mercados e final com combate assistido, separada do teste de IA autônoma. Passar a suíte não comprova equilíbrio para jogadores nem garante vitória dos bots padrão. Raridades, pactos, maldições, exclusividade global e áreas de chefes são regras novas; os atributos continuam seguindo as regras definidas pelo usuário.

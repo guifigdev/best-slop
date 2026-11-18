@@ -6,7 +6,7 @@ import {MONSTERS} from '../shared/monsters.js';
 import {equipmentEffectAt} from '../shared/equipment-effects.js';
 import {moveUnit,blocked} from '../shared/field.js';
 
-function setup(hero='knight'){const g=new Game(51);g.addPlayer('p',hero);g.spawnWave();g.units=g.heroes();g.zones=[];const p=g.player('p');p.x=p.z=0;p.accuracy=1;p.critChance=0;g.random=()=>.5;return{g,p};}
+function setup(hero='knight'){const g=new Game(51,{mode:'tower'});g.addPlayer('p',hero);g.spawnWave();g.units=g.heroes();g.zones=[];const p=g.player('p');p.x=p.z=0;p.accuracy=1;p.critChance=0;g.random=()=>.5;return{g,p};}
 const spawn=(g,kind='griffin',x=0,z=2,data={})=>g.spawnEnemy(kind,x,z,{hp:10000,damage:0,speed:0,...data});
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-7,`${actual} differs from ${expected}`);
 

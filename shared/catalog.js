@@ -9,6 +9,14 @@ export const HEROES = {
  owl:{name:'Noctis',animal:'Coruja da tempestade',role:'INTELIGÊNCIA · CONTROLE',color:0xb4a3cc,hp:690,mana:560,damage:26,armor:2,range:7,speed:4.4,interval:1.4,skill:'chain',focus:'int',description:'Enxerga a próxima abertura. Relâmpagos dançam sob suas asas.'},
  raccoon:{name:'Nico',animal:'Guaxinim duelista',role:'SORTE · CRÍTICOS',color:0xb4a082,hp:800,mana:320,damage:32,armor:3,range:1.8,speed:4.8,interval:.9,skill:'critical',focus:'luk',description:'Uma máscara, um sorriso e um golpe no momento perfeito.'}
 };
+for(const [key,name,description]of [
+ ['knight','Bjorn','Uma capivara do fiorde que jurou guardar as raízes de Yggdrasil. Seu passo faz a pedra recordar os gigantes.'],
+ ['mage','Liv','Coelha das runas de Niflheim. Lê o gelo como uma saga e chama a luz para proteger seu clã.'],
+ ['ranger','Runa','Raposa das trilhas de Skadi. Cada flecha atravessa o vento do norte em busca de um destino.'],
+ ['turtle','Sten','Tartaruga dos rochedos de Midgard. Carrega no casco os juramentos de gerações de guardiões.'],
+ ['owl','Vidar','Coruja dos pinheiros de Asgard. Escuta o trovão entre os galhos antes que a primeira faísca apareça.'],
+ ['raccoon','Eirik','Guaxinim viajante dos Nove Reinos. Lê as marcas das Nornas e escolhe o instante exato para atacar.']
+])Object.assign(HEROES[key],{name,description});
 export const ATTRIBUTES={
  str:{name:'Força',short:'STR',description:'+1,2 ATQ físico/ponto; +5% dano físico a cada 10.'},
  int:{name:'Inteligência',short:'INT',description:'+2,5% poder mágico/ponto; +0,8 mana/s a cada 6; +8 mana/ponto.'},
@@ -59,8 +67,25 @@ export const SKILLS={
  hornrush:skill('Investida do rinoceronte','active',1,'ground',{damage:[55,85,115,145,175],distance:[4,5,6,7,8],radius:1.8,push:[1.5,1.75,2,2.25,2.5],stun:.8,heroStun:.4,mana:55,cooldown:10},'Investe na direção escolhida, atingindo, empurrando e atordoando brevemente inimigos no impacto. Respeita obstáculos e limites. Técnica de monstro obtida por drop.'),
  warlockfire:skill('Esfera de repulsão','active',1,'ground',{damage:[100,150,200,250,300],push:[2.5,3,3.5,4,4.5],radius:.5,distance:14,projectileSpeed:12,mana:70,cooldown:7},'Dispara uma bola de fogo esquivável na direção escolhida. O primeiro inimigo atingido recebe dano mágico e é empurrado; não atravessa obstáculos.'),
  warlockfrost:skill('Orbe de inverno','active',1,'ground',{damage:[55,85,115,145,175],radius:.55,distance:14,projectileSpeed:11,slow:.45,duration:[1,1.25,1.5,1.75,2],mana:60,cooldown:8},'Dispara um projétil de gelo esquivável. O primeiro inimigo atingido recebe dano mágico e frost; não acumula outra lentidão sobre o frio ambiental.'),
- rage:skill('Fúria rubra','active',1,'self',{rageDamage:[.10,.15,.20,.25,.30],rageSpeed:[.10,.15,.20,.25,.30],duration:7,mana:80,cooldown:20},'Por 7s, ganha dano de ataques físicos e velocidade de ataque, sinalizados por uma aura vermelha. Não acumula com outra fúria.')
+ rage:skill('Fúria rubra','active',1,'self',{rageDamage:[.10,.15,.20,.25,.30],rageSpeed:[.10,.15,.20,.25,.30],duration:7,mana:80,cooldown:20},'Por 7s, ganha dano de ataques físicos e velocidade de ataque, sinalizados por uma aura vermelha. Não acumula com outra fúria.'),
+ odinsravens:skill('Corvos de Odin','active',1,'self',{summonKind:'raven',summonName:'Corvo de Odin',summonCount:2,summonHp:[140,200,260,320,380],summonDamage:[16,24,32,40,48],summonRange:5,summonSpeed:5.5,summonFlying:true,summonDuration:30,mana:90,cooldown:35},'Chama dois corvos espirituais voadores que atacam à distância por 30s. Um novo chamado substitui os corvos anteriores.'),
+ thorsgoats:skill('Bodes do Trovão','active',1,'self',{summonKind:'ram',summonName:'Bode do Trovão',summonCount:2,summonHp:[180,260,340,420,500],summonDamage:[18,25,32,39,46],summonRange:1.5,summonSpeed:4.8,summonFlying:false,summonDuration:30,mana:90,cooldown:35},'Invoca dois bodes rúnicos de Thor para combater corpo a corpo por 30s. Um novo chamado substitui este par.'),
+ freyjascat:skill('Lince de Freya','active',1,'self',{summonKind:'lynx',summonName:'Lince de Freya',summonCount:1,summonHp:[350,500,650,800,950],summonDamage:[32,46,60,74,88],summonRange:1.5,summonSpeed:5.6,summonFlying:false,summonDuration:35,mana:100,cooldown:38},'Chama um lince espiritual ágil para caçar inimigos corpo a corpo por 35s. Um novo chamado substitui o lince anterior.'),
+ helguard:skill('Guardião de Hel','active',1,'self',{summonKind:'helhound',summonName:'Guardião de Hel',summonCount:1,summonHp:[500,700,900,1100,1300],summonDamage:[22,34,46,58,70],summonRange:1.6,summonSpeed:3.9,summonFlying:false,summonDuration:35,mana:110,cooldown:42},'Invoca um cão espectral resistente, guardião dos portões de Hel, por 35s. Um novo chamado substitui o guardião anterior.'),
+ gungnir:skill('Rastro de Gungnir','active',1,'ground',{damage:[100,155,210,265,320],radius:1.2,distance:12,mana:85,cooldown:10},'Projeta uma lança rúnica de Odin em linha reta. Causa dano mágico a inimigos no trajeto; mire a direção no chão.'),
+ thorsjudgment:skill('Julgamento de Thor','active',1,'self',{damage:[80,120,160,200,240],radius:3.5,stun:.7,heroStun:.35,mana:90,cooldown:12},'Descarrega um círculo de relâmpagos em torno do portador. Causa dano mágico e atordoa brevemente os inimigos; duração menor contra heróis.'),
+ freyjasgrace:skill('Graça de Freya','active',1,'self',{heal:[120,180,240,300,360],radius:6,mana:100,cooldown:20},'Restaura vida do portador e de aliados a até 6m, amplificada por INT. Não ressuscita.'),
+ helsfrost:skill('Selo de Hel','active',1,'ground',{damage:[45,70,95,120,145],radius:3,duration:[3,3.5,4,4.5,5],slow:.45,mana:85,cooldown:13},'Detona uma runa de gelo no ponto escolhido. Causa dano mágico inicial e aplica frost, reduzindo movimento durante a duração indicada.')
 };
+// Original Nordic fiction layered over stable simulation IDs. Historical skill
+// sources remain metadata for reference documentation, never in player copy.
+const NORDIC_SKILL_NAMES={bolt:'Martelo de Thor',stomp:'Passo do Jotun',heal:'Luz de Eir',chain:'Corrente de Mjolnir',blizzard:'Inverno de Niflheim',summon:'Lobos de Fenrir',multishot:'Flechas de Skadi',avatar:'Juramento de Tyr',critical:'Corte do Einherjar',vampiric:'Sede de Hel',endurance:'Fôlego de Sleipnir',thorns:'Espinhos de Yggdrasil',shockwave:'Tremor de Midgard',bash:'Impacto do Trovão',devotion:'Égide de Asgard',brilliance:'Fonte de Mimir',fireball:'Brasa de Muspelheim',frostnova:'Círculo de Skadi',dash:'Salto de Ratatosk',evasion:'Passos de Loki',cleave:'Corte do Jotun',bounce:'Lâminas de Sif',blink:'Travessia de Bifrost',swap:'Fios das Nornas',icewall:'Muralha de Niflheim',forcepush:'Sopro de Njord',hook:'Grilhão de Gleipnir',gravity:'Poço de Ginnungagap',poison:'Presas de Jormungand',drain:'Toque de Hel',shield:'Manto de Frigg',flamebreath:'Sopro de Surtr',venomcloud:'Névoa de Nidhogg',stormdive:'Mergulho da Valquíria',stonehide:'Pele de Jotun',battlecry:'Brado de Heimdall',hornrush:'Investida de Tanngrisnir',warlockfire:'Orbe de Muspelheim',warlockfrost:'Orbe de Niflheim',rage:'Fúria de Berserker'};
+for(const [key,name]of Object.entries(NORDIC_SKILL_NAMES))SKILLS[key].name=name;
+SKILLS.cleave.description='Ataques corpo a corpo espalham dano físico aos inimigos próximos do alvo principal.';
+SKILLS.blink.description='Cruza um trecho do campo até um ponto livre, sem causar dano. Respeita os limites da prova.';
+SKILLS.icewall.description='Ergue uma parede temporária de gelo que bloqueia o movimento de todos. Contorne a muralha ou use Travessia de Bifrost.';
+SKILLS.hook.description='Um grilhão rúnico puxa o inimigo em sua direção; obstáculos e limites interrompem a passagem.';
+SKILLS.gravity.description='Abre um campo que puxa inimigos para o centro e causa dano por segundo. O Juramento de Tyr resiste ao puxão.';
 for(const key of ['flamebreath','venomcloud','stormdive','stonehide','battlecry','hornrush'])SKILLS[key].dropOnly=true;
 const balanceNotes={
  stomp:'Atordoamento e recarga balanceados para o coliseu; dano base clássico preservado.',
@@ -97,6 +122,16 @@ export const ITEMS={
  xpbook:{name:'Caderno do aprendiz',cost:350,stock:3,consumable:true,xp:80,description:'Concede 80 experiência ao herói. Consumível usado somente durante o mercado; não aciona a recarga de poções. Não recebe melhorias ou encantamentos.'},
  epicbook:{name:'Tomo das grandes provas',cost:900,stock:1,consumable:true,xp:200,description:'Concede 200 experiência ao herói. Consumível raro usado somente durante o mercado; não aciona a recarga de poções. Não recebe melhorias ou encantamentos.'}
 };
+const NORDIC_ITEM_NAMES={vitality:'Cinturão de Megingjord',blade:'Garras de Fenrir',mana:'Âmbar de Mimir',armor:'Anel de Asgard',mask:'Máscara de Hel',talisman:'Talismã de Hugin',gloves:'Manoplas de Ullr',crown:'Coroa de Valhalla',staff:'Cajado de Seidr',bow:'Arco de Skadi',boots:'Passos de Sleipnir',charm:'Runa das Nornas',shell:'Escama de Jormungand',ember:'Broche de Muspelheim',scarf:'Manto de Skadi',solar:'Lâmina de Sol',stormcoil:'Bobina de Mjolnir',mirror:'Couraça de Tyr',restoration:'Sino de Eir',potion:'Elixir de Eir',manapot:'Hidromel de Mimir',xpbook:'Tabuleta do Aprendiz',epicbook:'Saga dos Nove Reinos'};
+for(const [key,name]of Object.entries(NORDIC_ITEM_NAMES))ITEMS[key].name=name;
+for(const key of ['blade','mana','armor'])ITEMS[key].description=ITEMS[key].description.split(' Referência:')[0];
+ITEMS.mask.description='20% roubo de vida físico, inclusive em ataques à distância.';
+ITEMS.talisman.description='+10% crítico, multiplicador mínimo 2× e +3 LUK.';
+ITEMS.crown.description='+5 nos seis atributos.';
+ITEMS.solar.description='+18 dano físico. Uma aura solar causa 12 dano de fogo por segundo em inimigos a até 3,5m.';
+ITEMS.stormcoil.description='+9 dano físico e +10% velocidade de ataque. Acertos primários têm 25% de chance de lançar um relâmpago de 35 de dano em até 3 alvos; perde 20% por salto.';
+ITEMS.mirror.description='+4 armadura e +6 dano físico. Ativar: reflete 35% do dano de inimigos por 4s; recarga 25s, sem mana. Não reflete ambiente ou outra reflexão.';
+ITEMS.restoration.description='+2 armadura e +0,5 mana/s. Ativar: cura 150 vida do portador e aliados em 6m; custa 75 mana, recarga 30s. Não ressuscita.';
 export const ITEM_MAX_LEVEL=5;
 const ITEM_ATTRIBUTE_SCALE=[1,1.35,1.7,2.05,2.4];
 const ITEM_FLAT_SCALE=[1,1.3,1.65,2.05,2.5];
@@ -116,7 +151,7 @@ function equipmentDescription(item){
   else if(key==='coldResist')details.push(`−${formatItem(value*100)}% dano de frio e lentidão ambiental`);
  }
  const effect=item.effect?equipmentEffectAt(item.effect,item.level):null;
- return `${details.join(' · ')}. ${effect?effect.description+' Inspiração: '+item.inspiration+'. ':''}Nível ${item.level}/${ITEM_MAX_LEVEL}; evolução própria do coliseu.`;
+ return `${details.join(' · ')}. ${effect?effect.description+' ':''}Nível ${item.level}/${ITEM_MAX_LEVEL}.`;
 }
 export function itemAt(key,level=1){
  if(!Object.hasOwn(ITEMS,key))return null;
@@ -145,4 +180,4 @@ export const levelOf=(u,key)=>u.skillLevels?.[key]||(u.skills?.includes(key)?1:0
 export const skillAt=(key,level=1)=>SKILLS[key]?{...SKILLS[key],...SKILLS[key].levels[Math.max(0,Math.min(4,level-1))],level}:null;
 export const upgradePrice=(key,current=0)=>Math.round(SKILLS[key].cost*(1+current*.55));
 export const skillRequirement=level=>level*2-1;
-export function skillDescription(key,level=1){const s=skillAt(key,level);if(!s)return '';const details=[];for(const [k,label]of Object.entries({mana:'Mana',cooldown:'Recarga (s)',damage:'Dano base',heal:'Cura',shield:'Barreira',hp:'Vida',armor:'Armadura',pulses:'Pulsos',jumps:'Saltos',stun:'Atordoamento (s)',heroStun:'Atordoamento em heróis (s)',distance:'Alcance (m)',bounces:'Ricochetes',push:'Empurrão (m)',pull:'Puxão (m)',poison:'Veneno/s',burn:'Queimadura/s',radius:'Raio/alcance (m)',projectileSpeed:'Vel. projétil (m/s)',count:'Alvos/unidades',duration:'Duração (s)',manaRegen:'Mana/s',multiplier:'Crítico ×'}))if(s[k]!==undefined)details.push(`${label}: ${s[k]}`);for(const [k,label]of Object.entries({chance:'Chance',lifesteal:'Roubo de vida',attackSpeed:'Vel. ataque',moveSpeed:'Movimento',reflect:'Reflexão',evasion:'Esquiva',cleave:'Área',slow:'Lentidão',rageDamage:'Dano físico adicional',rageSpeed:'Vel. ataque adicional'}))if(s[k]!==undefined)details.push(`${label}: ${Math.round(s[k]*100)}%`);return `${s.description} ${details.join(' · ')}${s.reference?` · Base: ${s.reference}${level>s.originalRanks?' · nível estendido':''}`:' · técnica original'}${s.balanceNote?' · Ajuste: '+s.balanceNote:''}`;}
+export function skillDescription(key,level=1){const s=skillAt(key,level);if(!s)return '';const details=[];for(const [k,label]of Object.entries({mana:'Mana',cooldown:'Recarga (s)',damage:'Dano base',heal:'Cura',shield:'Barreira',hp:'Vida',armor:'Armadura',pulses:'Pulsos',jumps:'Saltos',stun:'Atordoamento (s)',heroStun:'Atordoamento em heróis (s)',distance:'Alcance (m)',bounces:'Ricochetes',push:'Empurrão (m)',pull:'Puxão (m)',poison:'Veneno/s',burn:'Queimadura/s',radius:'Raio/alcance (m)',projectileSpeed:'Vel. projétil (m/s)',count:'Alvos/unidades',duration:'Duração (s)',manaRegen:'Mana/s',multiplier:'Crítico ×',summonCount:'Invocações',summonHp:'Vida por aliado',summonDamage:'Dano por aliado',summonRange:'Alcance do aliado (m)',summonSpeed:'Vel. do aliado (m/s)',summonDuration:'Permanência (s)'}))if(s[k]!==undefined)details.push(`${label}: ${s[k]}`);for(const [k,label]of Object.entries({chance:'Chance',lifesteal:'Roubo de vida',attackSpeed:'Vel. ataque',moveSpeed:'Movimento',reflect:'Reflexão',evasion:'Esquiva',cleave:'Área',slow:'Lentidão',rageDamage:'Dano físico adicional',rageSpeed:'Vel. ataque adicional'}))if(s[k]!==undefined)details.push(`${label}: ${Math.round(s[k]*100)}%`);if(s.summonFlying)details.push('Aliado voador');return `${s.description} ${details.join(' · ')}`;}

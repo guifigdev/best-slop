@@ -29,6 +29,25 @@ export const MONSTERS={
  basilisk:{name:'Basilisco das raízes',description:'Um réptil terrestre de crista verde que cospe névoa tóxica a curta distância. Tolera veneno e prefere emboscadas entre obstáculos; fogo o expulsa do abrigo.',size:1.2,color:0x899e70,skill:'venomcloud',unlockWave:14,hpMultiplier:1.2,damageMultiplier:0.65,armorBonus:2,flying:false,altitude:0,range:3,element:'poison',resistances:{poison:.25,fire:-.15},mythic:true}
 };
 
+// The Pátio is original fiction: creatures from different mythologies crossed
+// Bifrost together. Nordic names are a setting, not a historical bestiary claim.
+const NORDIC_FAUNA={goblin:'Pintinho de Midgard',duck:'Pato dos Fiordes',frog:'Sapo de Yggdrasil',hare:'Lebre de Skadi',brute:'Javali das Runas',ram:'Bode de Jotunheim',bat:'Morcego de Helheim',tortoise:'Cágado de Asgard',hedgehog:'Ouriço das Raízes',champion:'Urso Einherjar',wolf:'Lobo de Fenrir',bonus:'Eco das Nornas'};
+for(const [key,name]of Object.entries(NORDIC_FAUNA))MONSTER_PROFILES[key].name=name;
+const NORDIC_BEASTS={
+ lion:['Leão da Juba de Sol','Um visitante de terras distantes atravessou Bifrost e recebeu uma juba marcada pelo sol. Seu rugido anuncia uma breve explosão de força.'],
+ rhino:['Rinoceronte de Jotunheim','Sob placas de basalto, este guardião das passagens dos gigantes prepara investidas. Seu chifre abre caminho; observe o aviso para sair da trajetória.'],
+ griffin:['Grifo de Bifrost','Uma fera alada de outra mitologia encontrou abrigo nas torres do Pátio. Patrulha os portais e mergulha envolta em relâmpagos; o gelo rompe sua vantagem.'],
+ chimera:['Quimera de Hel','Três vozes cruzaram os portões de Hel e passaram a habitar o mesmo corpo. A névoa venenosa denuncia sua presença antes que as garras alcancem o adversário.'],
+ dragon:['Dragão de Muspelheim','As brasas do reino ígneo tingiram suas asas. Ataca do ar com fogo e garras; suas escamas resistem às chamas e cedem ao frio.'],
+ sphinx:['Esfinge de Alfheim','Uma guardiã de enigmas de terras distantes aceitou vigiar as passagens luminosas de Alfheim. Sua couraça de pedra recompensa paciência e ataques bem escolhidos.'],
+ valkyrie:['Coruja Valquíria de Asgard','Uma coruja de elmo dourado e asas claras guarda as provas mais altas do Pátio. Seu mergulho elétrico é anunciado antes de atingir o campo.'],
+ harpy:['Harpia dos Ventos de Njord','Esta ave de rapina atravessou as correntes de Bifrost e fez dos ventos do norte seu território. Seus orbes frios punem perseguições; relâmpagos atravessam suas penas leves.'],
+ phoenix:['Fênix de Muspelheim','Penas vermelhas e douradas circundam uma chama que veio de outro mundo pela ponte dos reinos. Lança esferas ígneas e teme o gelo. Esta fênix não ressuscita durante a prova.'],
+ frostwyrm:['Serpente Alada de Niflheim','Escamas azuladas e uma cauda longa riscam a névoa gelada. Seus orbes frios atingem trajetos previsíveis; fogo encontra frestas em sua defesa.'],
+ basilisk:['Basilisco de Nidhogg','Um réptil de crista verde se esconde entre as raízes feridas de Yggdrasil. Prefere emboscadas com veneno e evita as chamas que invadem seu abrigo.']
+};
+for(const [key,[name,description]]of Object.entries(NORDIC_BEASTS))Object.assign(MONSTERS[key],{name,description});
+
 const SPECIAL_PROFILES={
  lion:{moveSpeed:3.8,attackInterval:1.55,accuracy:.9,evasion:.03,critChance:.08,critMultiplier:1.9},
  rhino:{moveSpeed:2.7,attackInterval:1.9,accuracy:.88,evasion:0,critChance:.1,critMultiplier:2.1},

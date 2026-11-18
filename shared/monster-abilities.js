@@ -1,4 +1,6 @@
 import {SKILLS,skillAt,levelOf} from './catalog.js';
+import {LOOT_RARITIES,rarityRoll,lootDropChance} from './rarity.js';
+import {skillFor} from './skill-quality.js';
 import {MONSTERS} from './monsters.js';
 import {blocked,limitPoint,moveUnit} from './field.js';
 
@@ -8,11 +10,11 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const sourceData=u=>({id:u.id,owner:u.owner,team:u.team,x:u.x,z:u.z,altitude:u.flying?u.altitude||0:0,challenge:u.challenge,cell:u.cell,magicPower:u.magicPower||1});
 function direction(u,p){const x=p.x-u.x,z=p.z-u.z,d=Math.hypot(x,z);return d>.001?{x:x/d,z:z/d}:{x:Math.sin(u.facing||0),z:Math.cos(u.facing||0)};}
 function lineClear(game,from,to){const d=distance(from,to),steps=Math.max(1,Math.ceil(d/.25));for(let i=1;i<=steps;i++)if(blocked({x:from.x+(to.x-from.x)*i/steps,z:from.z+(to.z-from.z)*i/steps},game.obstacles||[],.1))return false;return true;}
-function sameTrial(game,h,t){if(t.team===h.team)return false;if(t.challenge){if(game.phase==='bonus')return t.challenge===h.owner;if(['best','war'].includes(game.options.mode))return game.groupKey(h)===t.challenge;}return true;}
+function sameTrial(game,h,t){if(t.team===h.team)return false;if(t.challenge){if(game.phase==='bonus')return t.challenge===h.owner;if(['campaign','best','war'].includes(game.options.mode))return game.groupKey(h)===t.challenge;}return true;}
 
 export const monsterMethods={
  refreshMonsterStats(u){
-  const base=u.monsterBase;if(!base)return;const passive=key=>levelOf(u,key)?skillAt(key,levelOf(u,key)):{};
+  const base=u.monsterBase;if(!base)return;const passive=key=>levelOf(u,key)?skillFor(u,key):{};
   const aura=key=>this.auraFor(u,key)||passive(key),fervor=aura('endurance'),devotion=aura('devotion'),brilliance=aura('brilliance'),avatar=(u.avatar||0)>this.time?u.avatarData||{}:{},rage=(u.rageUntil||0)>this.time?u.rageData||{}:{};
   const oldHp=u.maxHp||base.hp;u.maxHp=base.hp+(avatar.hp||0);u.hp=clamp(u.hp+u.maxHp-oldHp,u.alive?1:0,u.maxHp);
   u.maxMana=base.mana;u.mana=clamp(u.mana??u.maxMana,0,u.maxMana);u.manaRegen=base.manaRegen+(brilliance.manaRegen||0);u.hpRegen=base.hpRegen||0;
@@ -28,7 +30,7 @@ export const monsterMethods={
   if(u.stun>0||u.channel||this.time<u.nextMonsterDecision||u.pendingSpecial)return;u.nextMonsterDecision=this.time+1.2;
   const target=this.enemies(u,14).find(t=>t.hero||t.summon);if(!target)return;
   for(let offset=0;offset<u.skills.length;offset++){
-   const slot=((u.monsterSkillCursor||0)+offset)%u.skills.length,key=u.skills[slot],s=skillAt(key,levelOf(u,key));
+   const slot=((u.monsterSkillCursor||0)+offset)%u.skills.length,key=u.skills[slot],s=skillFor(u,key);
    if(!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana)continue;
    if(s.heal&&u.hp>u.maxHp*.7||key==='shield'&&(u.shieldUntil||0)>this.time&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time+.7)continue;
    if(s.target==='enemy'&&distance(u,target)>12||s.target==='self'&&['stomp','frostnova'].includes(key)&&!this.enemies(u,s.radius).length)continue;
@@ -49,21 +51,22 @@ export const monsterMethods={
   let owner=source?.owner?this.player(source.owner):null;
   if(source){if(!owner||!sameTrial(this,owner,t))return null;}
   else owner=this.heroes().filter(h=>h.alive&&sameTrial(this,h,t)).sort((a,b)=>distance(a,t)-distance(b,t)||a.owner.localeCompare(b.owner))[0];
-  if(!owner)return null;const chance=t.boss==='boss'?1:t.boss==='miniboss'?.5:.15;if(chance<1&&this.random()>=chance)return null;
+  if(!owner)return null;const chance=lootDropChance({wave:this.wave,boss:t.boss});if(chance<1&&this.random()>=chance)return null;
   const skills=t.skills.filter(key=>SKILLS[key]),drop={id:this.id(),skill:skills[Math.min(skills.length-1,Math.floor(this.random()*skills.length))],owner:owner.owner,x:t.x,z:t.z,expires:this.time+90,kind:t.kind};
-  this.drops||=[];this.drops.push(drop);this.fx('lootDrop',t.x,t.z,{source:owner.id,skill:drop.skill,dropId:drop.id});return drop;
+  drop.rarity=rarityRoll(()=>this.random(),{wave:this.wave,boss:t.boss});const rarity=LOOT_RARITIES[drop.rarity];drop.quality=rarity.quality;drop.essence=rarity.essence;drop.xp=rarity.xp;this.drops||=[];this.drops.push(drop);this.fx('lootDrop',t.x,t.z,{source:owner.id,skill:drop.skill,dropId:drop.id});return drop;
  },
 
  claimLoot(u,c){
   const drop=(this.drops||[]).find(d=>d.id===c.dropId&&d.owner===u.owner&&d.expires>this.time);
   if(!drop||!u.alive||!SKILLS[drop.skill]||['victory','defeat'].includes(this.phase))return false;
   const rank=levelOf(u,drop.skill);let replaced=null;
-  if(rank){if(rank>=5)return false;u.skillLevels[drop.skill]=rank+1;}
+  if(!this.skillAvailable(u,drop.skill))return false;
+  const oldQuality=LOOT_RARITIES[u.skillRarities?.[drop.skill]]?.quality||1,newQuality=LOOT_RARITIES[drop.rarity]?.quality||1;if(rank){if(rank>=5&&newQuality<=oldQuality)return false;u.skillLevels[drop.skill]=Math.min(5,rank+1);}
   else{let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
    if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
    replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);
   }
-  this.cancelChannel(u);this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,skill:drop.skill,level:u.skillLevels[drop.skill],replaced});return true;
+  u.skillRarities||={};if(!rank||newQuality>oldQuality)u.skillRarities[drop.skill]=drop.rarity||'common';this.cancelChannel(u);this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,skill:drop.skill,level:u.skillLevels[drop.skill],replaced});return true;
  },
 
  castSpecial(u,key,s,c,target){

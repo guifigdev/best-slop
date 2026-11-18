@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {ITEMS} from '../shared/catalog.js';
 import {SHOPS} from '../shared/shops.js';
+import {merchantPosition} from '../shared/instances.js';
 const setup=()=>{const g=new Game();g.addPlayer('a');g.addPlayer('b','mage');return{g,p:g.player('a'),b:g.player('b')};};
-function approach(g,id,npc){const u=g.player(id),point=SHOPS[npc];u.x=point.x;u.z=point.z+1.5;assert.equal(g.command(id,{type:'interact',npc}),true);assert.equal(g.atShop(u,npc),true);return u;}
+function approach(g,id,npc){const u=g.player(id),point=merchantPosition(u,SHOPS[npc]);u.x=point.x;u.z=point.z+1.5;assert.equal(g.command(id,{type:'interact',npc}),true);assert.equal(g.atShop(u,npc),true);return u;}
 function advance(g,seconds){for(let i=0;i<Math.ceil(seconds*30);i++)g.tick(1/30);}
 
-test('remote shopping rejects forged NPC/session values and every player must interact independently',()=>{const {g,p,b}=setup(),gold=p.gold;assert.equal(g.command('a',{type:'item',item:'armor',npc:'equipment',shopSessionId:123}),false);assert.equal(p.gold,gold);approach(g,'a','equipment');b.x=p.x;b.z=p.z;assert.equal(g.command('b',{type:'item',item:'armor'}),false);assert.equal(g.command('a',{type:'item',item:'armor'}),true);assert.equal(g.command('b',{type:'interact',npc:'equipment'}),true);assert.equal(g.command('b',{type:'item',item:'armor'}),true);});
+test('remote shopping rejects forged NPC/session values and every player must interact in their own arena',()=>{const {g,p,b}=setup(),gold=p.gold;assert.equal(g.command('a',{type:'item',item:'armor',npc:'equipment',shopSessionId:123}),false);assert.equal(p.gold,gold);approach(g,'a','equipment');b.x=p.x;b.z=p.z;assert.equal(g.command('b',{type:'item',item:'armor'}),false);assert.equal(g.command('a',{type:'item',item:'armor'}),true);assert.equal(g.command('b',{type:'interact',npc:'equipment'}),true);assert.equal(g.command('b',{type:'item',item:'armor'}),false);approach(g,'b','equipment');assert.equal(b.cell.x-p.cell.x,56);assert.equal(g.command('b',{type:'item',item:'armor'}),true);});
 
 test('interacting from afar walks toward the shop and opens it only after actual movement enters range',()=>{const {g,p}=setup();assert.equal(g.command('a',{type:'interact',npc:'enchanter'}),true);assert.equal(p.pendingShop,'enchanter');assert.ok(!p.shopInteraction);const start=p.x;g.tick(.1);assert.ok(Math.abs(p.x-start)<1);assert.ok(p.x<SHOPS.enchanter.x-2);assert.ok(!p.shopInteraction);advance(g,5);assert.equal(p.shopInteraction,'enchanter');assert.equal(p.pendingShop,null);assert.ok(g.atShop(p,'enchanter'));assert.equal(p.order,'stop');assert.ok(Number.isInteger(p.shopSessionId));});
 

@@ -1,4 +1,6 @@
 import {ATTRIBUTES,HEROES,itemAt,levelOf,skillAt} from './catalog.js';
+import {permanentStats} from './permanent-enchants.js';
+import {skillFor} from './skill-quality.js';
 import {isEnchantable,ENCHANTMENTS} from './enchantments.js';
 export const ATTRIBUTE_KEYS=Object.keys(ATTRIBUTES);
 export function baseAttributes(type){const a=Object.fromEntries(ATTRIBUTE_KEYS.map(k=>[k,5]));a[HEROES[type].focus]=12;return a;}
@@ -6,7 +8,7 @@ export function recompute(u,time=0,auras={}){
  const base=HEROES[u.hero];if(!base)return;
  const a={...u.attributes},equipment={};u.enchantments={};u.itemEffects={};for(const slot of u.inventory||[])if(slot&&itemAt(slot.key,slot.level||1)?.effect)u.itemEffects[slot.key]=Math.max(u.itemEffects[slot.key]||0,slot.level||1);for(const slot of u.inventory||[])if(slot&&isEnchantable(slot.key)&&Object.hasOwn(ENCHANTMENTS,slot.enchantment))u.enchantments[slot.enchantment]=Math.max(u.enchantments[slot.enchantment]||0,slot.level||1);
  for(const slot of u.inventory||[]){const item=itemAt(slot?.key,slot?.level||1);if(!item||item.consumable)continue;for(const [k,v]of Object.entries(item.attributes||{}))a[k]+=v;for(const [k,v]of Object.entries(item.stats||{}))equipment[k]=k==='critMultiplier'?Math.max(equipment[k]||0,v):(equipment[k]||0)+v;}
- const passive=key=>levelOf(u,key)?skillAt(key,levelOf(u,key)):{};
+ const passive=key=>levelOf(u,key)?skillFor(u,key):{};
  const fervor=auras.endurance||passive('endurance'),devotion=auras.devotion||passive('devotion'),brilliance=auras.brilliance||passive('brilliance');
  const avatar=(u.avatar||0)>time?u.avatarData||{}:{},rage=(u.rageUntil||0)>time?u.rageData||{}:{};
  const oldHp=u.maxHp||base.hp,oldMana=u.maxMana||base.mana;
@@ -28,5 +30,6 @@ export function recompute(u,time=0,auras={}){
  u.attackSpeed=Math.min(3,1+a.agi*.01+Math.floor(a.agi/10)*.05+(fervor.attackSpeed||0)+(equipment.attackSpeed||0)+(rage.attackSpeed||0));
  u.speed=base.speed*(1+(fervor.moveSpeed||0)+(equipment.moveSpeed||0));
  u.lifesteal=Math.min(.8,(u.range<3?passive('vampiric').lifesteal||0:0)+(equipment.lifesteal||0));
+ const rune=permanentStats(u);u.damage=(u.damage+rune.damageFlat)*Math.max(.1,1+rune.damageMultiplier);u.magicPower*=Math.max(.1,1+rune.magicPower);u.armor+=rune.armor;u.attackSpeed=Math.min(3,u.attackSpeed+rune.attackSpeed);u.speed*=Math.max(.25,1+rune.moveSpeed);u.manaRegen=Math.max(0,u.manaRegen+rune.manaRegen);u.hpRegen=Math.max(0,u.hpRegen+rune.hpRegen);u.evasion=Math.min(.45,u.evasion+rune.evasion);u.critChance=Math.min(.8,u.critChance+rune.critChance);u.lifesteal=Math.min(.8,u.lifesteal+rune.lifesteal);u.permanentDamageTaken=rune.damageTaken;
  u.reflect=passive('thorns').reflect||0;u.fireResist=Math.min(.9,equipment.fireResist||0);u.coldResist=Math.min(.9,equipment.coldResist||0);
 }
