@@ -1,0 +1,4 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {Game} from '../shared/simulation.js';
+test('manual aiming suspends autocast through an authoritative command and cancellation resumes it',()=>{const g=new Game(9,{mode:'tower'});g.addPlayer('p','mage','Liv');const p=g.player('p');p.skills=['bolt'];p.skillLevels={bolt:1};p.mana=1000;g.phase='wave';const target=g.spawnEnemy('goblin',p.x+3,p.z,{hp:10000,damage:0,skills:[]});assert.equal(g.command('p',{type:'toggleAutocast',slot:0}),true);assert.equal(g.command('p',{type:'setCastPending',enabled:true}),true);assert.equal(g.tickAutocast(p),false);assert.equal(p.cooldowns.bolt,undefined);assert.equal(g.command('p',{type:'setCastPending',enabled:'bad'}),false);assert.equal(g.command('p',{type:'setCastPending',enabled:false}),true);assert.equal(g.tickAutocast(p),true);assert.ok(p.cooldowns.bolt>0);assert.ok(target.hp<target.maxHp);});

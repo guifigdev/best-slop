@@ -1,4 +1,4 @@
-export function combatStatuses(u,time){const statuses=[],burn=Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0),frost=Math.max(u.frostUntil||0,u.dots?.frost?.until||0),poison=u.dots?.poison?.until||0;
+export function combatStatuses(u,time){const statuses=[],burn=Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0),frost=Math.max(u.frostUntil||0,u.dots?.frost?.until||0,u.abilitySlowUntil||0),poison=u.dots?.poison?.until||0;
  if(burn>time)statuses.push({key:'fire',label:'QUEIMANDO',until:burn});
  if(frost>time)statuses.push({key:'frost',label:'FROST · LENTO',until:frost});
  if(poison>time)statuses.push({key:'poison',label:'VENENO',until:poison});

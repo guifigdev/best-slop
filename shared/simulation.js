@@ -1,9 +1,13 @@
+import {canLearnSkill} from './skill-access.js';
 import {HEROES,SKILLS,ITEMS,ATTRIBUTES,levelOf,skillAt,itemUpgradePrice,ITEM_MAX_LEVEL} from './catalog.js';
 import {ARENAS,arenaForWave} from './arenas.js';
 import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable} from './enchantments.js';
 import {equipmentEffectAt} from './equipment-effects.js';
 import {MONSTERS,MONSTER_PROFILES,monsterKind,monsterLoadout} from './monsters.js';
 import {ARENA_BOUNDS} from './arena-size.js';
+import {lineMap,mapMethods} from './map-runtime.js';
+import {AbilityMethods,abilityScaling,magicSkillDamage,physicalSkillDamage} from './ability-rules.js';
+import {resolveUnitCollisions,unitBlocked,unitRadius} from './unit-collision.js';
 import {LineWarsMethods} from './line-wars.js';
 import {permanentMethods} from './permanent-enchants.js';
 import {nordicMethods} from './nordic-skills.js';
@@ -26,7 +30,7 @@ const BATTLE=new Set(['wave','bonus','final']);
 const TERMINAL=new Set(['victory','defeat']);
 export class Game {
  constructor(seed=7381,options={}){
-  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
+  this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.voxelMap=this.options.mode==='linewars'?lineMap(options.voxelMap):null;this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
   this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
   this.arena='forest';this.zones=[];this.nextWeather=8;this.stock={};this.shopVisit=0;this.bonusResults=[];this.winner=null;this.restock();
  }
@@ -37,9 +41,9 @@ export class Game {
  player(id){return this.units.find(u=>u.id===this.players[id]);}
  addPlayer(id,type='knight',name='Aventureiro',bot=false,squad=null){
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
-  const h=HEROES[type],i=Object.keys(this.players).length,startSkill=this.skillAvailable(null,h.skill)?h.skill:Object.keys(SKILLS).find(k=>!SKILLS[k].dropOnly&&this.skillAvailable(null,k));if(!startSkill)return false;
+  const h=HEROES[type],i=Object.keys(this.players).length,startSkill=this.skillAvailable(null,h.skill)?h.skill:Object.keys(SKILLS).find(k=>!SKILLS[k].dropOnly&&canLearnSkill({level:1},k)&&this.skillAvailable(null,k));if(!startSkill)return false;
   const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
-  recompute(u,this.time);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);return true;
+  recompute(u,this.time);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const point=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
  restock(){this.stock=Object.fromEntries(Object.entries(ITEMS).map(([key,v])=>[key,v.stock]));this.shopVisit++;}
@@ -49,6 +53,8 @@ export class Game {
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
  command(id,c){
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
+  if(c.type==='queueLineUnit')return this.queueLineUnit(u,c);
+  if(c.type==='cancelLineQueue')return this.cancelLineQueue(u,c);
   if(c.type==='sendLineUnit')return this.sendLineUnit(u,c);
   if(c.type==='enchantPermanent')return this.enchantPermanent(u,c);
   if(c.type==='lootToXp')return this.lootToXp(u,c);
@@ -65,7 +71,7 @@ export class Game {
   if(c.type==='buy'){
    if(!Object.hasOwn(SKILLS,c.skill))return false;
    const level=levelOf(u,c.skill),next=level+1;if(SKILLS[c.skill].dropOnly&&!level)return false;
-   if(!this.skillAvailable(u,c.skill)||level>=5||!(u.skillPoints>0)||(!level&&u.skills.length>=7))return false;
+   if(!canLearnSkill(u,c.skill,next)||!this.skillAvailable(u,c.skill)||level>=5||!(u.skillPoints>0)||(!level&&u.skills.length>=7))return false;
    u.skillPoints--;if(!level)u.skills.push(c.skill);u.skillLevels[c.skill]=next;this.refresh(u);return true;
   }
   if(c.type==='item'){
@@ -102,6 +108,8 @@ export class Game {
   if(c.type==='stop'||c.type==='hold'){this.closeShop(u);this.cancelChannel(u);u.order=c.type;u.destination=null;u.target=null;return true;}
   if(c.type==='auto'){this.closeShop(u);this.cancelChannel(u);u.order='auto';u.destination=null;return true;}
   if(c.type==='claimLoot')return this.claimLoot(u,c);
+  if(c.type==='setCastPending'){if(typeof c.enabled!=='boolean')return false;u.manualCastPending=c.enabled;return true;}
+  if(c.type==='toggleAutocast')return this.toggleAutocast(u,c);
   if(c.type==='cast')return this.cast(u,c);
   return false;
  }
@@ -116,39 +124,40 @@ export class Game {
  heal(u,amount){const actual=Math.min(u.maxHp-u.hp,amount);u.hp+=actual;if(actual>0)this.fx('heal',u.x,u.z,{amount:Math.round(actual),source:u.id});return actual;}
  // Creature affinities are independent of hero equipment/attributes.
  elementDamage(target,amount,element){const resistance=element?target?.resistances?.[element]:null;return Number.isFinite(resistance)?amount*(1-clamp(resistance,-.5,.75)):amount;}
- spellDamage(u,damage,element='arcane'){const weather=ARENAS[this.arena];return damage*(u.magicPower||1)*(weather[element]||1);}
+ spellDamage(u,damage,element='arcane',key=null){const weather=ARENAS[this.arena],scaling=abilityScaling(key,levelOf(u,key));return magicSkillDamage(u,damage,scaling.matkCoefficient)*(weather[element]||1);}
+ attackReach(u,t){return u.range+(u.range<3?Math.max(0,unitRadius(u)+unitRadius(t)-.8):0);}
  cast(u,c){
   if(u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode))return false;
   const key=u.skills[c.slot],s=skillFor(u,key);if(!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana||!BATTLE.has(this.phase)||u.stun>0||!u.alive)return false;
   const t=this.units.find(t=>t.id===c.target&&(s.target==='unit'?t.alive&&t.id!==u.id&&(this.phase!=='wave'||!privateTrials(this.options.mode)||t.challenge===u.challenge):this.canTarget(u,t)));
   if(s.target==='unit'&&(!t||distance(u,t)>12))return false;
-  if(['blink','dash'].includes(key)&&Number.isFinite(c.x)&&Number.isFinite(c.z)&&blocked(c,this.obstacles))return false;
-  if(key==='swap'&&t&&(blocked(t,this.obstacles)||blocked(u,this.obstacles)||distance(t,limitPoint(this,u,t))>.01||distance(u,limitPoint(this,t,u))>.01))return false;
+  if(['blink','dash'].includes(key)&&Number.isFinite(c.x)&&Number.isFinite(c.z)&&unitBlocked(this,u,c))return false;
+  if(key==='swap'&&t&&(unitBlocked(this,u,t,[u.id,t.id])||unitBlocked(this,t,u,[u.id,t.id])||distance(t,limitPoint(this,u,t))>.01||distance(u,limitPoint(this,t,u))>.01))return false;
   let wall=null;if(key==='icewall'){wall={id:`wall-${this.serial+1}`,x:c.x,z:c.z,w:s.width,d:.8,h:2.5,type:'icewall',expires:this.time+s.duration};if(!Number.isFinite(c.x)||!Number.isFinite(c.z)||u.cell&&(Math.abs(c.x-u.cell.x)+s.width/2>u.cell.r||Math.abs(c.z-u.cell.z)+.4>u.cell.r)||this.units.some(v=>v.alive&&blocked(v,[wall],.65))||blocked(c,this.obstacles,1))return false;}
   if(s.target==='enemy'&&(!t||distance(u,t)>12))return false;
-  if(s.target==='ground'&&(!Number.isFinite(c.x)||!Number.isFinite(c.z)||distance(u,c)>14||Math.abs(c.x)>this.bounds||Math.abs(c.z)>this.bounds||distance(c,limitPoint(this,u,c))>.01))return false;
+  if(s.target==='ground'&&(!Number.isFinite(c.x)||!Number.isFinite(c.z)||distance(u,c)>14||distance(c,limitPoint(this,u,c))>.01))return false;
   this.cancelChannel(u);u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=this.time;u.castSkill=key;this.fx('cast',u.x,u.z,{source:u.id,skill:key});
-  if(this.castSpecial(u,key,s,c,t)||this.castNordic(u,key,s,c,t))return true;
-  const hit=(v,n,element)=>this.hit(v,this.spellDamage(u,n,element),u,true,false,false,false,element||null),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
+  if(this.castSpecial(u,key,s,c,t)||this.castNordic(u,key,s,c,t)||this.castAbility(u,key,s))return true;
+  const hit=(v,n,element)=>this.hit(v,this.spellDamage(u,n,element,key),u,true,false,false,false,element||null),stun=v=>{if((v.avatar||0)<=this.time){v.stun=v.hero?s.heroStun||s.stun:s.stun;this.cancelChannel(v);}};
   if(key==='bolt'){hit(t,s.damage,'lightning');stun(t);this.fx('bolt',u.x,u.z,{tx:t.x,tz:t.z});}
   if(key==='stomp'){this.fx('stomp',u.x,u.z,{radius:s.radius});for(const e of this.enemies(u,s.radius)){hit(e,s.damage);stun(e);}}
   if(key==='heal')this.heal(u,s.heal*(u.magicPower||1));
   if(key==='chain'){let last=t,from=u;const visited=new Set();for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);hit(last,s.damage*.85**i,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z});from=last;last=this.enemies(u).filter(e=>!visited.has(e.id)&&distance(from,e)<6)[0];}}
-  if(key==='blizzard'){u.channel='blizzard';u.destination=null;u.order='hold';this.effects.push({id:this.id(),type:'blizzard',x:c.x,z:c.z,time:this.time,next:this.time+.25,pulses:s.pulses,damage:this.spellDamage(u,s.damage,'ice'),radius:s.radius,owner:u.id,channel:true,duration:s.pulses+1});}
+  if(key==='blizzard'){u.channel='blizzard';u.destination=null;u.order='hold';this.effects.push({id:this.id(),type:'blizzard',x:c.x,z:c.z,time:this.time,next:this.time+.25,pulses:s.pulses,damage:this.spellDamage(u,s.damage,'ice',key),radius:s.radius,owner:u.id,channel:true,duration:s.pulses+1});}
   if(key==='summon'){const owner=u.owner||('npc-'+u.id);this.units=this.units.filter(v=>!(v.summon&&v.summoner===u.id&&(!v.summonSkill||v.summonSkill==='summon')));for(let i=0;i<2;i++)this.spawnEnemy('wolf',u.x+(i?1:-1),u.z+1,{owner,summon:true,summoner:u.id,summonSkill:'summon',lineLane:u.lineLane,challenge:u.challenge,cell:u.cell,team:u.team,hp:s.hp,damage:s.damage,armor:1,range:1.4,speed:5.6,interval:.8,accuracy:1,critChance:0,level:u.level,skills:[],skillLevels:{},expires:this.time+s.duration});this.fx('summon',u.x,u.z);}
-  if(key==='multishot')for(const e of this.enemies(u,10).slice(0,s.count)){this.hit(e,s.damage*(1+(u.totalAttributes?.dex||0)*.015),u);this.fx('arrow',u.x,u.z,{tx:e.x,tz:e.z});}
+  if(key==='multishot')for(const e of this.enemies(u,10).slice(0,s.count)){this.hit(e,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);this.fx('arrow',u.x,u.z,{tx:e.x,tz:e.z});}
   if(key==='avatar'){u.avatar=this.time+s.duration;u.avatarData={hp:s.hp,armor:s.armor,damage:s.damage};this.refresh(u);this.fx('avatar',u.x,u.z);}
   if(key==='shockwave'){const dx=c.x-u.x,dz=c.z-u.z,len=Math.hypot(dx,dz)||1;for(const e of this.enemies(u,12).filter(e=>{const proj=((e.x-u.x)*dx+(e.z-u.z)*dz)/len;return proj>=0&&Math.abs((e.x-u.x)*dz-(e.z-u.z)*dx)/len<s.radius;}).slice(0,12))hit(e,s.damage);this.fx('shockwave',u.x,u.z,{tx:c.x,tz:c.z,radius:s.radius});}
   if(key==='fireball'){for(const e of this.enemies(u).filter(e=>distance(e,c)<s.radius)){hit(e,s.damage,'fire');this.applyDot(e,'burn',s.burn,4,u);}this.fx('fireball',c.x,c.z,{radius:s.radius});}
   if(key==='frostnova'){for(const e of this.enemies(u,s.radius)){hit(e,s.damage,'ice');e.frostUntil=this.time+s.duration;}this.fx('frostnova',u.x,u.z,{radius:s.radius});}
-  if(key==='dash'){const d=distance(u,c)||1,n=Math.min(d,s.distance);u.facing=Math.atan2(c.x-u.x,c.z-u.z);moveUnit(this,u,{x:u.x+Math.sin(u.facing)*n,z:u.z+Math.cos(u.facing)*n});u.destination=null;u.order='auto';for(const e of this.enemies(u,2.2))this.hit(e,s.damage,u);this.fx('dash',u.x,u.z);}
+  if(key==='dash'){const d=distance(u,c)||1,n=Math.min(d,s.distance);u.facing=Math.atan2(c.x-u.x,c.z-u.z);moveUnit(this,u,{x:u.x+Math.sin(u.facing)*n,z:u.z+Math.cos(u.facing)*n});u.destination=null;u.order='auto';for(const e of this.enemies(u,2.2))this.hit(e,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);this.fx('dash',u.x,u.z);}
   if(key==='drain'){const damage=hit(t,s.damage);this.heal(u,damage*.5);this.fx('drain',u.x,u.z,{tx:t.x,tz:t.z});}
   if(key==='blink'){const from={x:u.x,z:u.z},d=distance(u,c)||1,n=Math.min(d,s.distance),p=limitPoint(this,u,{x:u.x+(c.x-u.x)/d*n,z:u.z+(c.z-u.z)/d*n});if(!blocked(p,this.obstacles)){u.x=p.x;u.z=p.z;}u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;this.fx('blink',from.x,from.z,{tx:u.x,tz:u.z});this.fx('blink',u.x,u.z);}
   if(key==='swap'){const from={x:u.x,z:u.z};u.x=t.x;u.z=t.z;t.x=from.x;t.z=from.z;for(const v of [u,t]){v.vx=v.vz=0;v.destination=null;v.target=null;v.order='auto';}this.fx('swap',u.x,u.z,{tx:t.x,tz:t.z});}
   if(key==='icewall'){this.obstacles.push(wall);this.obstacleRevision++;this.fx('frostnova',c.x,c.z,{radius:s.width});}
   if(key==='forcepush'){const dx=c.x-u.x,dz=c.z-u.z,len=Math.hypot(dx,dz)||1;for(const e of this.enemies(u,12)){const proj=((e.x-u.x)*dx+(e.z-u.z)*dz)/len;if(proj<0||Math.abs((e.x-u.x)*dz-(e.z-u.z)*dx)/len>s.radius)continue;hit(e,s.damage);if((e.avatar||0)<=this.time)this.displace(e,dx/len*s.push,dz/len*s.push);}this.fx('forcepush',u.x,u.z,{tx:c.x,tz:c.z});}
   if(key==='hook'){hit(t,s.damage);const d=distance(u,t)||1,n=Math.min(s.pull,Math.max(0,d-1.5));if((t.avatar||0)<=this.time)this.displace(t,(u.x-t.x)/d*n,(u.z-t.z)/d*n);this.fx('hook',u.x,u.z,{tx:t.x,tz:t.z});}
-  if(key==='gravity'){this.effects.push({id:this.id(),type:'gravity',x:c.x,z:c.z,owner:u.id,time:this.time,next:this.time+1,damage:this.spellDamage(u,s.damage),radius:s.radius,duration:s.duration});}
+  if(key==='gravity'){this.effects.push({id:this.id(),type:'gravity',x:c.x,z:c.z,owner:u.id,time:this.time,next:this.time+1,damage:this.spellDamage(u,s.damage,'arcane',key),radius:s.radius,duration:s.duration});}
   if(key==='shield'){u.shield=s.shield*(u.magicPower||1);u.shieldUntil=this.time+s.duration;this.fx('shield',u.x,u.z);}
   return true;
  }
@@ -178,7 +187,7 @@ export class Game {
   if(!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
   const baseDamage=u.damage*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?baseDamage*(weather[attackElement]||1):baseDamage,u,!!attackElement,false,crit,false,attackElement);
   this.permanentAttack(u,t,damage);
-  if(levelOf(u,'bash')){const s=skillFor(u,'bash');if(this.random()<s.chance&&t.alive){this.hit(t,s.damage,u);t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
+  if(levelOf(u,'bash')){const s=skillFor(u,'bash');if(this.random()<s.chance&&t.alive){this.hit(t,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
   if(levelOf(u,'cleave')&&u.range<3){const s=skillFor(u,'cleave');for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
   if(levelOf(u,'bounce')&&u.range>=3){const s=skillFor(u,'bounce'),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
   if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false,false,false,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
@@ -212,7 +221,7 @@ export class Game {
  openShop(){this.clearField();this.cells=[];this.phase='preparation';this.timer=65;this.restock();this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes();this.setArena(this.arenaAt(this.wave+1));for(const [i,h]of this.heroes().entries()){h.z=(h.cell?.z||0)-8.8;h.ready=false;h.botBuyAt=this.time+12+i*2;}this.message='Mercado do coliseu aberto. Estoque compartilhado: quem comprar primeiro leva!';}
  startFinal(){if(this.options.mode!=='campaign')return this.startCompetitionClash();this.clearField();this.phase='final';this.units=this.units.filter(u=>u.hero&&!u.summon);this.restoreHeroes();for(const [i,u]of this.heroes().entries()){u.team=10+i;u.x=Math.sin(i/this.heroes().length*Math.PI*2)*8;u.z=Math.cos(i/this.heroes().length*Math.PI*2)*8;}this.phase='final';this.finalStarted=this.time;this.message='Grande final: todos contra todos. Somente um nome no pedestal!';if(this.heroes().length===1)this.finishFinal(this.heroes()[0]);}
  finishFinal(winner){this.winningOwners=winner?[winner.owner]:[];this.phase='victory';this.winner=winner?.owner||null;this.message=winner?`${winner.name} é o herói perfeito do Coliseu das Mil Formas!`:'A final terminou sem sobreviventes.';}
- learnBotSkills(u){const plan=['heal','vampiric','critical','endurance','multishot','devotion'];while(u.skillPoints>0){const next=plan.find(k=>!u.skills.includes(k)&&u.skills.length<7&&this.skillAvailable(u,k))||[...u.skills].sort((a,b)=>levelOf(u,a)-levelOf(u,b)).find(k=>levelOf(u,k)<5);if(!next||!this.command(u.owner,{type:'buy',skill:next}))break;}}
+ learnBotSkills(u){const plan=['heal','vampiric','critical','endurance','multishot','devotion'];while(u.skillPoints>0){const next=plan.find(k=>!u.skills.includes(k)&&u.skills.length<7&&canLearnSkill(u,k)&&this.skillAvailable(u,k))||[...u.skills].sort((a,b)=>levelOf(u,a)-levelOf(u,b)).find(k=>levelOf(u,k)<5&&canLearnSkill(u,k,levelOf(u,k)+1));if(!next||!this.command(u.owner,{type:'buy',skill:next}))break;}}
  allocateBot(u){while(u.attributePoints>0){const key=[HEROES[u.hero].focus,'vit','agi','dex','int','str','luk'].find(k=>u.attributes[k]<99&&attributeCost(u.attributes[k])<=u.attributePoints);if(!key)break;this.command(u.owner,{type:'attribute',attribute:key});}}
  botThink(u){
   if(this.phase==='preparation')this.botShopThink(u);
@@ -239,21 +248,22 @@ export class Game {
   if(this.arena==='tempest'&&BATTLE.has(this.phase)&&this.time>=this.nextWeather){this.nextWeather=this.time+7;this.weatherStrike();}this.zones=this.zones.filter(z=>!z.expires||z.expires>this.time);
   for(const e of this.effects.filter(e=>e.type==='blizzard'&&e.pulses>0&&this.time>=e.next)){const owner=this.units.find(u=>u.id===e.owner);if(!owner?.alive||owner.channel!=='blizzard'||owner.stun>0){e.pulses=0;continue;}e.next+=1;e.pulses--;const targets=this.enemies(owner).filter(t=>distance(t,e)<e.radius),damage=e.damage*Math.min(1,5/Math.max(1,targets.length));for(const t of targets)this.hit(t,damage,owner,true,false,false,false,'ice');if(e.pulses===0){owner.channel=null;owner.order='auto';}}
   for(const e of this.effects.filter(e=>e.type==='gravity')){const owner=this.units.find(u=>u.id===e.owner);if(!owner)continue;for(const t of this.enemies(owner).filter(t=>distance(t,e)<e.radius)){const d=distance(t,e)||1;if((t.avatar||0)<=this.time)this.displace(t,(e.x-t.x)/d*dt*2.5,(e.z-t.z)/d*dt*2.5);if(this.time>=e.next)this.hit(t,e.damage,owner,true);}if(this.time>=e.next)e.next+=1;}
+  this.tickLinePaths();
   for(const u of [...this.units]){
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}
-   if(u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*u.hpRegen);for(const key of Object.keys(u.cooldowns))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(u.bot)this.botThink(u);}
+   if(u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*u.hpRegen);for(const key of Object.keys(u.cooldowns))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(u.bot)this.botThink(u);this.tickAutocast(u);}
    if(!u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*(u.hpRegen||0));for(const key of Object.keys(u.cooldowns||{}))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(!u.summon)this.monsterThink(u,dt);}this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
    let t=BATTLE.has(this.phase)?this.units.find(t=>t.id===u.target&&this.canTarget(u,t)):null;
-   if(!t&&BATTLE.has(this.phase))t=this.enemies(u,u.order==='hold'||u.order==='stop'?u.range:u.hero?(this.phase==='final'&&(u.bot||u.order==='auto')?Infinity:9):(u.acquireRange??Infinity))[0];
+   if(!t&&BATTLE.has(this.phase))t=this.enemies(u,u.order==='hold'||u.order==='stop'?u.range+(u.range<3?Math.max(0,unitRadius(u)+1.6-.8):0):u.hero?(this.phase==='final'&&(u.bot||u.order==='auto')?Infinity:9):(u.acquireRange??Infinity))[0];
    let dest=['move','attackMove'].includes(u.order)?u.destination:null;
    if(u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode)){u.moving=false;continue;}
-   if(t&&u.order!=='move'){if(distance(u,t)<=u.range){dest=null;if(u.cd<=0){this.attack(u,t);u.cd=u.interval/(u.attackSpeed||1);}}else if(u.order!=='hold'&&u.order!=='stop')dest=t;}
-   if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.18){const slow=(u.frostUntil||0)>this.time?1-.45*(1-(u.coldResist||0)):1,speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(['move','attackMove'].includes(u.order)){u.order='auto';u.destination=null;}}
+   if(t&&u.order!=='move'){if(distance(u,t)<=this.attackReach(u,t)){dest=null;if(u.cd<=0){this.attack(u,t);u.cd=u.interval/(u.attackSpeed||1);}}else if(u.order!=='hold'&&u.order!=='stop')dest=t;}
+   if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.18){const slow=1-Math.max((u.frostUntil||0)>this.time?.45*(1-(u.coldResist||0)):0,(u.abilitySlowUntil||0)>this.time?u.abilitySlowAmount||0:0),speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(['move','attackMove'].includes(u.order)){u.order='auto';u.destination=null;}}
    if(u.sliding){const blend=1-Math.exp(-dt*2.8);u.vx=(u.vx||0)+(vx-(u.vx||0))*blend;u.vz=(u.vz||0)+(vz-(u.vz||0))*blend;}else{u.vx=vx;u.vz=vz;}moveUnit(this,u,{x:u.x+u.vx*dt,z:u.z+u.vz*dt});
   }
-  const live=this.units.filter(u=>u.alive);for(let i=0;i<live.length;i++)for(let j=i+1;j<live.length;j++){const a=live[i],b=live[j],d=distance(a,b);const separation=.4*((a.size||1)+(b.size||1));if((!a.cell||a.cell===b.cell)&&d<separation&&d>.001){const push=(separation-d)*.35,dx=(a.x-b.x)/d,dz=(a.z-b.z)/d;moveUnit(this,a,{x:a.x+dx*push,z:a.z+dz*push});moveUnit(this,b,{x:b.x-dx*push,z:b.z-dz*push});}}
+  this.collisionStats=resolveUnitCollisions(this,dt);
   for(const hero of this.heroes())this.tickNPC(hero);
-  this.equipmentTick();this.tickBossPatterns();this.permanentTick(dt);if(this.options.mode==='linewars')this.tickLineWars(dt);
+  this.tickAbilityEffects(dt);this.equipmentTick();this.tickBossPatterns();this.permanentTick(dt);if(this.options.mode==='linewars')this.tickLineWars(dt);
   if(this.phase==='bonus')this.checkBonus();
   if(this.phase==='wave'&&this.options.mode!=='linewars')this.checkCompetitionWave();
 
@@ -261,7 +271,7 @@ export class Game {
   if(this.phase==='final'&&this.options.mode==='campaign'){const alive=this.heroes().filter(u=>u.alive);if(alive.length<=1)this.finishFinal(alive[0]);else if(this.time-this.finalStarted>60){for(const u of alive)this.hit(u,u.maxHp*.02*dt,null,true,true,false,true);if(this.time-this.finalStarted>120)this.finishFinal(alive.sort((a,b)=>b.hp/b.maxHp-a.hp/a.maxHp||a.id-b.id)[0]);}}
   this.units=this.units.filter(u=>u.hero||u.alive||this.time-(u.died||0)<1);
  }
- snapshot(){return {lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
+ snapshot(){return {voxelMap:this.voxelMap,lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
 }
 
-Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods,ownershipMethods,instanceMethods,bossMethods,nordicMethods,LineWarsMethods,permanentMethods);
+Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods,ownershipMethods,instanceMethods,bossMethods,nordicMethods,LineWarsMethods,permanentMethods,mapMethods,AbilityMethods);

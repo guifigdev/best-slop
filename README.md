@@ -16,7 +16,7 @@ Skuld é a sexta comerciante e grava **22 runas permanentes** no equipamento. Ch
 
 Chefes alternam círculos, anéis com centro seguro, cones e faixas de arena. A área é preenchida em vermelho e o impacto só ocorre após 2,2s; sair da forma evita o golpe, e atordoar o chefe interrompe o ritual. As oito técnicas nórdicas novas incluem quatro famílias de invocações independentes: corvos, bodes, lince e cão espectral, além dos lobos existentes.
 
-Line Wars usa 16 receitas inspiradas em papéis das quatro raças de Warcraft III. Cada defensor tem sua linha, 30 vidas e renda a cada 10s. Clicar na própria casinha envia uma tropa à próxima linha inimiga viva, custa ouro e aumenta renda. Invasores que atravessam o portal removem vidas; o último portal vivo vence. Há limite de tropas, renascimento e IA, com os mesmos heróis, habilidades e equipamentos. Consulte `docs/LINE_WARS.md` para regras, fontes e diferenças da referência.
+Line Wars usa 16 receitas inspiradas em papéis das quatro raças de Warcraft III. Cada defensor tem sua linha, 30 vidas e renda a cada 10s. Clicar na própria casinha adiciona uma tropa à fila FIFO, mesmo sem ouro ou durante a recarga. O envio automático cobra ouro e aumenta renda quando houver recursos e espaço na próxima linha inimiga viva. A fila permite cancelar entradas. Cada casinha mostra retrato, nome, preço e prévia de atributos antes do clique. Invasores que atravessam o portal removem vidas; o último portal vivo vence. Há fonte de recuperação, colisões por tamanho, observação da linha rival pelos avatares, limite de tropas, renascimento e IA, com os mesmos heróis, habilidades e equipamentos. Consulte `docs/LINE_WARS.md` para regras, fontes e diferenças da referência.
 
 ## Executar
 
@@ -57,7 +57,7 @@ Escolha Guerra → tamanho da equipe, quantidade de equipes e intervalo → Cria
 
 ## Técnicas, atributos e equipamentos
 
-48 técnicas, cada uma com cinco níveis. Sete espaços; evoluir uma técnica não ocupa outro espaço. O herói começa com sua técnica de clã no nível 1. Cada nível ganho concede **1 ponto de habilidade**, que aprende uma técnica ou sobe um nível de uma existente. Não exige ouro, mercado aberto nem nível mínimo adicional. O limite é cinco; alterações são validadas pela simulação, inclusive em batalha. Valores históricos documentados de Warcraft III são a base de parte do catálogo; níveis adicionais e técnicas originais são identificados. Veja `docs/REFERENCE.md` para fontes e diferenças.
+52 técnicas, cada uma com cinco níveis. Sete espaços; evoluir uma técnica não ocupa outro espaço. O herói começa com sua técnica de clã no nível 1. Cada nível ganho concede **1 ponto de habilidade**, que aprende uma técnica ou sobe um nível de uma existente. Não exige ouro nem mercado aberto. Ultimates exigem nível mínimo para aprender e evoluir; veja os requisitos no catálogo. O limite é cinco; alterações são validadas pela simulação, inclusive em batalha. Valores históricos documentados de Warcraft III são a base de parte do catálogo; níveis adicionais e técnicas originais são identificados. Veja `docs/REFERENCE.md` para fontes e diferenças.
 
 Cada nível dá `5 + floor(nível/5)` pontos de atributo. O custo depende do próximo valor **base**: até 10 custa 1, de 11 a 20 custa 2, de 21 a 30 custa 3 etc. Fórmula: `1 + floor(valor_base_atual/10)`. O limite base é 99. Equipamentos contam nos bônus/marcos, mas não encarecem a distribuição. As fórmulas abaixo são as regras próprias pedidas para este jogo, inspiradas em Ragnarok, não uma reprodução de um patch de RO.
 
@@ -139,7 +139,7 @@ Vitalidade concede regeneração percentual a cada dez pontos totais, inclusive 
 
 O bestiário inclui leão (onda4), rinoceronte(7), grifo(12), quimera(18), dragão(25) e esfinge(32), mantendo a fauna anterior. Modelos, tamanhos e silhuetas são próprios. Os 23 perfis variam movimento, intervalo de ataque, dano, precisão, esquiva e crítico. Cada espécie tem porte próprio; chefes são maiores. Provas concorrentes recebem os mesmos perfis e técnicas, sem variar a dificuldade por jogador.
 
-Animais normais não têm habilidades; especiais têm uma; minichefes e chefes recebem até cinco, conforme o nível. Todas as 48 técnicas podem aparecer, inclusive passivas, auras e invocações. As técnicas usam nível 1 nos níveis de monstro 1–10, nível 2 em 11–20, até nível 5 em 41+. Cada chefe recebe no máximo uma técnica de controle forte e uma de sustentação. Os ativos usam mana, recarga e aviso de 0,7–0,95s antes da execução, permitindo interromper com atordoamento. Empurrões, puxões, lentidão e stun afetam o combate e respeitam os limites do campo.
+Animais normais não têm habilidades; especiais têm uma; minichefes e chefes recebem até cinco, conforme o nível. Todas as 52 técnicas podem aparecer, inclusive passivas, auras e invocações. As técnicas usam nível 1 nos níveis de monstro 1–10, nível 2 em 11–20, até nível 5 em 41+. Cada chefe recebe no máximo uma técnica de controle forte e uma de sustentação. Os ativos usam mana, recarga e aviso de 0,7–0,95s antes da execução, permitindo interromper com atordoamento. Empurrões, puxões, lentidão e stun afetam o combate e respeitam os limites do campo.
 
 Clique esquerdo em qualquer personagem para consultar sua ficha, ou pressione **T** para alternar os inimigos: a aba **Alvo** mostra vida, nível, tamanho, estatísticas atuais, habilidades, recargas e tipos de controle. A seleção não altera as ordens do herói. A arena comum cresceu de 28 para 32m entre os limites laterais, com cantos arredondados; o campo de guerra passou de 54 para 60m. Cenário, plateia e câmera acompanham a ampliação.
 
@@ -176,3 +176,11 @@ Todos podem comprar seus itens de volta, por metade do investimento. A interaç�
 O catálogo especial tem 11 espécies. Valquíria-coruja, harpia, fênix, serpente alada de gelo e basilisco completam o bestiário. Grifos e dragões agora voam. As asas são grupos 3D separados do corpo e usam oito poses pré-calculadas; altura e oscilação acompanham a espécie, com sombra e seleção no chão. Voadores evitam lava, gelo, água e armadilhas de chão, mas continuam sujeitos a raios, efeitos aplicados e ataques/habilidades de todos os heróis. Pilares e limites continuam bloqueando a movimentação.
 
 Criaturas elementais têm resistências leves e fraquezas próprias. Isso não modifica as fórmulas dos atributos do herói. O dano básico elemental foi calibrado para compensar o fato de não usar armadura física; a campanha completa é verificada por um teste de fluxo assistido; os testes autônomos verificam ações e determinismo, sem garantir vitória dos bots.
+
+## Terreno e técnicas automáticas
+
+O botão **Mapas** abre o editor de imagem/altura para matriz voxel, com correção manual, prévia 3D, importação/exportação JSON e validação de rotas. O cenário padrão adapta o corredor superior do terreno W3E e passagem WPM de CHLW v1.6a; o anexo de mercado é próprio. Não é a reconstrução integral do mapa. Consulte `docs/MAP_IMPORT.md`.
+
+Botão direito numa técnica ativa alterna **AUTO**. A conjuração automática usa mana, recarga e alvos válidos, e respeita movimento e mira manual. Magias escalam com MATK, golpes físicos com ATK; há novas pegadas de fogo/gelo e auras mágicas. Consulte `docs/SCALING.md`.
+
+O catálogo distingue técnicas disponíveis, em evolução, exclusivas de outro herói, sem pontos, sem espaço, apenas de espólio e no nível máximo. Sete **ultimates** exigem nível mínimo de herói (10,12ou15) e requisitos crescentes para cada melhoria; os bloqueios são validados também em espólios e descobertas. Consulte `docs/ULTIMATES.md`.

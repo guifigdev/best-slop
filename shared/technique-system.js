@@ -1,3 +1,4 @@
+import {canLearnSkill} from './skill-access.js';
 import {SKILLS,levelOf} from './catalog.js';
 
 export const TECHNIQUE_ROLL_COST=3;
@@ -17,7 +18,7 @@ export const techniqueMethods={
 
  rollTechniques(u){
   if(!available(this,u)||(u.essence||0)<TECHNIQUE_ROLL_COST)return false;
-  const pool=Object.keys(SKILLS).filter(key=>!u.skills.includes(key)&&this.skillAvailable(u,key));if(pool.length<TECHNIQUE_OFFER_COUNT)return false;
+  const pool=Object.keys(SKILLS).filter(key=>!u.skills.includes(key)&&canLearnSkill(u,key)&&this.skillAvailable(u,key));if(pool.length<TECHNIQUE_OFFER_COUNT)return false;
   for(let i=0;i<TECHNIQUE_OFFER_COUNT;i++){const j=i+Math.min(pool.length-i-1,Math.floor(this.random()*(pool.length-i)));[pool[i],pool[j]]=[pool[j],pool[i]];}
   u.essence-=TECHNIQUE_ROLL_COST;u.techniqueOffers=pool.slice(0,TECHNIQUE_OFFER_COUNT);this.fx('techniqueRoll',u.x,u.z,{source:u.id,cost:TECHNIQUE_ROLL_COST,offers:[...u.techniqueOffers]});return true;
  },
@@ -26,7 +27,7 @@ export const techniqueMethods={
  // cooldown history by key and carry the replaced slot's remaining cooldown.
  swapTechniqueSlot(u,key,slot,rank){
   const replaced=u.skills[slot]||null;u.cooldowns||={};const oldCooldown=replaced?u.cooldowns[replaced]||0:0;
-  if(replaced){if(u.skillRarities)delete u.skillRarities[replaced];delete u.skillLevels[replaced];u.skills[slot]=key;
+  if(replaced){if(u.autoSkills)delete u.autoSkills[replaced];if(u.abilityTrail?.key===replaced)u.abilityTrail=null;if(u.skillRarities)delete u.skillRarities[replaced];delete u.skillLevels[replaced];u.skills[slot]=key;
    if(replaced==='avatar'){u.avatar=0;u.avatarData=null;}
    if(replaced==='shield'){u.shield=0;u.shieldUntil=0;}
    if(['rage','battlecry'].includes(replaced)&&(!u.rageSkill||u.rageSkill===replaced)){u.rageUntil=0;u.rageData=null;u.rageSkill=null;}
@@ -38,7 +39,7 @@ export const techniqueMethods={
   if(!available(this,u)||typeof c.skill!=='string'||!Object.hasOwn(SKILLS,c.skill)||!u.techniqueOffers?.includes(c.skill)||u.skills.includes(c.skill)||!this.skillAvailable(u,c.skill))return false;
   let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
   if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
-  const inherited=u.skills[slot]?Math.max(1,Math.min(5,levelOf(u,u.skills[slot]))):1,replaced=this.swapTechniqueSlot(u,c.skill,slot,inherited);
+  const inherited=u.skills[slot]?Math.max(1,Math.min(5,levelOf(u,u.skills[slot]))):1;if(!canLearnSkill(u,c.skill,inherited))return false;const replaced=this.swapTechniqueSlot(u,c.skill,slot,inherited);
   u.techniqueOffers=[];this.cancelChannel(u);this.refresh(u);this.fx('techniqueClaim',u.x,u.z,{source:u.id,skill:c.skill,level:inherited,replaced,slot});return true;
  }
 };

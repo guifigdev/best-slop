@@ -6,7 +6,7 @@ import {Game} from '../shared/simulation.js';
 import {Matchmaker} from './matchmaking.js';
 const port=Number(process.env.PORT||2567),rooms=new Map(),peers=new Map();
 const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({service:'Custom Hero',rooms:rooms.size}));});
-const wss=new WebSocketServer({server,maxPayload:4096});
+const wss=new WebSocketServer({server,maxPayload:262144});
 function send(peer,data){if(peer?.ws.readyState===1&&peer.ws.bufferedAmount<256000)peer.ws.send(JSON.stringify(data));}
 function attach(peer,room,code){peer.room=room;room.clients.set(peer.id,peer);send(peer,{type:'joined',id:peer.id,room:code,state:room.game.snapshot()});}
 const matchmaker=new Matchmaker((parties,options)=>{const code=`WAR-${randomUUID().slice(0,8)}`,r={game:new Game(Date.now()>>>0,options),clients:new Map()};for(const [i,p]of parties.entries())for(const u of p.players){const peer=peers.get(u.id);r.game.addPlayer(u.id,u.hero,u.name,false,i+1);attach(peer,r,code);}rooms.set(code,r);});

@@ -31,5 +31,6 @@ export function recompute(u,time=0,auras={}){
  u.speed=base.speed*(1+(fervor.moveSpeed||0)+(equipment.moveSpeed||0));
  u.lifesteal=Math.min(.8,(u.range<3?passive('vampiric').lifesteal||0:0)+(equipment.lifesteal||0));
  const rune=permanentStats(u);u.damage=(u.damage+rune.damageFlat)*Math.max(.1,1+rune.damageMultiplier);u.magicPower*=Math.max(.1,1+rune.magicPower);u.armor+=rune.armor;u.attackSpeed=Math.min(3,u.attackSpeed+rune.attackSpeed);u.speed*=Math.max(.25,1+rune.moveSpeed);u.manaRegen=Math.max(0,u.manaRegen+rune.manaRegen);u.hpRegen=Math.max(0,u.hpRegen+rune.hpRegen);u.evasion=Math.min(.45,u.evasion+rune.evasion);u.critChance=Math.min(.8,u.critChance+rune.critChance);u.lifesteal=Math.min(.8,u.lifesteal+rune.lifesteal);u.permanentDamageTaken=rune.damageTaken;
+ u.magicAttack=(18+u.level*1.5+a.int*2+(equipment.magicAttack||equipment.matk||0))*u.magicPower;
  u.reflect=passive('thorns').reflect||0;u.fireResist=Math.min(.9,equipment.fireResist||0);u.coldResist=Math.min(.9,equipment.coldResist||0);
 }

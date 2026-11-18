@@ -1,7 +1,7 @@
 import {ARENA_BOUNDS} from './arena-size.js';
 export const privateTrials=mode=>['campaign','best','war','linewars'].includes(mode);
 export function homeCell(game,u){if(!privateTrials(game.options.mode))return null;const index=game.options.mode==='war'?u.squad-1:u.seat;return{x:index*56,z:0,r:ARENA_BOUNDS,key:game.options.mode==='war'?`team-${u.squad}`:u.owner};}
-export function merchantPosition(u,shop){return{...shop,x:shop.x+(u?.cell?.x||0),z:shop.z+(u?.cell?.z||0)};}
+export function merchantPosition(u,shop){const position=u?.marketShops?.find(p=>p.id===shop.id)||shop;return{...shop,x:position.x+(u?.cell?.x||0),z:position.z+(u?.cell?.z||0)};}
 export const instanceMethods={
  setupHome(u,x=-4,z=-8.8){const cell=homeCell(this,u);if(!cell)return;u.cell=cell;u.challenge=cell.key;u.x=cell.x+x;u.z=cell.z+z;this.bounds=Math.max(this.bounds,Math.abs(cell.x)+ARENA_BOUNDS+2);const cells=new Map((this.cells||[]).map(c=>[c.key,c]));cells.set(cell.key,cell);this.cells=[...cells.values()];},
  homePosition(u,x=-4,z=2){if(privateTrials(this.options.mode)&&!['final','finalCountdown'].includes(this.phase))this.setupHome(u,x,z);else{delete u.cell;delete u.challenge;u.x=x;u.z=z;}},

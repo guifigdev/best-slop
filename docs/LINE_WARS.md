@@ -4,7 +4,7 @@ Segundo jogo independente, com dois a quatro jogadores em linhas isoladas. Cada 
 
 ## Referência e limites de fidelidade
 
-Referência histórica do mapa: [arquivo da wiki Custom Hero Line Wars](http://customherolinewars.pbworks.com/). O projeto ainda não contém o `.w3x` de uma versão de referência e não afirma reproduzir seus valores, catálogo ou scripts. A mecânica de enviar tropas, desenvolver renda e defender linhas é a base desta adaptação; preços, unidades, escalas e regras abaixo são próprios e precisam de partidas humanas para balanceamento.
+Referência histórica do mapa: [arquivo da wiki Custom Hero Line Wars](http://customherolinewars.pbworks.com/). O terreno e a passagem do arquivo v1.6a foram consultados; o cenário voxel adapta seu corredor superior e adiciona um anexo próprio de mercado. A matriz e a proveniência estão em [MAP_IMPORT.md](MAP_IMPORT.md). Os valores de unidades e habilidades permanecem próprios. A mecânica de enviar tropas, desenvolver renda e defender linhas é a base desta adaptação; preços, unidades, escalas e regras abaixo são próprios e precisam de partidas humanas para balanceamento.
 
 As quatro famílias de papéis militares são inspiradas nas unidades do guia clássico da Blizzard, consultado em 18/11/2026. Foram verificadas fontes primárias para [Footman](https://classic.battle.net/war3/human/units/footman.shtml), [Grunt](https://classic.battle.net/war3/orc/units/grunt.shtml), [Huntress](https://classic.battle.net/war3/nightelf/units/huntress.shtml) e [Crypt Fiend](https://classic.battle.net/war3/undead/units/cryptfiend.shtml). Seus índices também relacionam as demais unidades das respectivas raças. Cada receita guarda seu próprio link de referência no catálogo. Nenhum modelo, textura, sprite ou texto descritivo da Blizzard foi copiado.
 
@@ -68,3 +68,9 @@ As linhas têm centros separados por 52 unidades em X e células de raio 16. O s
 `node --test tests/line-wars.test.js` verifica catálogo, renda, propriedade, recarga, limite de população, estatísticas reais das receitas, vazamentos, vitória, eliminação do anel, renascimento, deslocamento de invasores, defesa pelo combate existente e determinismo com bots. A fixture inclui os adaptadores de integração para permitir testar o módulo antes de a interface e o seletor de modos serem conectados.
 
 Isso valida comportamento e consistência. Não demonstra equilíbrio competitivo, capacidade de hospedagem pública ou fidelidade a uma versão específica do mapa original.
+
+## Fila, fonte e observação
+
+`queueLineUnit` aceita até 50 entradas, inclusive sem ouro ou em recarga. `cancelLineQueue` remove uma entrada sem custo; `processLineQueue` só paga quando realiza o envio da primeira entrada. A fonte recupera6%HPmáximo/s e4%mana máxima/s em raio2,6m para herói e invocações da mesma linha.
+
+A barra de avatares mostraHPdo herói e vidas do portal de todos. Clicar seleciona apenas a instância apresentada pela câmera; Espaço/F1 retorna ao próprio jogador. Enquanto observa, compras em casinhas/NPCs rivais e ordens de chão ficam bloqueadas na interface. O servidor continua validando proprietário. As prévias de tropas mostram retratos originais antes da compra.

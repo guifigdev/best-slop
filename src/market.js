@@ -1,15 +1,16 @@
 import * as T from 'three';
 import {SHOPS} from '../shared/shops.js';
+import {buildHeroModel} from './hero-models.js';
 
 // Non-combatants are local scenery. Stock, range and transactions remain in the
 // authoritative simulation; this component only renders and routes interaction.
-export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{}}){
+export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{},interactive:initialInteractive=true}){
  const root=new T.Group();root.name='physical-coliseum-market';scene.add(root);
  const labels=document.createElement('div');labels.className='market-labels';Object.assign(labels.style,{position:'absolute',inset:'0',pointerEvents:'none',zIndex:'4'});
  // Combat-number overlays may be aria-hidden; merchant buttons must be their
  // siblings so keyboard and assistive technology can reach the shop services.
  (overlay.parentElement||overlay).append(labels);
- const stores=[],ownedGeometry=new Set();let state=null,disposed=false;
+ const stores=[],ownedGeometry=new Set();let state=null,disposed=false,marketInteractive=!!initialInteractive;
  const neutralWood=0xa58c64,lightWood=0xc6ad7c,darkWood=0x746448,cream=0xe9dfbd;
  const box=(parent,x,y,z,w,h,d,color)=>voxel(parent,x,y,z,w,h,d,color);
  function consolidate(group,key){const mesh=bake(group);if(mesh){mesh.name=key;if(mesh.geometry)ownedGeometry.add(mesh.geometry);}return mesh;}
@@ -34,38 +35,45 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{}}){
   }
  }
  function animal(group,shop){
-  const kind=shop.hero,fur=kind==='mage'?0xe4decf:kind==='owl'?0xa18b69:kind==='raccoon'?0xa7a392:kind==='ranger'?0xd39761:0xbba074,muzzle=kind==='mage'?0xf4ecda:kind==='ranger'?0xf0dfba:0xd8c396;
-  box(group,0,.83,0,.76,.81,1.05,fur);box(group,0,1.44,.34,.87,.77,.74,fur);box(group,0,1.23,.79,.61,.3,.25,muzzle);box(group,0,.79,.12,.81,.38,.91,shop.color);box(group,0,.61,.61,.51,.49,.06,shop.id==='smith'?0x8a684d:0xd4c194);
-  for(const x of [-.26,.26]){box(group,x,.26,.15,.22,.45,.29,fur);box(group,x,1.56,.72,.105,.14,.035,0x344b3d);}
-  if(kind==='mage'){for(const x of [-.26,.26]){box(group,x,2.11,.26,.23,.7,.24,fur);box(group,x,2.12,.4,.1,.46,.035,0xc7aaa0);}box(group,0,.81,-.61,.35,.35,.31,0xf1e6d1);}
-  else if(kind==='owl'){for(const x of [-.24,.24]){box(group,x,1.53,.73,.31,.35,.05,0xe9d9b7);box(group,x,1.54,.775,.12,.17,.035,0x3b4c3b);box(group,x,1.57,.8,.035,.045,.02,0xf4ebcb);}box(group,0,1.31,.9,.18,.23,.21,0xdfb96a);for(const side of [-1,1]){box(group,side*.49,.95,.04,.19,.57,.64,0x7a7d69);box(group,side*.34,1.98,.27,.22,.28,.29,0x9c825c);}}
-  else if(kind==='raccoon'){box(group,0,1.56,.73,.78,.25,.04,0x4b5751);for(const x of [-.26,.26]){box(group,x,1.57,.765,.12,.15,.035,0xf0e9cc);box(group,x,1.98,.24,.25,.27,.25,fur);}for(let i=0;i<3;i++)box(group,0,.78,-.65-i*.2,.31,.29,.2,i%2?0x596156:0xb6b29a);box(group,-.53,.91,.55,.1,.7,.1,0xa88b5e);box(group,-.53,1.29,.55,.36,.22,.25,0xb1b8ab);}
-  else if(kind==='ranger'){for(const x of [-.27,.27]){box(group,x,2.01,.23,.23,.41,.25,fur);box(group,x,2.04,.37,.1,.2,.03,0x795f48);}box(group,0,.84,-.76,.38,.36,.69,fur);box(group,0,.84,-1.06,.4,.37,.29,0xf2dfb8);box(group,-.59,1.02,.4,.095,1.38,.1,0x9a8258);box(group,-.59,1.83,.4,.31,.33,.3,0xc4addd);}
-  else{for(const x of [-.31,.31])box(group,x,1.95,.28,.23,.25,.25,fur);box(group,0,.88,-.04,.81,.14,1.1,0xe3c17d);box(group,0,1.77,.31,.91,.12,.74,0xc4b18b);box(group,0,1.92,.24,.53,.2,.53,0xe2cf9f);}
-  if(kind!=='owl')box(group,0,1.31,.94,.17,.1,.035,0x66533e);
+  const descriptor=buildHeroModel(shop.hero,group,voxel);if(!descriptor)return null;
+  for(const part of descriptor.legs||[])box(group,part.x,part.y,part.z,part.w,part.h,part.d,part.color??descriptor.fur);
+  for(const wing of descriptor.wings||[])for(const [x,y,z,w,h,d,color]of wing.parts)box(group,x+wing.pivot[0],y+wing.pivot[1],z+wing.pivot[2],w,h,d,color);
+  box(group,0,.84,.65,.38,.27,.045,shop.color);
+  if(shop.id==='runemaster'){box(group,0,2.57,.12,.64,.12,.57,shop.color);box(group,0,2.72,.26,.17,.23,.16,0xd9d9e9);}
+  return descriptor;
  }
+ function isOpen(next){return !next||next.phase==='preparation'||next.options?.mode==='linewars'&&next.phase==='wave';}
+ function locationFor(unit,shop){const layout=unit?.marketShops,marker=Array.isArray(layout)?layout.find(p=>p.id===shop.id):layout?.[shop.id];return{...shop,x:Number.isFinite(marker?.x)?marker.x:shop.x,z:Number.isFinite(marker?.z)?marker.z:shop.z};}
  for(const shop of Object.values(SHOPS)){
   const stand=new T.Group();root.add(stand);stand.position.set(shop.x,0,shop.z);const cloth=Number.isFinite(shop.color)?shop.color:0x7a987e;
   box(stand,0,.24,-1.1,3.9,.12,3.0,0x9eac81);box(stand,0,.91,-1.8,3.35,1.15,.78,neutralWood);box(stand,0,1.54,-1.8,3.65,.16,.94,lightWood);box(stand,0,.7,-1.37,3.3,.15,.08,darkWood);
   for(const side of [-1,1]){box(stand,side*1.67,1.57,-1.9,.14,2.7,.14,lightWood);box(stand,side*1.67,1.57,-2.6,.14,2.7,.14,darkWood);}
   box(stand,0,2.92,-2.12,3.8,.2,1.8,cloth);box(stand,0,3.1,-2.3,3.1,.17,1.3,cloth);box(stand,0,2.75,-1.18,3.8,.27,.13,cloth);for(let i=0;i<5;i++)box(stand,-1.5+i*.75,2.75,-1.1,.17,.27,.06,cream);
   box(stand,0,2.47,-1.37,1.27,.38,.12,darkWood);box(stand,0,2.47,-1.29,1.12,.25,.045,lightWood);box(stand,0,2.49,-1.255,.19,.18,.025,cloth);products(stand,shop);consolidate(stand,`npc-shop-stand-${shop.id}`);
-  const npc=new T.Group();npc.position.set(shop.x,.18,shop.z);root.add(npc);animal(npc,shop);consolidate(npc,`npc-shop-animal-${shop.id}`);
+  const npc=new T.Group();npc.position.set(shop.x,.18,shop.z);root.add(npc);const model=animal(npc,shop);consolidate(npc,`npc-shop-animal-${shop.id}`);
   const button=document.createElement('button');button.type='button';button.className='npc-label';button.dataset.npc=shop.id;button.setAttribute('aria-label',`Falar com ${shop.npc} — ${shop.name}`);Object.assign(button.style,{position:'absolute',transform:'translate(-50%,-100%)',pointerEvents:'auto'});
   const mark=document.createElement('span');mark.className='npc-label-mark';mark.textContent=shop.id==='smith'?'⚒':['enchanter','runemaster'].includes(shop.id)?'✦':shop.id==='books'?'▤':shop.id==='consumables'?'✚':'◆';const text=document.createElement('span');text.className='npc-label-text';const name=document.createElement('b');name.textContent=shop.npc;const role=document.createElement('small');role.textContent=({equipment:'Equipamentos',consumables:'Poções',books:'Livros de XP',smith:'Ferreiro',enchanter:'Imbuições',runemaster:'Runas permanentes'})[shop.id];const hint=document.createElement('em');hint.className='npc-label-hint';hint.textContent='Conversar';text.append(name,role,hint);button.append(mark,text);labels.append(button);
-  button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();});button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!state||(state.phase==='preparation'||state.options?.mode==='linewars'&&state.phase==='wave'))onTalk(shop.id);});stores.push({shop,npc,stand,button,hint,position:new T.Vector3(),lastFrame:-1});
+  button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();});button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(marketInteractive&&isOpen(state))onTalk(shop.id);});stores.push({shop,location:{...shop},model,npc,stand,button,hint,position:new T.Vector3(),screenNpc:{x:0,y:0,visible:false},lastFrame:-1});
  }
  return{
-  update(next,camera,container,playerId){
-   if(disposed)return;state=next;const visible=!state||(state.phase==='preparation'||state.options?.mode==='linewars'&&state.phase==='wave');root.visible=visible;labels.hidden=!visible;if(!visible)return;
+  update(next,camera,container,playerId,interaction){
+   if(disposed)return;state=next;if(typeof interaction==='boolean')marketInteractive=interaction;else if(interaction&&typeof interaction.interactive==='boolean')marketInteractive=interaction.interactive;
+   const visible=isOpen(state);root.visible=visible;labels.hidden=!visible;if(!visible)return;
    const own=state?.units.find(u=>u.id===state.players[playerId]),time=state?.time??performance.now()/1000,width=container.clientWidth,height=container.clientHeight;
    for(const [i,entry]of stores.entries()){
-    const {shop,npc,button,hint,position}=entry,frame=Math.floor(time*8+i*2)%8;if(frame!==entry.lastFrame){entry.lastFrame=frame;npc.position.y=.18+[0,.018,.035,.018,0,-.012,-.018,-.012][frame];npc.rotation.z=[0,.012,.016,.008,0,-.008,-.012,-.008][frame];}
-    position.set(shop.x,3.05,shop.z+.18).project(camera);const onscreen=position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;button.hidden=!onscreen;if(!onscreen)continue;button.style.left=`${(position.x*.5+.5)*width}px`;button.style.top=`${(-position.y*.5+.5)*height}px`;
-    const distance=own?Math.hypot(own.x-shop.x,own.z-shop.z):null,near=distance!==null&&distance<=shop.range+(own?.shopInteraction===shop.id?.35:0);button.classList.toggle('npc-near',near);button.classList.toggle('npc-engaged',own?.shopInteraction===shop.id);hint.textContent=distance===null?'Conhecer':near?'Conversar · ao alcance':`Aproximar · ${distance.toFixed(1)}m`;button.title=`${shop.npc} · ${shop.role}. Alcance de atendimento: ${shop.range}m.`;
+    const {shop,npc,stand,button,hint,position}=entry,location=locationFor(own,shop),frame=Math.floor(time*8+i*2)%8;entry.location=location;stand.position.set(location.x,0,location.z);npc.position.x=location.x;npc.position.z=location.z;
+    if(frame!==entry.lastFrame){entry.lastFrame=frame;npc.position.y=.18+[0,.018,.035,.018,0,-.012,-.018,-.012][frame];npc.rotation.z=[0,.012,.016,.008,0,-.008,-.012,-.008][frame];}
+    position.set(location.x,Math.max(3.25,(entry.model?.height||2.5)+.55),location.z+.18).project(camera);const onscreen=position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;button.hidden=!onscreen;
+    const screen=entry.screenNpc;position.set(location.x,entry.model?.eyeLine||1.3,location.z).project(camera);screen.x=(position.x*.5+.5)*width;screen.y=(-position.y*.5+.5)*height;screen.visible=position.z>=-1&&position.z<=1&&Math.abs(position.x)<1.1&&Math.abs(position.y)<1.15;
+    button.disabled=!marketInteractive;button.tabIndex=marketInteractive?0:-1;button.style.pointerEvents=marketInteractive?'auto':'none';button.classList.toggle('npc-observed',!marketInteractive);if(!onscreen)continue;
+    position.set(location.x,Math.max(3.25,(entry.model?.height||2.5)+.55),location.z+.18).project(camera);button.style.left=((position.x*.5+.5)*width)+'px';button.style.top=((-position.y*.5+.5)*height)+'px';
+    const distance=own?Math.hypot(own.x-location.x,own.z-location.z):null,near=distance!==null&&distance<=shop.range+(own?.shopInteraction===shop.id ? .35 : 0);button.classList.toggle('npc-near',marketInteractive&&near);button.classList.toggle('npc-engaged',marketInteractive&&own?.shopInteraction===shop.id);hint.textContent=!marketInteractive?'Apenas observando':distance===null?'Conhecer':near?'Conversar · ao alcance':'Aproximar · '+distance.toFixed(1)+'m';button.title=shop.npc+' · '+shop.role+'. Alcance de atendimento: '+shop.range+'m.';
    }
   },
-  pick(point){if(disposed||state&&state.phase!=='preparation'||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;return stores.filter(s=>Math.hypot(point.x-s.shop.x,point.z-s.shop.z)<1.1).sort((a,b)=>Math.hypot(point.x-a.shop.x,point.z-a.shop.z)-Math.hypot(point.x-b.shop.x,point.z-b.shop.z))[0]?.shop.id||null;},
+  setInteractive(value){marketInteractive=!!value;},
+  getShops(){return stores.map(entry=>({...entry.location}));},
+  pick(point){if(disposed||!marketInteractive||!isOpen(state)||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;return stores.filter(s=>Math.hypot(point.x-s.location.x,point.z-s.location.z)<1.1).sort((a,b)=>Math.hypot(point.x-a.location.x,point.z-a.location.z)-Math.hypot(point.x-b.location.x,point.z-b.location.z))[0]?.shop.id||null;},
+  pickScreen(point){if(disposed||!marketInteractive||!isOpen(state)||!Number.isFinite(point?.x)||!Number.isFinite(point?.y))return null;return stores.filter(entry=>entry.screenNpc.visible).map(entry=>({id:entry.shop.id,d:Math.hypot(point.x-entry.screenNpc.x,point.y-entry.screenNpc.y)})).filter(entry=>entry.d<32).sort((a,b)=>a.d-b.d)[0]?.id||null;},
   dispose(){if(disposed)return;disposed=true;root.removeFromParent();labels.remove();for(const geometry of ownedGeometry)geometry.dispose();ownedGeometry.clear();root.clear();}
  };
 }

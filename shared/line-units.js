@@ -13,7 +13,7 @@ export const LINE_UNITS={
  frostcharger:unit('Carneiro saqueador','ram','Clã da Brasa','Raider','orc','raider',170,8,280,19,2,4.1,1.35,1.5,{size:1.05,critChance:.08,skills:['critical'],role:'Corredor veloz · ameaça brechas e críticos'}),
  runebull:unit('Leão dos monólitos','lion','Clã da Brasa','Tauren','orc','tauren',360,15,700,29,4,2.3,1.8,1.7,{size:1.5,skills:['stomp'],lifeDamage:3,role:'Colosso terrestre · pisada atordoante'}),
  moonhare:unit('Lebre das auroras','hare','Clã da Lua','Archer','nightelf','archer',45,3,90,13,0,3.2,1.4,6,{size:.78,evasion:.05,role:'Arqueira leve · alcance e mobilidade'}),
- moonhunter:unit('Lince da lua crescente','lion','Clã da Lua','Huntress','nightelf','huntress',150,7,290,17,1,3.7,1.5,4.8,{size:.95,skills:['bounce'],role:'Caçadora ágil · glaives ricocheteantes'}),
+ moonhunter:unit('Lince da lua crescente','lynx','Clã da Lua','Huntress','nightelf','huntress',150,7,290,17,1,3.7,1.5,4.8,{size:.95,skills:['bounce'],role:'Caçadora ágil · glaives ricocheteantes'}),
  runedryad:unit('Basilisco dos bosques','basilisk','Clã da Lua','Dryad','nightelf','dryad',200,9,220,20,2,3.2,1.5,6,{size:.95,skills:['poison'],role:'Guarda do bosque · projéteis envenenados'}),
  aurorachimera:unit('Quimera da aurora','chimera','Clã da Lua','Chimaera','nightelf','chimaera',600,25,820,40,4,2.4,1.9,6,{size:1.5,flying:true,altitude:1.7,skills:['venomcloud'],lifeDamage:4,role:'Voador de cerco · nuvem venenosa'}),
  mistwolf:unit('Lobo da névoa','wolf','Clã da Névoa','Ghoul','undead','ghoul',40,3,115,10,0,3.3,.95,1.3,{size:.85,skills:['vampiric'],role:'Atacante rápido · recupera vida ao morder'}),

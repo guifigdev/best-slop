@@ -30,5 +30,5 @@ export function createColiseum(scene,tiles,environment,sun,base,material){
   for(let i=0;i<90;i++){const x=((i*7.31)%38)-19,z=((i*13.17)%38)-19,t=(time*(key==='tempest'?1.5:.5)+i*.17)%1;dummy.position.set(x+(key==='glacier'?Math.sin(time+i):0),10*(1-t),z);dummy.rotation.set(0,0,key==='tempest'?.3:0);dummy.scale.set(key==='volcano'?.07:.04,key==='tempest'?.65:key==='glacier'?.09:.22,.04);dummy.updateMatrix();weather.setMatrixAt(i,dummy.matrix);}weather.instanceMatrix.needsUpdate=true;weather.visible=key!=='moon'||Math.floor(time)%5<3;
  }
  environment.material=new T.MeshLambertMaterial({vertexColors:true});
- return{update,setExpanded(value){for(const mesh of Object.values(parts))mesh.visible=!value;},setPreview(key){preview=key;theme(key);},cheer(){cheerUntil+=2;}};
+ return{update,setExpanded(value){for(const mesh of Object.values(parts))mesh.visible=!value;hazards.visible=!value;if(value)weather.visible=false;},setPreview(key){preview=key;theme(key);},cheer(){cheerUntil+=2;}};
 }

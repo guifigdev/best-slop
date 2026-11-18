@@ -1,0 +1,2 @@
+// Camera focus is presentation state. It never changes the command owner.
+export function createLaneFocus(){let watched=null;return{select(state,owner){if(state?.options?.mode!=='linewars'||!state.units.some(u=>u.id===state.players[owner]&&u.hero&&!u.summon))return false;watched=owner;return true;},owner(state,self){return state?.options?.mode==='linewars'&&state.players[watched]?watched:self;},isSpectating(state,self){return this.owner(state,self)!==self;},reset(){watched=null;}};}
