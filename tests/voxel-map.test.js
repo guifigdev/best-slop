@@ -91,8 +91,10 @@ test('all sixteen purchased recipes traverse the imported route and breach its r
 });
 
 
-test('the enlarged fjord battlefield has two long validated routes and a separate recruitment district',()=>{
- const map=defaultLineWarsMap();assert.equal(map.name,'Portais dos Fiordes');assert.equal(map.width*map.tileSize,63);assert.equal(map.height*map.tileSize,112);assert.equal(validateMapPath(map).valid,true);assert.equal(map.markers.routes.length,2);assert.equal(map.markers.buildings.length,16);assert.equal(new Set(map.markers.buildings.map(b=>b.routeId)).size,2);for(const route of map.markers.routes){const length=route.path.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-route.path[i-1].x,p.z-route.path[i-1].z):0),0);assert.ok(length>=70);assert.ok(route.spawn.x<0);for(const b of map.markers.buildings)assert.ok(b.x>10);}
+test('the enlarged fjord battlefield has exactly two long routes and compact recruitment terraces behind each entrance',()=>{
+ const map=defaultLineWarsMap();assert.equal(map.name,'Portais dos Fiordes');assert.equal(map.width*map.tileSize,63);assert.equal(map.height*map.tileSize,112);assert.equal(validateMapPath(map).valid,true);assert.equal(map.markers.routes.length,2);assert.equal(map.markers.buildings.length,16);
+ for(const route of map.markers.routes){const length=route.path.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-route.path[i-1].x,p.z-route.path[i-1].z):0),0),houses=map.markers.buildings.filter(b=>b.routeId===route.id);assert.ok(length>=70);assert.equal(houses.length,8);for(const b of houses){assert.ok(b.z<route.spawn.z);assert.ok(route.spawn.z-b.z<10);assert.ok(Math.abs(b.x-route.spawn.x)<6);assert.equal(mapTileAt(map,b.x,b.z).walkable,1);}assert.ok(Math.max(...houses.map(b=>b.x))-Math.min(...houses.map(b=>b.x))<11);assert.ok(Math.max(...houses.map(b=>b.z))-Math.min(...houses.map(b=>b.z))<5);}
+ for(const z of [-35,-15,0,15]){const bands=[];let previous=false;for(let x=-30;x<31;x+=.25){const open=!!mapTileAt(map,x,z)?.walkable;if(open&&!previous)bands.push(x);previous=open;}assert.equal(bands.length,2,`exactly two walkable bands at z=${z}`);for(const x of [20,24,28])assert.equal(mapTileAt(map,x,z).walkable,0);}
  const copy=normalizeVoxelMap(JSON.parse(JSON.stringify(map)));assert.deepEqual(copy.markers.routes,map.markers.routes);copy.markers.routes[0].path[0].x=99;assert.notEqual(map.markers.routes[0].path[0].x,99);
  assert.throws(()=>normalizeVoxelMap({...map,markers:{...map.markers,routes:[map.markers.routes[0],map.markers.routes[0]]}}));
 });

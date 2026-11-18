@@ -1,4 +1,6 @@
 import {canUseSkill} from './archetypes.js';
+import {CastleFightMethods} from './castle-fight.js';
+import {generateScenery,sceneryObstacles} from './scenery.js';
 import {canLearnSkill} from './skill-access.js';
 import {HEROES,SKILLS,ITEMS,ATTRIBUTES,levelOf,skillAt,itemUpgradePrice,ITEM_MAX_LEVEL} from './catalog.js';
 import {ARENAS,arenaForWave} from './arenas.js';
@@ -32,7 +34,7 @@ const TERMINAL=new Set(['victory','defeat']);
 export class Game {
  constructor(seed=7381,options={}){
   this.drops=[];this.projectiles=[];this.specials=[];this.options=modeOptions(options);this.voxelMap=this.options.mode==='linewars'?lineMap(options.voxelMap):null;this.bounds=ARENA_BOUNDS;this.obstacles=[];this.obstacleRevision=0;this.stageResults=[];this.winningOwners=[];
-  this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
+  this.worldSeed=seed;this.seed=seed;this.time=0;this.units=[];this.effects=[];this.players={};this.phase='preparation';this.wave=0;this.timer=90;this.serial=0;this.message='Mercado aberto: clique num comerciante para conversar. Distribua os atributos na ficha do herói.';
   this.arena='forest';this.zones=[];this.nextWeather=8;this.stock={};this.shopVisit=0;this.bonusResults=[];this.winner=null;this.restock();
  }
  random(){this.seed=(Math.imul(this.seed,1664525)+1013904223)>>>0;return this.seed/4294967296;}
@@ -44,7 +46,7 @@ export class Game {
   if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
   const h=HEROES[type],i=Object.keys(this.players).length,startSkill=h.skill;
   const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
-  recompute(u,this.time);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const point=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
+  recompute(u,this.time);if(this.options.mode==='castlefight')this.setupCastleBuilder(u);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const point=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
  }
  addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
  restock(){this.stock=Object.fromEntries(Object.entries(ITEMS).map(([key,v])=>[key,v.stock]));this.shopVisit++;}
@@ -54,6 +56,7 @@ export class Game {
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
  command(id,c){
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
+  if(this.options.mode==='castlefight')return this.castleCommand(u,c);
   if(c.type==='queueLineUnit')return this.queueLineUnit(u,c);
   if(c.type==='cancelLineQueue')return this.cancelLineQueue(u,c);
   if(c.type==='sendLineUnit')return this.sendLineUnit(u,c);
@@ -195,10 +198,11 @@ export class Game {
   if(t.alive&&(t.avatar||0)<=this.time)for(const [key,rank]of Object.entries(u.enchantments||{})){const s=enchantAt(key,rank);if(key==='frost'){t.frostUntil=Math.max(t.frostUntil||0,this.time+s.duration);this.fx('frost',t.x,t.z,{source:u.id,enchantment:true});}else{this.applyDot(t,key==='fire'?'burn':'poison',s.damage,s.duration,u);this.fx(key==='fire'?'burn':'poison',t.x,t.z,{source:u.id,enchantment:true});}}
   if(canUseSkill(u,'poison')&&levelOf(u,'poison')&&t.alive){const s=skillFor(u,'poison');this.applyDot(t,'poison',s.poison,4,u);this.fx('poison',t.x,t.z);}
  }
- setArena(key){this.arena=key;this.zones=ARENAS[key].zones.map((z,i)=>({...z,id:`${key}-${i}`}));this.nextWeather=this.time+8;}
+ setupArenaScenery(){if(['castlefight','linewars'].includes(this.options.mode)||this.field)return;const props=generateScenery({seed:this.worldSeed+this.wave*101,bounds:ARENA_BOUNDS,count:10,keepClear:(ARENAS[this.arena]?.zones||[]).map(z=>({...z,r:z.r+1}))}),origins=this.cells?.length?this.cells:[{x:0,z:0}];this.obstacles=this.obstacles.filter(o=>o.type!=='scenery').concat(origins.flatMap(origin=>sceneryObstacles(props,origin)));this.obstacleRevision++;}
+ setArena(key){this.arena=key;this.zones=ARENAS[key].zones.map((z,i)=>({...z,id:`${key}-${i}`}));this.nextWeather=this.time+8;this.setupArenaScenery();}
  arenaAt(wave){const keys=Object.keys(ARENAS),start=Math.max(0,keys.indexOf(this.startingArena||'forest'));return keys[(start+Math.floor(Math.max(0,wave-1)/10))%keys.length];}
  restoreHeroes(full=true){for(const [i,u]of this.heroes().entries()){this.closeShop(u);u.alive=true;u.team=this.homeTeam(u);this.homePosition(u,-4+(i%5)*2,2);u.destination=null;u.target=null;u.order='auto';u.stun=0;u.itemReflectUntil=0;u.itemReflect=0;u.rageUntil=0;u.rageData=null;u.dots={};u.frostUntil=0;u.vx=0;u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=full?u.maxHp:Math.min(u.maxHp,u.hp+u.maxHp*.3);u.mana=full?u.maxMana:Math.min(u.maxMana,u.mana+u.maxMana*.3);}}
- spawnWave(){if(this.options.mode==='linewars')return this.initLineWars();return this.spawnCompetitionWave();}
+ spawnWave(){if(this.options.mode==='castlefight')return this.initCastleFight();if(this.options.mode==='linewars')return this.initLineWars();const result=this.spawnCompetitionWave();this.setupArenaScenery();return result;}
  spawnEnemy(kind,x,z,data){
   const variant=Number.isFinite(data.variantRoll)?data.variantRoll:this.random();let boss=data.boss===true?'boss':data.boss;
   if(!data.summon&&!data.lineCreep&&['goblin','duck','frog','hare','brute','ram','bat','tortoise','hedgehog','champion'].includes(kind)){if(kind==='champion')boss||='boss';kind=monsterKind(kind,this.wave,variant,!!boss);}
@@ -241,7 +245,7 @@ export class Game {
   if(this.arena==='tempest')for(const z of active.filter(z=>z.type==='lightning'&&z.strike<=this.time&&!z.hit?.includes(u.id))){z.hit||=[];z.hit.push(u.id);this.hit(u,100+this.wave*2,null,true,true,false,true,'lightning');this.fx('thunder',z.x,z.z);}
  }
  tick(dt){
-  if(!Number.isFinite(dt)||dt<=0)return;this.time+=dt;this.tickSpecials(dt);
+  if(!Number.isFinite(dt)||dt<=0)return;this.time+=dt;if(this.options.mode==='castlefight'){this.tickCastleFight(dt);return;}this.tickSpecials(dt);
   const previousObstacles=this.obstacles.length;this.obstacles=this.obstacles.filter(o=>!o.expires||o.expires>this.time);if(previousObstacles!==this.obstacles.length)this.obstacleRevision++;
   this.effects=this.effects.filter(e=>this.time-e.time<(e.duration|| (e.type==='blizzard'?16:1.1)));
   if(!this.heroes().length||TERMINAL.has(this.phase))return;
@@ -272,7 +276,7 @@ export class Game {
   if(this.phase==='final'&&this.options.mode==='campaign'){const alive=this.heroes().filter(u=>u.alive);if(alive.length<=1)this.finishFinal(alive[0]);else if(this.time-this.finalStarted>60){for(const u of alive)this.hit(u,u.maxHp*.02*dt,null,true,true,false,true);if(this.time-this.finalStarted>120)this.finishFinal(alive.sort((a,b)=>b.hp/b.maxHp-a.hp/a.maxHp||a.id-b.id)[0]);}}
   this.units=this.units.filter(u=>u.hero||u.alive||this.time-(u.died||0)<1);
  }
- snapshot(){return {voxelMap:this.voxelMap,lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
+ snapshot(){if(this.options.mode==='castlefight'){const castleFight=this.snapshotCastleFight();return {castleFight,options:this.options,bounds:this.bounds,time:this.time,units:[...this.units,...(castleFight?.units||[])],players:this.players,effects:this.effects,obstacles:this.obstacles,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,winner:this.winner,winningOwners:this.winningOwners,arena:this.arena,zones:[],drops:[],projectiles:[],cells:[],standings:this.standings(),stock:{},skillOwners:{}};}return {voxelMap:this.voxelMap,lineWars:this.snapshotLineWars(),bossWarnings:this.bossWarnings||[],skillOwners:this.skillOwnership(),drops:this.drops,projectiles:this.projectiles,options:this.options,bounds:this.bounds,field:this.field,obstacles:this.obstacles,cells:this.cells||[],standings:this.standings(),stageResults:this.stageResults,lastClash:this.lastClash,waveKind:this.waveKind,winningOwners:this.winningOwners,time:this.time,units:this.units,effects:this.effects,players:this.players,phase:this.phase,wave:this.wave,timer:this.timer,message:this.message,stock:this.stock,shopVisit:this.shopVisit,arena:this.arena,zones:this.zones,bonusResults:this.bonusResults,winner:this.winner};}
 }
 
-Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods,ownershipMethods,instanceMethods,bossMethods,nordicMethods,LineWarsMethods,permanentMethods,mapMethods,AbilityMethods);
+Object.assign(Game.prototype,competitionMethods,monsterMethods,shopMethods,techniqueMethods,ownershipMethods,instanceMethods,bossMethods,nordicMethods,LineWarsMethods,permanentMethods,mapMethods,AbilityMethods,CastleFightMethods);

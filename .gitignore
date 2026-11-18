@@ -4,3 +4,5 @@ dist/
 *.log
 outputs/
 .sites-checkout/
+__pycache__/
+*.pyc

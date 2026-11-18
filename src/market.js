@@ -42,7 +42,7 @@ export function createMarket({scene,voxel,bake,overlay,onTalk=()=>{},interactive
   if(shop.id==='runemaster'){box(group,0,2.57,.12,.64,.12,.57,shop.color);box(group,0,2.72,.26,.17,.23,.16,0xd9d9e9);}
   return descriptor;
  }
- function isOpen(next){return !next||next.phase==='preparation'||next.options?.mode==='linewars'&&next.phase==='wave';}
+ function isOpen(next){if(next?.options?.mode==='castlefight')return false;return !next||next.phase==='preparation'||next.options?.mode==='linewars'&&next.phase==='wave';}
  function locationFor(unit,shop){const layout=unit?.marketShops,marker=Array.isArray(layout)?layout.find(p=>p.id===shop.id):layout?.[shop.id];return{...shop,x:Number.isFinite(marker?.x)?marker.x:shop.x,z:Number.isFinite(marker?.z)?marker.z:shop.z};}
  for(const shop of Object.values(SHOPS).filter(s=>s.id!=='fountain')){
   const stand=new T.Group();root.add(stand);stand.position.set(shop.x,0,shop.z);const cloth=Number.isFinite(shop.color)?shop.color:0x7a987e;
