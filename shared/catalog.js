@@ -1,3 +1,4 @@
+import {CUSTOM_HERO_IDENTITIES} from './hero-identities.js';
 import {equipmentEffectAt} from './equipment-effects.js';
 // Historical guides document the origin, not a promise of patch equivalence.
 // Balance notes identify intentional changes; ranks 4–5 are our extensions.
@@ -9,14 +10,7 @@ export const HEROES = {
  owl:{name:'Noctis',animal:'Coruja da tempestade',role:'INTELIGÊNCIA · CONTROLE',color:0xb4a3cc,hp:690,mana:560,damage:26,armor:2,range:7,speed:4.4,interval:1.4,skill:'chain',focus:'int',description:'Enxerga a próxima abertura. Relâmpagos dançam sob suas asas.'},
  raccoon:{name:'Nico',animal:'Guaxinim duelista',role:'SORTE · CRÍTICOS',color:0xb4a082,hp:800,mana:320,damage:32,armor:3,range:1.8,speed:4.8,interval:.9,skill:'critical',focus:'luk',description:'Uma máscara, um sorriso e um golpe no momento perfeito.'}
 };
-for(const [key,name,description]of [
- ['knight','Bjorn','Uma capivara do fiorde que jurou guardar as raízes de Yggdrasil. Seu passo faz a pedra recordar os gigantes.'],
- ['mage','Liv','Coelha das runas de Niflheim. Lê o gelo como uma saga e chama a luz para proteger seu clã.'],
- ['ranger','Runa','Raposa das trilhas de Skadi. Cada flecha atravessa o vento do norte em busca de um destino.'],
- ['turtle','Sten','Tartaruga dos rochedos de Midgard. Carrega no casco os juramentos de gerações de guardiões.'],
- ['owl','Vidar','Coruja dos pinheiros de Asgard. Escuta o trovão entre os galhos antes que a primeira faísca apareça.'],
- ['raccoon','Eirik','Guaxinim viajante dos Nove Reinos. Lê as marcas das Nornas e escolhe o instante exato para atacar.']
-])Object.assign(HEROES[key],{name,description});
+for(const [key,identity]of Object.entries(CUSTOM_HERO_IDENTITIES))Object.assign(HEROES[key],{name:identity.name,animal:identity.title,description:identity.description});
 for(const [key,archetype,combatRole]of [
  ['knight','physical_melee','guardian'],['turtle','physical_melee','tank'],['raccoon','physical_melee','assassin'],
  ['ranger','physical_ranged','archer'],['mage','magic','arcanist'],['owl','magic','controller']

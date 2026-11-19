@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildHeroModel,HERO_VISUALS} from '../src/hero-models.js';
-import {portrait} from '../src/art.js';
+import {animalPortrait as portrait} from '../src/art.js';
 import {armyPortrait,ARMY_PORTRAIT_KINDS} from '../src/army-art.js';
 import {LINE_UNITS} from '../shared/line-units.js';
 
@@ -18,7 +18,7 @@ test('Vidar is a brown upright owl with facial discs and beak rather than a purp
  const capy=model('knight');assert.ok(Math.max(...capy.parts.map(([x,y,z,w,h,d])=>z+d/2))>1.4);
  assert.ok(parts.filter(part=>part[6]===descriptor.fur).every(part=>part[5]<1),'owl feathers form a compact upright body');
 });
-test('hero portrait fur and clothing share the 3D palette without changing animal identity',()=>{
+test('animal NPC portraits retain their 3D palette after the playable hero redesign',()=>{
  for(const [kind,visual]of Object.entries(HERO_VISUALS)){const svg=portrait(kind),hex=value=>'#'+value.toString(16).padStart(6,'0');assert.ok(svg.includes(hex(visual.fur)),kind);assert.ok(svg.includes(hex(visual.cloth)),kind);assert.equal(svg.includes('undefined'),false);}
  assert.equal(Object.isFrozen(HERO_VISUALS.owl),true);
 });

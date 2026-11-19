@@ -1,3 +1,4 @@
+import {createMoltenLavaMaterial} from './lava-material.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {TREE_TAG_BUILDINGS,TREE_TAG_FOREST,TREE_TAG_RULES} from '../shared/tree-tag-catalog.js';
@@ -106,9 +107,7 @@ export function createLegacyWorld({scene}){
   }
   for(const[id,entry]of buildings)if(!seen.has(id)){entry.group.removeFromParent();buildings.delete(id);}
  }
- const lavaMaterial=new T.ShaderMaterial({uniforms:{uTime:{value:0}},vertexShader:'varying vec3 vWorld;void main(){vec4 p=modelMatrix*vec4(position,1.0);vWorld=p.xyz;gl_Position=projectionMatrix*viewMatrix*p;}',fragmentShader:`precision highp float;varying vec3 vWorld;uniform float uTime;
- float rnd(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
- void main(){vec2 p=floor(vWorld.xz*3.0)/3.0;p=p*.42+vec2(uTime*.025,-uTime*.018);vec2 cell=floor(p),f=fract(p);float first=10.0,second=10.0;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));float a=rnd(cell+g);vec2 spot=g+vec2(.2+.6*a,.2+.6*rnd(cell+g+17.2));float d=length(spot-f);if(d<first){second=first;first=d;}else if(d<second)second=d;}float edge=second-first;float crust=smoothstep(.025,.135,edge);float hot=.5+.5*sin(p.x*2.7+p.y*1.8+uTime*.8);vec3 molten=mix(vec3(.95,.23,.035),vec3(1.0,.69,.14),hot);vec3 rock=mix(vec3(.16,.095,.085),vec3(.26,.12,.075),rnd(cell));vec3 colour=mix(molten,rock,crust);colour+=vec3(.13,.035,0.0)*(1.0-smoothstep(.08,.25,edge));gl_FragColor=vec4(colour,1.0);}`});
+ const lavaMaterial=createMoltenLavaMaterial();
  const lava=new T.Mesh(boxGeometry,lavaMaterial);lava.name='warlock-lava';lava.position.y=-.82;lava.scale.set(220,.65,220);lava.receiveShadow=false;warRoot.add(lava);
  const boundary=new T.Mesh(ringGeometry,new T.MeshBasicMaterial({color:0xffc882,transparent:true,opacity:.72,side:T.DoubleSide,depthWrite:false,toneMapped:false}));boundary.name='warlock-arena-boundary';boundary.rotation.x=-Math.PI/2;boundary.position.y=.16;warRoot.add(boundary);
  function updateArena(radius,time){

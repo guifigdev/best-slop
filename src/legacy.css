@@ -5,3 +5,5 @@
 .legacy-game #climate{display:none!important}.legacy-game .worldhead>div:first-child{background:#f1ecd7ed;padding:10px 14px;border-radius:8px;max-width:370px;box-shadow:0 3px 12px #15382916}.legacy-game .worldhead .worldnote{font-size:11px;line-height:1.5;max-width:320px}.legacy-game .worldhead h1{font-size:23px}.legacy-game .worldhead .eyebrow{font-size:8px;line-height:1.6}.legacy-game .worldhead{top:18px}.legacy-game #player-roster{top:150px;max-width:275px}.legacy-game .player-roster b{font-size:10px}
 
 .legacy-game .worldhead h1{color:#294d3b!important}.legacy-game .worldhead .worldnote{color:#4c6a51!important}.legacy-game .worldhead .eyebrow{color:#6e805d!important}.legacy-game .worldhead .wavepill{color:#294e3a!important}
+
+.legacy-detail-art{float:left;width:60px;height:60px;margin:0 12px 8px 0}.legacy-detail-art svg{width:100%;height:100%}.legacy-detail>dl{clear:both}.legacy-game .ability>.game-illustration{width:100%;height:100%;display:block}.legacy-game .legacy-spell-icons button:hover{background:#36573e}.legacy-game .legacy-card-grid button:disabled{cursor:default}.legacy-game .legacy-card-grid button>span{flex:0 0 44px}

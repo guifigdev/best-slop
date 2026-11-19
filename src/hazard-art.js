@@ -1,3 +1,4 @@
+import {createMoltenLavaMaterial} from './lava-material.js';
 import * as T from 'three';
 
 const TAU=Math.PI*2;
@@ -40,7 +41,7 @@ export function hazardDecorations(zone){
 
 export function createHazardArt({base,heightAt=()=>.2}={}){
  const root=new T.Group(),geometry=base||new T.BoxGeometry(1,1,1),ownGeometry=!base,material=new T.MeshBasicMaterial({color:0xffffff,toneMapped:false}),details=new T.InstancedMesh(geometry,material,2048),dummy=new T.Object3D(),color=new T.Color(),entries=new Map(),circleCache=new Map(),shaders=new Map();root.name='arena-hazards';details.frustumCulled=false;details.count=0;root.add(details);let lastFrame=-1;
- function shader(type){const id=kind(type);if(!shaders.has(id))shaders.set(id,new T.ShaderMaterial({vertexShader:vertex,fragmentShader:fragment,uniforms:{uTime:{value:0},uKind:{value:id}},side:T.DoubleSide,transparent:id!==0,depthWrite:id===0,toneMapped:false}));return shaders.get(id);}
+ function shader(type){const id=kind(type);if(!shaders.has(id))shaders.set(id,id===0?createMoltenLavaMaterial():new T.ShaderMaterial({vertexShader:vertex,fragmentShader:fragment,uniforms:{uTime:{value:0},uKind:{value:id}},side:T.DoubleSide,transparent:id!==0,depthWrite:id===0,toneMapped:false}));return shaders.get(id);}
  function circle(r){if(!circleCache.has(r))circleCache.set(r,new T.CircleGeometry(r,64));return circleCache.get(r);}
  function remove(id){const entry=entries.get(id);if(entry){root.remove(entry.surface,entry.border);entry.border.geometry.dispose();entry.border.material.dispose();entries.delete(id);}}
  function update(zones,time=0){
