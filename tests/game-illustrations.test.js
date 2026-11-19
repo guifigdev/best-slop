@@ -17,7 +17,7 @@ test('all five games have original illustrations for every current skill, item a
   const spec=gameIllustrationSpec(game,kind,key);assert.ok(spec,`${game}/${kind}/${key}`);assert.equal(spec.name,definition.name);assert.ok(spec.paths.length>80);assert.ok(Object.isFrozen(spec));assert.ok(gameIllustration(game,kind,key));count++;
  }
  for(const key of ['blink','cancel','repair','rescue']){assert.ok(gameIllustration('castlefight','skill',key));count++;}
- assert.equal(illustrationCatalog().length,count);assert.equal(count,173);
+ assert.equal(illustrationCatalog().length,count);assert.equal(count,198);
 });
 
 test('related actions have distinct central subjects, rather than merely a different frame or palette over one fallback bolt',()=>{

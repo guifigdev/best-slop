@@ -147,6 +147,20 @@ const survivalItems={
  xpbook:['gold',book()+G(spark(0,0),17,17,.48)],
  epicbook:['arcane',book()+G(raven(),15,16,.5)]
 };
+for(const [key,item]of Object.entries(ITEMS))if(item.attributeTome){
+ const {attribute,amount}=item.attributeTome,palette=({str:'blood',int:'arcane',dex:'nature',luk:'gold',vit:'steel',agi:'storm'})[attribute];
+ const emblem=({str:fist(),int:crystal(),dex:bow(),luk:spark(0,0),vit:shield(),agi:boot()})[attribute];
+ survivalItems[key]=[palette,book()+G(emblem,19,17,.42)+R(35,45,24,15,'shade')+`<text x="47" y="56" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="12" fill="bright">${amount}</text>`];
+}
+Object.assign(survivalItems,{
+ runesword:['steel',sword(-25)+L('m34 16-8 6 8 6-8 6','accent',3)],
+ thunderaxe:['storm',G(hammer(),-2,5,.85)+G(ray(0,0),24,0,.5)],
+ ravenspear:['steel',L('m13 57 29-42','accent',6)+P('m42 5 12 19-22 1z','light')+G(raven(),-6,11,.48)],
+ seidrwand:['arcane',staff()+G(crystal(),29,1,.42)],
+ moonbow:['ice',bow()+P('M16 7a12 12 0 1 0 9 19A13 13 0 0 1 16 7','bright')],
+ helblade:['death',G(sword(-35),8,12,.72)+G(skull(),-1,-5,.5)],
+ runemail:['steel',P('m15 11 11-6h12l12 6 9 15-11 7-6-7v32H22V26l-6 7-11-7z','accent')+L('M26 16v35m12-35v35M22 28h20M22 40h20','light',3)]
+});
 
 const warlockSkills={
  fireball:['fire',G(flame(),14,4,.75)+L('m6 13 11 10M3 29l13 5M7 46l11-2','bright',4)],

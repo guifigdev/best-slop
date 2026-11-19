@@ -31,3 +31,9 @@
 .castle-builders .hero-choice p{font-size:12px;line-height:1.6;margin:10px 0 0}
 @media(max-width:950px){.heroes.castle-builders{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.heroes.castle-builders{grid-template-columns:repeat(2,minmax(0,1fr))}.castle-builders .hero-choice{padding:13px 11px}.castle-builders .hero-choice b{font-size:16px}}
+
+.book-filters{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}.book-filters button{padding:7px 10px;font-size:12px}.book-filters button[aria-pressed=true]{background:#315743;color:#fff0be;border-color:#bda264}.npc-stock .shop-item[hidden]{display:none}.npc-stock .shop-item:hover,.npc-stock .shop-item:focus-visible{background:#315743;border-color:#c1bc81}.npc-stock .shop-item{min-height:100px}
+
+.enchantment-dot.fireward{background:#eea15b;color:#eea15b}.enchantment-dot.frostward{background:#a1dff3;color:#a1dff3}.enchantment-dot.venomward{background:#b5ce70;color:#b5ce70}.enchantment-dot.stormward{background:#c9b8ff;color:#c9b8ff}
+
+.npc-stock .shop-item:not(:disabled){background:#214337!important}.npc-stock .shop-item:hover:not(:disabled),.npc-stock .shop-item:focus-visible:not(:disabled){background:#315743!important;transform:none}

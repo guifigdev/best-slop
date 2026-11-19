@@ -1,7 +1,7 @@
 import {canLearnSkill} from './skill-access.js';
 import {physicalSkillDamage} from './ability-rules.js';
 import {unitRadius} from './unit-collision.js';
-import {SKILLS,skillAt,levelOf} from './catalog.js';
+import {ITEMS,SKILLS,skillAt,levelOf} from './catalog.js';
 import {LOOT_RARITIES,rarityRoll,lootDropChance} from './rarity.js';
 import {skillFor} from './skill-quality.js';
 import {MONSTERS} from './monsters.js';
@@ -50,24 +50,37 @@ export const monsterMethods={
  },
 
  monsterLoot(t,source=null){
-  if(t.lootRolled||t.alive||t.hero||t.summon||!t.skills?.some(key=>SKILLS[key])||!BATTLE.has(this.phase))return null;t.lootRolled=true;
+  if(t.lootRolled||t.alive||t.hero||t.summon||!BATTLE.has(this.phase))return null;t.lootRolled=true;
   let owner=source?.owner?this.player(source.owner):null;
   if(source){if(!owner||!sameTrial(this,owner,t))return null;}
   else owner=this.heroes().filter(h=>h.alive&&sameTrial(this,h,t)).sort((a,b)=>distance(a,t)-distance(b,t)||a.owner.localeCompare(b.owner))[0];
-  if(!owner)return null;const chance=lootDropChance({wave:this.wave,boss:t.boss});if(chance<1&&this.random()>=chance)return null;
+  if(!owner)return null;this.dropBossEquipment(t,owner);if(!t.skills?.some(key=>SKILLS[key]))return null;const chance=lootDropChance({wave:this.wave,boss:t.boss});if(chance<1&&this.random()>=chance)return null;
   const skills=t.skills.filter(key=>SKILLS[key]),drop={id:this.id(),skill:skills[Math.min(skills.length-1,Math.floor(this.random()*skills.length))],owner:owner.owner,x:t.x,z:t.z,expires:this.time+90,kind:t.kind};
   drop.rarity=rarityRoll(()=>this.random(),{wave:this.wave,boss:t.boss});const rarity=LOOT_RARITIES[drop.rarity];drop.quality=rarity.quality;drop.essence=rarity.essence;drop.xp=rarity.xp;this.drops||=[];this.drops.push(drop);this.fx('lootDrop',t.x,t.z,{source:owner.id,skill:drop.skill,dropId:drop.id});return drop;
  },
 
+ dropBossEquipment(t,owner){
+  if(t.boss!=='boss'||this.wave<10||this.wave%10!==0||this.phase!=='wave'||t.lineCreep)return null;
+  const chance=this.wave>=30?.65:.4;if(this.random()>=chance)return null;
+  const pool=['runesword','thunderaxe','ravenspear','seidrwand','moonbow','helblade'],item=pool[Math.min(pool.length-1,Math.floor(this.random()*pool.length))],level=Math.min(3,1+Math.floor((this.wave-10)/20));
+  const drop={id:this.id(),item,level,rarity:level>=3?'legendary':level===2?'epic':'rare',owner:owner.owner,x:t.x+.7,z:t.z,expires:this.time+180,kind:t.kind};
+  this.drops||=[];this.drops.push(drop);this.fx('lootDrop',t.x,t.z,{source:owner.id,item,dropId:drop.id});return drop;
+ },
+
  claimLoot(u,c){
   const drop=(this.drops||[]).find(d=>d.id===c.dropId&&d.owner===u.owner&&d.expires>this.time);
+  if(drop?.item){
+   if(!u.alive||!ITEMS[drop.item]||ITEMS[drop.item].slotType!=='weapon'||['victory','defeat'].includes(this.phase))return false;
+   const empty=u.inventory.findIndex(slot=>!slot);if(empty<0&&u.inventory.length>=6)return false;
+   const slot={key:drop.item,level:drop.level||1,charges:1,invested:ITEMS[drop.item].cost,rarity:drop.rarity};if(empty>=0)u.inventory[empty]=slot;else u.inventory.push(slot);
+   this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,item:drop.item,level:slot.level});return true;
+  }
   if(!drop||!u.alive||!SKILLS[drop.skill]||['victory','defeat'].includes(this.phase))return false;
   const rank=levelOf(u,drop.skill);if(!canLearnSkill(u,drop.skill,Math.min(5,rank+1)))return false;let replaced=null;
-  if(!this.skillAvailable(u,drop.skill))return false;
   const oldQuality=LOOT_RARITIES[u.skillRarities?.[drop.skill]]?.quality||1,newQuality=LOOT_RARITIES[drop.rarity]?.quality||1;if(rank){if(rank>=5&&newQuality<=oldQuality)return false;u.skillLevels[drop.skill]=Math.min(5,rank+1);}
   else{let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
    if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
-   replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);if(replaced===false)return false;
+   replaced=this.swapTechniqueSlot(u,drop.skill,slot,1);if(replaced===false)return false;u.skillOrigins||={};u.skillOrigins[drop.skill]='loot';
   }
   u.skillRarities||={};if(!rank||newQuality>oldQuality)u.skillRarities[drop.skill]=drop.rarity||'common';this.cancelChannel(u);this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,skill:drop.skill,level:u.skillLevels[drop.skill],replaced});return true;
  },

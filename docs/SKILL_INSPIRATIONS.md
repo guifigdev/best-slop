@@ -28,7 +28,7 @@ Força violentíssima também amplifica dano físico periódico, mas a contrapar
 
 ## Modos e integração
 
-As quatro técnicas estão no catálogo compartilhado, disponíveis por pontos e como espólios, sem exclusividade global, respeitando sete espaços, cinco níveis e uma cópia por herói. Todos os seis heróis podem usá-las. Monstros usam o mesmo caminho de conjuração e passivas; Line Wars mantém os limites de alvo de sua arena. Construtores de Castle Fight continuam sem técnicas de herói.
+As quatro técnicas estão no catálogo compartilhado, disponíveis por pontos e como espólios, com reserva na aquisição pelo catálogo e exceção para fragmentos reais, respeitando sete espaços, cinco níveis e uma cópia por herói. Todos os seis heróis podem usá-las. Monstros usam o mesmo caminho de conjuração e passivas; Line Wars mantém os limites de alvo de sua arena. Construtores de Castle Fight continuam sem técnicas de herói.
 
 Autoconjuração respeita mana, recarga, atordoamento e ordens manuais. Não reaplica um buff já ativo. Hurricane só é ativado automaticamente com inimigo no raio atual. Sua prévia usa esse mesmo raio; Força de Magni é um efeito próprio.
 

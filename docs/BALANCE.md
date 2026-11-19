@@ -318,3 +318,12 @@ A recomendação é manter o porte previsível de cada espécie e chefe, que já
 
 Por solicitação explícita do usuário, VIT agora também concede +0,1% de vida máxima por segundo a cada dez pontos totais. A nova parcela soma à regeneração plana já existente (`1,5 + 0,03 × VIT` por segundo). O marco considera equipamento; os custos de distribuição continuam por valor base e nenhuma outra regra de atributo foi alterada. A porcentagem inicial é uma escolha de implementação explicitada ao usuário, não uma fórmula oficial de RO.
 
+
+
+## Tomos, armas e proteções elementais
+
+Hugin vende 18 tomos: +1/+5/+10 de cada um dos seis atributos, por 150/800/1700 ouro e estoque 3/2/1 por visita. A compra coloca o consumível na mochila, até três cargas iguais por espaço; consumi-lo no mercado soma `tomeAttributes` aos atributos totais. O investimento base, custo por dezena, pontos distribuíveis e limite 99 da distribuição permanecem separados. Os bônus persistem após ondas e recuperação, não concedem XP nem acionam a recarga de poções. A mesma regra vale no Line Wars, onde o uso durante combate exige uma sessão válida de mercado.
+
+O arsenal ganhou espada rúnica, machado, lança, varinha, arco lunar, adaga e cota rúnica, com ilustrações próprias. Todas as onze armas, incluindo Lâmina de Sol e Bobina de Mjolnir, aceitam fogo/gelo/veneno. Proteções aceitam resistência a fogo, gelo, veneno ou raio: 15% no nível 1, +5 pontos percentuais por nível, até 35%. Resistências iguais usam somente a maior; elementos distintos coexistem. A mitigação ocorre uma vez no dano elemental, incluindo dano periódico e ambiental, sem virar defesa física. O encanto permanece e escala com a melhoria do item, entra no preço de revenda e desaparece ao vender o equipamento. Freya mostra os equipamentos elegíveis diretamente na conversa.
+
+Chefes das ondas 10/20 têm 40% de chance de deixar uma das seis novas armas; nas ondas 30/40/50, 65%. Nível do drop: 1 nas ondas 10/20, 2 nas 30/40 e 3 na 50. O sorteio é independente do fragmento de habilidade. O espólio pertence ao herói responsável, expira em 180s e precisa ser recolhido na tela Espólios. Mochila cheia preserva o drop e impede a coleta; ele nunca substitui equipamentos automaticamente. Outros monstros, minibosses e invocações não deixam essas armas.

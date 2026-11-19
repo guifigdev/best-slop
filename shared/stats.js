@@ -2,17 +2,18 @@ import {canUseSkill} from './archetypes.js';
 import {ATTRIBUTES,HEROES,itemAt,levelOf,skillAt} from './catalog.js';
 import {permanentStats} from './permanent-enchants.js';
 import {skillFor} from './skill-quality.js';
-import {isEnchantable,ENCHANTMENTS} from './enchantments.js';
+import {enchantAt,canEnchant,isWeapon} from './enchantments.js';
 export const ATTRIBUTE_KEYS=Object.keys(ATTRIBUTES);
 export function baseAttributes(type){const a=Object.fromEntries(ATTRIBUTE_KEYS.map(k=>[k,5]));a[HEROES[type].focus]=12;return a;}
 export function recompute(u,time=0,auras={}){
  const base=HEROES[u.hero];if(!base)return;
- const a={...u.attributes},equipment={};u.enchantments={};u.itemEffects={};for(const slot of u.inventory||[])if(slot&&itemAt(slot.key,slot.level||1)?.effect)u.itemEffects[slot.key]=Math.max(u.itemEffects[slot.key]||0,slot.level||1);for(const slot of u.inventory||[])if(slot&&isEnchantable(slot.key)&&Object.hasOwn(ENCHANTMENTS,slot.enchantment))u.enchantments[slot.enchantment]=Math.max(u.enchantments[slot.enchantment]||0,slot.level||1);
+ const a={...u.attributes},equipment={};u.enchantments={};u.wardResistances={};u.itemEffects={};for(const slot of u.inventory||[])if(slot&&itemAt(slot.key,slot.level||1)?.effect)u.itemEffects[slot.key]=Math.max(u.itemEffects[slot.key]||0,slot.level||1);for(const slot of u.inventory||[])if(slot&&canEnchant(slot.key,slot.enchantment)){if(isWeapon(slot.key))u.enchantments[slot.enchantment]=Math.max(u.enchantments[slot.enchantment]||0,slot.level||1);else{const ward=enchantAt(slot.enchantment,slot.level||1);u.wardResistances[ward.element]=Math.max(u.wardResistances[ward.element]||0,ward.resistance);}}
  for(const slot of u.inventory||[]){const item=itemAt(slot?.key,slot?.level||1);if(!item||item.consumable)continue;for(const [k,v]of Object.entries(item.attributes||{}))a[k]+=v;for(const [k,v]of Object.entries(item.stats||{}))equipment[k]=k==='critMultiplier'?Math.max(equipment[k]||0,v):(equipment[k]||0)+v;}
  const passive=key=>canUseSkill(u,key)&&levelOf(u,key)?skillFor(u,key):{};
  const fervor=auras.endurance||passive('endurance'),devotion=auras.devotion||passive('devotion'),brilliance=auras.brilliance||passive('brilliance');
  const avatar=canUseSkill(u,'avatar')&&(u.avatar||0)>time?u.avatarData||{}:{},rage=canUseSkill(u,u.rageSkill||'rage')&&(u.rageUntil||0)>time?u.rageData||{}:{};
  const oldHp=u.maxHp||base.hp,oldMana=u.maxMana||base.mana;
+ for(const key of ATTRIBUTE_KEYS)a[key]+=u.tomeAttributes?.[key]||0;
  u.totalAttributes=a;
  u.maxHp=base.hp+(u.level-1)*30+a.vit*20+(equipment.hp||0)+(avatar.hp||0);
  u.hpRegenPercent=Math.floor(a.vit/10)*.001;u.hpRegen=1.5+a.vit*.03+u.maxHp*u.hpRegenPercent;

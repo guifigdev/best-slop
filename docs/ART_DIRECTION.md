@@ -76,7 +76,7 @@ Recomendações futuras de UI discutidas: rodapé estável na seleção, painel 
 
 ## Aquisição e builds híbridas
 
-Técnicas obtíveis de monstros não são mais reservadas a um único jogador. `LOOT_SKILLS` é a mesma lista usada para montar habilidades dos monstros e para a exceção de exclusividade; hoje todo o catálogo pode aparecer nesses loadouts. Mantém-se uma cópia por herói, cinco níveis, sete espaços, raridade e requisitos de nível. Reservas antigas recebidas em snapshots são ignoradas no HUD para essas técnicas.
+Aquisições pelo catálogo e por essências reservam a técnica a um herói. A exceção é aplicada à origem real: uma técnica aprendida por fragmento recebe `skillOrigins[key] = "loot"`, pode coexistir com a cópia reservada e continua evoluindo com pontos. Os seis poderes iniciais e as técnicas exclusivas de bestas permanecem compartilhados. Substituir a cópia reservada libera a técnica; melhorar por fragmento uma técnica já comprada não libera sua reserva. `LOOT_SKILLS` define os loadouts de monstros, sem anular as reservas do catálogo. O HUD identifica o portador e mantém o fragmento utilizável.
 
 A separação entre tipo físico e mágico descreve a escala e a defesa, sem impedir builds híbridas. Requisitos mecânicos de ataque corpo a corpo/à distância continuam nas técnicas que precisam deles. Os seis animais podem investir em magia e em defesas, mantendo suas identidades e o sistema de atributos acordado.
 

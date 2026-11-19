@@ -10,9 +10,10 @@ function buttons(html){return [...html.matchAll(/<button\b([^>]*)>/g)].map(([,so
 function action(html,attributes){const result=buttons(html).find(button=>Object.entries(attributes).every(([key,value])=>button[key]===String(value)));assert.ok(result,'Action exists: '+JSON.stringify(attributes));return result;}
 const catalogButton=(html,key)=>action(html,{'data-buy':key});
 
-test('legacy reservations for loot skills never block acquisition or replace real level and point requirements',()=>{
+test('catalog reservations show the rival safely and block learning, while an already-owned loot copy can upgrade',()=>{
  const p=hero({hero:'mage',level:40,skills:['bolt'],skillLevels:{bolt:1}}),state={phase:'wave',skillOwners:{blizzard:{owner:'rival',name:'<img src=x onerror=evil> "Rival"'}},units:[{owner:'rival',hero:'mage'}]};
- const markup=skillShopMarkup(p,state),button=catalogButton(markup,'blizzard');assert.equal(button['data-access'],'available');assert.equal(button.disabled,undefined);assert.equal(markup.includes('<img src=x'),false);assert.equal(markup.includes('&lt;img src=x'),false,'an obsolete holder is not rendered');assert.equal(markup.includes('skill-owner-avatar'),false);assert.ok(markup.includes('Obtível em espólio · compartilhada entre heróis'));
+ const markup=skillShopMarkup(p,state),button=catalogButton(markup,'blizzard');assert.equal(button['data-access'],'occupied');assert.equal(button.disabled,true);assert.equal(markup.includes('<img src=x'),false);assert.ok(markup.includes('&lt;img src=x'));assert.ok(markup.includes('skill-owner-avatar'));
+ p.skills.push('blizzard');p.skillLevels.blizzard=1;p.skillOrigins={blizzard:'loot'};assert.equal(catalogButton(skillShopMarkup(p,state),'blizzard')['data-access'],'upgrade');
  p.level=9;assert.equal(catalogButton(skillShopMarkup(p,state),'blizzard')['data-access'],'level');p.level=40;p.skillPoints=0;assert.equal(catalogButton(skillShopMarkup(p,state),'blizzard')['data-access'],'points');
 });
 
@@ -47,10 +48,10 @@ test('a new ultimate fragment cannot bypass its first acquisition level',()=>{
  const p=hero({level:11}),drop={id:43,skill:'avatar',expires:90,rarity:'common'},locked=buttons(lootMarkup(p,[drop],1)).filter(button=>button['data-claim']==='43');assert.ok(locked.length>0);assert.ok(locked.every(button=>button.disabled===true));
  p.level=12;assert.ok(buttons(lootMarkup(p,[drop],1)).filter(button=>button['data-claim']==='43').every(button=>!button.disabled));
 });
-test('essence offers retain inherited-rank requirements while ignoring old reservations on loot skills',()=>{
+test('essence offers retain inherited-rank requirements and respect another catalog holder',()=>{
  const p=hero({hero:'mage',level:10,skills:['bolt','heal','chain','blizzard','shield','frostnova','poison'],skillLevels:{bolt:5,heal:1,chain:1,blizzard:1,shield:1,frostnova:1,poison:1},techniqueOffers:['gungnir']}),markup=lootMarkup(p,[],1);
  assert.equal(action(markup,{'data-technique-choose':'gungnir','data-replace-slot':0}).disabled,true);assert.equal(action(markup,{'data-technique-choose':'gungnir','data-replace-slot':1}).disabled,undefined);
- const reserved=lootMarkup(p,[],1,{skillOwners:{gungnir:{owner:'rival',name:'Reserva antiga de rival'}}});assert.equal(action(reserved,{'data-technique-choose':'gungnir','data-replace-slot':0}).disabled,true);assert.equal(action(reserved,{'data-technique-choose':'gungnir','data-replace-slot':1}).disabled,undefined);assert.equal(reserved.includes('Reserva antiga de rival'),false);
+ const reserved=lootMarkup(p,[],1,{skillOwners:{gungnir:{owner:'rival',name:'Reserva antiga de rival'}}});assert.doesNotMatch(reserved,/data-technique-choose="gungnir"/);assert.ok(reserved.includes('Reserva antiga de rival'));
 });
 test('rendering access information does not mutate authoritative player or room state',()=>{
  const p=hero(),state={phase:'wave',skillOwners:{},units:[]},before=JSON.stringify({p,state});skillShopMarkup(p,state);lootMarkup(p,[],1,state);assert.equal(JSON.stringify({p,state}),before);

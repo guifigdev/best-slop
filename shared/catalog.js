@@ -161,6 +161,21 @@ export const ITEMS={
  epicbook:{name:'Tomo das grandes provas',cost:900,stock:1,consumable:true,xp:200,description:'Concede 200 experiência ao herói. Consumível raro usado somente durante o mercado; não aciona a recarga de poções. Não recebe melhorias ou encantamentos.'}
 };
 const NORDIC_ITEM_NAMES={vitality:'Cinturão de Megingjord',blade:'Garras de Fenrir',mana:'Âmbar de Mimir',armor:'Anel de Asgard',mask:'Máscara de Hel',talisman:'Talismã de Hugin',gloves:'Manoplas de Ullr',crown:'Coroa de Valhalla',staff:'Cajado de Seidr',bow:'Arco de Skadi',boots:'Passos de Sleipnir',charm:'Runa das Nornas',shell:'Escama de Jormungand',ember:'Broche de Muspelheim',scarf:'Manto de Skadi',solar:'Lâmina de Sol',stormcoil:'Bobina de Mjolnir',mirror:'Couraça de Tyr',restoration:'Sino de Eir',potion:'Elixir de Eir',manapot:'Hidromel de Mimir',xpbook:'Tabuleta do Aprendiz',epicbook:'Saga dos Nove Reinos'};
+for(const [attribute,definition]of Object.entries(ATTRIBUTES))for(const amount of [1,5,10]){
+ const key=`tome_${attribute}_${amount}`;
+ ITEMS[key]={name:`Tomo de ${definition.name} +${amount}`,cost:({1:150,5:800,10:1700})[amount],stock:({1:3,5:2,10:1})[amount],consumable:true,attributeTome:{attribute,amount},description:`Ao consumir: +${amount} ${definition.short} permanente nesta partida. Soma aos atributos totais, sem gastar pontos de atributo. Use no mercado; até 3 cargas por espaço. Não aciona a recarga de poções.`};
+}
+Object.assign(ITEMS,{
+ runesword:{name:'Espada rúnica de Tyr',cost:520,stock:2,stats:{damage:16},attributes:{str:2},description:'+16 dano físico e +2 STR. Espada encantável.'},
+ thunderaxe:{name:'Machado de Magni',cost:760,stock:1,stats:{damage:24},attributes:{str:3},description:'+24 dano físico e +3 STR. Machado encantável.'},
+ ravenspear:{name:'Lança dos corvos',cost:650,stock:2,stats:{damage:14},attributes:{dex:4,agi:2},description:'+14 dano físico, +4 DEX e +2 AGI. Lança encantável; não altera o alcance do herói.'},
+ seidrwand:{name:'Vara de Gullveig',cost:600,stock:2,stats:{magicAttack:14,mana:90},attributes:{int:3},description:'+14 ATQ mágico, +90 mana e +3 INT. Varinha encantável.'},
+ moonbow:{name:'Arco da lua de Mani',cost:720,stock:1,stats:{damage:16,attackSpeed:.06},attributes:{dex:4},description:'+16 dano físico, +6% velocidade de ataque e +4 DEX. Arco encantável; não altera o alcance do herói.'},
+ helblade:{name:'Adaga das sombras de Hel',cost:680,stock:1,stats:{damage:13,crit:.04},attributes:{luk:3},description:'+13 dano físico, +4% crítico e +3 LUK. Adaga encantável.'},
+ runemail:{name:'Cota rúnica de Asgard',cost:580,stock:2,stats:{armor:5,hp:80},description:'+5 armadura física e +80 vida. Armadura encantável com resistência elemental.'}
+});
+for(const key of ['blade','bow','staff','solar','stormcoil','runesword','thunderaxe','ravenspear','seidrwand','moonbow','helblade'])ITEMS[key].slotType='weapon';
+for(const key of ['armor','shell','scarf','mirror','vitality','boots','runemail'])ITEMS[key].slotType='armor';
 for(const [key,name]of Object.entries(NORDIC_ITEM_NAMES))ITEMS[key].name=name;
 for(const key of ['blade','mana','armor'])ITEMS[key].description=ITEMS[key].description.split(' Referência:')[0];
 ITEMS.mask.description='20% roubo de vida físico, inclusive em ataques à distância.';
@@ -180,7 +195,7 @@ const formatItem=value=>String(roundItem(value)).replace('.',',');
 function equipmentDescription(item){
  const details=Object.entries(item.attributes||{}).map(([key,value])=>`+${value} ${ATTRIBUTES[key]?.short||key.toUpperCase()}`);
  for(const [key,value]of Object.entries(item.stats||{})){
-  const flat={damage:'dano físico',mana:'mana máxima',hp:'vida máxima',armor:'armadura',manaRegen:'mana/s'};
+  const flat={damage:'dano físico',magicAttack:'ATQ mágico',matk:'ATQ mágico',magicDefense:'defesa mágica',mana:'mana máxima',hp:'vida máxima',armor:'armadura',manaRegen:'mana/s'};
   const rates={lifesteal:'roubo de vida físico, inclusive à distância',crit:'chance de crítico',attackSpeed:'velocidade de ataque',moveSpeed:'movimento',evasion:'esquiva comum'};
   if(flat[key])details.push(`+${formatItem(value)} ${flat[key]}`);
   else if(rates[key])details.push(`+${formatItem(value*100)}% ${rates[key]}`);

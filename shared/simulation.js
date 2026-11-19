@@ -14,7 +14,7 @@ import {generateScenery,sceneryObstacles} from './scenery.js';
 import {canLearnSkill} from './skill-access.js';
 import {HEROES,SKILLS,ITEMS,ATTRIBUTES,levelOf,skillAt,itemUpgradePrice,ITEM_MAX_LEVEL} from './catalog.js';
 import {ARENAS,arenaForWave} from './arenas.js';
-import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable} from './enchantments.js';
+import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable,canEnchant} from './enchantments.js';
 import {equipmentEffectAt} from './equipment-effects.js';
 import {MONSTERS,MONSTER_PROFILES,monsterKind,monsterLoadout} from './monsters.js';
 import {ARENA_BOUNDS} from './arena-size.js';
@@ -89,7 +89,7 @@ export class Game {
    if(!Object.hasOwn(SKILLS,c.skill))return false;
    const level=levelOf(u,c.skill),next=level+1;if(SKILLS[c.skill].dropOnly&&!level)return false;
    if(!canLearnSkill(u,c.skill,next)||!this.skillAvailable(u,c.skill)||level>=5||!(u.skillPoints>0)||(!level&&u.skills.length>=7))return false;
-   u.skillPoints--;if(!level)u.skills.push(c.skill);u.skillLevels[c.skill]=next;this.refresh(u);return true;
+   u.skillPoints--;if(!level){u.skills.push(c.skill);u.skillOrigins||={};u.skillOrigins[c.skill]='catalog';}u.skillLevels[c.skill]=next;this.refresh(u);return true;
   }
   if(c.type==='item'){
    const s=Object.hasOwn(ITEMS,c.item)?ITEMS[c.item]:null,stock=this.stockFor(u);
@@ -101,7 +101,7 @@ export class Game {
    this.refresh(u);return true;
   }
   if(c.type==='enchantItem'){
-   if(!this.atShop(u,'enchanter')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!Object.hasOwn(ENCHANTMENTS,c.enchantment))return false;const slot=u.inventory[c.slot];if(!slot||!isEnchantable(slot.key)||slot.enchantment===c.enchantment)return false;const cost=enchantPrice(c.enchantment,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.enchantment=c.enchantment;this.refresh(u);return true;
+   if(!this.atShop(u,'enchanter')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!Object.hasOwn(ENCHANTMENTS,c.enchantment))return false;const slot=u.inventory[c.slot];if(!slot||!canEnchant(slot.key,c.enchantment)||slot.enchantment===c.enchantment)return false;const cost=enchantPrice(c.enchantment,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.enchantment=c.enchantment;this.refresh(u);return true;
   }
   if(c.type==='upgradeItem'){
 
@@ -114,7 +114,7 @@ export class Game {
   }
   if(c.type==='use'){
    if(!u.alive||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;
-   const slot=u.inventory[c.slot],item=ITEMS[slot?.key];if(item?.xp){if(this.phase!=='preparation'&&!(this.options.mode==='linewars'&&this.atShop(u)))return false;this.gainXp(u,(slot.xpValue||item.xp));if(--slot.charges<=0)u.inventory[c.slot]=null;this.fx('bookRead',u.x,u.z,{source:u.id,item:slot.key,amount:slot.xpValue||item.xp});return true;}if(item?.active)return this.activateEquipment(u,slot);if(!item?.consumable||(u.potionUntil||0)>this.time||(item.heal&&u.hp>=u.maxHp)||(item.mana&&u.mana>=u.maxMana))return false;
+   const slot=u.inventory[c.slot],item=ITEMS[slot?.key];if(item?.xp||item?.attributeTome){if(this.phase!=='preparation'&&!(this.options.mode==='linewars'&&this.atShop(u)))return false;const tome=item.attributeTome;if(tome){u.tomeAttributes||={};u.tomeAttributes[tome.attribute]=(u.tomeAttributes[tome.attribute]||0)+tome.amount;this.refresh(u);}else this.gainXp(u,(slot.xpValue||item.xp));if(--slot.charges<=0)u.inventory[c.slot]=null;this.fx(tome?'tomeRead':'bookRead',u.x,u.z,{source:u.id,item:slot.key,attribute:tome?.attribute,amount:tome?.amount||slot.xpValue||item.xp});return true;}if(item?.active)return this.activateEquipment(u,slot);if(!item?.consumable||(u.potionUntil||0)>this.time||(item.heal&&u.hp>=u.maxHp)||(item.mana&&u.mana>=u.maxMana))return false;
    if(item.heal)this.heal(u,item.heal);if(item.mana){u.mana=Math.min(u.maxMana,u.mana+item.mana);this.fx('mana',u.x,u.z,{source:u.id,amount:item.mana});}
    if(--slot.charges<=0)u.inventory[c.slot]=null;u.potionUntil=this.time+10;return true;
   }
@@ -140,7 +140,7 @@ export class Game {
  cancelChannel(u){u.channel=null;for(const e of this.effects)if(e.owner===u.id&&e.channel)e.pulses=0;}
  heal(u,amount,source=null){const actual=Math.min(u.maxHp-u.hp,amount);u.hp+=actual;if(source)this.recordWaveSupport?.(source,u,actual);if(actual>0)this.fx('heal',u.x,u.z,{amount:Math.round(actual),source:u.id});return actual;}
  // Creature affinities are independent of hero equipment/attributes.
- elementDamage(target,amount,element){const resistance=element?target?.resistances?.[element]:null;return Number.isFinite(resistance)?amount*(1-clamp(resistance,-.5,.75)):amount;}
+ elementDamage(target,amount,element){const resistance=element?target?.resistances?.[element]:null;return amount*(1-(Number.isFinite(resistance)?clamp(resistance,-.5,.75):0))*(1-Math.min(.75,Math.max(0,target?.wardResistances?.[element]||0)));}
  spellDamage(u,damage,element='arcane',key=null){const weather=ARENAS[this.arena],scaling=abilityScaling(key,levelOf(u,key));return magicSkillDamage(u,damage,scaling.matkCoefficient)*(weather[element]||1);}
  attackReach(u,t){return u.range+(u.range<3?Math.max(0,unitRadius(u)+unitRadius(t)-.8):0);}
  cast(u,c){

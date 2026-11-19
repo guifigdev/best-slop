@@ -9,7 +9,7 @@ const available=(game,u)=>!!(u?.hero&&u.alive&&!u.summon&&!['victory','defeat'].
 
 export const techniqueMethods={
  recycleLoot(u,c){
-  if(!available(this,u))return false;const drop=(this.drops||[]).find(d=>d.id===c.dropId&&d.owner===u.owner&&d.expires>this.time);if(!drop)return false;
+  if(!available(this,u))return false;const drop=(this.drops||[]).find(d=>d.id===c.dropId&&d.owner===u.owner&&d.expires>this.time);if(!drop||!Object.hasOwn(SKILLS,drop.skill))return false;
   this.drops=this.drops.filter(d=>d.id!==drop.id);u.essence=(u.essence||0)+(drop.essence||1);this.fx('essence',u.x,u.z,{source:u.id,amount:drop.essence||1,reason:'loot',skill:drop.skill});return true;
  },
 
@@ -28,7 +28,7 @@ export const techniqueMethods={
  // cooldown history by key and carry the replaced slot's remaining cooldown.
  swapTechniqueSlot(u,key,slot,rank){
   if(!canLearnSkill(u,key,rank)||!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length||u.skills.some((owned,i)=>owned===key&&i!==slot))return false;
-  const replaced=u.skills[slot]||null;u.cooldowns||={};const oldCooldown=replaced?u.cooldowns[replaced]||0:0;
+  const replaced=u.skills[slot]||null;u.cooldowns||={};if(replaced&&u.skillOrigins)delete u.skillOrigins[replaced];const oldCooldown=replaced?u.cooldowns[replaced]||0:0;
   if(replaced){if(u.autoSkills)delete u.autoSkills[replaced];if(u.abilityTrail?.key===replaced)u.abilityTrail=null;if(u.skillRarities)delete u.skillRarities[replaced];delete u.skillLevels[replaced];u.skills[slot]=key;
    if(replaced==='avatar'){u.avatar=0;u.avatarData=null;}
    if(replaced==='shield'){u.shield=0;u.shieldUntil=0;}
@@ -42,6 +42,6 @@ export const techniqueMethods={
   let slot=c.slot;if(slot===undefined&&u.skills.length<7)slot=u.skills.length;
   if(!Number.isInteger(slot)||slot<0||slot>=7||slot>u.skills.length)return false;
   const inherited=u.skills[slot]?Math.max(1,Math.min(5,levelOf(u,u.skills[slot]))):1;if(!canLearnSkill(u,c.skill,inherited))return false;const replaced=this.swapTechniqueSlot(u,c.skill,slot,inherited);
-  if(replaced===false)return false;u.techniqueOffers=[];this.cancelChannel(u);this.refresh(u);this.fx('techniqueClaim',u.x,u.z,{source:u.id,skill:c.skill,level:inherited,replaced,slot});return true;
+  if(replaced===false)return false;u.skillOrigins||={};u.skillOrigins[c.skill]='essence';u.techniqueOffers=[];this.cancelChannel(u);this.refresh(u);this.fx('techniqueClaim',u.x,u.z,{source:u.id,skill:c.skill,level:inherited,replaced,slot});return true;
  }
 };
