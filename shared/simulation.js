@@ -36,7 +36,7 @@ import {baseAttributes,recompute} from './stats.js';
 import {modeOptions,capacity} from './modes.js';
 import {attributeCost,attributePointsForLevel} from './progression.js';
 import {competitionMethods} from './competition.js';
-import {blocked,limitPoint,moveUnit,navigation} from './field.js';
+import {blocked,limitPoint,moveUnit,navigation,navigationInfo} from './field.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const BATTLE=new Set(['wave','bonus','final']);
@@ -120,14 +120,14 @@ export class Game {
   }
   if(!u.alive)return false;
   if(c.type==='ready'&&this.phase==='preparation'){u.ready=true;if(this.heroes().filter(h=>!h.bot).every(h=>h.ready))this.timer=Math.min(this.timer,3);return true;}
-  if(['move','attackMove'].includes(c.type)&&Number.isFinite(c.x)&&Number.isFinite(c.z)){this.closeShop(u);this.cancelChannel(u);u.destination=limitPoint(this,u,c);u.order=c.type;u.target=null;return true;}
-  if(c.type==='attack'){const t=this.units.find(t=>t.id===c.target&&this.canTarget(u,t));if(!t)return false;this.closeShop(u);this.cancelChannel(u);u.target=t.id;u.order='attack';u.destination=null;return true;}
-  if(c.type==='stop'||c.type==='hold'){this.closeShop(u);this.cancelChannel(u);u.order=c.type;u.destination=null;u.target=null;return true;}
-  if(c.type==='auto'){this.closeShop(u);this.cancelChannel(u);u.order='auto';u.destination=null;return true;}
+  if(['move','attackMove'].includes(c.type)&&Number.isFinite(c.x)&&Number.isFinite(c.z)){this.closeShop(u);this.prioritizeCommand(u);u.destination=limitPoint(this,u,c);u.order=c.type;u.target=null;return true;}
+  if(c.type==='attack'){const t=this.units.find(t=>t.id===c.target&&this.canTarget(u,t));if(!t)return false;this.closeShop(u);this.prioritizeCommand(u);u.target=t.id;u.order='attack';u.destination=null;return true;}
+  if(c.type==='stop'||c.type==='hold'){this.closeShop(u);this.prioritizeCommand(u);u.order=c.type;u.destination=null;u.target=null;return true;}
+  if(c.type==='auto'){this.closeShop(u);this.prioritizeCommand(u);u.order='auto';u.destination=null;u.target=null;return true;}
   if(c.type==='claimLoot')return this.claimLoot(u,c);
   if(c.type==='setCastPending'){if(typeof c.enabled!=='boolean')return false;u.manualCastPending=c.enabled;return true;}
   if(c.type==='toggleAutocast')return this.toggleAutocast(u,c);
-  if(c.type==='cast')return this.cast(u,c);
+  if(c.type==='cast'){const accepted=this.cast(u,c);if(accepted)u.nextAutoCastAt=Math.max(u.nextAutoCastAt||0,this.time+.3);return accepted;}
   return false;
  }
  activateEquipment(u,slot){const s=equipmentEffectAt(slot.key,slot.level||1);if(!s||s.type!=='active'||!BATTLE.has(this.phase)||u.stun>0||u.stageDone&&this.phase==='wave'||(u.itemCooldowns?.[slot.key]||0)>this.time||u.mana<s.mana)return false;u.itemCooldowns||={};u.itemCooldowns[slot.key]=this.time+s.cooldown;u.mana-=s.mana;
@@ -138,6 +138,7 @@ export class Game {
  equipmentTick(){if(!BATTLE.has(this.phase)||this.time<(this.nextEquipmentTick||0))return;this.nextEquipmentTick=this.time+.5;const sources=this.heroes().filter(h=>h.alive&&h.itemEffects?.solar&&!(h.stageDone&&this.phase==='wave'));for(const target of this.units.filter(u=>u.alive)){const teams=new Map();for(const owner of sources){const effect=equipmentEffectAt('solar',owner.itemEffects.solar);if(!this.canTarget(owner,target)||distance(owner,target)>effect.radius)continue;const old=teams.get(owner.team);if(!old||old.effect.damage<effect.damage)teams.set(owner.team,{owner,effect});}for(const {owner,effect}of teams.values()){if(this.hit(target,effect.damage*.5*(1-(target.fireResist||0)),owner,true,false,false,false,'fire','proc')>0)target.solarUntil=this.time+.6;this.fx('solarHit',target.x,target.z,{source:owner.id});}}
  }
  cancelChannel(u){u.channel=null;for(const e of this.effects)if(e.owner===u.id&&e.channel)e.pulses=0;}
+ prioritizeCommand(u){this.cancelChannel(u);u.manualCastPending=false;u.nextAutoCastAt=Math.max(u.nextAutoCastAt||0,this.time+.3);if(!u.sliding)u.vx=u.vz=0;u.pathKey=null;}
  heal(u,amount,source=null){const actual=Math.min(u.maxHp-u.hp,amount);u.hp+=actual;if(source)this.recordWaveSupport?.(source,u,actual);if(actual>0)this.fx('heal',u.x,u.z,{amount:Math.round(actual),source:u.id});return actual;}
  // Creature affinities are independent of hero equipment/attributes.
  elementDamage(target,amount,element){const resistance=element?target?.resistances?.[element]:null;return amount*(1-(Number.isFinite(resistance)?clamp(resistance,-.5,.75):0))*(1-Math.min(.75,Math.max(0,target?.wardResistances?.[element]||0)));}
@@ -274,12 +275,14 @@ export class Game {
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}
    if(u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*u.hpRegen);for(const key of Object.keys(u.cooldowns))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(u.bot)this.botThink(u);this.tickAutocast(u);}
    if(!u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*(u.hpRegen||0));for(const key of Object.keys(u.cooldowns||{}))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(!u.summon)this.monsterThink(u,dt);}this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
-   let t=BATTLE.has(this.phase)?this.units.find(t=>t.id===u.target&&this.canTarget(u,t)):null;
-   if(!t&&BATTLE.has(this.phase))t=this.enemies(u,u.order==='hold'||u.order==='stop'?u.range+(u.range<3?Math.max(0,unitRadius(u)+1.6-.8):0):u.hero?(this.phase==='final'&&(u.bot||u.order==='auto')?Infinity:9):(u.acquireRange??Infinity))[0];
+   const targeting=u.hero&&u.manualCastPending,canAttack=u.order!=='move'&&u.order!=='stop'&&!targeting;
+   let t=canAttack&&BATTLE.has(this.phase)?this.units.find(t=>t.id===u.target&&this.canTarget(u,t)):null;
+   if(canAttack&&u.order==='attack'&&!t){u.target=null;u.order='auto';}
+   if(!t&&canAttack&&BATTLE.has(this.phase))t=this.enemies(u,u.order==='hold'?u.range+(u.range<3?Math.max(0,unitRadius(u)+1.6-.8):0):u.hero?(this.phase==='final'&&(u.bot||u.order==='auto')?Infinity:9):(u.acquireRange??Infinity))[0];
    let dest=['move','attackMove'].includes(u.order)?u.destination:null;
    if(u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode)){u.moving=false;continue;}
    if(t&&u.order!=='move'){if(distance(u,t)<=this.attackReach(u,t)){dest=null;if(u.cd<=0){this.attack(u,t);u.cd=u.interval/(u.attackSpeed||1);}}else if(u.order!=='hold'&&u.order!=='stop')dest=t;}
-   if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.04){const slow=1-Math.max((u.frostUntil||0)>this.time?.45*(1-(u.coldResist||0)):0,(u.abilitySlowUntil||0)>this.time?u.abilitySlowAmount||0:0),speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(['move','attackMove'].includes(u.order)){u.order='auto';u.destination=null;}}
+   const followingDestination=dest&&dest===u.destination&&['move','attackMove'].includes(u.order);if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.04){const slow=1-Math.max((u.frostUntil||0)>this.time?.45*(1-(u.coldResist||0)):0,(u.abilitySlowUntil||0)>this.time?u.abilitySlowAmount||0:0),speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(followingDestination&&navigationInfo(u)?.status==='arrived'){u.order='auto';u.destination=null;}}
    if(u.sliding){const blend=1-Math.exp(-dt*2.8);u.vx=(u.vx||0)+(vx-(u.vx||0))*blend;u.vz=(u.vz||0)+(vz-(u.vz||0))*blend;}else{u.vx=vx;u.vz=vz;}moveUnit(this,u,{x:u.x+u.vx*dt,z:u.z+u.vz*dt});
   }
   this.collisionStats=resolveUnitCollisions(this,dt);

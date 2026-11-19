@@ -332,3 +332,12 @@ Chefes das ondas 10/20 têm 40% de chance de deixar uma das seis novas armas; na
 ## Vitalidade: vida máxima e recuperação
 
 Cada ponto total de VIT passa a conceder também +1% de vida máxima, mantendo +20 HP fixos e +1 armadura física por ponto. Fórmula: `round((HP do herói + 30 * (nível - 1) + 20 * VIT + HP de equipamentos + HP temporário) * (1 + VIT / 100))`. A porcentagem usa VIT total, incluindo equipamentos e tomos; é recalculada a partir das fontes, sem se acumular a cada atualização. Os 0,1% por dez VIT continuam sendo regeneração por segundo, calculada sobre a vida máxima resultante. A descrição do atributo separa explicitamente esses dois efeitos.
+
+
+## Prioridade de comandos do herói
+
+Uma ordem válida de mover, atacar, atacar ao mover, parar ou manter posição interrompe canalizações e mira pendente e reserva 0,3s antes da próxima decisão de autoconjuração. Esse intervalo não limita a prioridade: o destino manual permanece ativo até a navegação confirmar chegada; uma pausa por multidão, rota bloqueada ou desvio não transforma a ordem em combate automático. Novos cliques substituem o destino anterior sem zerar a recarga de ataque.
+
+Mover evita aquisição de alvos, ataques básicos e autoconjuração até chegar. Parar suspende ataques e habilidades automáticas até outra ordem. Manter posição permite defesa local e técnicas instantâneas, mas nenhuma autoconjuração pode teleportar, trocar de lugar, erguer uma barreira no caminho ou iniciar uma canalização que substitua a ordem de ataque/guarda. Ataques a um alvo explícito conservam esse alvo até ele deixar de ser válido. Mira manual pausa ataques automáticos. Deslizamento no gelo e controle aplicado por inimigos continuam regidos pelas regras de clima e combate.
+
+A HUD distingue controle próprio de observação de outro jogador, além de informar derrota e prova já concluída. Selecionar o avatar de um competidor muda apenas a câmera. As verificações e decisões de prioridade são feitas na simulação compartilhada, usada também pelo servidor.

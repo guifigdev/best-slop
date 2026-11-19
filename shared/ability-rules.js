@@ -2,7 +2,7 @@ import {canUseSkill} from './archetypes.js';
 import {skillFor} from './skill-quality.js';
 import {SKILLS,levelOf,skillAt} from './catalog.js';
 const BATTLE=new Set(['wave','bonus','final']);
-const MOBILITY=new Set(['blink','dash','hornrush','stormdive']);
+const MOBILITY=new Set(['blink','dash','hornrush','stormdive','swap']);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const number=(value,fallback=0)=>Number.isFinite(value)?Math.max(0,value):fallback;
 export function physicalSkillDamage(u,base,coefficient=0){return number(base)+(u?.hero?number(u.damage)*number(coefficient):0);}
@@ -17,10 +17,14 @@ export const AbilityMethods={
  },
 
  tickAutocast(u){
-  if(!u?.hero||!u.alive||!BATTLE.has(this.phase)||u.stun>0||u.channel||u.manualCastPending||u.stageDone&&this.phase==='wave'||['move','attackMove'].includes(u.order)||this.time<(u.nextAutoCastAt||0))return false;
+  if(!u?.hero||!u.alive||!BATTLE.has(this.phase)||u.stun>0||u.channel||u.manualCastPending||u.stageDone&&this.phase==='wave'||['move','attackMove','stop'].includes(u.order)||this.time<(u.nextAutoCastAt||0))return false;
   const reserved=this.units.find(t=>t.id===u.target&&this.canTarget(u,t)),target=reserved||this.enemies(u,12)[0];
+  if(u.order==='attack'&&!reserved)return false;
   for(const [slot,key]of u.skills.entries()){
    const s=skillAt(key,levelOf(u,key));if(!canUseSkill(u,key)||!u.autoSkills?.[key]||!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana)continue;
+   // Safe instant spells may support a selected attack/guard order, but an
+   // automatic channel or relocation must never replace that manual order.
+   if(['attack','hold'].includes(u.order)&&(MOBILITY.has(key)||key==='blizzard'||key==='icewall'))continue;
    if(s.heal){const injured=key==='freyjasgrace'?this.units.some(v=>v.alive&&v.team===u.team&&v.challenge===u.challenge&&distance(u,v)<=s.radius&&v.hp<v.maxHp*.65):u.hp<u.maxHp*.65&&u.maxHp-u.hp>=s.heal*(u.magicPower||1)*.3;if(!injured)continue;}
    else if(!target)continue;
    if(key==='shield'&&(u.shieldUntil||0)>this.time+.5&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time||key==='violentforce'&&(u.violentForce?.until||0)>this.time||key==='hurricane'&&(u.hurricane?.until||0)>this.time)continue;
