@@ -1,3 +1,4 @@
+import {createCastleUI} from '../src/castle-ui.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -45,4 +46,10 @@ test('Sniper fires outside melee reach with a bullet effect and its factual refe
  const g=setup(),cf=g.castleFight,b=build(g,1,'human_h003',-40,18),enemy=build(g,2,'human_h000',40,18),u=g.castleSpawn(b),target=g.castleSpawn(enemy);b.nextSpawn=enemy.nextSpawn=Infinity;Object.assign(u,{x:0,z:9});Object.assign(target,{x:2.3,z:9,cd:9999,hp:10000,maxHp:10000});const before=target.hp;
  g.tick(.05);assert.ok(target.hp<before);assert.ok(Math.hypot(u.x-target.x,u.z-target.z)>1.5);assert.equal(u.range,CASTLE_UNITS.hrif.sourceStats.range/256);assert.equal(u.ranged,true);assert.ok(g.effects.some(e=>e.type==='arrow'&&e.source===u.id&&e.projectileKind==='bullet'));assert.ok(!g.effects.some(e=>e.type==='slash'&&e.source===u.id));
  const m=castleMatchups(u);assert.ok(m.weak.some(x=>x.type==='normal'&&x.multiplier===1.75));assert.ok(m.resistant.some(x=>x.type==='magic'&&x.multiplier===.7));const html=castleUnitInfo(u);assert.match(html,/Alcance/);assert.match(html,/Vulnerável a/);assert.match(html,/Armadura média/);assert.doesNotMatch(html,/extraído|implementa|escala espacial|nativo/);
+});
+
+test('clicking a troop prioritizes its visible model over a building behind it',()=>{
+ const selected=[],inspected=[],g=setup(),b=build(g,1,'human_h003',-40,18),unit=g.castleSpawn(b),view={setCastleSelection:id=>selected.push(id),setInspected:id=>inspected.push(id)};
+ const ui=createCastleUI({view,send:()=>true,getState:()=>g.snapshot(),getOwner:()=> 'a',toast:()=>{},portrait:()=>'',onEnd:()=>{}});
+ ui.point({point:{x:unit.x,z:unit.z},unit,button:0,building:b.id});assert.deepEqual(selected,[unit.id]);assert.deepEqual(inspected,[unit.id]);
 });

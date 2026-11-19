@@ -7,7 +7,7 @@ export function castleBuildAvailability(state,hero,key){
  const cf=state?.castleFight,p=cf?.players?.[hero?.owner],definition=typeof key==='string'&&Object.hasOwn(CASTLE_BUILDINGS,key)?CASTLE_BUILDINGS[key]:null;
  if(!cf||state.phase!=='wave'||cf.finished||!hero?.alive||!hero.castleBuilder||!p)return deny('phase','Comece a partida para construir.',definition);
  if(!definition)return deny('building','Construção desconhecida.');
- if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!effects.has(definition.castleEffect?.type))return deny('unsupported','Efeito ainda não disponível nesta adaptação.',definition);
+ if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!effects.has(definition.castleEffect?.type))return deny('unsupported','Indisponível nesta versão.',definition);
  if(definition.race!==p.race)return deny('race','Esta construção pertence a outra raça.',definition);
  if(definition.requiresBuilding)return deny('upgrade','Selecione a construção anterior para evoluí-la.',definition);
  const owned=cf.buildings.filter(b=>b.alive&&b.owner===hero.owner);
