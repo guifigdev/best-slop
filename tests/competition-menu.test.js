@@ -70,3 +70,18 @@ test('Dungeon and Bloody cards submit the chosen party size, run limit and rival
   f.kinds[0].click();assert.equal(menu.options().mode,'campaign');assert.equal(f.ids['arena-select'].hidden,false);
  }finally{globalThis.document=old;}
 });
+
+
+test('army tournament formats explain armies while Dungeon is labelled as an original exploration game',()=>{
+ const f=fixture(),old=globalThis.document;globalThis.document=f.document;
+ try{
+  installCompetitionMenu({connect(){},getSocket(){return null;}});
+  const html=f.root.innerHTML,army=html.match(/<fieldset[^>]+id="bloody-format"[\s\S]*?<\/fieldset>/)[0];
+  assert.doesNotMatch(army,/EXPEDIÇÃO|Meta da run|Heróis por grupo/);
+  assert.match(army,/COMBATE DE EXÉRCITOS/);assert.match(army,/tropas automáticas/);assert.match(army,/cada um com seu exército/);
+  const picker=f.root.querySelector('.game-picker').html;
+  assert.match(picker,/JOGO ORIGINAL/);assert.match(picker,/RECRIAÇÃO/);
+  f.kinds.find(b=>b.dataset.gameKind==='bloody').click();assert.equal(f.ids['dungeon-options'].classList.contains('hidden'),true);assert.equal(f.ids['bloody-options'].classList.contains('hidden'),false);
+  f.kinds.find(b=>b.dataset.gameKind==='dungeon').click();assert.equal(f.ids['bloody-options'].classList.contains('hidden'),true);assert.equal(f.ids['dungeon-options'].classList.contains('hidden'),false);
+ }finally{globalThis.document=old;}
+});

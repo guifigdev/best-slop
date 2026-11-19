@@ -1,5 +1,7 @@
 # Colocar o jogo na sua VPS
 
+Para executar pela primeira vez, comece pelo [roteiro completo em ordem: PC, DNS, VPS, R2 e CI](COMECE_AQUI_VPS.md).
+
 Guia de produção, revisado em **19/11/2026**. O site no subdomínio ChatGPT e a instalação abaixo são ambientes separados. Publicar no Sites não atualiza sua VPS; seu CI atualiza a VPS depois que você configurar o repositório.
 
 ## Arquitetura escolhida

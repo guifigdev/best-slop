@@ -1,5 +1,7 @@
 # Dungeon dos Nove Reinos
 
+Dungeon e Bloody Tournament são jogos separados. O confronto de heróis ao final dos 50 andares é uma regra própria da Dungeon; o torneio de compra e formação de exércitos pertence ao Bloody Tournament.
+
 Modo original que usa os heróis e o combate do Custom Hero, com andares procedurais conectados em vez de provas isoladas no coliseu. Salas fechadas, corredores largos e pátios abertos formam cada andar. A geometria usa uma semente separada do RNG de combate: a mesma semente e andar produzem o mesmo mapa em todas as réplicas.
 
 ## Configuração da sala

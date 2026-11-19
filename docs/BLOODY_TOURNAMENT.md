@@ -1,5 +1,7 @@
 # Bloody Tournament — Campo dos Juramentos
 
+Este jogo é a recriação de um mapa de exércitos. Dungeon é outro jogo: seu modo original de exploração procedural. Os cards Individual e Equipes 5×5 são dois formatos do próprio Bloody Tournament; ambos usam tropas e formações. A variante individual foi incluída como opção desta adaptação, sem certificar fidelidade à revisão do vídeo de referência.
+
 O modo implementa uma competição de composição de exércitos. Cada jogador contrata grupos, escolhe suas posições e envia a formação para um combate automático. Os grupos contratados voltam completos na rodada seguinte; a derrota não apaga o exército construído.
 
 ## Referência e limites da reprodução
