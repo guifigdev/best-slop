@@ -1,5 +1,5 @@
 export function cameraBounds(state){if(state?.options?.mode==='castlefight'){const m=state.castleFight?.map;return {minX:m?.minX??-52,maxX:m?.maxX??52,minZ:m?.minZ??-28,maxZ:m?.maxZ??28};}const m=state?.options?.mode==='linewars'&&state.voxelMap;return m?{minX:m.origin.x-3,maxX:m.origin.x+m.width*m.tileSize+3,minZ:m.origin.z-3,maxZ:m.origin.z+m.height*m.tileSize+3}:{minX:-35,maxX:35,minZ:-35,maxZ:35};}
-export const cameraDragIsPan=(event,mode='pan')=>(event.pointerType==='touch'||event.button===0||event.button===1)&&mode==='pan';
+export const cameraDragIsPan=(event,mode='pan')=>(event.pointerType==='touch'||event.button===0)&&mode==='pan';
 // Coordinates are already local to the displayed player's arena.
 export function cameraDestination(state,owner,zone='battle'){
  const map=state?.voxelMap,m=map?.markers||{},hero=state?.units?.find(u=>u.id===state.players?.[owner]),fountain=m.fountain||hero||{x:0,z:0};

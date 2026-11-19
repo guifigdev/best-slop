@@ -79,3 +79,23 @@ Recomendações futuras de UI discutidas: rodapé estável na seleção, painel 
 Técnicas obtíveis de monstros não são mais reservadas a um único jogador. `LOOT_SKILLS` é a mesma lista usada para montar habilidades dos monstros e para a exceção de exclusividade; hoje todo o catálogo pode aparecer nesses loadouts. Mantém-se uma cópia por herói, cinco níveis, sete espaços, raridade e requisitos de nível. Reservas antigas recebidas em snapshots são ignoradas no HUD para essas técnicas.
 
 A separação entre tipo físico e mágico descreve a escala e a defesa, sem impedir builds híbridas. Requisitos mecânicos de ataque corpo a corpo/à distância continuam nas técnicas que precisam deles. Os seis animais podem investir em magia e em defesas, mantendo suas identidades e o sistema de atributos acordado.
+
+## Revisão do mundo e identidade dos ataques
+
+O Survival agora tem uma construção elíptica de coliseu: quatro terraços, arcadas externas, quatro portões monumentais e bandeiras por bioma. A arquitetura estática usa um batch instanciado; 288 animais de plateia compartilham oito grupos instanciados e poses previamente calculadas de descanso e comemoração a 8 Hz. Eventos como crítico, explosão e evolução provocam a reação da torcida. A borda pontilhada acompanha a interseção real entre os limites quadrados e circulares da simulação.
+
+A lava intercala crosta de obsidiana, canais e bolsões incandescentes, com brasas blocadas. Gelo, água e regiões de frost possuem superfícies diferentes. O shader é procedural, sem texturas; o círculo visível continua com o raio exato do perigo. Arenas de guerra usam a mesma apresentação dos perigos. A arquitetura é ocultada corretamente no Line Wars e Castle Fight.
+
+`world-landscape.js` prolonga cada campo até o horizonte com terreno escalonado, árvores, rochas, montanhas e detalhes de cinco biomas. O interior dos mapas importados é preservado, inclusive a água; o coliseu reserva quarenta metros de espaço para sua arquitetura. O relevo é criado em até três batches e não é reconstruído quando o jogador move a câmera. O horizonte e a névoa acompanham a paleta do bioma. Materiais próprios impedem que a coloração de um cenário altere animais ou outro modo de jogo.
+
+Ataques básicos têm objetos próprios dos animais quando apropriado: galinhas lançam ovos, coelhos cenouras, guaxinins sucata, corujas penas, tartarugas pequenos cascos, sapos gotas e ouriços espinhos. Armas explícitas, como o rifle do Sniper, e elementos mágicos preservam suas identidades. São mudanças cosméticas; alcance, dano e classificação física/mágica continuam definidos pela simulação. Geometrias, materiais e cores de vértice são compartilhados.
+
+O crítico usa número amarelo ligeiramente maior sobre uma explosão laranja, sem exclamação. Sua centelha 3D também usa âmbar. Não depende apenas da cor para se diferenciar de dano comum.
+
+O arraste esquerdo puxa o terreno; o botão do meio gira a câmera sem modificadores. No toque, o botão Mover/Girar permanece disponível, junto aos gestos de dois dedos para deslocar e aproximar.
+
+## Movimento coerente com o cenário
+
+Árvores bloqueiam pelo tronco, com copas levantadas para permitir passagem abaixo delas. Pedras bloqueiam pela base visível. A navegação usa o raio real do corpo, verifica os segmentos entre os nós, evita cortar quinas e busca aproximação segura quando o destino está ocupado. Ao perder progresso, recalcula o percurso; aliados parados podem ser contornados. A animação considera o deslocamento efetivo depois das colisões, evitando o ciclo de caminhada sem sair do lugar.
+
+Os efeitos liberam buffers de instâncias ao expirar, sair do orçamento ou trocar de arena. Recursos compartilhados dos projéteis são preservados. A otimização foi validada por testes de descarte e regressões de navegação; não há promessa de FPS sem medição no dispositivo do jogador.

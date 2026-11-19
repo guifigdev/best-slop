@@ -11,8 +11,8 @@ const hero=(type,level=60)=>({hero:type,level});
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 function setup(type='knight',mode='tower'){const g=new Game(17,{mode});assert.equal(g.addPlayer('p',type),true);const p=g.player('p');p.level=60;p.skillPoints=100;p.essence=100;return{g,p};}
 
-test('all fifty-two skills retain descriptive damage metadata and six canonical attack profiles',()=>{
- assert.equal(Object.keys(SKILLS).length,52);assert.equal(Object.keys(HEROES).length,6);assert.deepEqual(Object.keys(ARCHETYPES).sort(),['magic','physical_melee','physical_ranged']);
+test('all fifty-six skills retain descriptive damage metadata and six canonical attack profiles',()=>{
+ assert.equal(Object.keys(SKILLS).length,56);assert.equal(Object.keys(HEROES).length,6);assert.deepEqual(Object.keys(ARCHETYPES).sort(),['magic','physical_melee','physical_ranged']);
  for(const [key,h]of Object.entries(HEROES)){assert.equal(heroArchetype(hero(key)),h.archetype);assert.ok(ARCHETYPES[h.archetype]);assert.equal(h.attackType,h.archetype==='magic'?'magic':'physical');assert.ok(h.combatRole);assert.equal(canLearnSkill(hero(key,1),h.skill),true);}
  for(const [key,s]of Object.entries(SKILLS)){assert.ok(['physical','magic','utility'].includes(s.skillStyle),key);assert.equal(new Set(s.allowedArchetypes).size,s.allowedArchetypes.length);assert.ok(s.allowedArchetypes.every(a=>ARCHETYPES[a]),key);assert.ok(s.compatibilityLabel);assert.deepEqual(skillAt(key).allowedArchetypes,s.allowedArchetypes);for(const type of Object.keys(HEROES))assert.equal(canUseSkill(hero(type),key),s.allowedArchetypes.includes(HEROES[type].archetype),`${type}/${key}`);}
 });

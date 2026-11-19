@@ -15,7 +15,7 @@ export function createCameraGestures({getMode=()=> 'pan',onPan=()=>{},onRotate=(
  const reset=()=>{pointers.clear();moved=false;};
  return{
   get active(){return pointers.size>0;},
-  down(e){if(e.pointerType!=='touch'&&e.button!==0&&e.button!==1)return false;if(!pointers.size){moved=false;mode=getMode();}const p=pos(e);pointers.set(e.pointerId,{start:p,last:p,button:e.button,touch:e.pointerType==='touch'});if(pointers.size>1)moved=true;return true;},
+  down(e){if(e.pointerType!=='touch'&&e.button!==0&&e.button!==1)return false;if(!pointers.size){moved=false;mode=e.pointerType!=='touch'&&e.button===1?'rotate':getMode();}const p=pos(e);pointers.set(e.pointerId,{start:p,last:p,button:e.button,touch:e.pointerType==='touch'});if(pointers.size>1)moved=true;return true;},
   move(e){const p=pointers.get(e.pointerId);if(!p)return false;const next=pos(e);if(pointers.size>=2){const before=pair();p.last=next;const after=pair();onPan(before.center,after.center);if(before.distance>2&&after.distance>2)onZoom(before.distance/after.distance);return true;}
    const crossed=Math.hypot(next.x-p.start.x,next.y-p.start.y)>5;if(!moved&&!crossed){p.last=next;return true;}const previous=moved?p.last:p.start;moved=true;p.last=next;if(mode==='rotate')onRotate(next.x-previous.x,next.y-previous.y);else onPan(previous,next);return true;},
   up(e){const p=pointers.get(e.pointerId);if(!p)return false;this.move(e);pointers.delete(e.pointerId);const tap=!moved&&mode==='pan'&&(p.touch||p.button===0)&&!pointers.size;if(!pointers.size)moved=false;else for(const remaining of pointers.values())remaining.start={...remaining.last};if(tap)onTap(e);return true;},

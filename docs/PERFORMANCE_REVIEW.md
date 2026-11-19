@@ -49,3 +49,15 @@ O ganho de aproximadamente 89% é do **microbenchmark de consultas com 24 constr
 ## Aplicado na integração visual
 
 Além da validação de navegação, a integração reaproveita vetores/quaternions no movimento dos atores, orientação das barras e números flutuantes. A escolha de altura visual dos projéteis de Warlock usa uma varredura única dos alvos, sem `filter/map/filter/sort` por projétil por frame. Sete geometrias de projétil com cores de vértice são compartilhadas; fogo, gelo e Blast Staff usam instancing. Esses ajustes não alteram dano ou colisão autoritativa. Não foi medido FPS para atribuir um ganho numérico a essa etapa.
+
+## Revisão do mundo, novembro de 2026
+
+- Arquitetura do coliseu em um batch, 288 espectadores em oito grupos instanciados com oito poses calculadas previamente. Atualização das poses limitada a 8 Hz.
+- Paisagem externa em até três batches, com cache por mapa/bioma. Mover a câmera e avançar o tempo não recriam o relevo.
+- Lava procedural sem textura e detalhes instanciados a 8 Hz; áreas visíveis preservam o tamanho da simulação.
+- Novos projéteis de animais compartilham geometrias, materiais e cores de vértice. Efeitos continuam sob o limite existente de 96 entradas.
+- `releaseEffect` resolve um vazamento confirmado: remover `InstancedMesh` da cena não liberava os buffers de instância. Agora expiração, descarte por orçamento, troca de arena e reinício liberam esses buffers, sem descartar a geometria/material compartilhados.
+- Materiais do ambiente e da paisagem são isolados, evitando que trocar o bioma altere a cor de outros consumidores. As cópias são únicas por componente, não por frame.
+- Rotas retas reutilizam seu cache. O clearance usa o corpo real e os segmentos do trajeto; a recuperação de estagnação evita insistir na mesma quina.
+
+Testes novos verificam cache, orçamento de batches, propriedade e descarte dos recursos, travessias e colisões. Contadores de render foram inspecionados no navegador em cenários controlados. Não há uma medição comparável de FPS nem validação em celular físico nesta revisão.

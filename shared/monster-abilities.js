@@ -35,8 +35,8 @@ export const monsterMethods={
   for(let offset=0;offset<u.skills.length;offset++){
    const slot=((u.monsterSkillCursor||0)+offset)%u.skills.length,key=u.skills[slot],s=skillFor(u,key);
    if(!s||s.kind!=='active'||(u.cooldowns[key]||0)>0||u.mana<s.mana)continue;
-   if(s.heal&&u.hp>u.maxHp*.7||key==='shield'&&(u.shieldUntil||0)>this.time&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time+.7)continue;
-   if(s.target==='enemy'&&distance(u,target)>12||s.target==='self'&&['stomp','frostnova'].includes(key)&&!this.enemies(u,s.radius).length)continue;
+   if(s.heal&&u.hp>u.maxHp*.7||key==='shield'&&(u.shieldUntil||0)>this.time&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time+.7||key==='violentforce'&&(u.violentForce?.until||0)>this.time||key==='hurricane'&&(u.hurricane?.until||0)>this.time)continue;
+   if(s.target==='enemy'&&distance(u,target)>12||s.target==='self'&&['stomp','frostnova','hurricane'].includes(key)&&!this.enemies(u,s.radius).length)continue;
    if(key==='summon'&&this.units.filter(v=>v.alive&&v.summon&&v.summoner===u.id&&v.expires>this.time+10).length>=2)continue;
    let point=limitPoint(this,u,target);if(['blink','dash'].includes(key)){const dir=direction(u,target),stand=unitRadius(u)+unitRadius(target)+.15;point=limitPoint(this,u,{x:target.x-dir.x*stand,z:target.z-dir.z*stand});}
    if(key==='icewall'){

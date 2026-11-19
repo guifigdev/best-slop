@@ -1,0 +1,24 @@
+/* A compact, warm burst behind the number, inspired by classic RO feedback. */
+.combat-overlay .combat-text.critical.critical {
+  color:#fff172;
+  font-size:34px;
+  font-weight:800;
+  font-style:italic;
+  line-height:1;
+  padding:3px 6px;
+  isolation:isolate;
+  z-index:4;
+  -webkit-text-stroke:.65px #8c4b17;
+  text-shadow:0 2px #9b4b18,1px 0 #9b4b18,-1px 0 #9b4b18;
+}
+.combat-overlay .combat-text.critical::before {
+  content:'';
+  position:absolute;
+  z-index:-1;
+  inset:-8px -13px;
+  background:linear-gradient(170deg,#ffd060 0%,#f6a12d 38%,#ed841e 76%,#d46b19 100%);
+  clip-path:polygon(0 43%,16% 35%,10% 13%,31% 24%,43% 0,52% 21%,74% 6%,73% 28%,100% 19%,88% 45%,100% 64%,81% 67%,89% 91%,64% 80%,54% 100%,43% 79%,18% 94%,23% 70%,1% 80%,12% 57%);
+}
+.status-chip.violentforce{background:#765028ed;color:#fff0b9}
+.status-chip.violentforce i{background:#ffd27c;box-shadow:0 0 10px #ffc56575}
+.unit-status-label .violentforce{background:#8b5c2de8;color:#fff0bd}

@@ -40,6 +40,8 @@ export function skillPreview({key,skill:s,hero,point,target,mode='hover',state={
   notes.push('Deslocamento máximo '+s.distance.toLocaleString('pt-BR',{maximumFractionDigits:1})+' m');
  }else if(key==='icewall'){
   anchor=cursor;shapes.push(rect(cursor,s.width,.8));const wall={...cursor,w:s.width,d:.8};if(blocked(cursor,game.obstacles||[],1)||(game.units||[]).some(v=>v.alive&&blocked(v,[wall],.65)))reject('A barreira sobrepõe uma unidade ou obstáculo');if(u.cell&&(Math.abs(cursor.x-u.cell.x)+s.width/2>u.cell.r||Math.abs(cursor.z-u.cell.z)+.4>u.cell.r))reject('A barreira ultrapassa a arena');notes.push('Parede '+s.width+' × 0,8 m · alinhada ao campo');
+ }else if(['doubleattack','manabreak'].includes(key)){
+  anchor=effectTarget;shapes.push(circle(u,finite(u.range,1.7),'range'),circle(anchor,unitRadius(target||{})+.22,'target'));notes.push('Efeito no próximo ataque básico que causar dano');
  }else if(key==='cleave'||key==='bounce'){
   anchor=effectTarget;shapes.push(circle(u,finite(u.range,1.7),'range'));shapes.push(circle(anchor,key==='cleave'?2.8:5));notes.push(key==='cleave'?'Área ao redor do alvo atingido':'Alcance de cada ricochete');
  }else if(key==='multishot')shapes.push(circle(u,10));

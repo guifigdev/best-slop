@@ -1,3 +1,4 @@
+import {animalBasicProjectile} from './animal-projectiles.js';
 import {freshShopStock,stockForHero} from './shop-stock.js';
 import {lineDefenseThink} from './line-defense.js';
 import {canUseSkill} from './archetypes.js';
@@ -153,7 +154,7 @@ export class Game {
   if(key==='chain'){let last=t,from=u;const visited=new Set();for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);hit(last,s.damage*.85**i,'lightning');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z});from=last;last=this.enemies(u).filter(e=>!visited.has(e.id)&&distance(from,e)<6)[0];}}
   if(key==='blizzard'){u.channel='blizzard';u.destination=null;u.order='hold';this.effects.push({id:this.id(),type:'blizzard',x:c.x,z:c.z,time:this.time,next:this.time+.25,pulses:s.pulses,damage:this.spellDamage(u,s.damage,'ice',key),radius:s.radius,owner:u.id,channel:true,duration:s.pulses+1});}
   if(key==='summon'){const owner=u.owner||('npc-'+u.id);this.units=this.units.filter(v=>!(v.summon&&v.summoner===u.id&&(!v.summonSkill||v.summonSkill==='summon')));for(let i=0;i<2;i++)this.spawnEnemy('wolf',u.x+(i?1:-1),u.z+1,{owner,summon:true,summoner:u.id,summonSkill:'summon',lineLane:u.lineLane,challenge:u.challenge,cell:u.cell,team:u.team,hp:s.hp,damage:s.damage,armor:1,range:1.4,speed:5.6,interval:.8,accuracy:1,critChance:0,level:u.level,skills:[],skillLevels:{},expires:this.time+s.duration});this.fx('summon',u.x,u.z);}
-  if(key==='multishot')for(const e of this.enemies(u,10).slice(0,s.count)){this.hit(e,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);this.fx('arrow',u.x,u.z,{tx:e.x,tz:e.z});}
+  if(key==='multishot')for(const e of this.enemies(u,10).slice(0,s.count)){this.hit(e,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);this.fx('arrow',u.x,u.z,{tx:e.x,tz:e.z,source:u.id,target:e.id,projectileKind:animalBasicProjectile(u),skill:key});}
   if(key==='avatar'){u.avatar=this.time+s.duration;u.avatarData={hp:s.hp,armor:s.armor,damage:s.damage};this.refresh(u);this.fx('avatar',u.x,u.z);}
   if(key==='shockwave'){const dx=c.x-u.x,dz=c.z-u.z,len=Math.hypot(dx,dz)||1;for(const e of this.enemies(u,12).filter(e=>{const proj=((e.x-u.x)*dx+(e.z-u.z)*dz)/len;return proj>=0&&Math.abs((e.x-u.x)*dz-(e.z-u.z)*dx)/len<s.radius;}).slice(0,12))hit(e,s.damage);this.fx('shockwave',u.x,u.z,{tx:c.x,tz:c.z,radius:s.radius});}
   if(key==='fireball'){for(const e of this.enemies(u).filter(e=>distance(e,c)<s.radius)){hit(e,s.damage,'fire');this.applyDot(e,'burn',s.burn,4,u);}this.fx('fireball',c.x,c.z,{radius:s.radius});}
@@ -174,7 +175,7 @@ export class Game {
  hit(t,amount,source=null,magic=false,reflect=false,critical=false,environment=false,element=null,damageKind='direct'){
   if(!t?.alive||!Number.isFinite(amount)||amount<0)return 0;
   if(magic&&!environment&&(t.avatar||0)>this.time)return 0;
-  if(!environment)amount=this.permanentModifyDamage(t,amount,source);amount=this.elementDamage(t,amount,element);let dmg=environment?amount:magic?amount/(1+.03*Math.max(0,t.magicDefense||0)):amount/(1+.06*Math.max(0,t.armor||0));
+  amount=this.techniqueModifyDamage(t,amount,source,magic,environment);if(!environment)amount=this.permanentModifyDamage(t,amount,source);amount=this.elementDamage(t,amount,element);let dmg=environment?amount:magic?amount/(1+.03*Math.max(0,t.magicDefense||0)):amount/(1+.06*Math.max(0,t.armor||0));
   if((t.shieldUntil||0)>this.time&&t.shield>0){const absorbed=Math.min(t.shield,dmg);t.shield-=absorbed;dmg-=absorbed;}
   const actual=Math.min(t.hp,Math.max(0,dmg));t.hp=Math.max(0,t.hp-dmg);t.hitAt=this.time;
   if(!environment)this.recordWaveDamage?.(source,t,actual);
@@ -189,16 +190,16 @@ export class Game {
  }
  gainXp(u,amount){u.xp+=amount;while(u.xp>=u.level*55){u.xp-=u.level*55;u.level++;u.attributePoints+=attributePointsForLevel(u.level);u.skillPoints++;this.refresh(u);this.heal(u,80);this.fx('levelup',u.x,u.z,{source:u.id});}}
  attack(u,t){
-  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena],magicBasic=u.hero?HEROES[u.hero]?.attackType==='magic':!u.summon&&!!u.element,attackElement=magicBasic?(u.element||'arcane'):null;
-  if(!magicBasic&&(t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
+  u.attackAt=this.time;u.facing=Math.atan2(t.x-u.x,t.z-u.z);const weather=ARENAS[this.arena],magicBasic=u.hero?HEROES[u.hero]?.attackType==='magic':!u.summon&&!!u.element,attackElement=magicBasic?(u.element||'arcane'):null,projectileKind=animalBasicProjectile(u);
+  if(!magicBasic&&(t.perfectEvasion||0)>0&&this.random()<t.perfectEvasion){this.fx(u.range>3||attackElement||projectileKind?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null,basicAttack:true,projectileKind});this.fx('miss',t.x,t.z,{source:u.id,target:t.id,perfect:true});return;}
   const crit=!magicBasic&&this.random()<(u.critChance||0),accuracy=clamp((u.accuracy??.88)+(weather.accuracy||0)-(t.evasion||0)-(weather.evasion||0),.05,1);
-  this.fx(u.range>3||attackElement?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null});
+  this.fx(u.range>3||attackElement||projectileKind?'arrow':'slash',u.x,u.z,{tx:t.x,tz:t.z,source:u.id,target:t.id,element:attackElement||Object.keys(u.enchantments||{})[0]||null,basicAttack:true,projectileKind});
   if(!magicBasic&&!crit&&this.random()>=accuracy){this.fx('miss',t.x,t.z,{source:u.id,target:t.id});return;}
   const baseDamage=(u.hero&&magicBasic?(u.magicAttack||0)*.9:u.damage)*(crit?u.critMultiplier||2:1),damage=this.hit(t,attackElement?baseDamage*(weather[attackElement]||1):baseDamage,u,!!attackElement,false,crit,false,attackElement);
-  this.permanentAttack(u,t,damage);
+  this.permanentAttack(u,t,damage);this.attackTechniques(u,t,damage);
   if(canUseSkill(u,'bash')&&levelOf(u,'bash')){const s=skillFor(u,'bash');if(this.random()<s.chance&&t.alive){this.hit(t,physicalSkillDamage(u,s.damage,s.atkCoefficient),u,false,false,false,false,null,'proc');t.stun=t.hero?s.heroStun:s.stun;this.cancelChannel(t);this.fx('bash',t.x,t.z,{source:u.id});}}
   if(canUseSkill(u,'cleave')&&levelOf(u,'cleave')&&u.range<3){const s=skillFor(u,'cleave');for(const e of this.enemies(u).filter(e=>e.id!==t.id&&distance(t,e)<2.8))this.hit(e,u.damage*(crit?u.critMultiplier||2:1)*s.cleave,u,false,true);this.fx('cleave',t.x,t.z,{source:u.id,radius:2.8});}
-  if(canUseSkill(u,'bounce')&&levelOf(u,'bounce')&&u.range>=3){const s=skillFor(u,'bounce'),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id});last=next;}}
+  if(canUseSkill(u,'bounce')&&levelOf(u,'bounce')&&u.range>=3){const s=skillFor(u,'bounce'),visited=new Set([t.id]);let last=t;for(let i=0;i<s.bounces;i++){const next=this.enemies(u).find(e=>!visited.has(e.id)&&distance(last,e)<=5);if(!next)break;visited.add(next.id);this.hit(next,u.damage*s.retention**(i+1),u,false,true);this.fx('bounce',last.x,last.z,{tx:next.x,tz:next.z,source:u.id,target:next.id,projectileKind:animalBasicProjectile(u)});last=next;}}
   if(u.itemEffects?.stormcoil){const s=equipmentEffectAt('stormcoil',u.itemEffects.stormcoil);if(this.random()<s.chance){const visited=new Set();let last=t,from=u;for(let i=0;i<s.jumps&&last;i++){visited.add(last.id);this.hit(last,s.damage*s.retention**i,u,true,false,false,false,'lightning','proc');this.fx('bolt',from.x,from.z,{tx:last.x,tz:last.z,source:u.id,item:'stormcoil'});from=last;last=this.enemies(u).find(e=>!visited.has(e.id)&&distance(from,e)<=s.radius);}}}
   if(t.alive&&(t.avatar||0)<=this.time)for(const [key,rank]of Object.entries(u.enchantments||{})){const s=enchantAt(key,rank);if(key==='frost'){t.frostUntil=Math.max(t.frostUntil||0,this.time+s.duration);this.fx('frost',t.x,t.z,{source:u.id,enchantment:true});}else{this.applyDot(t,key==='fire'?'burn':'poison',s.damage,s.duration,u);this.fx(key==='fire'?'burn':'poison',t.x,t.z,{source:u.id,enchantment:true});}}
   if(canUseSkill(u,'poison')&&levelOf(u,'poison')&&t.alive){const s=skillFor(u,'poison');this.applyDot(t,'poison',s.poison,4,u);this.fx('poison',t.x,t.z);}
@@ -206,7 +207,7 @@ export class Game {
  setupArenaScenery(){if(['castlefight','linewars'].includes(this.options.mode)||this.field)return;const props=generateScenery({seed:this.worldSeed+this.wave*101,bounds:ARENA_BOUNDS,count:10,keepClear:(ARENAS[this.arena]?.zones||[]).map(z=>({...z,r:z.r+1}))}),origins=this.cells?.length?this.cells:[{x:0,z:0}];this.obstacles=this.obstacles.filter(o=>o.type!=='scenery').concat(origins.flatMap(origin=>sceneryObstacles(props,origin)));this.obstacleRevision++;}
  setArena(key){this.arena=key;this.zones=ARENAS[key].zones.map((z,i)=>({...z,id:`${key}-${i}`}));this.nextWeather=this.time+8;this.setupArenaScenery();}
  arenaAt(wave){const keys=Object.keys(ARENAS),start=Math.max(0,keys.indexOf(this.startingArena||'forest'));return keys[(start+Math.floor(Math.max(0,wave-1)/10))%keys.length];}
- restoreHeroes(full=true){for(const [i,u]of this.heroes().entries()){this.closeShop(u);u.alive=true;u.team=this.homeTeam(u);this.homePosition(u,-4+(i%5)*2,2);u.destination=null;u.target=null;u.order='auto';u.stun=0;u.itemReflectUntil=0;u.itemReflect=0;u.rageUntil=0;u.rageData=null;u.dots={};u.frostUntil=0;u.vx=0;u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=full?u.maxHp:Math.min(u.maxHp,u.hp+u.maxHp*.3);u.mana=full?u.maxMana:Math.min(u.maxMana,u.mana+u.maxMana*.3);}}
+ restoreHeroes(full=true){for(const [i,u]of this.heroes().entries()){this.closeShop(u);u.alive=true;u.team=this.homeTeam(u);this.homePosition(u,-4+(i%5)*2,2);u.destination=null;u.target=null;u.order='auto';u.stun=0;u.itemReflectUntil=0;u.itemReflect=0;u.rageUntil=0;u.rageData=null;u.violentForce=null;u.hurricane=null;u.dots={};u.frostUntil=0;u.vx=0;u.vz=0;this.cancelChannel(u);this.refresh(u);u.hp=full?u.maxHp:Math.min(u.maxHp,u.hp+u.maxHp*.3);u.mana=full?u.maxMana:Math.min(u.maxMana,u.mana+u.maxMana*.3);}}
  spawnWave(){if(this.options.mode==='castlefight')return this.initCastleFight();if(this.options.mode==='linewars')return this.initLineWars();const result=this.spawnCompetitionWave();this.setupArenaScenery();return result;}
  spawnEnemy(kind,x,z,data){
   const variant=Number.isFinite(data.variantRoll)?data.variantRoll:this.random();let boss=data.boss===true?'boss':data.boss;
@@ -270,7 +271,7 @@ export class Game {
    let dest=['move','attackMove'].includes(u.order)?u.destination:null;
    if(u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode)){u.moving=false;continue;}
    if(t&&u.order!=='move'){if(distance(u,t)<=this.attackReach(u,t)){dest=null;if(u.cd<=0){this.attack(u,t);u.cd=u.interval/(u.attackSpeed||1);}}else if(u.order!=='hold'&&u.order!=='stop')dest=t;}
-   if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.18){const slow=1-Math.max((u.frostUntil||0)>this.time?.45*(1-(u.coldResist||0)):0,(u.abilitySlowUntil||0)>this.time?u.abilitySlowAmount||0:0),speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(['move','attackMove'].includes(u.order)){u.order='auto';u.destination=null;}}
+   if(dest)dest=navigation(this,u,dest);let vx=0,vz=0;if(dest){const d=distance(u,dest);if(d>.04){const slow=1-Math.max((u.frostUntil||0)>this.time?.45*(1-(u.coldResist||0)):0,(u.abilitySlowUntil||0)>this.time?u.abilitySlowAmount||0:0),speed=u.speed*slow*(u.wading?.55:1)*(ARENAS[this.arena].move||1);u.facing=Math.atan2(dest.x-u.x,dest.z-u.z);vx=Math.sin(u.facing)*Math.min(d/dt,speed);vz=Math.cos(u.facing)*Math.min(d/dt,speed);u.moving=true;}else if(['move','attackMove'].includes(u.order)){u.order='auto';u.destination=null;}}
    if(u.sliding){const blend=1-Math.exp(-dt*2.8);u.vx=(u.vx||0)+(vx-(u.vx||0))*blend;u.vz=(u.vz||0)+(vz-(u.vz||0))*blend;}else{u.vx=vx;u.vz=vz;}moveUnit(this,u,{x:u.x+u.vx*dt,z:u.z+u.vz*dt});
   }
   this.collisionStats=resolveUnitCollisions(this,dt);

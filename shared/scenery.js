@@ -6,8 +6,8 @@ import {mapTileAt} from './voxel-map.js';
 // their raised canopies deliberately leave the surrounding floor walkable.
 const freezeAsset=value=>Object.freeze({...value,collider:Object.freeze(value.collider),parts:Object.freeze(value.parts.map(part=>Object.freeze(part)))});
 export const SCENERY_ASSETS=Object.freeze({
- pine:freezeAsset({collider:{w:.7,d:.7,h:4.1},parts:[[0,1.6,0,.56,3.2,.56,0x74553e],[0,1.85,0,2.15,.8,2.15,0x3d6650],[0,2.5,0,1.7,.75,1.7,0x4f7c5e],[0,3.1,0,1.2,.7,1.2,0x638c68],[0,3.62,0,.6,.55,.6,0x8aaa7d]]}),
- birch:freezeAsset({collider:{w:.65,d:.65,h:3.7},parts:[[0,1.45,0,.5,2.9,.5,0xd7d5b7],[.255,.8,0,.02,.13,.35,0x736e58],[-.255,1.7,0,.02,.15,.3,0x736e58],[0,1.3,.255,.32,.1,.02,0x736e58],[0,2.65,0,2,.95,1.8,0x95ad6b],[-.55,3.1,.25,1.25,.65,1.25,0xaac480],[.45,3.25,-.25,1.2,.8,1.2,0xc0cf8c]]}),
+ pine:freezeAsset({collider:{w:.7,d:.7,h:6.25},parts:[[0,2.35,0,.56,4.7,.56,0x74553e],[0,4.1,0,2.15,.8,2.15,0x3d6650],[0,4.75,0,1.7,.75,1.7,0x4f7c5e],[0,5.35,0,1.2,.7,1.2,0x638c68],[0,5.88,0,.6,.55,.6,0x8aaa7d]]}),
+ birch:freezeAsset({collider:{w:.65,d:.65,h:5.35},parts:[[0,2.225,0,.5,4.45,.5,0xd7d5b7],[.255,.8,0,.02,.13,.35,0x736e58],[-.255,1.7,0,.02,.15,.3,0x736e58],[0,1.3,.255,.32,.1,.02,0x736e58],[0,4.15,0,2,.95,1.8,0x95ad6b],[-.55,4.65,.25,1.25,.65,1.25,0xaac480],[.45,4.8,-.25,1.2,.8,1.2,0xc0cf8c]]}),
  boulder:freezeAsset({collider:{w:1.45,d:1.3,h:1.25},parts:[[0,.4,0,1.45,.8,1.2,0x858e8b],[-.15,.94,-.08,1.05,.45,.95,0xa7aea4],[.39,.18,.35,.6,.36,.6,0x728478],[-.3,1.19,-.1,.55,.13,.6,0xb9bdac]]}),
  runestone:freezeAsset({collider:{w:1.1,d:.9,h:1.85},parts:[[0,.2,0,1.1,.4,.9,0x7a8580],[0,1,0,.85,1.4,.7,0x959e92],[0,1.75,0,.62,.2,.62,0xb4b8a2],[0,1,.36,.07,.75,.035,0xd1bc79],[.12,1.18,.36,.3,.07,.035,0xd1bc79],[-.1,.85,.36,.23,.065,.035,0xd1bc79]]})
 });
