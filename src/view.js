@@ -11,7 +11,7 @@ import {buildCastleBuilderModel} from './castle-builder-art.js';
 import {createCastleRescueEffect,updateCastleRescueEffect} from './castle-rescue-art.js';
 import {buildCastleUnitModel,castleUnitModelKey,castleUnitAnimation,castleBasicProjectile} from './castle-unit-art.js';
 import './critical-feedback.css';
-import {releaseEffect} from './effect-resources.js';
+import {releaseEffect,refreshEffectEvent} from './effect-resources.js';
 import {createTechniqueEffect,updateTechniqueEffect} from './technique-art.js';
 import {createWorldLandscape} from './world-landscape.js';
 import {locomotionFrame,constructionFrame} from './animation-profiles.js';
@@ -217,7 +217,7 @@ export function createView(container,overlay,onPoint){
   }
   for(const u of statusUnits.slice(0,12)){let entry=statusLabels.get(u.id);if(!entry){const el=document.createElement('div');el.className='unit-status-label';overlay.append(el);entry={el,sig:''};statusLabels.set(u.id,entry);}const statuses=combatStatuses(u,time).slice(0,3),sig=statuses.map(s=>s.key).join();if(entry.sig!==sig){entry.sig=sig;entry.el.replaceChildren(...statuses.map(s=>{const span=document.createElement('span');span.className=s.key;span.textContent=s.key==='fire'?'FOGO':s.key==='frost'?'FROST':s.key==='poison'?'VENENO':s.key==='stun'?'STUN':s.key==='shield'?'ESCUDO':s.key==='rage'?'FÚRIA':s.key==='violentforce'?'FORÇA VIOLENTA':'REFLEXO';return span;}));}const p=new T.Vector3(u.x,(u.size||1)*3.6+(u.flying?u.altitude||1.5:0),u.z).project(camera);entry.el.style.left=((p.x*.5+.5)*container.clientWidth)+'px';entry.el.style.top=((-p.y*.5+.5)*container.clientHeight)+'px';entry.el.hidden=p.z>1;}for(const [unitId,entry]of statusLabels)if(!visibleLabels.has(unitId)){entry.el.remove();statusLabels.delete(unitId);}
   for(const [id,a]of actors)if(!units.some(u=>u.id===id)){removeActor(a);actors.delete(id);}
-  for(const e of state?.effects||[]){if(!seen.has(e.id)){seen.add(e.id);if(e.type==='damage'||e.type==='miss'||e.type==='lifesteal'||(e.type==='heal'||e.type==='fountainHeal')&&e.amount>0)floating(e);if(e.type!=='damage'&&e.type!=='miss')createEffect(e);}else if(effects.has(e.id))effects.get(e.id).e=e;}
+  for(const e of state?.effects||[]){if(!seen.has(e.id)){seen.add(e.id);if(e.type==='damage'||e.type==='miss'||e.type==='lifesteal'||(e.type==='heal'||e.type==='fountainHeal')&&e.amount>0)floating(e);if(e.type!=='damage'&&e.type!=='miss')createEffect(e);}else if(effects.has(e.id))refreshEffectEvent(effects.get(e.id),e);}
   if(seen.size>5000){const active=new Set((state?.effects||[]).map(e=>e.id));for(const id of seen)if(!active.has(id))seen.delete(id);}
   techniqueContext.time=time;techniqueContext.units=units;
   for(const [id,entry]of effects){if(entry.castleRescue){if(!updateCastleRescueEffect(entry,time,state?.voxelMap?terrainHeight(state.voxelMap,entry.e.x,entry.e.z):.18)){releaseEffect(entry);effects.delete(id);}continue;}if(entry.techniqueArt){if(!updateTechniqueEffect(entry,techniqueContext)){releaseEffect(entry);effects.delete(id);}continue;}const {group,e,mat}=entry,age=time-e.time,duration=['blizzard','gravity','venomcloud','monsterWarning','bossDanger','bossImpact','permanentTrail','abilityField','rage','battlecry'].includes(e.type)?(e.duration||1):e.type==='cast'?.5:e.type==='critical'?.7:.8;if(age>duration||e.type==='bossDanger'&&!(state?.bossWarnings||[]).some(w=>w.id===e.warningId)||e.type==='blizzard'&&e.pulses<=0){releaseEffect(entry);effects.delete(id);continue;}
