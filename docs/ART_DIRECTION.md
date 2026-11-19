@@ -113,3 +113,8 @@ O HUD e os cards usam reconciliação de DOM com identidade por comando ou const
 Duplo clique esquerdo seleciona entidades do mesmo tipo e dono cujos modelos intersectam o campo visível da câmera. O botão Selecionar iguais visíveis oferece a mesma ação por toque. Prédios selecionados compartilham um batch de anéis; o controle de produção atua no grupo, respeitando posse e limites no servidor. Evoluções e demolição aparecem na seleção individual. A produção pausada tem estado explícito e a retomada sincronizada inicia um ciclo inteiro.
 
 O Golpe de resgate possui uma carga por partida e mira com alcance/raio reais. Seu aviso breve é dourado, seguido de uma explosão blocada branca, azul e dourada. A geometria do aviso e da explosão é independente dos telegraphs de chefes do Survival. Referências, números e limites estão em `CASTLE_EMERGENCY.md`.
+
+
+## Faixa de lava do coliseu
+
+Na Forja de Muspelheim, um canal animado contorna o limite externo do campo e termina antes da primeira arquibancada. Reutiliza o material de lava opaca do Warlock, com fissuras e pulsos em oito quadros por segundo; basalto e quatro pontes de pedra ligam o campo aos portões. Toda a lava fica além do limite de movimento, sem acrescentar perigos à simulação. O canal usa apenas duas chamadas de desenho e acompanha a visibilidade do coliseu: fica oculto nos demais temas, no Line Wars, no Castle Fight e em campos expandidos. Recursos próprios são liberados ao descartar o cenário; a geometria base compartilhada permanece válida.

@@ -15,7 +15,8 @@ export function recompute(u,time=0,auras={}){
  const oldHp=u.maxHp||base.hp,oldMana=u.maxMana||base.mana;
  for(const key of ATTRIBUTE_KEYS)a[key]+=u.tomeAttributes?.[key]||0;
  u.totalAttributes=a;
- u.maxHp=base.hp+(u.level-1)*30+a.vit*20+(equipment.hp||0)+(avatar.hp||0);
+ u.hpBonusPercent=a.vit*.01;
+ u.maxHp=Math.round((base.hp+(u.level-1)*30+a.vit*20+(equipment.hp||0)+(avatar.hp||0))*(1+u.hpBonusPercent));
  u.hpRegenPercent=Math.floor(a.vit/10)*.001;u.hpRegen=1.5+a.vit*.03+u.maxHp*u.hpRegenPercent;
  u.maxMana=base.mana+a.int*8+(equipment.mana||0);
  u.hp=Math.max(u.alive?1:0,Math.min(u.maxHp,u.hp+u.maxHp-oldHp));

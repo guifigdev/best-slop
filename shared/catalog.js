@@ -20,7 +20,7 @@ export const ATTRIBUTES={
  int:{name:'Inteligência',short:'INT',description:'+2,5% poder mágico, +1 defesa mágica e +8 mana/ponto; +0,8 mana/s a cada 6.'},
  dex:{name:'Destreza',short:'DEX',description:'+1,5 ATQ à distância/ponto; +0,5% precisão/ponto e +2% a cada 5.'},
  luk:{name:'Sorte',short:'LUK',description:'+1% crítico a cada 3; +1% esquiva perfeita a cada 10 (DEX não reduz).'},
- vit:{name:'Vitalidade',short:'VIT',description:'+20 vida e +1 armadura física/ponto; +1 defesa mágica a cada 5; +0,1% da vida máxima/s a cada 10.'},
+ vit:{name:'Vitalidade',short:'VIT',description:'Por ponto: +20 vida, +1% vida máxima e +1 armadura física. A cada 5 VIT: +1 defesa mágica. Regeneração: +0,1% da vida máxima/s a cada 10 VIT.'},
  agi:{name:'Agilidade',short:'AGI',description:'+1% vel. ataque e +0,3% esquiva comum/ponto; +5% vel. ataque a cada 10.'}
 };
 const urls={mk:'https://classic.battle.net/war3/human/units/mountainking.shtml',tc:'https://classic.battle.net/war3/orc/units/taurenchieftain.shtml',pal:'https://classic.battle.net/war3/human/units/paladin.shtml',far:'https://classic.battle.net/war3/orc/units/farseer.shtml',bm:'https://classic.battle.net/war3/orc/units/blademaster.shtml',am:'https://classic.battle.net/war3/human/units/archmage.shtml',dl:'https://classic.battle.net/war3/undead/units/dreadlord.shtml',kg:'https://classic.battle.net/war3/nightelf/units/keepergrove.shtml'};
