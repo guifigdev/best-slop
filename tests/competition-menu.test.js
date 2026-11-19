@@ -9,12 +9,13 @@ class Element {
  setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,fn){this.handlers[k]=fn;}insertAdjacentHTML(_where,html){this.html=(this.html||'')+html;}click(){if(!this.disabled)this.onclick?.();}replaceChildren(){this.html='';}before(){}set innerHTML(html){this.html=html;}get innerHTML(){return this.html||'';}
 }
 function fixture(){
- const ids=Object.fromEntries(['arena-select','start','online','start-title','war-options','tower-options','party-section','party-code','party-status','party-create','party-join','party-queue','party-leave','line-format-info','line-format','castle-lanes','castle-format-info','castle-options','line-options'].map(id=>[id,new Element()]));ids['start-title'].nextElementSibling=new Element();
+ const ids=Object.fromEntries(['arena-select','start','online','start-title','war-options','tower-options','party-section','party-code','party-status','party-create','party-join','party-queue','party-leave','line-format-info','line-format','castle-lanes','castle-format-info','castle-options','line-options','dungeon-options','bloody-options','dungeon-party','dungeon-limit','dungeon-teams','bloody-format'].map(id=>[id,new Element()]));ids['start-title'].nextElementSibling=new Element();
  for(const [id,value]of [['team-size','2'],['team-count','5'],['clash-every','5'],['tower-limit','0']])ids[id]=Object.assign(new Element(),{value});
- const kinds=['survival','linewars','castlefight','treetag','warlock','kodotag'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight','treetag','warlock','kodotag'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
+ const kinds=['survival','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
+ for(const [name,values]of Object.entries({'dungeon-party':['1','2','3','4'],'dungeon-limit':['50','0'],'dungeon-teams':['2','4','1'],'bloody-format':['ffa','teams']}))groups[name]=values.map((value,i)=>Object.assign(new Element(),{value,checked:i===values.length-1}));
  for(const [name,inputs]of Object.entries(groups)){const cards=inputs.map(input=>{const card=new Element();card.querySelector=()=>input;return card;});ids[name].querySelectorAll=()=>cards;}
  root.querySelector=selector=>{if(selector==='.game-picker')return picker;if(selector==='.mode-grid')return grid;const checked=selector.match(/input\[name="([^"]+)"\]:checked/);if(checked)return groups[checked[1]].find(radio=>radio.checked);const mode=selector.match(/data-game-mode="([^"]+)"/);if(mode)return modes.find(b=>b.dataset.gameMode===mode[1]);throw Error('Unexpected selector '+selector);};
- root.querySelectorAll=selector=>selector==='[data-game-mode]'?modes:selector==='[data-game-kind]'?kinds:selector==='.format-choices'?[ids['line-format'],ids['castle-lanes']]:selector.startsWith('select,')?[...Object.values(groups).flat(),...modes,...kinds,...['team-size','team-count','clash-every','tower-limit','party-create','party-join','party-code'].map(id=>ids[id])]:[];
+ root.querySelectorAll=selector=>selector==='[data-game-mode]'?modes:selector==='[data-game-kind]'?kinds:selector==='.format-choices'?Object.keys(groups).map(name=>ids[name]):selector.startsWith('select,')?[...Object.values(groups).flat(),...modes,...kinds,...['team-size','team-count','clash-every','tower-limit','party-create','party-join','party-code'].map(id=>ids[id])]:[];
  return{ids,kinds,modes,root,groups,document:{createElement:()=>root,getElementById:id=>ids[id],querySelectorAll:()=>[]},select(group,value){for(const input of groups[group])input.checked=input.value===value;ids[group].onchange?.();ids[group].handlers.change?.();}};
 }
 test('native format cards preserve network options, defaults, cross-game choices and party locking',()=>{
@@ -30,7 +31,7 @@ test('both format groups expose native labelled radio choices with one default a
  const f=fixture(),previous=globalThis.document;globalThis.document=f.document;
  try{
   installCompetitionMenu({connect(){},getSocket(){return null;}});const html=f.root.innerHTML;assert.equal(/<select[^>]+id="(?:line-format|castle-lanes)"/.test(html),false);
-  for(const name of Object.keys(f.groups)){assert.match(html,new RegExp('<fieldset[^>]+id="'+name+'"'));const controls=[...html.matchAll(new RegExp('<input[^>]+name="'+name+'"[^>]*>','g'))].map(m=>m[0]);assert.equal(controls.length,2);assert.equal(controls.filter(tag=>/\schecked(?:\s|>)/.test(tag)).length,1);for(const tag of controls){assert.match(tag,/type="radio"/);const title=tag.match(/aria-labelledby="([^"]+)"/)[1];assert.ok(html.includes('id="'+title+'"'));for(const description of tag.match(/aria-describedby="([^"]+)"/)[1].split(' '))assert.ok(html.includes('id="'+description+'"'));}}
+  for(const name of Object.keys(f.groups)){assert.match(html,new RegExp('<fieldset[^>]+id="'+name+'"'));const controls=[...html.matchAll(new RegExp('<input[^>]+name="'+name+'"[^>]*>','g'))].map(m=>m[0]);assert.equal(controls.length,f.groups[name].length);assert.equal(controls.filter(tag=>/\schecked(?:\s|>)/.test(tag)).length,1);for(const tag of controls){assert.match(tag,/type="radio"/);const title=tag.match(/aria-labelledby="([^"]+)"/)[1];assert.ok(html.includes('id="'+title+'"'));for(const description of tag.match(/aria-describedby="([^"]+)"/)[1].split(' '))assert.ok(html.includes('id="'+description+'"'));}}
  }finally{globalThis.document=previous;}
 });
 
@@ -53,3 +54,19 @@ test('Tree Tag and Warlock cards select independent options and restore the exis
 
 
 test('Kodo Tag has a separate game card and keeps the native map out of Survival arena settings',()=>{const f=fixture(),old=globalThis.document;globalThis.document=f.document;try{const menu=installCompetitionMenu({connect(){},getSocket(){return null;}});f.kinds[5].click();assert.equal(menu.options().mode,'kodotag');assert.equal(menu.options().game,'kodotag');assert.equal(f.ids['arena-select'].hidden,true);f.kinds[0].click();assert.equal(menu.options().mode,'campaign');assert.equal(f.ids['arena-select'].hidden,false);}finally{globalThis.document=old;}});
+
+
+test('Dungeon and Bloody cards submit the chosen party size, run limit and rival team format',()=>{
+ const f=fixture(),old=globalThis.document;globalThis.document=f.document;
+ try{
+  const menu=installCompetitionMenu({connect(){},getSocket(){return null;}});
+  f.kinds.find(b=>b.dataset.gameKind==='dungeon').click();
+  assert.equal(menu.options().mode,'dungeon');assert.equal(menu.options().dungeonPartySize,4);assert.equal(menu.options().dungeonTeams,1);
+  f.select('dungeon-party','2');f.select('dungeon-teams','4');f.select('dungeon-limit','50');
+  assert.equal(menu.options().dungeonPartySize,2);assert.equal(menu.options().dungeonTeams,4);assert.equal(menu.options().dungeonPvp,true);assert.equal(menu.options().dungeonLimit,50);
+  assert.equal(f.ids['arena-select'].hidden,true);assert.equal(f.ids['dungeon-options'].classList.contains('hidden'),false);
+  f.kinds.find(b=>b.dataset.gameKind==='bloody').click();assert.equal(menu.options().mode,'bloody');assert.equal(menu.options().bloodyTeams,true);assert.equal(menu.options().teamSize,5);
+  f.select('bloody-format','ffa');assert.equal(menu.options().bloodyTeams,false);assert.equal(f.ids['dungeon-options'].classList.contains('hidden'),true);
+  f.kinds[0].click();assert.equal(menu.options().mode,'campaign');assert.equal(f.ids['arena-select'].hidden,false);
+ }finally{globalThis.document=old;}
+});

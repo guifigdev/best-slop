@@ -1,0 +1,14 @@
+import {readFile,stat} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import path from 'node:path';
+import {parseDeployEnv} from './doctor-deploy.mjs';
+const args=process.argv.slice(2),arg=key=>args[args.indexOf(key)+1];
+if(!args.includes('--env')||!args.includes('--directory'))throw Error('Uso: node scripts/deploy-r2-backup.mjs --env /arquivo/.env --directory /backup');
+const env=parseDeployEnv(await readFile(arg('--env'),'utf8')),folder=path.resolve(arg('--directory'));
+if(!(await stat(folder)).isDirectory())throw Error('Diretório de backup inválido.');
+for(const key of ['R2_ENDPOINT','BACKUP_R2_BUCKET','AWS_ACCESS_KEY_ID','AWS_SECRET_ACCESS_KEY'])if(!env[key])throw Error(`Configure ${key} no .env; consulte docs/CONFIGURACOES.md.`);
+const endpoint=new URL(env.R2_ENDPOINT);if(endpoint.protocol!=='https:'||!endpoint.hostname.endsWith('.r2.cloudflarestorage.com')||endpoint.username||endpoint.password)throw Error('R2_ENDPOINT deve ser o endpoint HTTPS S3 da Cloudflare, sem credenciais na URL.');
+if(!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(env.BACKUP_R2_BUCKET)||env.BACKUP_R2_BUCKET===env.R2_BUCKET)throw Error('Use BACKUP_R2_BUCKET privado, separado do bucket de assets.');
+const result=spawnSync('aws',['s3','sync',folder,`s3://${env.BACKUP_R2_BUCKET}/custom-hero/backups/${path.basename(folder)}/`,'--endpoint-url',endpoint.origin,'--only-show-errors'],{stdio:'inherit',shell:false,env:{...process.env,AWS_ACCESS_KEY_ID:env.AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY:env.AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_REGION:'auto',AWS_EC2_METADATA_DISABLED:'true'}});
+if(result.error)throw Error('AWS CLI não encontrado. Instale-o seguindo docs/CONFIGURACOES.md.');
+process.exitCode=result.status||0;

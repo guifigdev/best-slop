@@ -1,0 +1,60 @@
+name: custom-hero
+services:
+  game:
+    image: ${GAME_IMAGE:-custom-hero:local}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        VITE_ASSET_BASE_URL: ${VITE_ASSET_BASE_URL:-}
+        VITE_SERVER_URL: ${VITE_SERVER_URL:-}
+        VITE_PHASE_API_URL: ${VITE_PHASE_API_URL:-}
+    restart: unless-stopped
+    init: true
+    expose: ["2567"]
+    environment:
+      NODE_ENV: production
+      PORT: "2567"
+      HOST: 0.0.0.0
+      TRUST_PROXY: "1"
+      DATA_DIR: /data
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Defina PUBLIC_ORIGIN no .env}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      ROOM_LIMIT: ${ROOM_LIMIT:-32}
+      MAX_CLIENTS: ${MAX_CLIENTS:-256}
+      ROOM_IDLE_SECONDS: ${ROOM_IDLE_SECONDS:-1800}
+      ROOM_RESUME_SECONDS: ${ROOM_RESUME_SECONDS:-120}
+      ROOM_SNAPSHOT_HZ: ${ROOM_SNAPSHOT_HZ:-10}
+      SIMULATION_HZ: ${SIMULATION_HZ:-30}
+      DRAIN_TIMEOUT_SECONDS: ${DRAIN_TIMEOUT_SECONDS:-120}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
+    volumes:
+      - game_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    stop_grace_period: 135s
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      game: {condition: service_healthy}
+    environment:
+      DOMAIN: ${DOMAIN:?Defina DOMAIN no .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Defina ACME_EMAIL no .env}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+volumes:
+  game_data:
+  caddy_data:
+  caddy_config:

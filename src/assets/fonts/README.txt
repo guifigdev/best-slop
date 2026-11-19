@@ -1,0 +1,1 @@
+DM Sans and Outfit from Google Fonts. SIL Open Font License 1.1. Source: https://github.com/google/fonts/tree/main/ofl/dmsans and https://github.com/google/fonts/tree/main/ofl/outfit . Four Latin/Latin-ext variable WOFF2 subsets. License files included.

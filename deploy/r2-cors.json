@@ -1,0 +1,9 @@
+[
+  {
+    "AllowedOrigins": ["https://play.gfig.space", "https://gfig.space"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["Range"],
+    "ExposeHeaders": ["ETag", "Content-Length", "Content-Range"],
+    "MaxAgeSeconds": 3600
+  }
+]

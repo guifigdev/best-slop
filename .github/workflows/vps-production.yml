@@ -1,0 +1,111 @@
+name: Validate and deploy VPS
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-master
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node --test --test-concurrency=2 tests/*.test.js
+      - run: npm run build
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && vars.PRODUCTION_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+      VPS_PATH: ${{ vars.VPS_PATH || '/opt/custom-hero' }}
+      VITE_ASSET_BASE_URL: ${{ vars.VITE_ASSET_BASE_URL }}
+      VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+      VITE_PHASE_API_URL: ${{ vars.VITE_PHASE_API_URL }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Build and publish immutable image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_USER" --password-stdin
+          docker build --file deploy/Dockerfile --build-arg "VITE_ASSET_BASE_URL=$VITE_ASSET_BASE_URL" --build-arg "VITE_SERVER_URL=$VITE_SERVER_URL" --build-arg "VITE_PHASE_API_URL=$VITE_PHASE_API_URL" --tag "$image:$GITHUB_SHA" --label "org.opencontainers.image.revision=$GITHUB_SHA" .
+          docker push "$image:$GITHUB_SHA"
+          docker logout ghcr.io
+      - name: Upload versioned static assets to R2 when CDN is enabled
+        if: env.VITE_ASSET_BASE_URL != ''
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_ASSET_PREFIX: ${{ vars.R2_ASSET_PREFIX || 'games' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if ! command -v aws >/dev/null; then
+            curl --fail --silent --show-error https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o "$RUNNER_TEMP/awscli.zip"
+            unzip -q "$RUNNER_TEMP/awscli.zip" -d "$RUNNER_TEMP/awscli-install"
+            sudo "$RUNNER_TEMP/awscli-install/aws/install" --update
+          fi
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:$GITHUB_SHA"
+          asset_container="$(docker create "$image")"
+          docker cp "$asset_container:/app/dist/client" "$RUNNER_TEMP/r2-client"
+          docker rm "$asset_container"
+          node scripts/deploy-r2-assets.mjs --directory "$RUNNER_TEMP/r2-client"
+      - name: Configure verified SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$VPS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$VPS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "${VPS_PORT:-22}" =~ ^[0-9]+$ ]]
+          [[ "$VPS_PATH" =~ ^/[a-zA-Z0-9_./-]+$ && "$VPS_PATH" != *..* ]]
+          [[ -n "$SSH_PRIVATE_KEY" && -n "$SSH_KNOWN_HOSTS" ]]
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Send deployment kit and activate release
+        run: |
+          set -euo pipefail
+          port="${VPS_PORT:-22}"
+          release="$VPS_PATH/releases/$GITHUB_SHA"
+          ssh -o StrictHostKeyChecking=yes -p "$port" "$VPS_USER@$VPS_HOST" "install -d -m 750 '$release'"
+          tar -czf "$RUNNER_TEMP/deploy-kit.tgz" deploy scripts/deploy.sh scripts/doctor-deploy.mjs scripts/deploy-backup.sh scripts/deploy-snapshot.mjs scripts/deploy-rollback.sh scripts/deploy-restore.sh scripts/deploy-restore-data.mjs scripts/deploy-r2-backup.mjs scripts/deploy-r2-assets.mjs
+          scp -o StrictHostKeyChecking=yes -P "$port" "$RUNNER_TEMP/deploy-kit.tgz" "$VPS_USER@$VPS_HOST:$release/deploy-kit.tgz"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:$GITHUB_SHA"
+          ssh -o StrictHostKeyChecking=yes -p "$port" "$VPS_USER@$VPS_HOST" "cd '$release' && tar -xzf deploy-kit.tgz && bash scripts/deploy.sh --env '$VPS_PATH/.env' --image '$image'"
+      - name: Remove runner SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

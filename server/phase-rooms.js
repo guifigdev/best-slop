@@ -32,7 +32,7 @@ function tick(game,data,now){
 function hydrate(data,createGame){const saved=data.game;if(!saved||saved.options?.mode!=='phasekiller')fail(503,'invalid_state','A sala precisa ser recriada.');const game=createGame(saved.worldSeed||1);for(const key of KEYS)if(Object.hasOwn(saved,key))game[key]=saved[key];return game;}
 function validateCommand(command){if(!command||Array.isArray(command)||typeof command!=='object'||!TYPES.has(command.type))fail(400,'invalid_command','Comando desconhecido.');if(command.type==='pkChat'&&(typeof command.text!=='string'||command.text.trim().length<1||command.text.length>240))fail(400,'invalid_chat','Escreva uma mensagem de até 240 caracteres.');return command;}
 
-export function createPhaseHandler({createGame=seed=>new Game(seed,{mode:'phasekiller',phaseTraining:false}),clock=()=>Date.now(),cryptoProvider=globalThis.crypto}={}){
+export function createPhaseHandler({createGame=seed=>new Game(seed,{mode:'phasekiller',phaseTraining:false}),clock=()=>Date.now(),cryptoProvider=globalThis.crypto,allowedOrigins=[]}={}){
  const digest=async token=>{const bytes=await cryptoProvider.subtle.digest('SHA-256',new TextEncoder().encode(token));return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');};
  const newIdentity=async()=>{const id=cryptoProvider.randomUUID(),token=cryptoProvider.randomUUID();return{id,token,tokenHash:await digest(token)};};
  const select=(db,code)=>db.prepare('SELECT room_id, revision, data, expires_at FROM phase_rooms WHERE room_id = ?').bind(code).first();
@@ -86,7 +86,7 @@ export function createPhaseHandler({createGame=seed=>new Game(seed,{mode:'phasek
  return async function handlerPhaseRequest(request,env){
   const url=new URL(request.url);if(!url.pathname.startsWith('/api/phase'))return null;
   try{
-   const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)fail(403,'origin_mismatch','Origem não autorizada.');
+   const origin=request.headers.get('Origin');if(origin&&origin!==url.origin&&!allowedOrigins.includes(origin))fail(403,'origin_mismatch','Origem não autorizada.');
    const route=url.pathname.match(/^\/api\/phase\/(create|join|[A-Za-z0-9]{4,10})(?:\/(command|leave))?\/?$/);if(!route)fail(404,'not_found','Rota não encontrada.');
    const special=['create','join'].includes(route[1]);if(special&&route[2])fail(404,'not_found','Rota não encontrada.');const action=special?route[1]:route[2]||'poll',method=action==='poll'?'GET':'POST';if(request.method!==method)fail(405,'method_not_allowed','Método não permitido.');
    if(!env?.DB?.prepare)fail(503,'storage_unavailable','O serviço online está indisponível no momento.');const now=clock(),body=method==='POST'?await readBody(request):{};

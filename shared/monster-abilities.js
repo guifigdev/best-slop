@@ -52,6 +52,7 @@ export const monsterMethods={
  },
 
  monsterLoot(t,source=null){
+  if(this.options.mode==='dungeon')return this.dungeonLoot(t,source);
   if(t.lootRolled||t.alive||t.hero||t.summon||!BATTLE.has(this.phase))return null;t.lootRolled=true;
   let owner=source?.owner?this.player(source.owner):null;
   if(source){if(!owner||!sameTrial(this,owner,t))return null;}

@@ -33,6 +33,14 @@ The full functional extraction is recorded in `ambient-facts.json`. Native drop 
 
 ## Practical limits
 
+### Terrain, forest and nighttime presentation
+
+The browser woodland now reads numeric terrain painting and doodad coordinates from the pinned map's `war3map.w3e` and `war3map.doo`. The extraction script verifies their SHA-256 hashes before generating `shared/phase-killer-terrain-data.js`: W3E is a 129 × 193 vertex Dalaran Ruins terrain; DOO contains 6,555 doodads. Tree, rock, lamp, fountain, wall and village-building positions are taken from that evidence. The forested western half and eastern settlement replace the former invented repeated grid of fifteen houses. Each dimension uses its own source placements.
+
+This remains a browser adaptation: source elevation is compressed into surface coloration, playable ground is level, and native decorative models are replaced with original voxel geometry. Trunk/rock/fountain/column footprints participate in authoritative navigation, while foliage above the trunks does not block walking. Narrow arterial routes, spawn areas and gateways receive explicit clearance; some overlapping source objects are omitted to keep these routes usable. Thus the seven native village-building placements can produce fewer visible houses after route clearance. Native pathing masks, exact height profiles and every doodad are not claimed to be reproduced.
+
+Nighttime uses moon-colored scene lighting, a material shader with subtle ground mist, restrained glowing windows/lamps and a dithered canopy near the controlled character. Instance batches bound draw calls across thousands of forest objects. Automated checks verify source anchors, real navigation corridors, collider-to-trunk geometry, realm switching and shader hooks. Browser visual/GPU compilation QA was unavailable in this session, so the shader's final rendered appearance still requires that check. Numeric layout extraction does not establish commercial redistribution rights for the original map design; review those rights before selling a source-faithful adaptation.
+
 - Native movement/pathing, projectile physics, camera, models and feedback are implemented with browser-specific code. Item casting is processed through validated commands; engine-specific cast-point/channel interruption is not reproduced for every native ability.
 - The Nova's `.25s` pulse cadence is a deliberate browser interpretation of the native damage/buff fields. It is tested as a bounded periodic area effect, not asserted to match every internal Warcraft engine tick.
 - Normal ambient difficulty is implemented. Additional native difficulty settings, scripted disruption events and every special victory/event branch are not all reproduced. Population throttling counts living browser creatures; the native group can retain old unit handles.
@@ -42,3 +50,14 @@ The full functional extraction is recorded in `ambient-facts.json`. Native drop 
 - Some native selection/control conveniences, such as commanding a zombie through the original control item, remain browser adaptations. Secret roles remain authoritative regardless of visual adaptations.
 
 Validation covers actual cast effects, resources and cooldowns, armor reversibility, visible/private field snapshots, dimensional transitions, bomb fuses, trap triggering, storage, resurrection, native ambient generation, repaired boss loot, concurrent D1 chat and optimistic state persistence. Model/icon coverage tests alone are not used to establish gameplay fidelity.
+
+
+## Readability and bot ambush adaptation
+
+The initial ground loot is deliberately capped at 28 caches across all three dimensions (12 normal, 10 Aether, 6 Omni). Spawn points are seeded, at least seven metres apart and at least nine metres from the player arrival point. The full 137-item catalog, recipes and native ambient/boss drop pools remain available; a run no longer places the entire eligible catalog on every map at once. These counts and spacing are browser readability/balance rules, not verified native quantities.
+
+The killer bot now treats two nearby combatants as a crowd. It withdraws before transforming, chooses an isolated visible victim, stages at least eight metres away, and waits for the actual Shift cooldown/resources. A revealed or badly wounded killer attempts only escape abilities it genuinely owns (Phase, Fade, Teleport or Sprint), preserves their real mana and cooldown rules, and delays another ambush. It can return to human form after reaching a clear location. These tactics are new browser AI, not a claim about native map AI.
+
+Shift keeps the same participant id, owner, position and health fraction. It emits a dedicated `phaseTransform` event containing the prior and next public appearance, facing and 1.1-second visual duration. Other viewers receive that silhouette event only when the transforming participant is visible to them; it does not disclose a hidden role or a distant hidden transformation. Environmental Shade/Spirit/etc. actors are explicitly marked as creatures in public packets and do not use the killer's Beast appearance. Ambient spawns also reject locations within fourteen metres of living players in that dimension.
+
+Navigation now uses the forest/rock footprints and village structures from the Phase world module. Per-game, per-dimension navigation objects are cached so the dense forest does not rebuild its collision index for every unit query. Body separation uses the shared solid-aware resolver, including recovery of embedded legacy positions. All caches stay outside multiplayer snapshots.

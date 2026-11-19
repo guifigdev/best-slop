@@ -1,0 +1,14 @@
+.git
+node_modules
+dist
+outputs
+.env
+.env.*
+!.env.example
+.sites-checkout
+data
+backups
+*.log
+**/*.w3x
+**/*.w3m
+__pycache__

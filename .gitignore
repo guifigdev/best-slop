@@ -6,3 +6,10 @@ outputs/
 .sites-checkout/
 __pycache__/
 *.pyc
+
+data/
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

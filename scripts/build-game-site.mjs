@@ -1,11 +1,18 @@
-import {build as viteBuild} from 'vite';
+import {build as viteBuild,loadEnv} from 'vite';
 import {build as bundle} from 'esbuild';
-import {readFile,writeFile,mkdir,readdir} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,readdir,copyFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
-await viteBuild({build:{outDir:'dist/client',emptyOutDir:true}});
+const buildEnv={...loadEnv('production',process.cwd(),'VITE_'),...process.env};
+await viteBuild({base:buildEnv.VITE_ASSET_BASE_URL||'/',build:{outDir:'dist/client',emptyOutDir:true}});
+await mkdir('dist/client/guides',{recursive:true});
+for(const name of ['HOSPEDAGEM.md','CONFIGURACOES.md','MONETIZACAO.md','RELATORIO_EXECUTIVO.md'])try{await copyFile('docs/'+name,'dist/client/guides/'+name);}catch(error){if(error.code!=='ENOENT')throw error;}
+await mkdir('dist/client/assets/font-licenses',{recursive:true});
+for(const name of ['dm-sans-OFL.txt','outfit-OFL.txt','README.txt'])await copyFile('src/assets/fonts/'+name,'dist/client/assets/font-licenses/'+name);
+await mkdir('outputs',{recursive:true});
+await writeFile('outputs/game-public-config.js','export default '+JSON.stringify({websocketUrl:buildEnv.VITE_SERVER_URL||'',phaseApiBase:buildEnv.VITE_PHASE_API_URL||'',assetBase:buildEnv.VITE_ASSET_BASE_URL||''})+';\n');
 const assets={};
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.ico':'image/x-icon','.json':'application/json'};
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.ico':'image/x-icon','.json':'application/json','.md':'text/plain; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 async function collect(dir,prefix=''){
  for(const entry of await readdir(dir,{withFileTypes:true})){
   const key=prefix+'/'+entry.name,full=path.join(dir,entry.name);

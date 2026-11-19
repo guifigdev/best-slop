@@ -1,7 +1,9 @@
 import assets from '../outputs/phase-site-assets.js';
 import {handlerPhaseRequest} from './phase-rooms.js';
+import publicConfig from '../outputs/game-public-config.js';
 
 export default {async fetch(request,env){
+ if(new URL(request.url).pathname==='/api/config')return Response.json({...publicConfig,hosting:'sites',configured:!!publicConfig.websocketUrl,features:{online:{status:publicConfig.websocketUrl?'configured':'external',guide:'online'},phase:{status:env?.DB?'ready':'external',guide:'workers'},r2:{status:publicConfig.assetBase?'configured':'optional',guide:'r2'},steam:{status:'external',guide:'steam'},android:{status:'external',guide:'android'},payments:{status:'not-implemented',guide:'monetization'}}},{headers:{'Cache-Control':'no-store'}});
  const api=await handlerPhaseRequest(request,env);if(api)return api;
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});
  const pathname=new URL(request.url).pathname;

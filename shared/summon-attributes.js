@@ -1,4 +1,4 @@
-const CUSTOM_HERO_MODES=new Set(['campaign','best','tower','war','linewars']);
+const CUSTOM_HERO_MODES=new Set(['campaign','best','tower','war','linewars','dungeon']);
 const KEYS=['str','int','dex','luk','vit','agi'];
 
 // A skill's rank still owns the creature's baseline. Inherited attributes are

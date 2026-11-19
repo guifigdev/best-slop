@@ -1,0 +1,13 @@
+name = "best-slop-assets"
+main = "assets-worker.js"
+compatibility_date = "2026-11-19"
+account_id = "a9cf0f539d37afe46de8c5d1aec58cdf"
+routes = [{ pattern = "assets.gfig.space", custom_domain = true }]
+
+[vars]
+PUBLIC_ASSET_ORIGINS = "https://play.gfig.space,https://gfig.space"
+PUBLIC_ASSET_PREFIX = "games"
+
+[[r2_buckets]]
+binding = "CLIENTS_BUCKET"
+bucket_name = "clients"

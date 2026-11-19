@@ -74,12 +74,15 @@ export function phaseKillerItemDetailMarkup(u,slot,state){
 }
 
 export function phaseKillerHelpMarkup(){
- return '<p>Phase Killer · identidades secretas. Os papéis são sorteados durante a partida. Um jogador é o assassino; os demais investigam e procuram equipamentos. Phase leva os viajantes a Aetherworld. O assassino pode mudar de forma e imitar a identidade e a voz de um habitante.</p><p>Botão direito move ou ataca. Clique em um baú para caminhar até ele. Q, W, E, R, D, F e C acionam sua barra; os livros abrem um grupo de poderes. 1–6 abrem os itens da mochila. Escolha Usar ou Equipar para ativar um item. Combinar permite escolher um segundo espaço; arrastar um item sobre outro também combina.</p><p>Enter abre a aba Vozes. O chat é compartilhado com a sala online. Fantasmas atravessam mundos e observam; falar custa mana e distorce sua voz. Para abrir o portal de Omniworld, combine os ingredientes no local indicado em Aetherworld. Consulte as receitas no Caderno.</p><p>Treino local usa bots. Salas online exigem o servidor. Valores e regras documentados de Phase Killer 1.2.8; arte e controles adaptados para navegador.</p>';
+ return '<p>Phase Killer · identidades secretas. Os papéis são sorteados durante a partida. Um jogador é o assassino; os demais investigam e procuram equipamentos. Phase leva os viajantes a Aetherworld. O assassino pode mudar de forma e imitar a identidade e a voz de um habitante.</p><p>Botão direito move ou ataca. Clique em um baú para caminhar até ele. Q, W, E, R, D, F e C acionam sua barra; os livros abrem um grupo de poderes. 1–6 abrem os itens da mochila. Escolha Usar ou Equipar para ativar um item. Combinar permite escolher um segundo espaço; arrastar um item sobre outro também combina.</p><p>Enter abre o chat transparente à esquerda; Enter envia e Esc fecha. O chat é compartilhado com a sala online. Fantasmas atravessam mundos e observam; falar custa mana e distorce sua voz. Para abrir o portal de Omniworld, combine os ingredientes no local indicado em Aetherworld. Consulte as receitas no Caderno.</p><p>Treino local usa bots. Salas online exigem o servidor. Valores e regras documentados de Phase Killer 1.2.8; arte e controles adaptados para navegador.</p>';
 }
+
+export function phaseKillerChatLogMarkup(messages=[]){return messages.slice(-80).map(m=>`<p data-pk-message="${esc(m.id)}" class="${m.ghost?'ghost':m.system?'system':''}"><b>${esc(m.name)}:</b> <span>${esc(m.text)}</span></p>`).join('');}
+export function phaseKillerChatOverlayMarkup(){return '<div id="pk-chat-log" role="log" aria-label="Mensagens da aldeia" aria-live="polite" aria-relevant="additions text"></div><button type="button" id="pk-chat-toggle" aria-controls="pk-chat-form" aria-expanded="false">Chat · Enter</button><form id="pk-chat-form" hidden><label for="pk-chat-input">Aldeia:</label><input id="pk-chat-input" maxlength="240" autocomplete="off" placeholder="Mensagem para a aldeia…"><button type="submit" aria-label="Enviar mensagem">Enviar</button><button type="button" id="pk-chat-close" aria-label="Fechar chat">×</button><small>Enter envia · Esc fecha</small></form>';}
 
 export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{},onEnd=()=>{},getRoom=()=>null}){
  let page='skills',selectedSkill=null,selectedGroup=null,selectedItem=null,combineFrom=null,aim=null,aimSlot=null,hoverSkill=null,inspect=null,lastDimension=null,ended=false;
- let chatDraft='',chatUnread=0,lastMessageId=null,lastChatHTML=null,lastContentHTML=null,shopHost=null;
+ let chatDraft='',chatOpen=false,lastChatHTML=null,lastContentHTML=null,shopHost=null,chatOverlay=null;
  const state=()=>getState?.();
  const hero=()=>{const s=state();return s?.units?.find(u=>u.id===s.players?.[getOwner()]);};
  const el=id=>globalThis.document?.getElementById(id);
@@ -87,7 +90,7 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
  const command=(type,extra={})=>send({type:'pk'+type,...extra});
  const itemSlotFor=key=>inventory(hero()).findIndex(e=>(ITEMS[e?.key]?.skills||[]).some(parent=>parent===key||groupMembers(parent).includes(key)));
  function cancel(){aim=null;aimSlot=null;hoverSkill=null;view.setInteraction?.('command');}
- function openPage(next){page=next;if(page==='chat')chatUnread=0;}
+ function openPage(next){page=next;}
  function openItem(slot){const u=hero();if(!inventory(u)[slot])return;selectedItem=slot;openPage('items');}
  function chooseSkill(key,slot=null){
   const u=hero(),s=SKILLS[key];if(!u||!s||!phaseKillerAvailableSkills(u).includes(key))return false;
@@ -116,7 +119,8 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
   if(pkCorpse&&u.pkRole==='killer'&&phaseKillerAvailableSkills(u).includes('A019'))chooseCorpse(pkCorpse,point);
  }
  function chooseCorpse(id,point){selectedSkill='A019';const status=phaseKillerSkillStatus(hero(),'A019',statusOptions(state()));if(status.disabled)toast(status.reason);else command('Cast',{skill:'A019',target:id,x:point.x,z:point.z});}
- function focusChat(){openPage('chat');render();el('pk-chat-input')?.focus();}
+ function focusChat(){if(chatOpen)return sendChat();cancel();chatOpen=true;ensureChat();const s=state(),u=hero();if(s&&u)renderChat(s,u);const log=el('pk-chat-log');if(log)log.scrollTop=log.scrollHeight;el('pk-chat-input')?.focus();return true;}
+ function closeChat(){const input=el('pk-chat-input');if(input)chatDraft=input.value;chatOpen=false;if(chatOverlay)chatOverlay.classList.remove('is-open');if(el('pk-chat-form'))el('pk-chat-form').hidden=true;el('pk-chat-toggle')?.setAttribute('aria-expanded','false');input?.blur();view.canvas?.focus?.({preventScroll:true});return true;}
  function hotkeys(){return Object.fromEntries([['M','move'],['S','stop'],['ENTER','chat'],...phaseKillerActionBar(hero()).map((key,i)=>[HOTKEYS[i],key])]);}
  function shortcut(type,value){
   if(type==='legacySkill'){
@@ -124,7 +128,7 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
    else if(value==='stop'){cancel();command('Stop');}
    else if(value==='chat')focusChat();else chooseSkill(value);
   }else if(type==='item')openItem(Number(value));
-  else if(type==='escape'){if(combineFrom!=null)combineFrom=null;else cancel();}
+  else if(type==='escape'){if(chatOpen)closeChat();else if(combineFrom!=null)combineFrom=null;else cancel();}
   else if(type==='stop'||type==='hold'){cancel();command('Stop');}
   else if(type==='move'||type==='attackMove'){cancel();aim='move';view.setInteraction?.('ground');}
   else if(type==='center'){const u=hero();if(u)view.focusPoint?.({...u,distance:48});}
@@ -133,7 +137,13 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
   const u=hero(),key=aim||hoverSkill,s=SKILLS[key];if(!u||!s||s.kind!=='active'||s.target==='self'||!phaseKillerAvailableSkills(u).includes(key))return null;
   const at=phaseKillerSkillAt(key,1);return {sourceId:u.id,key,mode:aim?'aim':'hover',skill:{...s,...at,castRange:at.range||8,target:s.target,radius:at.radius||0,previewShape:['boneBlast','aetherPulse','aethralLance','destructionBlast'].includes(s.family)?'line':null}};
  }
- function sendChat(){if(hero()?.pkGhost&&(hero().mana||0)<10){toast('O fantasma precisa de 10 de mana para falar.');return false;}const input=el('pk-chat-input'),message=String(input?.value??chatDraft).trim();if(!message)return false;if(command('Chat',{text:message})===false)return false;chatDraft='';if(input){input.value='';input.focus();}return true;}
+ function sendChat(){
+  const input=el('pk-chat-input'),message=String(input?.value??chatDraft).trim();
+  if(!message){closeChat();return false;}
+  if(hero()?.pkGhost&&(hero().mana||0)<10){toast('O fantasma precisa de 10 de mana para falar.');return false;}
+  if(command('Chat',{text:message})===false)return false;
+  chatDraft='';if(input)input.value='';closeChat();return true;
+ }
  function bindSpell(button,key,slot=null){button.onclick=()=>chooseSkill(key,slot);button.onpointerenter=()=>{hoverSkill=key;};button.onpointerleave=()=>{if(hoverSkill===key)hoverSkill=null;};button.onfocus=()=>{hoverSkill=key;};button.onblur=()=>{if(hoverSkill===key)hoverSkill=null;};}
  function inventoryMarkup(u){return Array.from({length:6},(_,slot)=>{const e=inventory(u)[slot],d=ITEMS[e?.key],locked=slot>=(u.inventorySlots??2),selected=selectedItem===slot&&page==='items';return `<button type="button" class="inventory-slot ${selected?'selected ':''}${combineFrom===slot?'combining':''}" data-pk-slot="${slot}" ${d&&!d.innate&&!u.pkGhost?'draggable="true"':''} ${locked?'disabled':''} aria-label="${esc((slot+1)+': '+(locked?'Espaço bloqueado':d?.name||'Espaço vazio'))}" aria-pressed="${selected}" title="${esc(locked?'Espaço bloqueado nesta forma':d?d.name+' · '+d.description:'Espaço vazio')}"><small>${slot+1}</small>${d?art('item',e.key):'<span aria-hidden="true">'+(locked?'▧':'+')+'</span>'}${d?.charges>0?'<em>×'+num(e.charges??d.charges)+'</em>':''}</button>`;}).join('');}
  function bindInventory(){for(const b of el('inventory')?.querySelectorAll('[data-pk-slot]')||[]){
@@ -145,10 +155,20 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
  function ensureShop(){
   const host=el('shop');if(!host)return false;
   if(shopHost===host&&el('pk-panel-content')?.parentNode===host)return true;
-  shopHost=host;lastContentHTML=null;lastChatHTML=null;
-  patchHTML(host,'<nav class="legacy-tabs pk-tabs" aria-label="Painel do personagem" id="pk-tabs"></nav><div id="pk-panel-content"></div><section class="pk-chat" id="pk-chat-panel" hidden><div class="pk-chat-heading"><h3>Vozes da aldeia</h3><small id="pk-chat-connection"></small></div><p class="pk-chat-hint" id="pk-chat-hint"></p><div id="pk-chat-log" role="log" aria-label="Mensagens da aldeia" aria-live="polite" aria-relevant="additions text"></div><form id="pk-chat-form"><label for="pk-chat-input">Mensagem para a aldeia</label><div class="pk-chat-compose"><input id="pk-chat-input" maxlength="240" autocomplete="off" placeholder="Converse, investigue ou despiste"><button type="submit">Enviar</button></div><small>Enter envia · seu texto permanece ao trocar de aba</small></form></section>',['id']);
-  const input=el('pk-chat-input');if(input){input.value=chatDraft;input.oninput=()=>{chatDraft=input.value;};input.onkeydown=e=>{e.stopPropagation();if(e.key==='Escape')input.blur();};}
-  const form=el('pk-chat-form');if(form)form.onsubmit=e=>{e.preventDefault();sendChat();};
+  shopHost=host;lastContentHTML=null;
+  patchHTML(host,'<nav class="legacy-tabs pk-tabs" aria-label="Painel do personagem" id="pk-tabs"></nav><div id="pk-panel-content"></div>',['id']);
+  return true;
+ }
+ function ensureChat(){
+  const world=el('world');if(!world)return false;
+  if(chatOverlay&&chatOverlay.parentNode===world)return true;
+  chatOverlay=el('pk-overlay-chat');
+  if(!chatOverlay||chatOverlay.parentNode!==world){chatOverlay=document.createElement('section');chatOverlay.id='pk-overlay-chat';chatOverlay.className='pk-overlay-chat';chatOverlay.setAttribute('aria-label','Chat da aldeia');chatOverlay.innerHTML=phaseKillerChatOverlayMarkup();world.append(chatOverlay);}
+  lastChatHTML=null;
+  const input=el('pk-chat-input');if(input){input.value=chatDraft;input.oninput=()=>{chatDraft=input.value;};input.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();sendChat();}else if(e.key==='Escape'){e.preventDefault();closeChat();}};}
+  const form=el('pk-chat-form');if(form){form.hidden=!chatOpen;form.onsubmit=e=>{e.preventDefault();sendChat();};form.onpointerdown=e=>e.stopPropagation();}
+  const toggle=el('pk-chat-toggle');if(toggle)toggle.onclick=focusChat;
+  const close=el('pk-chat-close');if(close)close.onclick=closeChat;
   return true;
  }
  function skillsMarkup(u,s){
@@ -192,19 +212,17 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
   const disguise=host.querySelector('[data-pk-disguise]');if(disguise)disguise.onclick=()=>{const owner=el('pk-disguise')?.value;if(owner&&hero()?.pkRole==='killer')command('Disguise',{owner});else toast('Escolha um habitante para imitar.');};
  }
  function renderChat(s,u){
-  const p=s.phaseKiller,messages=p?.messages||s.phaseLobbyMessages||[],latest=messages.at(-1)?.id;
-  if(latest!=null&&latest!==lastMessageId){if(lastMessageId!=null&&page!=='chat')chatUnread=Math.min(99,chatUnread+Math.max(1,messages.length-messages.findIndex(m=>m.id===lastMessageId)-1));lastMessageId=latest;}
-  const log=el('pk-chat-log'),html=messages.length?messages.map(m=>`<p data-pk-message="${esc(m.id)}" class="${m.ghost?'ghost':''}"><b>${esc(m.name)}</b><span>${esc(m.text)}</span></p>`).join(''):'<p class="pk-chat-empty">A aldeia ainda está em silêncio.</p>';
+  ensureChat();const p=s.phaseKiller,messages=p?.messages||s.phaseLobbyMessages||[],log=el('pk-chat-log'),html=phaseKillerChatLogMarkup(messages);
   if(log&&html!==lastChatHTML){const atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<35,scroll=log.scrollTop;patchHTML(log,html,['data-pk-message']);lastChatHTML=html;log.scrollTop=atBottom?log.scrollHeight:scroll;}
-  text('pk-chat-connection',getRoom()?'Sala '+getRoom():'Treino local');
-  text('pk-chat-hint',u.pkGhost?'Sua voz custa 10 de mana e chega distorcida aos habitantes.':'Converse com a aldeia. Identidades e vozes podem ser imitadas.');
-  const input=el('pk-chat-input'),submit=el('pk-chat-form')?.querySelector('button');if(input)input.disabled=!!p?.finished;if(submit)submit.disabled=!!p?.finished;
+  chatOverlay?.classList.toggle('is-open',chatOpen);
+  const input=el('pk-chat-input'),form=el('pk-chat-form'),submit=form?.querySelector('[type=submit]');if(input){input.disabled=!!p?.finished;input.placeholder=u.pkGhost?'Falar custa 10 de mana…':'Mensagem para a aldeia…';}if(form)form.hidden=!chatOpen;if(submit)submit.disabled=!!p?.finished;
+  el('pk-chat-toggle')?.setAttribute('aria-expanded',String(chatOpen));
  }
  function renderPanel(s,u){if(!ensureShop())return;
   renderChat(s,u);
-  const tabMarkup=[['skills','Poderes'],['items','Mochila'],['journal','Caderno'],['people','Habitantes'],['chat','Vozes'+(chatUnread?' · '+chatUnread:'')]].map(([key,label])=>`<button type="button" data-pk-page="${key}" class="${page===key?'selected':''}" aria-current="${page===key?'page':'false'}">${label}</button>`).join('');
+  const tabMarkup=[['skills','Poderes'],['items','Mochila'],['journal','Caderno'],['people','Habitantes']].map(([key,label])=>`<button type="button" data-pk-page="${key}" class="${page===key?'selected':''}" aria-current="${page===key?'page':'false'}">${label}</button>`).join('');
   patchHTML(el('pk-tabs'),tabMarkup,['data-pk-page']);for(const b of el('pk-tabs').querySelectorAll('[data-pk-page]'))b.onclick=()=>openPage(b.dataset.pkPage);
-  const content=el('pk-panel-content'),chat=el('pk-chat-panel');content.hidden=page==='chat';chat.hidden=page!=='chat';if(page==='chat')return;
+  const content=el('pk-panel-content');
   const html=page==='skills'?skillsMarkup(u,s):page==='items'?itemsMarkup(u,s):page==='journal'?journalMarkup():peopleMarkup(s);
   if(html!==lastContentHTML){const scroll=el('shop').scrollTop;patchHTML(content,html,['id','data-pk-skill','data-pk-cast','data-pk-form','data-pk-item-cast','data-pk-drop','data-pk-combine']);lastContentHTML=html;el('shop').scrollTop=scroll;bindPanel();}
  }
@@ -219,11 +237,11 @@ export function createPhaseKillerUI({send,getState,getOwner,view={},toast=()=>{}
   text('gold',u.pkRole==='killer'?num(u.pkPower)+' poder':world);text('slots',u.pkRole==='killer'?num(u.pkSouls)+' almas · '+num(u.pkBlood)+' sangue':inventory(u).length+' / '+(u.inventorySlots??2)+' itens');text('point-badge','');text('heroname',u.name||'Habitante');if(el('mini-portrait'))patchHTML(el('mini-portrait'),portrait(u));text('level',u.pkGhost?'FANTASMA':u.pkMonster?FORMS[u.pkForm]?.name||'FORMA':'HABITANTE');
   text('hptext',Math.ceil(u.hp||0)+' / '+Math.ceil(u.maxHp||0));text('mptext',Math.floor(u.mana||0)+' / '+Math.floor(u.maxMana||0));if(el('hpbar'))el('hpbar').style.width=Math.min(100,Math.max(0,(u.hp||0)/Math.max(1,u.maxHp||0)*100))+'%';if(el('mpbar'))el('mpbar').style.width=Math.min(100,Math.max(0,(u.mana||0)/Math.max(1,u.maxMana||0)*100))+'%';text('arena-name','PHASE KILLER · '+world.toUpperCase());const heading=document.querySelector('.worldhead h1');if(heading)heading.textContent=s.phase==='preparation'?'Reúna os habitantes':p?.stage==='gathering'?'Explore antes do sorteio':u.pkGhost?'A história continua do outro lado':'Quem está escondendo sua verdadeira forma?';text('message',p?s.message||'':'Explore três mundos, investigue identidades e sobreviva à caçada. Os papéis são sorteados em segredo após o início.');text('wave-label',p?.stage==='gathering'?'PAPÉIS EM':'TEMPO');text('wave',clock(p?.remaining??s.timer));text('wave-limit','');
   const ready=el('ready');if(ready){ready.disabled=s.phase!=='preparation';ready.textContent=s.phase==='preparation'?'Estou pronto':p?.finished?'Partida encerrada':'Investigação em andamento';}
-  text('phasetext',getRoom()?'Sala '+getRoom()+' · Enter abre as Vozes':s.options?.phaseTraining?'Treino local com bots':'Reúna os jogadores e escolha Estou pronto');text('position',world);text('narrator-hint','Nem toda voz pertence a quem parece falar.');text('order-status',aim?'Escolha '+(SKILLS[aim]?.target==='unit'?'um alvo':'um local')+' · Esc cancela':combineFrom!=null?'Escolha o segundo item da combinação':u.destination?'Caminhando por '+world:'Direito: mover / atacar · clique nos baús');
+  text('phasetext',getRoom()?'Sala '+getRoom()+' · Enter abre o chat':s.options?.phaseTraining?'Treino local com bots':'Reúna os jogadores e escolha Estou pronto');text('position',world);text('narrator-hint','Nem toda voz pertence a quem parece falar.');text('order-status',aim?'Escolha '+(SKILLS[aim]?.target==='unit'?'um alvo':'um local')+' · Esc cancela':combineFrom!=null?'Escolha o segundo item da combinação':u.destination?'Caminhando por '+world:'Direito: mover / atacar · clique nos baús');
   const bar=phaseKillerActionBar(u);if(el('abilities')){patchHTML(el('abilities'),bar.map((key,i)=>{const a=SKILLS[key],status=phaseKillerSkillStatus(u,key,statusOptions(s));return `<button type="button" class="ability ${aim===key||selectedGroup===key?'active ':''}${status.disabled?'unavailable':''}" data-pk-cast="${key}" aria-label="${esc(HOTKEYS[i]+': '+a.name)}" title="${esc('['+HOTKEYS[i]+'] '+skillTooltip(u,key,s))}"><small>${HOTKEYS[i]}</small>${art('skill',key)}<em>${a.kind==='group'?'Opções':status.cooldown?Math.ceil(status.cooldown)+'s':a.name}</em></button>`;}).join(''),['data-pk-cast']);for(const b of el('abilities').querySelectorAll('[data-pk-cast]'))bindSpell(b,b.dataset.pkCast);}
   if(el('inventory')){patchHTML(el('inventory'),inventoryMarkup(u),['data-pk-slot']);bindInventory();}
   renderPanel(s,u);
   if(p?.finished&&!ended&&el('world')){ended=true;const card=document.createElement('section');card.id='endmodal';card.className='end-card pk-results';card.innerHTML=`<div class="eyebrow">PHASE KILLER</div><h3>${p.winner==='killer'?'A aldeia caiu':'O assassino foi detido'}</h3><p>${esc(s.message||'')}</p><div>${(p.roster||[]).map(t=>`<p><b>${esc(t.name)}</b> · ${esc(roles[t.role]||'Habitante')}</p>`).join('')}</div><button type="button" class="primary">Nova partida</button>`;el('world').append(card);card.querySelector('button').onclick=onEnd;}
  }
- return {render,point,hotkeys,shortcut,skillPreview,ready:()=>command('Ready'),cancel,sendChat,setHoveredSkill(key){hoverSkill=key;},reset(){cancel();page='skills';selectedSkill=null;selectedGroup=null;selectedItem=null;combineFrom=null;inspect=null;lastDimension=null;ended=false;chatDraft='';chatUnread=0;lastMessageId=null;lastContentHTML=null;lastChatHTML=null;shopHost=null;}};
+ return {render,point,hotkeys,shortcut,skillPreview,ready:()=>command('Ready'),cancel,sendChat,openChat:focusChat,closeChat,isChatOpen:()=>chatOpen,setHoveredSkill(key){hoverSkill=key;},reset(){cancel();page='skills';selectedSkill=null;selectedGroup=null;selectedItem=null;combineFrom=null;inspect=null;lastDimension=null;ended=false;chatDraft='';chatOpen=false;chatOverlay?.remove();chatOverlay=null;lastContentHTML=null;lastChatHTML=null;shopHost=null;}};
 }

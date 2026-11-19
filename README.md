@@ -1,12 +1,18 @@
 # Custom Hero — Pátio dos Nove Reinos
 
-Jogo independente para navegador, com combate RTS e animais voxel originais. Arte sem texturas, cores de vértice, corpos agrupados, terreno e plateia instanciados. Movimentos usam clipes de poses pré-calculadas a 8 Hz; não é um pipeline de Blender/VAT.
+Jogo independente para navegador, com combate RTS e personagens e bestas voxel originais. Arte sem texturas, cores de vértice, corpos agrupados, terreno e plateia instanciados. Movimentos usam clipes de poses pré-calculadas a 8 Hz; não é um pipeline de Blender/VAT.
+
+## Produção e modos novos
+
+Comece pelo [relatório executivo](docs/RELATORIO_EXECUTIVO.md), [tutorial VPS/CI](docs/HOSPEDAGEM.md), [configuração de integrações](docs/CONFIGURACOES.md) e [opções comerciais](docs/MONETIZACAO.md). O botão Configuração no jogo mostra pendências externas.
+
+[Dungeon](docs/DUNGEON.md) oferece andares procedurais e grupos de até quatro heróis; [Bloody Tournament](docs/BLOODY_TOURNAMENT.md) combina recrutamento, formações e sete rodadas de exércitos. O servidor VPS usa salas autoritativas, chat, retomada de sessão e checkpoints persistentes. Steam P2P, instaladores e compras comerciais ainda não estão integrados.
 
 ## Jogos e novas regras
 
-O menu agora tem três jogos. **Castle Fight** usa uma simulação de construção separada, com duas equipes de dois jogadores, uma ou duas lanes, construtor invulnerável sem técnicas/atributos de combate, Blink, demolição, evoluções, construções produtoras e tropas automáticas. A referência fixada é **v1.14b**: dez raças jogáveis, 161 registros de construções (incluindo evoluções), 107 tropas, nove itens da loja original e a matriz de ataque/armadura foram lidos do mapa. As estruturas disponíveis incluem produtores, torres, cura e economia; efeitos complexos ainda ausentes ficam desabilitados. O catálogo não significa reprodução integral da engine original. Consulte [fontes e limites](docs/CASTLE_FIGHT_REFERENCE.md) e [regras da adaptação](docs/CASTLE_FIGHT.md).
+O menu inclui Survival, Line Wars, Castle Fight, Tree Tag, Warlock, Kodo Tag, Phase Killer, Dungeon e Bloody Tournament. **Castle Fight** usa uma simulação de construção separada, com duas equipes de dois jogadores, uma ou duas lanes, construtor invulnerável sem técnicas/atributos de combate, Blink, demolição, evoluções, construções produtoras e tropas automáticas. A referência fixada é **v1.14b**: dez raças jogáveis, 161 registros de construções (incluindo evoluções), 107 tropas, nove itens da loja original e a matriz de ataque/armadura foram lidos do mapa. As estruturas disponíveis incluem produtores, torres, cura e economia; efeitos complexos ainda ausentes ficam desabilitados. O catálogo não significa reprodução integral da engine original. Consulte [fontes e limites](docs/CASTLE_FIGHT_REFERENCE.md) e [regras da adaptação](docs/CASTLE_FIGHT.md).
 
-No Castle Fight, cada animal tem raça fixa e descrição própria: capivara humana, coelha da União Élfica, raposa dos Elfos Noturnos, tartaruga naga, coruja nórdica e guaxinim mecânico. Escolher o personagem define o catálogo; o seletor de raça independente foi removido.
+No Castle Fight, cada construtor tem identidade visual da sua raça. Escolher o construtor define o catálogo de estruturas; o seletor de raça independente foi removido.
 
 O Line Wars conserva seu campo de 63 × 112 metros, agora com **exatamente dois corredores**, sem distrito lateral paralelo. Oito casas ficam em cada terraço atrás da entrada correspondente. O campo do Survival cresceu de 16 para 18 metros de raio jogável. Pinheiros, bétulas, pedras e pedras rúnicas são assets voxel compartilhados pelos três jogos, com colisões reais e geração determinística; as arenas isoladas recebem o mesmo arranjo relativo para preservar a comparação entre competidores.
 
@@ -17,9 +23,7 @@ O menu separa **Custom Hero Survival** e **Custom Hero Line Wars**. Survival con
 
 Campanha e Best of All dão a cada competidor um cenário físico separado, inclusive no mercado. Equipes compartilham sua arena; cooperação compartilha o campo. O cliente mostra a instância local e converte os comandos de volta para as coordenadas do servidor. Os rivais se reúnem somente nos confrontos PvP. Retratos com vida e nível permitem visitar a arena de cada competidor; Espaço/F1 retorna ao próprio herói. Ao passar o mouse, o nome aparece acima da vida com a cor da equipe: vermelho, azul, amarelo, ciano e magenta.
 
-As seis técnicas iniciais dos heróis são **compartilhadas entre jogadores compatíveis**: Passo do Jotun, Martelo de Thor, Flechas de Skadi, Espinhos de Yggdrasil, Corrente de Mjolnir e Corte do Einherjar. Cada animal sempre começa com a sua técnica original. Cada herói mantém apenas uma cópia de cada técnica, com melhorias independentes. As demais técnicas pertencem a **um único herói por partida**; substituir uma delas libera sua reserva. Técnicas de monstros e invocações não consomem reservas de jogadores.
-
-Heróis usam os arquétipos físico corpo a corpo, físico à distância ou mágico. Habilidades ofensivas físicas e mágicas não cruzam essas classes; Flechas de Skadi e ricochete são exclusivos dos físicos à distância. Vampirismo e algumas passivas defensivas são comuns. Catálogo, ofertas, espólios e combate validam a mesma regra, incluindo Line Wars. Veja [a matriz de arquétipos](docs/ARCHETYPES.md) e [as regras de combate](docs/COMBAT.md). O hover/foco das habilidades e a mira mostram seu alcance e formato reais. Espólios no chão usam as cinco cores de raridade; um único efeito negativo dá uma leve tonalidade ao animal, removida quando há duas ou mais categorias negativas.
+Os heróis nórdicos podem montar builds híbridas físicas, mágicas e defensivas. Cada herói mantém apenas uma cópia de cada técnica; técnicas obtíveis por espólios podem ser compartilhadas entre heróis. As demais respeitam a reserva da partida. A interface mostra disponibilidade e motivos de bloqueio. Invocações herdam os seis atributos do dono, incluindo crescimento de vida.
 
 Espólios têm cinco raridades: Comum, Raro, Épico, Lendário e Heroico. A potência cresce em 0/5/10/15/20%, incluindo dano, cura, invocações, passivas, barreiras e alcance de deslocamentos; técnicas ativas também recarregam proporcionalmente mais rápido. A raridade não aumenta a duração de atordoamentos nem muda as fórmulas de atributos. Um fragmento superior pode melhorar a raridade de uma técnica que já está N5. Reciclar rende 1/2/3/5/8 essências. Se já conhece a técnica, pode convertê-la em um tomo físico de 40/70/110/180/280 XP: ele ocupa a mochila e é consumido no mercado. Herança de nível por essências não herda a raridade anterior.
 
@@ -31,7 +35,7 @@ Line Wars usa 16 receitas inspiradas em papéis das quatro raças de Warcraft II
 
 ## Executar
 
-Requer Node 22.12+ ou 24:
+Requer Node 24 para servidor, SQLite e ferramentas de produção:
 
 ```sh
 npm install
