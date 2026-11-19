@@ -79,7 +79,7 @@ Isso **não equivale a fidelidade integral do executável original**. As seguint
 - A arena circular de 22 unidades, o cronograma de redução, as posições de pilares e o limite local de quatro jogadores são autorais. O original tem vários terrenos, modos e comandos de host.
 - Dano, recargas e números visíveis por nível foram extraídos, mas nem todas as velocidades, raios e regras secundárias de cada variante foram auditadas de forma independente. Algumas famílias usam parâmetros de trajetória compartilhados, registrados como adaptação no catálogo.
 - As variantes alternativas por coluna e os upgrades de Ultimate não estão implementados. Registros residuais e cosméticos dos objetos não foram anunciados como magias disponíveis.
-- A rotação da curva de Arc, divisão em cinco fragmentos, espelhos simplificados, captura de Control e cura de Vector são aproximações funcionais. Há diferenças no detalhe da acumulação de veneno/queimadura, maldições, impulso e interação entre projéteis. Não há invisibilidade de rede completa em Wind Walk.
+- A rotação da curva de Arc, divisão em cinco fragmentos e espelhos simplificados são aproximações funcionais. Controle, Vetor e demais rotinas auditadas abaixo substituem as aproximações anteriores. Há diferenças no detalhe da acumulação de veneno/queimadura, maldições, impulso e interação entre projéteis. Não há invisibilidade de rede completa em Wind Walk.
 - Pilares são estáticos e destrutíveis com HP provisório. O modo original inclui física adicional de obstáculos e combos de projéteis ainda ausentes.
 - O formato de placar local usa vitórias de rodada; o desempate final com rodada extra, presets competitivos, assistências e comandos de host do original não estão implementados.
 - O primeiro inventário de quatro espaços e a abertura direta de seis por uma pesquisa condensam a apresentação da pesquisa de inventário original. Venda e restrições de itens foram preservadas quando verificadas; alguns modificadores secundários de vulnerabilidade e interações entre maldições e equipamentos continuam incompletos.
@@ -113,3 +113,33 @@ As pesquisas originais `war3map.w3q` agora estão disponíveis na loja entre rod
 Cada nível individual também soma **5% de regeneração** e reduz o recuo recebido em **2,5%**. São três níveis totais por compra de Jack. O bônus de regeneração multiplica a regeneração após equipamentos; o alcance soma as maestrias com a penalidade do Helmet antes de formar o multiplicador. A duração não altera os avisos de Meteor nem a canalização fixa da magia pessoal. Teleport e Meteor mantêm seus alcances fixos originais. Homing usa seu modificador especial de duração de voo de 1,5 vezes o bônus de alcance.
 
 Fontes: preços e limites dos quatro objetos de pesquisa; handler JASS de pesquisas nas linhas **19650–19706**; regeneração `GE` nas linhas **5148–5151**; roubo de vida nas linhas **4310–4311**, com cura e recuperação de metade do valor em pontos de dano em `hR`, linhas **1902–1908**; alcance fixo de Teleport em `yD`, linhas **8805–8834**, e de Meteor em `wd`, linhas **7913–7928**. A cobertura de maestrias se aplica às famílias de magias implementadas; as diferenças de trajetória e interações secundárias já declaradas acima continuam válidas.
+
+## Auditoria de comportamento de 19/11/2026
+
+Foi comparada a execução das famílias com o JASS da mesma revisão 1.02. As correções abaixo usam callbacks e também as regras compartilhadas de colisão e de tempo; olhar somente o callback de uma magia pode esconder filtros de equipe ou reflexões executadas por pilares.
+
+| Família | Comportamento implementado nesta auditoria | Evidência no JASS legível |
+| --- | --- | --- |
+| Vínculo / Hook | Gancho ligado visualmente ao usuário durante voo e retorno. Prende mago ou pilar, mantém o elo sem timeout arbitrário de 4s e puxa o alvo, ou puxa o conjurador até o pilar. Repetir Y recolhe o gancho; depois cancela ou solta o elo mesmo durante recarga. | fF 10183–10204, IF 10048–10058, BF 10082–10100, movimento 5346–5458, NN 3207–3223 |
+| Controle / Enemy cast | Orbe segue voando depois de amaldiçoar o inimigo; os feitiços do afetado passam a mirar na posição atual do orbe. Não converte os projéteis já lançados pela equipe. | QF 10359–10378, pF 10323–10344, DG 12179–12205 |
+| Domo | Entidade independente, raio 180 nativos, 4s × duração e metade do movimento voluntário inicial. Reflete radialmente projéteis inimigos que entram, com metade da velocidade; não impede pessoas caminhando. | Rg 10815–10839, Og 10759–10812, filtro externo oc 5508–5510 |
+| Vetor | Marca por 6s; ao ultrapassar 225 nativos redireciona o impulso para a marca, preservando sua magnitude. Cura somente acima do limiar nativo de impulso 16. | Vg/Eg 10724–10751, ng 10698–10722 |
+| Deslocamento temporal | Mantém cura recebida depois da conjuração e recupera a fração original dos pontos de dano; quebra elos no retorno, não ao criar a marca. | Hg 11054–11124 |
+| Drenar / Slow | Dano e lentidão em inimigos, cura/velocidade em aliados, mudança de direção no fim do primeiro trecho e cura própria entregue por um orbe que retorna sem colisões. Mantém a cura imediata adicional da maestria. | Jf 9443–9476, gf 9284–9329, Hf 9399–9433, Ff 9267–9282, lb 4270–4315 |
+| Gravidade / Dark Matter | Atração até 450 nativos, dano até 250 e desvio de projéteis até 600. Velocidade 400 e vida 2,25s × alcance. Não adiciona cura integral; aplica somente a maestria de roubo de vida existente. | eF 9879–9890, zf 9840–9875, KI 2530, Mb 4317–4357 |
+
+O pulso `te` ocorre a cada **0,18 s**, não a cada 0,1 s: `oc` incrementa um contador a cada 0,03 s e ativa `te` a cada seis passos (5252–5267, timer 5694). Vínculo e Gravidade usam esse pulso. O Vínculo tem dano maior nos primeiros instantes, reduzindo até o valor-base por pulso do catálogo. A interface mostra o dano-base por segundo como valor por pulso dividido por 0,18.
+
+A física compartilhada também confirma que Gravidade e Drenar ricocheteiam elasticamente em pilares, preservando dono, equipe e velocidade (`kc` 6028 → `Vc` 5698–5737, `Ov=1`). O Domo não reflete projéteis aliados no padrão: o filtro externo impede que a colisão aliada alcance `Og`, apesar de `Og` não repetir o filtro.
+
+Escudo, Ímpeto, Domo e Espelhos rompem vínculos inimigos recebidos ao conjurar, preservando o elo lançado pelo próprio jogador. Vetor rompe recebidos somente ao disparar; Deslocamento temporal rompe recebidos e o próprio elo ao retornar. A magia pessoal pode romper o Hook de um inimigo que está na lava.
+
+O placar de encerramento ordena os pontos acumulados e mantém posições compartilhadas em empates. Os pontos continuam sendo vitórias de rodada, sem criar bônus por abates. Avatares e pontuações vêm do estado da partida.
+
+### Limites que continuam explícitos
+
+A auditoria percorreu as 30 famílias na implementação. As sete famílias acima receberam confronto direto com as rotinas indicadas; isso não certifica equivalência integral de todas as 30. As variantes alternativas Induction, Weaken, Force Field e Silence ainda não são opções de seleção. Permanecem aproximações já declaradas em Arc, espelhos, projéteis especiais, efeitos secundários de itens e algumas interações de maldições/colisões. Controle redireciona a mira e reduz a duração das magias durante o efeito; outros multiplicadores secundários do original não foram todos reproduzidos. Os passos variáveis do navegador também aproximam as integrações físicas originais de 0,03 s.
+
+### Regressão de inicialização corrigida
+
+A seleção de construções acessava `snapshot.units` durante a prévia inicial, quando ainda não existe partida. A exceção interrompia a primeira animação e deixava cenário vazio em todos os modos. O acesso passou a aceitar estado ausente. O teste de primeira renderização agora percorre prévia vazia e cada um dos seis jogos, incluindo a troca Warlock → Kodo Tag → Survival.

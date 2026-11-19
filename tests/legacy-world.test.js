@@ -7,6 +7,11 @@ import {TREE_TAG_BUILDINGS} from '../shared/tree-tag-catalog.js';
 function treeState(){return{time:1,options:{mode:'treetag'},treeTag:{map:{width:94,depth:94,minX:-47,maxX:47,minZ:-47,maxZ:47,prison:{x:0,z:0,radius:2}},trees:[{id:1,x:-4,z:2,scale:1,alive:true},{id:2,x:7,z:4,kind:'pine',alive:true},{id:3,x:3,z:3,alive:false}],buildings:[{id:10,key:'eC09',x:0,z:8,w:2,d:2,alive:true,workProgress:.25}]}};}
 const checkMatrices=mesh=>{const matrix=new T.Matrix4();for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,matrix);assert.ok(matrix.elements.every(Number.isFinite));}};
 
+test('the first animation frame before choosing a game accepts an absent snapshot and every mode can render afterwards',()=>{
+ const scene=new T.Scene(),view=createLegacyWorld({scene});for(const empty of [null,undefined])assert.doesNotThrow(()=>view.update(empty,0,'local'));assert.equal(view.root.visible,false);
+ for(const mode of ['campaign','linewars','castlefight','treetag','warlock','kodotag']){assert.doesNotThrow(()=>view.update(null,0,'local'));assert.doesNotThrow(()=>view.update({options:{mode},units:[],players:{},time:1},1,'local'),mode);assert.equal(view.root.visible,['treetag','warlock'].includes(mode));}view.dispose();
+});
+
 test('Tree Tag forest uses two instanced tree batches, cached floor and matching footprint picking',()=>{
  const scene=new T.Scene(),view=createLegacyWorld({scene}),s=treeState();view.update(s,1);
  const forest=view.root.getObjectByName('tree-tag-forest');assert.equal(forest.children.length,2);assert.ok(forest.children.every(m=>m.isInstancedMesh));
