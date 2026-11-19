@@ -46,6 +46,8 @@ O registro `ti[0..9]` / `Go[0..9]` no JASS confirma **dez** raças:
 | `nightelf` | Night Elf | `h089` |
 | `mech` | Mechanical | `h06P` |
 
+As dez raças registradas estão disponíveis na seleção de construtores. Os seis animais anteriores mantêm suas raças; Bork (javali orc), Morr (corvo dos mortos-vivos), Azar (leão do Caos) e Varg (lobo corrompido) completam o elenco com modelos e retratos próprios. A identidade de construtor é separada dos seis heróis de combate e acompanha a partida e os snapshots online. Cada construtor acessa o catálogo da sua raça e não troca de raça durante a partida. A IA também pode escolher qualquer uma das dez.
+
 Há um objeto chamado **Nature Builder** (`h01A`) no arquivo de objetos, mas ele não aparece nesse registro. Por isso não foi apresentado como raça selecionável. Esta distinção entre objeto residual e conteúdo jogável é relevante para outras extrações.
 
 O catálogo cobre os menus `ubui` desses builders e as cadeias `uupt` de melhoria: **161 entradas de construção**, incluindo melhorias e cópias por raça de estruturas compartilhadas como Treasure Box; **107 perfis de tropas** vinculadas a essas construções; e os **14 objetos de item** encontrados. Isso não significa que 161 habilidades especiais tenham sido reproduzidas pelo motor.

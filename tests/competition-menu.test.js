@@ -33,3 +33,14 @@ test('both format groups expose native labelled radio choices with one default a
   for(const name of Object.keys(f.groups)){assert.match(html,new RegExp('<fieldset[^>]+id="'+name+'"'));const controls=[...html.matchAll(new RegExp('<input[^>]+name="'+name+'"[^>]*>','g'))].map(m=>m[0]);assert.equal(controls.length,2);assert.equal(controls.filter(tag=>/\schecked(?:\s|>)/.test(tag)).length,1);for(const tag of controls){assert.match(tag,/type="radio"/);const title=tag.match(/aria-labelledby="([^"]+)"/)[1];assert.ok(html.includes('id="'+title+'"'));for(const description of tag.match(/aria-describedby="([^"]+)"/)[1].split(' '))assert.ok(html.includes('id="'+description+'"'));}}
  }finally{globalThis.document=previous;}
 });
+
+
+test('switching games notifies the character picker and a locked party cannot replace its roster',()=>{
+ const f=fixture(),previous=globalThis.document;globalThis.document=f.document;
+ try{
+  const calls=[],menu=installCompetitionMenu({connect(){},getSocket(){return null;},onGameChange:kind=>calls.push(kind)});
+  f.kinds[2].click();f.kinds[1].click();f.kinds[0].click();assert.deepEqual(calls,['castlefight','linewars','survival']);
+  menu.renderParty({code:'TEST',host:'p',players:[{id:'p',hero:'knight'}],options:{teamSize:2,teamCount:2,clashEvery:5},queued:false},'p');
+  f.kinds[2].onclick();assert.equal(calls.length,3);
+ }finally{globalThis.document=previous;}
+});

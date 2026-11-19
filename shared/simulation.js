@@ -1,3 +1,4 @@
+import {CASTLE_BUILDERS,castleBuilderFor} from './castle-builders.js';
 import {animalBasicProjectile} from './animal-projectiles.js';
 import {freshShopStock,stockForHero} from './shop-stock.js';
 import {lineDefenseThink} from './line-defense.js';
@@ -46,12 +47,13 @@ export class Game {
  heroes(){return this.units.filter(u=>u.hero&&!u.summon);}
  player(id){return this.units.find(u=>u.id===this.players[id]);}
  addPlayer(id,type='knight',name='Aventureiro',bot=false,squad=null){
-  if(this.players[id]||!Object.hasOwn(HEROES,type)||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
-  const h=HEROES[type],i=Object.keys(this.players).length,startSkill=h.skill;
-  const u={id:this.id(),owner:id,hero:type,name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[type],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(type),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
+  const builder=this.options.mode==='castlefight'?castleBuilderFor(type):null,baseHero=builder?.hero||type;
+  if(typeof type!=='string'||this.players[id]||(this.options.mode==='castlefight'?!builder:!Object.hasOwn(HEROES,type))||Object.keys(this.players).length>=capacity(this.options)||this.phase!=='preparation'||this.wave!==0)return false;
+  const h=HEROES[baseHero],i=Object.keys(this.players).length,startSkill=h.skill;
+  const u={id:this.id(),owner:id,hero:baseHero,...(builder?{castleBuilderKey:builder.key}:{}),name:String(name).slice(0,20),bot,size:({knight:1.05,mage:.88,ranger:.94,turtle:1.12,owl:.87,raccoon:.92})[baseHero],seat:i,squad:squad||Math.floor(i/this.options.teamSize)+1,score:0,team:1,x:-4+(i%5)*2,z:-8.8,hp:h.hp,maxHp:h.hp,mana:h.mana,maxMana:h.mana,damage:h.damage,armor:h.armor,range:h.range,speed:h.speed,interval:h.interval,cd:0,stun:0,skills:[startSkill],skillLevels:{[startSkill]:1},skillRarities:{},cooldowns:{},inventory:[],attributes:baseAttributes(baseHero),attributePoints:6,skillPoints:0,essence:0,techniqueOffers:[],gold:1100,level:1,xp:0,kills:0,alive:true,order:'auto',botBuyAt:this.time+12+i*2};
   recompute(u,this.time);if(this.options.mode==='castlefight')this.setupCastleBuilder(u);this.players[id]=u.id;this.units.push(u);u.team=this.homeTeam(u);this.setupHome(u,-4+(i%5)*2,-8.8);if(this.voxelMap){u.marketShops=this.voxelMap.markers.shops;const home=this.voxelMap.markers.heroSpawn||this.voxelMap.markers.fountain,route=this.voxelMap.markers.routes[i%2],point=this.options.lineTeams?{x:route?.portal?.x??route?.spawn.x??home.x,z:home.z}:home;u.x=(u.cell?.x||0)+point.x;u.z=(u.cell?.z||0)+point.z;}this.prepareLineTerrain?.();return true;
  }
- addBots(count=3){const types=['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[i%types.length];this.addPlayer(`bot-${i}`,type,HEROES[type].name+' '+(i+1),true);}}
+ addBots(count=3){const castle=this.options.mode==='castlefight',types=castle?Object.keys(CASTLE_BUILDERS):['raccoon','owl','turtle','ranger','mage','knight'];for(let i=0;i<count;i++){const type=types[castle?Math.floor(this.random()*types.length):i%types.length];this.addPlayer(`bot-${i}`,type,(castle?castleBuilderFor(type):HEROES[type]).name+' '+(i+1),true);}}
  restock(){this.stock=freshShopStock();this.teamStock=this.options.mode==='linewars'&&this.options.lineTeams?{1:freshShopStock(true),2:freshShopStock(true)}:null;this.shopVisit++;}
  stockFor(u){return stockForHero(this,u);}
  auraFor(u,key){let best=null;const group=unit=>unit.challenge||(this.phase==='bonus'?unit.owner:null);for(const ally of this.units)if(ally.alive&&ally.team===u.team&&group(ally)===group(u)&&distance(ally,u)<=9&&levelOf(ally,key)&&canUseSkill(ally,key)){const s=skillAt(key,levelOf(ally,key));if(!best||s.level>best.level)best=s;}return best;}

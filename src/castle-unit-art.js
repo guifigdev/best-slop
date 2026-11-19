@@ -20,7 +20,7 @@ function familyFor(unit){const n=unit.name.toLowerCase();
  if(/sorceress|wizard|warlock|necromancer|lich|shaman|priest|witch doctor|ice queen|druid/.test(n))return 'caster';
  if(/sniper|marksman|gunner/.test(n))return 'rifleman';if(/archer|ranger|amazon/.test(n))return 'archer';return 'warrior';
 }
-export function castleUnitModelKey(unit){return unit?.castleUnit?`castle:${resolve(unit)?.key||unit.unitKey||unit.key||unit.kind}`:unit?.hero||unit?.kind;}
+export function castleUnitModelKey(unit){return unit?.castleUnit?`castle:${resolve(unit)?.key||unit.unitKey||unit.key||unit.kind}`:unit?.castleBuilderKey?`builder:${unit.castleBuilderKey}`:unit?.hero||unit?.kind;}
 export function castleUnitVisual(value){
  const found=resolve(value);if(!found)return null;if(cache.has(found.key))return cache.get(found.key);const {key,unit}=found,race=unitRace.get(key)||'human',palette=RACES[race]||RACES.human,name=unit.name.toLowerCase(),family=familyFor(unit),parts=[],legs=[],wings=[],rotors=[],advanced=/royal|elder|master|lord|ancient|mighty|champion|veteran|adamant|heavy|sergeant|avatar|annihilat|queen|king|defender|crusader/.test(name);
  const b=(x,y,z,w,h,d,color)=>parts.push([x,y,z,w,h,d,color]),leg=(x,z,color=palette.metal,w=.3,h=.5,y=.25,d=.36)=>legs.push({x,y,z,w,h,d,color}),eye=(x,y,z,color=0x293f3d)=>b(x,y,z,.11,.12,.055,color);

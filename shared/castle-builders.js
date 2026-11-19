@@ -4,7 +4,11 @@ const profiles={
  ranger:{race:'nightelf',raceName:'Elfos Noturnos',name:'Runa, guardiã noturna',title:'Guardiã noturna',role:'Floresta e precisão',description:'Uma raposa guardiã que reúne os elfos noturnos e protege os caminhos de seu povo.'},
  turtle:{race:'naga',raceName:'Nagas',name:'Sten, construtor naga',title:'Construtor naga',role:'Resistência e apoio',description:'Uma tartaruga construtora que traz os exércitos naga e seus monumentos de apoio à batalha.'},
  owl:{race:'north',raceName:'Nórdicos',name:'Vidar, mestre nórdico',title:'Mestre nórdico',role:'Bestas do norte',description:'Uma coruja mestre de obras que convoca as forças nórdicas e suas criaturas das terras geladas.'},
- raccoon:{race:'mech',raceName:'Mecânicos',name:'Eirik, engenheiro mecânico',title:'Engenheiro mecânico',role:'Engenharia e máquinas',description:'Um guaxinim engenheiro que monta oficinas e exércitos mecânicos para enfrentar o castelo rival.'}
+ raccoon:{race:'mech',raceName:'Mecânicos',name:'Eirik, engenheiro mecânico',title:'Engenheiro mecânico',role:'Engenharia e máquinas',description:'Um guaxinim engenheiro que monta oficinas e exércitos mecânicos para enfrentar o castelo rival.'},
+ orc:{hero:'knight',animal:'Javali',race:'orc',raceName:'Orcs',name:'Bork, mestre orc',title:'Mestre orc',role:'Horda e força bruta',description:'Um javali mestre de obras que ergue os quartéis orcs e reúne guerreiros, xamãs e bestas de guerra.'},
+ undead:{hero:'owl',animal:'Corvo espectral',race:'undead',raceName:'Mortos-vivos',name:'Morr, mestre dos mortos',title:'Mestre dos mortos',role:'Necromancia e desgaste',description:'Um corvo espectral que constrói criptas e reúne os exércitos dos mortos-vivos.'},
+ chaos:{hero:'ranger',animal:'Leão ígneo',race:'chaos',raceName:'Caos',name:'Azar, arquiteto do caos',title:'Arquiteto do caos',role:'Demônios e destruição',description:'Um leão ígneo que ergue os portais do Caos e prepara legiões demoníacas para o cerco.'},
+ corrupted:{hero:'turtle',animal:'Lobo corrompido',race:'corrupted',raceName:'Corrompidos',name:'Varg, mestre corrompido',title:'Mestre corrompido',role:'Corrupção e criaturas sombrias',description:'Um lobo marcado pela corrupção que ergue santuários sombrios e reúne as forças dos Corrompidos.'}
 };
-export const CASTLE_BUILDERS=Object.freeze(Object.fromEntries(Object.entries(profiles).map(([hero,profile])=>[hero,Object.freeze(profile)])));
-export function castleBuilderFor(hero){const key=typeof hero==='string'?hero:hero?.hero;return Object.hasOwn(CASTLE_BUILDERS,key)?CASTLE_BUILDERS[key]:null;}
+export const CASTLE_BUILDERS=Object.freeze(Object.fromEntries(Object.entries(profiles).map(([hero,profile])=>[hero,Object.freeze({key:hero,hero,...profile})])));
+export function castleBuilderFor(hero){const key=typeof hero==='string'?hero:hero?.castleBuilderKey??hero?.hero;return Object.hasOwn(CASTLE_BUILDERS,key)?CASTLE_BUILDERS[key]:null;}
