@@ -1,10 +1,11 @@
+import {CASTLE_RESCUE_STRIKE} from '../shared/castle-rescue.js';
 import * as T from 'three';
 
 // Rescue Strike has its own brief warning. It never depends on Survival's
 // boss-warning list, and its outer contour always matches the damage radius.
 export function createCastleRescueEffect(event,baseGeometry){
  if(!['castleRescueWarning','castleRescueStrike'].includes(event.type))return null;
- const warning=event.type==='castleRescueWarning',radius=Number.isFinite(event.radius)?event.radius:2.734375,group=new T.Group(),owned=[],material=new T.MeshBasicMaterial({color:warning?0xf4d17c:0xffffff,transparent:true,opacity:warning?.22:.92,depthWrite:false,side:T.DoubleSide,toneMapped:false});owned.push(material);
+ const warning=event.type==='castleRescueWarning',radius=Number.isFinite(event.radius)?event.radius:CASTLE_RESCUE_STRIKE.radius,group=new T.Group(),owned=[],material=new T.MeshBasicMaterial({color:warning?0xf4d17c:0xffffff,transparent:true,opacity:warning?.22:.92,depthWrite:false,side:T.DoubleSide,toneMapped:false});owned.push(material);
  const outlineGeometry=new T.RingGeometry(Math.max(0,radius-.065),radius,64),outlineMaterial=new T.MeshBasicMaterial({color:0xffd886,transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide,toneMapped:false}),outline=new T.Mesh(outlineGeometry,outlineMaterial);owned.push(outlineGeometry,outlineMaterial);outline.rotation.x=-Math.PI/2;outline.position.y=.025;
  if(warning){const geometry=new T.CircleGeometry(radius,64),fill=new T.Mesh(geometry,material);owned.push(geometry);fill.rotation.x=-Math.PI/2;group.add(fill,outline);}
  else{const blocks=new T.InstancedMesh(baseGeometry,material,24);blocks.frustumCulled=false;for(let i=0;i<24;i++)blocks.setColorAt(i,new T.Color([0xe8f6ff,0x88c7ef,0xffdc8c][i%3]));group.add(blocks,outline);}

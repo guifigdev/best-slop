@@ -4,11 +4,13 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export const CASTLE_REPAIR={reach:.35,scan:14,hpPerSecond:35,goldFraction:.35};
 
 export function queueCastleWork(builder,building){
+ builder.castleRescueOrder=null;
  builder.castleWorkQueue||=[];
  if(!builder.castleWorkQueue.includes(building.id))builder.castleWorkQueue.push(building.id);
  builder.castleWorkPaused=false;builder.destination=null;builder.order='build';
 }
 export function pauseCastleWork(builder){
+ builder.castleRescueOrder=null;
  builder.castleWorkPaused=true;builder.castleRepairTarget=null;builder.castleWorking=false;builder.castleWorker=null;
 }
 function workPoint(cf,builder,target){

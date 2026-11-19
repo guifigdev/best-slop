@@ -1,3 +1,4 @@
+import {CASTLE_RANGED_SCALE} from '../shared/castle-spatial.js';
 import {createCastleUI} from '../src/castle-ui.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -42,9 +43,9 @@ test('roles reserve different footprints and an expanding upgrade reserves its n
  assert.equal(g.command('a',{type:'cfBuild',building:'naga_h00H',x:-37,z:18}),false,'reserved growth prevents a neighbor from occupying it');b.workRemaining=0;b.readyAt=g.castleFight.elapsed;g.castleCompleteBuildings();assert.equal(b.w,4);assert.equal(b.key,'naga_h032');
 });
 
-test('Sniper fires outside melee reach with a bullet effect and its factual reference range is retained',()=>{
+test('Sniper fires outside melee reach with a bullet effect with the adapted voxel range while retaining its factual reference range',()=>{
  const g=setup(),cf=g.castleFight,b=build(g,1,'human_h003',-40,18),enemy=build(g,2,'human_h000',40,18),u=g.castleSpawn(b),target=g.castleSpawn(enemy);b.nextSpawn=enemy.nextSpawn=Infinity;Object.assign(u,{x:0,z:9});Object.assign(target,{x:2.3,z:9,cd:9999,hp:10000,maxHp:10000});const before=target.hp;
- g.tick(.05);assert.ok(target.hp<before);assert.ok(Math.hypot(u.x-target.x,u.z-target.z)>1.5);assert.equal(u.range,CASTLE_UNITS.hrif.sourceStats.range/256);assert.equal(u.ranged,true);assert.ok(g.effects.some(e=>e.type==='arrow'&&e.source===u.id&&e.projectileKind==='bullet'));assert.ok(!g.effects.some(e=>e.type==='slash'&&e.source===u.id));
+ g.tick(.05);assert.ok(target.hp<before);assert.ok(Math.hypot(u.x-target.x,u.z-target.z)>1.5);assert.equal(u.range,CASTLE_UNITS.hrif.sourceStats.range/256*CASTLE_RANGED_SCALE);assert.equal(u.ranged,true);assert.ok(g.effects.some(e=>e.type==='arrow'&&e.source===u.id&&e.projectileKind==='bullet'));assert.ok(!g.effects.some(e=>e.type==='slash'&&e.source===u.id));
  const m=castleMatchups(u);assert.ok(m.weak.some(x=>x.type==='normal'&&x.multiplier===1.75));assert.ok(m.resistant.some(x=>x.type==='magic'&&x.multiplier===.7));const html=castleUnitInfo(u);assert.match(html,/Alcance/);assert.match(html,/Vulnerável a/);assert.match(html,/Armadura média/);assert.doesNotMatch(html,/extraído|implementa|escala espacial|nativo/);
 });
 

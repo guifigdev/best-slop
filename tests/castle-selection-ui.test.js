@@ -23,9 +23,9 @@ test('production controls target living owned producers and expose paused state 
  const markup=castleProductionControls(cf,'a',[1,2,3]);assert.match(markup,/2 construções selecionadas/);assert.match(markup,/1 pausada/);assert.doesNotMatch(markup,/data-cf-production="resume" disabled/);
  const status=castleProductionStatus(cf,buildings[0]);assert.equal(status.paused,true);assert.equal(status.remaining,7);assert.equal(status.blocked,false);assert.equal(status.label,'Produção pausada');
 });
-test('rescue aiming uses the native builder range instead of generic spell range',()=>{
+test('rescue aiming uses the effective builder range instead of generic spell range',()=>{
  const hero={hero:'knight',x:0,z:0,alive:true,mana:0,range:1.8};
  const skill={kind:'active',target:'ground',castRange:CASTLE_RESCUE_STRIKE.range,radius:CASTLE_RESCUE_STRIKE.radius,mana:0};
  const aim=x=>skillPreview({key:'cfRescueStrike',skill,hero,point:{x,z:0},mode:'aim',state:{phase:'wave',units:[]}});
- assert.equal(aim(3).valid,true);assert.equal(aim(5).valid,false);assert.ok(aim(3).shapes.some(s=>s.role==='range'&&s.radius===CASTLE_RESCUE_STRIKE.range));assert.ok(aim(3).shapes.some(s=>s.role==='effect'&&s.radius===CASTLE_RESCUE_STRIKE.radius));
+ assert.equal(aim(3).valid,true);assert.equal(aim(CASTLE_RESCUE_STRIKE.range+1).valid,false);assert.ok(aim(3).shapes.some(s=>s.role==='range'&&s.radius===CASTLE_RESCUE_STRIKE.range));assert.ok(aim(3).shapes.some(s=>s.role==='effect'&&s.radius===CASTLE_RESCUE_STRIKE.radius));
 });

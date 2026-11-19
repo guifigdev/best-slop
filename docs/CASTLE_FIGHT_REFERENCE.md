@@ -178,3 +178,10 @@ Selecionar o produtor ou uma de suas tropas mostra unidade produzida, progresso,
 A simulação escolhe arma válida para o alvo e aplica seu alcance, cadência e tipo de dano. A ficha mostra os alvos e, em unidades com duas armas, ambos os ataques. Fora desse modo, os atributos personalizados do Survival/Line Wars permanecem separados.
 
 A travessia da saída agora aceita a passagem pelo plano do portão também quando a formação se dispersou lateralmente em combate. Voltar ao centro exato fazia grupos estacionarem e retornarem ali depois de cada escaramuça. A navegação até a próxima etapa continua verificando obstáculos.
+
+
+## Alcance e altitude no cenário voxel
+
+O catálogo de referência permanece em 1/256, sem alterar os números extraídos. `shared/castle-spatial.js` aplica uma escala de combate de **3×** às armas com alcance maior que 200/256, incluindo cada arma secundária e as torres. Contato e armas curtas até 200/256 preservam a distância anterior. O Sniper de 500 nativos passa de 1,953125 para **5,859375 unidades de cenário**, o Wizard de 650 para **7,617186** e o Mortar de 1000 para **11,71875**. Essa compensação pelo tamanho das malhas e pelo campo ampliado é uma adaptação explícita, não um novo valor atribuído ao original. A aquisição de alvos acompanha o alcance efetivo, inclusive acima de nove unidades; os cartões de compra, inspeção e círculos de alcance recebem os mesmos valores.
+
+A altitude fixa de 2 foi substituída por **4,4** para máquinas aéreas, **4,6** para grifos/serpentes/wyverns e **5,3** para dragões e frost wyrms. Essas alturas são direção visual autoral; não foram confirmadas como alturas nativas do mapa. A altitude não altera os filtros de ataque terrestre/aéreo nem transforma alcance em distância 3D. Projéteis e efeitos continuam acompanhando o modelo elevado.
