@@ -1,6 +1,7 @@
 import * as T from 'three';
-import {CASTLE_BUILDINGS,CASTLE_RACES} from '../shared/castle-catalog.js';
-import {castleMap,castleBuildPosition} from '../shared/castle-map.js';
+import {CASTLE_BUILDINGS,CASTLE_RACES,CASTLE_ITEMS} from '../shared/castle-catalog.js';
+import {castleMap} from '../shared/castle-map.js';
+import {castleBuildCheck} from '../shared/castle-build-rules.js';
 import {normalizeVoxelMap} from '../shared/voxel-map.js';
 import {buildVoxelTerrain,terrainHeight} from './voxel-terrain.js';
 
@@ -14,15 +15,40 @@ const nativePalette=['light-dirt','dirt-ashenvale','grass','rock','grassy-dirt',
 
 // Original architecture: each race has a distinct roofline and construction
 // vocabulary, rather than the same house with a different roof color.
-export function createCastleView({scene,voxel,bake}){
+export function createCastleView({scene,voxel,bake,overlay}){
  const root=new T.Group(),ground=new T.Group(),structures=new T.Group();root.name='castle-fight';root.add(ground,structures);scene.add(root);let layout='',entries=new Map(),state=null,selection=null,disposed=false,terrainMap=null,lastMap=null;
  const owned=new Set(),barGeometry=new T.BoxGeometry(1,1,1),barBackground=new T.MeshBasicMaterial({color:0x263b33,depthWrite:false}),healthMaterial=new T.MeshBasicMaterial({color:0x81db9a,depthWrite:false,toneMapped:false}),enemyHealthMaterial=new T.MeshBasicMaterial({color:0xf18272,depthWrite:false,toneMapped:false}),progressMaterial=new T.MeshBasicMaterial({color:0xf0d390,depthWrite:false,toneMapped:false});
  const ringGeo=new T.RingGeometry(1,1.07,32),ringMat=new T.MeshBasicMaterial({color:0xf2d48b,side:T.DoubleSide,transparent:true,opacity:.95,depthWrite:false,toneMapped:false}),ring=new T.Mesh(ringGeo,ringMat);ring.rotation.x=-Math.PI/2;ring.visible=false;root.add(ring);
  const ghostMat=new T.MeshBasicMaterial({color:0x8ce3b1,transparent:true,opacity:.3,depthWrite:false}),ghostGeo=new T.BoxGeometry(1,1,1),ghost=new T.Mesh(ghostGeo,ghostMat);ghost.visible=false;root.add(ghost);
+ const staffRangeGeometry=new T.RingGeometry(CASTLE_ITEMS.blast_staff.radius-.025,CASTLE_ITEMS.blast_staff.radius+.025,64),staffRangeMaterial=new T.MeshBasicMaterial({color:0x99d7ff,transparent:true,opacity:.4,side:T.DoubleSide,depthWrite:false,toneMapped:false}),staffRange=new T.Mesh(staffRangeGeometry,staffRangeMaterial);staffRange.rotation.x=-Math.PI/2;staffRange.visible=false;root.add(staffRange);
+ const buildZones=new T.Group();buildZones.name='castle-build-zones';root.add(buildZones);const zoneEntries=[];
+ const footprintGeometry=new T.PlaneGeometry(1,1),footprintMaterial=new T.MeshBasicMaterial({color:0x74efa6,transparent:true,opacity:.24,side:T.DoubleSide,depthWrite:false,toneMapped:false}),footprint=new T.Mesh(footprintGeometry,footprintMaterial);footprint.rotation.x=-Math.PI/2;footprint.visible=false;root.add(footprint);
+ const footprintGridGeometry=new T.BufferGeometry();footprintGridGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(1536),3).setUsage(T.DynamicDrawUsage));footprintGridGeometry.setDrawRange(0,0);const footprintGridMaterial=new T.LineBasicMaterial({color:0x86ffb4,transparent:true,opacity:.9,depthWrite:false,toneMapped:false}),footprintGrid=new T.LineSegments(footprintGridGeometry,footprintGridMaterial);footprintGrid.frustumCulled=false;footprintGrid.visible=false;root.add(footprintGrid);
+ let buildLabel=null,labelText='';if(overlay&&typeof document!=='undefined'){buildLabel=document.createElement('div');buildLabel.className='castle-build-preview';buildLabel.hidden=true;buildLabel.setAttribute('role','status');buildLabel.setAttribute('aria-live','polite');buildLabel.setAttribute('aria-atomic','true');Object.assign(buildLabel.style,{position:'absolute',background:'#f5f0e2f5',border:'1px solid #71b887',boxShadow:'0 3px 12px #173c2d44',borderRadius:'7px',color:'#315b3d',padding:'7px 10px',fontSize:'11px',fontWeight:'600',lineHeight:'1.5',pointerEvents:'none',transform:'translate(-50%,-100%)',zIndex:'12',maxWidth:'270px'});const host=overlay.getAttribute?.('aria-hidden')==='true'&&overlay.parentElement?overlay.parentElement:overlay;host.append(buildLabel);}
+ function hideBuildPreview(){ghost.visible=footprint.visible=footprintGrid.visible=false;if(buildLabel)buildLabel.hidden=true;}
  const merge=group=>{const mesh=bake(group);if(mesh?.geometry)owned.add(mesh.geometry);return mesh;};
  function release(group){if(group.userData.dispose){group.removeFromParent();group.userData.dispose();return;}const geometries=new Set();group.traverse(o=>{if(o.geometry&&owned.has(o.geometry))geometries.add(o.geometry);});for(const geometry of geometries){geometry.dispose();owned.delete(geometry);}group.removeFromParent();}
  const groundHeight=(x,z)=>terrainMap?terrainHeight(terrainMap,x,z):0;
  function clear(group){for(const child of [...group.children])release(child);group.clear();}
+ function rebuildBuildZones(map){
+  clear(buildZones);zoneEntries.length=0;
+  for(const zone of map.buildZones||[]){
+   const group=new T.Group(),fillGeometry=new T.BufferGeometry(),lineGeometry=new T.BufferGeometry(),corners=[[zone.minX,zone.minZ],[zone.maxX,zone.minZ],[zone.maxX,zone.maxZ],[zone.minX,zone.maxZ]],positions=corners.map(([x,z])=>[x,groundHeight(x,z)+.035,z]);fillGeometry.setAttribute('position',new T.Float32BufferAttribute([positions[0],positions[1],positions[2],positions[0],positions[2],positions[3]].flat(),3));
+   const linePoints=[];for(let i=0;i<4;i++){linePoints.push(new T.Vector3(...positions[i]),new T.Vector3(...positions[(i+1)%4]));}lineGeometry.setFromPoints(linePoints);
+   const fillMaterial=new T.MeshBasicMaterial({color:0x63e691,transparent:true,opacity:.12,side:T.DoubleSide,depthWrite:false,toneMapped:false}),lineMaterial=new T.LineBasicMaterial({color:0x73d995,transparent:true,opacity:.2,depthWrite:false,toneMapped:false}),fill=new T.Mesh(fillGeometry,fillMaterial),outline=new T.LineSegments(lineGeometry,lineMaterial);group.add(fill,outline);buildZones.add(group);fill.visible=false;
+   group.userData.dispose=()=>{fillGeometry.dispose();lineGeometry.dispose();fillMaterial.dispose();lineMaterial.dispose();};zoneEntries.push({zone,fill,outline});
+  }
+ }
+ function updateBuildPreview(snapshot,point,buildKey,owner,map,camera,container){
+  const builder=snapshot.units?.find(u=>u.owner===owner&&u.hero),definition=CASTLE_BUILDINGS[buildKey],placing=!!(definition&&builder),team=state.players?.[owner]?.team??builder?.team;
+  for(const entry of zoneEntries){const ally=entry.zone.team===team;entry.fill.visible=placing;entry.fill.material.color.setHex(ally?0x63e691:0xec7770);entry.fill.material.opacity=ally?.14:.045;entry.outline.visible=ally||placing;entry.outline.material.color.setHex(ally?0x73e7a0:0xe88c7f);entry.outline.material.opacity=placing?(ally?.85:.4):.2;}
+  if(!placing||!Number.isFinite(point?.x)||!Number.isFinite(point?.z)){hideBuildPreview();return;}
+  const check=castleBuildCheck(snapshot,builder,buildKey,point),size=definition.footprint||{w:3,d:3},grid=num(map.grid,.5),p=check.point||{x:Math.round(point.x/grid)*grid,z:Math.round(point.z/grid)*grid},color=check.allowed?0x77edac:0xff776e,floor=groundHeight(p.x,p.z);
+  ghost.visible=footprint.visible=footprintGrid.visible=true;ghost.position.set(p.x,floor+.7,p.z);ghost.scale.set(size.w,1.4,size.d);ghostMat.color.setHex(color);ghostMat.opacity=.18;footprint.position.set(p.x,floor+.07,p.z);footprint.scale.set(size.w,size.d,1);footprintMaterial.color.setHex(color);footprintGridMaterial.color.setHex(color);
+  let count=0;const attribute=footprintGridGeometry.attributes.position,line=(ax,az,bx,bz)=>{if(count+2>attribute.count)return;attribute.setXYZ(count++,ax,groundHeight(ax,az)+.09,az);attribute.setXYZ(count++,bx,groundHeight(bx,bz)+.09,bz);},minX=p.x-size.w/2,maxX=p.x+size.w/2,minZ=p.z-size.d/2,maxZ=p.z+size.d/2;
+  line(minX,minZ,maxX,minZ);line(maxX,minZ,maxX,maxZ);line(maxX,maxZ,minX,maxZ);line(minX,maxZ,minX,minZ);for(let x=minX+grid;x<maxX-.001;x+=grid)line(x,minZ,x,maxZ);for(let z=minZ+grid;z<maxZ-.001;z+=grid)line(minX,z,maxX,z);attribute.needsUpdate=true;footprintGridGeometry.setDrawRange(0,count);
+  if(buildLabel){const message=check.allowed?'Clique para construir · '+definition.name+' · '+definition.cost+' ouro':check.reason||'Não é possível construir aqui';if(message!==labelText){labelText=message;buildLabel.textContent=message;}buildLabel.dataset.valid=String(check.allowed);buildLabel.dataset.code=check.code||'';buildLabel.style.borderColor=check.allowed?'#71b887':'#d07b6e';buildLabel.style.color=check.allowed?'#315b3d':'#873b31';buildLabel.hidden=!camera||!container;if(camera&&container){const projected=new T.Vector3(p.x,floor+2,p.z).project(camera),width=container.clientWidth,height=container.clientHeight,maxWidth=Math.min(270,width-20),margin=Math.min(maxWidth/2+10,width/2);buildLabel.style.maxWidth=maxWidth+'px';buildLabel.hidden=projected.z< -1||projected.z>1;buildLabel.style.left=Math.max(margin,Math.min(width-margin,(projected.x*.5+.5)*width))+'px';buildLabel.style.top=Math.max(65,Math.min(height-20,(-projected.y*.5+.5)*height-10))+'px';}}
+ }
  function architecture(parent,entry,{castle=false,tower=false}={}){
   const holder=new T.Group(),model=new T.Group(),definition=CASTLE_BUILDINGS[entry.key||entry.building]||{},race=entry.race||definition.race||'human',accent=raceColor(race),team=teamColor(entry.team),w=num(entry.w,3),d=num(entry.d,3);holder.position.set(entry.x,groundHeight(entry.x,entry.z),entry.z);holder.add(model);parent.add(holder);
   const block=(x,y,z,bw,bh,bd,color)=>voxel(model,x,y,z,bw,bh,bd,color),stone=0xbab79b,wood=0x806b50,ivory=0xded4b4,dark=0x4b5057;
@@ -63,8 +89,8 @@ export function createCastleView({scene,voxel,bake}){
  return{
   setSelection(id){selection=id;},
   pick(point){if(!root.visible||!state||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;if(Math.hypot(point.x-state.map.tower.x,point.z-state.map.tower.z)<2.4)return{castleTower:true};const b=(state.buildings||[]).filter(b=>b.alive&&Math.abs(point.x-b.x)<num(b.w,3)/2+.3&&Math.abs(point.z-b.z)<num(b.d,3)/2+.3).at(-1);return b?{castleBuilding:b.id}:null;},
-  update(snapshot,point,buildKey,owner){
-   if(disposed)return;const active=snapshot?.options?.mode==='castlefight';root.visible=active;if(!active)return;state=snapshot.castleFight||{map:castleMap(snapshot.options.laneCount),buildings:[],teams:[],players:{}};const map=state.map||castleMap(snapshot.options.laneCount),sig=map===lastMap?layout:JSON.stringify(map);lastMap=map;if(sig!==layout){layout=sig;makeFloor(map);clear(structures);entries.clear();}
+  update(snapshot,point,buildKey,owner,camera,container){
+   if(disposed)return;const active=snapshot?.options?.mode==='castlefight';root.visible=active;if(!active){hideBuildPreview();return;}state=snapshot.castleFight||{map:castleMap(snapshot.options.laneCount),buildings:[],teams:[],players:{}};const map=state.map||castleMap(snapshot.options.laneCount),sig=map===lastMap?layout:JSON.stringify(map);lastMap=map;if(sig!==layout){layout=sig;makeFloor(map);rebuildBuildZones(map);clear(structures);entries.clear();}
    const players=Object.values(state.players||{}),teamRace=team=>players.find(p=>p.team===team)?.race||'human',castles=(state.teams||[]).map(c=>({...c,race:c.race||teamRace(c.team),isCastle:true,renderId:'castle-'+c.id})),tower={...(state.shop||{}),...map.tower,id:'central-tower',renderId:'central-tower',race:'north',team:0,w:2.4,d:2.4,isTower:true},list=[...castles,...(state.buildings||[]).map(b=>({...b,renderId:'building-'+b.id})),tower],ids=new Set(list.map(b=>b.renderId));
    for(const [id,entry]of entries)if(!ids.has(id)){release(entry.group);entries.delete(id);}
    for(const b of list){const race=b.race||CASTLE_BUILDINGS[b.key]?.race||'human';let entry=entries.get(b.renderId);if(entry&&entry.race!==race){release(entry.group);entries.delete(b.renderId);entry=null;}if(!entry){entry=architecture(structures,{...b,race},{castle:b.isCastle,tower:b.isTower});entries.set(b.renderId,entry);}entry.group.position.set(b.x,groundHeight(b.x,b.z),b.z);entry.group.visible=b.alive!==false;
@@ -72,8 +98,9 @@ export function createCastleView({scene,voxel,bake}){
     const hasHp=Number.isFinite(b.hp)&&num(b.maxHp,num(definition.hp,0))>0,health=clamp(num(b.hp,0)/num(b.maxHp,num(definition.hp,1)));entry.background.visible=entry.health.visible=hasHp;entry.health.material=b.team===(state.players?.[owner]?.team??snapshot.units?.find(u=>u.owner===owner)?.team)?healthMaterial:enemyHealthMaterial;entry.health.scale.x=entry.width*health;entry.health.position.x=-(1-health)*entry.width/2;entry.progressBg.visible=entry.progress.visible=constructing;entry.progress.scale.x=entry.width*fraction;entry.progress.position.x=-(1-fraction)*entry.width/2;
    }
    const selected=list.find(b=>(b.id===selection||b.renderId===selection)&&b.alive!==false);ring.visible=!!selected;if(selected){ring.position.set(selected.x,groundHeight(selected.x,selected.z)+.045,selected.z);ring.scale.set(num(selected.w,3)*.67,num(selected.d,3)*.67,1);}
-   const builder=snapshot.units?.find(u=>u.owner===owner&&u.hero),definition=CASTLE_BUILDINGS[buildKey];ghost.visible=!!(point&&definition&&builder&&definition.race===(state.players?.[owner]?.race||builder.castleRace));if(ghost.visible){const footprint=definition.footprint||{w:3,d:3},candidate=castleBuildPosition(map,builder.team,point,footprint,state.buildings||[]),p=candidate||{x:Math.round(point.x),z:Math.round(point.z)};ghost.position.set(p.x,groundHeight(p.x,p.z)+.7,p.z);ghost.scale.set(footprint.w,1.4,footprint.d);ghostMat.color.setHex(candidate?0x77edac:0xff776e);}
+   updateBuildPreview(snapshot,point,buildKey,owner,map,camera,container);
+   const holder=snapshot.units?.find(u=>u.hero&&u.owner===owner&&u.alive);staffRange.visible=!!(holder&&state.players?.[owner]?.items?.blast_staff);if(staffRange.visible)staffRange.position.set(holder.x,groundHeight(holder.x,holder.z)+.045,holder.z);
   },
-  dispose(){if(disposed)return;disposed=true;clear(ground);clear(structures);for(const geometry of owned)geometry.dispose();owned.clear();for(const resource of [barGeometry,barBackground,healthMaterial,enemyHealthMaterial,progressMaterial,ringGeo,ringMat,ghostGeo,ghostMat])resource.dispose();root.removeFromParent();}
+  dispose(){if(disposed)return;disposed=true;clear(ground);clear(structures);clear(buildZones);buildLabel?.remove();for(const geometry of owned)geometry.dispose();owned.clear();for(const resource of [barGeometry,barBackground,healthMaterial,enemyHealthMaterial,progressMaterial,ringGeo,ringMat,ghostGeo,ghostMat,footprintGeometry,footprintMaterial,footprintGridGeometry,footprintGridMaterial,staffRangeGeometry,staffRangeMaterial])resource.dispose();root.removeFromParent();}
  };
 }

@@ -58,6 +58,7 @@ export class Game {
  canTarget(u,t){if(this.options.mode==='linewars'&&this.lineWars)return this.lineCanTarget(u,t);if(!t||!t.alive||u.id===t.id||u.team===t.team)return false;if(this.phase==='wave'&&privateTrials(this.options.mode))return !!(u.challenge&&u.challenge===t.challenge);if(this.phase==='bonus')return !!(t.challenge&&t.challenge===u.owner||u.challenge&&u.challenge===t.owner);return true;}
  enemies(u,r=Infinity){return this.units.filter(t=>this.canTarget(u,t)&&distance(u,t)<=r).sort((a,b)=>distance(u,a)-distance(u,b));}
  command(id,c){
+  this.commandFailureReason=null;
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
   if(this.options.mode==='castlefight')return this.castleCommand(u,c);
   if(c.type==='queueLineUnit')return this.queueLineUnit(u,c);

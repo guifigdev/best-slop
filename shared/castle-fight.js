@@ -1,3 +1,6 @@
+import {launchCastleBlast,tickCastleItemProjectiles} from './castle-item-effects.js';
+import {castleBuildCheck,CASTLE_BUILDING_LIMIT} from './castle-build-rules.js';
+import {castlePassable,castleSpawnPoint,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
 import {castleBuilderFor} from './castle-builders.js';
 import {sceneryObstacles} from './scenery.js';
 import {CASTLE_RACES,CASTLE_BUILDINGS,CASTLE_UNITS,CASTLE_ITEMS,CASTLE_ECONOMY_REFERENCE,castleDamageMultiplier} from './castle-catalog.js';
@@ -7,12 +10,12 @@ export const CASTLE_START_GOLD=CASTLE_ECONOMY_REFERENCE.defaultStartingGold;
 export const CASTLE_START_LUMBER=CASTLE_ECONOMY_REFERENCE.defaultStartingLumber;
 export const CASTLE_INCOME_INTERVAL=10;
 export const CASTLE_BASE_INCOME=Math.floor(CASTLE_ECONOMY_REFERENCE.baseIncomeRate*CASTLE_ECONOMY_REFERENCE.defaultPlayerMultiplier*CASTLE_ECONOMY_REFERENCE.displayMultiplier);
-export const CASTLE_BUILDING_LIMIT=12;
+export {CASTLE_BUILDING_LIMIT};
 export const CASTLE_UNIT_CAP=60;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const own=(object,key)=>typeof key==='string'&&Object.hasOwn(object,key);
-const radius=u=>u.castleStructure?Math.max(u.w||2,u.d||2)/2:Math.max(.25,Math.min(1.1,(u.size||1)*.45));
+const radius=u=>u.castleStructure?Math.max(u.w||2,u.d||2)/2:castleNavigationRadius(u);
 const active=game=>game.castleFight&&game.phase==='wave'&&!game.castleFight.finished;
 const passiveItems=new Set(['speed_aura','repair_aura','damage_aura','passive_blast']);
 const effects=new Set(['tower','income','heal','damage','kill','stun']);
@@ -20,9 +23,8 @@ const playable=b=>!!b&&b.playable!==false&&(!!catalogUnit(b)||effects.has(b.cast
 const legendaryCount=(cf,owner)=>cf.buildings.filter(b=>b.alive&&b.owner===owner&&(CASTLE_BUILDINGS[b.pendingUpgrade||b.key]?.legendary)).length;
 const catalogUnit=building=>typeof building.unit==='string'?CASTLE_UNITS[building.unit]:building.unit;
 const canHit=(u,t)=>!t.flying||u.canHitAir;
-function passable(cf,p,r=.4){return Math.abs(p.x)+r<=cf.map.maxX&&Math.abs(p.z)+r<=cf.map.maxZ&&![...cf.buildings.filter(b=>b.alive),...cf.teams.filter(t=>t.alive),...(cf.obstacles||[])].some(b=>castleOverlap({x:p.x,z:p.z,w:r*2,d:r*2},b));}
-function move(cf,u,destination,dt){const d=distance(u,destination);u.moving=false;if(d<.12)return true;const step=Math.min(d,(u.speed||0)*dt),dx=(destination.x-u.x)/d*step,dz=(destination.z-u.z)/d*step,candidates=[{x:u.x+dx,z:u.z+dz},{x:u.x+dx,z:u.z},{x:u.x,z:u.z+dz}],r=radius(u);let point=candidates.find(p=>u.flying||passable(cf,p,r));if(!point){const side=dx>=0?1:-1;point=[{x:u.x+dz,z:u.z-dx},{x:u.x-dz,z:u.z+dx},{x:u.x,z:u.z+side*step}].find(p=>passable(cf,p,r));}if(point){u.x=clamp(point.x,cf.map.minX+r,cf.map.maxX-r);u.z=clamp(point.z,cf.map.minZ+r,cf.map.maxZ-r);u.facing=Math.atan2(dx,dz);u.moving=true;}return distance(u,destination)<.2;}
-function hurt(game,target,amount,source,element=null){if(!target?.alive||!Number.isFinite(amount)||amount<=0)return 0;const actual=Math.min(target.hp,amount);target.hp=Math.max(0,target.hp-amount);target.hitAt=game.time;game.fx('damage',target.x,target.z,{source:source?.id,target:target.id,amount:Math.round(actual),magic:source?.attackType==='magic'||source?.attackType==='spells',element,castle:true});if(target.hp<=0){target.alive=false;target.died=game.time;game.fx('castleDeath',target.x,target.z,{source:source?.id,target:target.id,structure:!!target.castleStructure});if(source?.owner&&target.castleUnit){const owner=game.player(source.owner);if(owner)owner.gold+=target.bounty??4;}}return actual;}
+const passable=castlePassable,move=moveCastleUnit;
+function hurt(game,target,amount,source,element=null){if(!target?.alive||!Number.isFinite(amount)||amount<=0)return 0;const actual=Math.min(target.hp,amount);target.hp=Math.max(0,target.hp-amount);target.hitAt=game.time;game.fx('damage',target.x,target.z,{source:source?.id,target:target.id,amount:Math.round(actual),magic:source?.attackType==='magic'||source?.attackType==='spells',element,castle:true});if(target.hp<=0){target.alive=false;if(target.castleStructure)game.castleFight.navigationRevision++;target.died=game.time;game.fx('castleDeath',target.x,target.z,{source:source?.id,target:target.id,structure:!!target.castleStructure});if(source?.owner&&target.castleUnit){const owner=game.player(source.owner);if(owner)owner.gold+=target.bounty??4;}}return actual;}
 function itemReady(game,u,key){return(game.castleFight.players[u.owner].cooldowns[key]||0)<=game.castleFight.elapsed;}
 function incomeRate(cf,p){return(p.baseIncomeRate??CASTLE_ECONOMY_REFERENCE.baseIncomeRate)+cf.buildings.filter(b=>b.alive&&b.owner===p.owner&&b.economyReady).reduce((sum,b)=>sum+(b.incomeContribution||0),0);}
 function effectiveIncome(cf,p){const base=Math.floor(incomeRate(cf,p)*(p.incomeMultiplier??1)*CASTLE_ECONOMY_REFERENCE.displayMultiplier),count=cf.buildings.filter(b=>b.alive&&b.owner===p.owner&&b.economyReady&&CASTLE_BUILDINGS[b.key].castleEffect?.type==='income').length,weights=CASTLE_ECONOMY_REFERENCE.treasureWeights,weight=count<weights.length?weights[count]:weights.at(-1)+(count-9)*.25;return Math.floor(base*(1+.25*weight));}
@@ -32,14 +34,15 @@ export const CastleFightMethods={
  setupCastleBuilder(u){const profile=castleBuilderFor(u);if(!profile)return false;u.castleRace=profile.race;u.castleProfile=profile;u.castleBuilderTitle=profile.title;u.castleRaceName=profile.raceName;u.name=profile.name;u.gold=CASTLE_START_GOLD;u.lumber=CASTLE_START_LUMBER;u.castleBuilder=true;u.skills=[];u.skillLevels={};u.inventory=[];u.cooldowns={};u.autoSkills={};u.channel=null;u.mana=u.maxMana=0;u.target=null;u.destination=null;u.order='stop';u.speed=7;return u;},
  initCastleFight(){
   if(this.castleFight)return false;const heroes=this.heroes();if(heroes.length<2)return false;if(heroes.some(u=>!castleBuilderFor(u)))return false;const map=castleMap(this.options.laneCount);
-  const cf=this.castleFight={map,elapsed:0,nextIncome:CASTLE_INCOME_INTERVAL,players:{},buildings:[],units:[],projectiles:[],finished:false,winnerTeam:null,teams:[],shop:{...map.tower,stock:Object.fromEntries(Object.entries(CASTLE_ITEMS).map(([key,item])=>[key,Number.isFinite(item.stock)?item.stock:null]))}};
+  const cf=this.castleFight={map,elapsed:0,nextIncome:CASTLE_INCOME_INTERVAL,navigationRevision:0,players:{},buildings:[],units:[],projectiles:[],finished:false,winnerTeam:null,teams:[],shop:{...map.tower,stock:Object.fromEntries(Object.entries(CASTLE_ITEMS).map(([key,item])=>[key,Number.isFinite(item.stock)?item.stock:null]))}};
   cf.shop.nextStock={};cf.shop.availableAt=Object.fromEntries(Object.entries(CASTLE_ITEMS).map(([key,item])=>[key,item.initialDelay??item.sourceStats?.stockInitialDelay??0]));for(const[key,item]of Object.entries(CASTLE_ITEMS))cf.shop.stock[key]=item.stock??item.sourceStats?.stockMaximum??null;
   cf.teams=map.castles.map(castle=>({...castle,id:this.id(),castleStructure:true,castle:true,name:'Castelo do clã',hp:map.castleHp,maxHp:map.castleHp,armor:map.castleArmor,armorType:map.castleArmorType,alive:true}));
-  for(const [seat,u]of heroes.entries()){this.setupCastleBuilder(u);const team=seat%2+1,race=castleBuilderFor(u).race;cf.players[u.owner]={owner:u.owner,team,race,income:CASTLE_BASE_INCOME,baseIncomeRate:CASTLE_ECONOMY_REFERENCE.baseIncomeRate,incomeMultiplier:CASTLE_ECONOMY_REFERENCE.defaultPlayerMultiplier,cooldowns:{},items:{},legendarySlots:1,hasBuilt:false,nextBot:seat*.65};u.castleBuilder=true;u.castleTeam=team;u.castleRace=race;u.team=team;u.gold=CASTLE_START_GOLD;u.lumber=CASTLE_START_LUMBER;u.x=team===1?-16.5:16.5;u.z=(Math.floor(seat/2)-.5)*3;u.speed=7;u.order='stop';u.destination=null;u.target=null;u.mana=u.maxMana=0;u.castleBlinkUntil=0;u.ready=false;delete u.cell;delete u.challenge;}
-  this.phase='wave';this.wave=0;this.timer=0;this.bounds=map.maxX;cf.scenery=castleReferenceScenery(map);cf.obstacles=sceneryObstacles(cf.scenery);this.obstacles=cf.obstacles;this.zones=[];this.units=heroes;this.message='Castle Fight: construa seu exército. As tropas lutam sozinhas; vença destruindo o castelo inimigo.';return true;
+  for(const [seat,u]of heroes.entries()){this.setupCastleBuilder(u);const team=seat%2+1,race=castleBuilderFor(u).race;cf.players[u.owner]={owner:u.owner,team,race,income:CASTLE_BASE_INCOME,baseIncomeRate:CASTLE_ECONOMY_REFERENCE.baseIncomeRate,incomeMultiplier:CASTLE_ECONOMY_REFERENCE.defaultPlayerMultiplier,cooldowns:{},items:{},legendarySlots:1,hasBuilt:false,nextBot:seat*.65};u.castleBuilder=true;u.castleTeam=team;u.castleRace=race;u.team=team;u.gold=CASTLE_START_GOLD;u.lumber=CASTLE_START_LUMBER;u.x=team===1?-38:38;u.z=(Math.floor(seat/2)-.5)*3;u.speed=7;u.order='stop';u.destination=null;u.target=null;u.mana=u.maxMana=0;u.castleBlinkUntil=0;u.ready=false;delete u.cell;delete u.challenge;}
+  this.phase='wave';this.wave=0;this.timer=0;this.bounds=map.maxX;cf.scenery=castleReferenceScenery(map);cf.obstacles=[...sceneryObstacles(cf.scenery),{id:'castle-central-market',type:'structure',x:map.tower.x,z:map.tower.z,w:2.4,d:2.4}];this.obstacles=cf.obstacles;this.zones=[];this.units=heroes;this.message='Castle Fight: construa seu exército. As tropas lutam sozinhas; vença destruindo o castelo inimigo.';return true;
  },
 
  castleCommand(u,c){
+  this.commandFailureReason=null;
   if(!u||!c||typeof c!=='object')return false;
   if(c.type==='ready'){if(this.castleFight||this.phase!=='preparation')return false;u.ready=true;if(this.heroes().length>=2&&this.heroes().every(h=>h.ready||h.bot))this.initCastleFight();return true;}
   if(c.type==='cfRace'){const profile=castleBuilderFor(u);if(!profile||c.race!==profile.race||['victory','defeat'].includes(this.phase)||this.castleFight?.players[u.owner]?.hasBuilt||this.castleFight?.finished)return false;u.castleRace=profile.race;if(this.castleFight?.players[u.owner])this.castleFight.players[u.owner].race=profile.race;return true;}
@@ -48,14 +51,13 @@ export const CastleFightMethods={
   if(c.type==='cfStop'){u.destination=null;u.order='stop';u.moving=false;return true;}
   if(c.type==='cfBlink'){const point=castlePoint(cf.map,c);if(!point||distance(point,c)>.01||distance(u,point)>20||cf.elapsed<(u.castleBlinkUntil||0)||!passable(cf,point,.5))return false;const from={x:u.x,z:u.z};u.x=point.x;u.z=point.z;u.destination=null;u.order='stop';u.castleBlinkUntil=cf.elapsed+8;this.fx('blink',from.x,from.z,{source:u.id,tx:u.x,tz:u.z,castle:true});return true;}
   if(c.type==='cfBuild'){
-   const definition=own(CASTLE_BUILDINGS,c.building)?CASTLE_BUILDINGS[c.building]:null;if(!playable(definition)||definition.race!==p.race||definition.requiresBuilding||definition.legendary&&legendaryCount(cf,u.owner)>=p.legendarySlots||cf.buildings.filter(b=>b.alive&&b.owner===u.owner).length>=CASTLE_BUILDING_LIMIT||!Number.isFinite(definition.cost)||definition.cost<0||u.gold<definition.cost||(u.lumber||0)<(definition.lumberCost||0))return false;
-   const footprint=definition.footprint||{w:3,d:3},point=castleBuildPosition(cf.map,p.team,c,footprint,[...cf.buildings,...cf.obstacles]);if(!point)return false;
+   const check=castleBuildCheck(this,u,c.building,c);if(!check.allowed){this.commandFailureReason=check.reason;return false;}const definition=check.definition,point=check.point,footprint=definition.footprint||{w:3,d:3};
    const buildTime=Math.max(0,definition.buildTime||0),spawnInterval=Math.max(1,definition.spawnInterval??definition.spawnTime??20),lane=cf.map.lanes.reduce((a,b)=>Math.abs(a.z-point.z)<=Math.abs(b.z-point.z)?a:b),maxHp=definition.hp||800+definition.cost*1.5;
-   const building={id:this.id(),key:c.building,name:definition.name,owner:u.owner,team:p.team,race:p.race,...point,...footprint,castleStructure:true,hp:maxHp,maxHp,armor:definition.armor??5,armorType:definition.armorType||'fortified',alive:true,invested:definition.cost,created:cf.elapsed,readyAt:cf.elapsed+buildTime,spawnInterval,nextSpawn:cf.elapsed+buildTime+spawnInterval,lane:lane.id,spawnCount:0,economyReady:false,registeredCost:0,incomeContribution:0};u.gold-=definition.cost;u.lumber-=definition.lumberCost||0;p.hasBuilt=true;cf.buildings.push(building);this.fx('castleBuild',point.x,point.z,{source:u.id,building:c.building,buildingId:building.id,duration:buildTime});return true;
+   const building={id:this.id(),key:c.building,name:definition.name,owner:u.owner,team:p.team,race:p.race,...point,...footprint,castleStructure:true,hp:maxHp,maxHp,armor:definition.armor??5,armorType:definition.armorType||'fortified',alive:true,invested:definition.cost,created:cf.elapsed,readyAt:cf.elapsed+buildTime,spawnInterval,nextSpawn:cf.elapsed+buildTime+spawnInterval,lane:lane.id,spawnCount:0,economyReady:false,registeredCost:0,incomeContribution:0};u.gold-=definition.cost;u.lumber-=definition.lumberCost||0;p.hasBuilt=true;cf.buildings.push(building);cf.navigationRevision++;this.fx('castleBuild',point.x,point.z,{source:u.id,building:c.building,buildingId:building.id,duration:buildTime});return true;
   }
   if(c.type==='cfUpgrade')return this.castleUpgrade(u,c);
   if(c.type==='cfSell'){
-   const building=cf.buildings.find(b=>b.id===c.buildingId&&b.alive&&b.owner===u.owner);if(!building)return false;const refund=Math.floor(building.invested*.65*clamp(building.hp/building.maxHp,0,1));building.alive=false;building.sold=true;building.died=this.time;u.gold+=refund;this.fx('castleSell',building.x,building.z,{source:u.id,amount:refund,buildingId:building.id});return true;
+   const building=cf.buildings.find(b=>b.id===c.buildingId&&b.alive&&b.owner===u.owner);if(!building)return false;const refund=Math.floor(building.invested*.65*clamp(building.hp/building.maxHp,0,1));building.alive=false;cf.navigationRevision++;building.sold=true;building.died=this.time;u.gold+=refund;this.fx('castleSell',building.x,building.z,{source:u.id,amount:refund,buildingId:building.id});return true;
   }
   if(c.type==='cfItem')return this.castleBuyItem(u,c);
   return false;
@@ -84,7 +86,7 @@ export const CastleFightMethods={
 
  castleCompleteBuildings(atTime=this.castleFight.elapsed){
   const cf=this.castleFight;for(const building of cf.buildings.filter(b=>b.alive&&atTime>=b.readyAt)){
-   if(building.pendingUpgrade){const definition=CASTLE_BUILDINGS[building.pendingUpgrade],ratio=building.hp/building.maxHp;building.key=building.pendingUpgrade;building.name=definition.name;building.maxHp=definition.hp;building.hp=definition.hp*ratio;building.armor=definition.armor;building.armorType=definition.armorType;building.spawnInterval=Math.max(1,definition.spawnInterval??definition.spawnTime??20);building.pendingUpgrade=null;}
+   if(building.pendingUpgrade){const definition=CASTLE_BUILDINGS[building.pendingUpgrade],ratio=building.hp/building.maxHp;building.key=building.pendingUpgrade;building.name=definition.name;building.maxHp=definition.hp;building.hp=definition.hp*ratio;building.armor=definition.armor;building.armorType=definition.armorType;building.spawnInterval=Math.max(1,definition.spawnInterval??definition.spawnTime??20);building.pendingUpgrade=null;cf.navigationRevision++;}
    if(building.completedKey===building.key)continue;const definition=CASTLE_BUILDINGS[building.key],data=definition.provenance||{},cost=data.scriptIncomeCost??definition.cost;
    building.registeredCost+=cost;building.incomeContribution=(data.registeredIncomeFactor||0)*building.registeredCost/100;building.economyReady=true;building.completedKey=building.key;
    const woodFactor=data.registeredKind===0?CASTLE_ECONOMY_REFERENCE.woodAwardNormalFactor:data.registeredKind===1?CASTLE_ECONOMY_REFERENCE.woodAwardSiegeFactor:0,wood=Math.floor(cost*woodFactor),owner=this.player(building.owner);if(owner&&wood){owner.lumber=(owner.lumber||0)+wood;this.fx('castleLumber',building.x,building.z,{source:owner.id,amount:wood,buildingId:building.id});}
@@ -98,7 +100,7 @@ export const CastleFightMethods={
    let auraDamage=0;for(const p of Object.values(cf.players).filter(p=>p.team===unit.team)){const holder=this.player(p.owner);for(const key of Object.keys(p.items)){const item=CASTLE_ITEMS[key];if(distance(holder,unit)>(item.radius||100))continue;if(item.effect==='speed_aura'){unit.castleSpeedBonus=Math.max(unit.castleSpeedBonus,item.moveSpeed||0);unit.castleAttackBonus=Math.max(unit.castleAttackBonus,item.attackSpeed||0);}if(item.effect==='damage_aura')auraDamage=Math.max(auraDamage,item.damageBonus||0);}}
    unit.damage+=(unit.baseDamage??unit.damage)*auraDamage;
   }
-  for(const p of Object.values(cf.players)){const holder=this.player(p.owner);for(const[key,owned]of Object.entries(p.items)){const item=CASTLE_ITEMS[key];if(item.effect==='repair_aura')for(const target of [...cf.buildings,...cf.teams].filter(t=>t.alive&&t.team===p.team&&distance(holder,t)<=item.radius))target.hp=Math.min(target.maxHp,target.hp+item.healPerSecond*dt);if(item.effect==='passive_blast'&&cf.elapsed>=owned.nextAt){owned.nextAt=cf.elapsed+item.interval;const target=cf.units.filter(t=>t.alive&&t.team!==p.team&&distance(holder,t)<=item.radius).sort((a,b)=>distance(holder,a)-distance(holder,b)||a.id-b.id)[0];if(target){hurt(this,target,item.damage,{...holder,attackType:'spells'},'arcane');this.fx('bolt',holder.x,holder.z,{source:holder.id,tx:target.x,tz:target.z,castle:true});}}}}
+  for(const p of Object.values(cf.players)){const holder=this.player(p.owner);for(const[key,owned]of Object.entries(p.items)){const item=CASTLE_ITEMS[key];if(item.effect==='repair_aura')for(const target of [...cf.buildings,...cf.teams].filter(t=>t.alive&&t.team===p.team&&distance(holder,t)<=item.radius))target.hp=Math.min(target.maxHp,target.hp+item.healPerSecond*dt);if(item.effect==='passive_blast'&&cf.elapsed>=owned.nextAt){const target=cf.units.filter(t=>t.alive&&t.team!==p.team&&distance(holder,t)<=item.radius).sort((a,b)=>distance(holder,a)-distance(holder,b)||a.id-b.id)[0];if(target)launchCastleBlast(this,holder,target,item,key);}}}
  },
 
  castleSupportTick(dt){
@@ -109,15 +111,28 @@ export const CastleFightMethods={
   }
  },
 
+ // Castle defense is an explicit adaptation: the v1.14b Guard Tower weapon.
+ castleDefenseTick(dt){
+  const cf=this.castleFight,weapon=CASTLE_BUILDINGS.human_h006.castleEffect;
+  for(const castle of cf.teams.filter(c=>c.alive)){
+   castle.hp=Math.min(castle.maxHp,castle.hp+.5*dt);castle.defense={...weapon,reference:'Guard Tower v1.14b',adapted:true};
+   if(cf.elapsed<(castle.nextAttack||0))continue;
+   const target=cf.units.filter(t=>t.alive&&t.team!==castle.team&&distance(castle,t)<=weapon.range+radius(castle)+radius(t)).sort((a,b)=>distance(castle,a)-distance(castle,b)||a.id-b.id)[0];if(!target)continue;
+   castle.nextAttack=cf.elapsed+weapon.interval;castle.attackAt=this.time;
+   const damage=weapon.damage*castleDamageMultiplier(weapon.attackType,target.armorType)/(1+.06*Math.max(0,target.armor||0));
+   this.fx('arrow',castle.x,castle.z,{source:castle.id,target:target.id,tx:target.x,tz:target.z,castle:true,castleDefense:true});hurt(this,target,damage,{...castle,attackType:weapon.attackType});
+  }
+ },
+
  castleSpawn(building){
   const cf=this.castleFight,definition=CASTLE_BUILDINGS[building.key],data=catalogUnit(definition);if(!data||cf.units.filter(u=>u.alive&&u.team===building.team).length>=CASTLE_UNIT_CAP)return null;
-  const lane=cf.map.lanes[building.lane]||cf.map.lanes[0],direction=building.team===1?1:-1,index=building.spawnCount++,offset=(index%5-2)*.45,castle=cf.teams.find(t=>t.team!==building.team),unit={...data,id:this.id(),unitKey:definition.unit,kind:data.kind||'wolf',name:data.name||definition.name,castleUnit:true,owner:building.owner,team:building.team,building:building.id,lane:lane.id,x:(direction===1?lane.left.x:lane.right.x),z:lane.z+offset,hp:data.hp,maxHp:data.hp,damage:data.damage,baseDamage:data.damage,armor:data.armor||0,baseArmor:data.armor||0,armorType:data.armorType||'medium',attackType:data.attackType||'normal',range:data.range||1.5,speed:data.speed||3,interval:data.interval||1.3,canHitAir:data.targetsAir??data.canHitAir??(data.range>=3||!!data.flying),flying:!!data.flying,altitude:data.flying?2:0,size:data.size||1,alive:true,cd:0,stun:0,route:[{x:direction===1?lane.right.x:lane.left.x,z:lane.z},{x:castle.x-direction*3,z:castle.z}],pathIndex:0};cf.units.push(unit);this.fx('summon',unit.x,unit.z,{source:unit.id,buildingId:building.id,castle:true});return unit;
+  const lane=cf.map.lanes[building.lane]||cf.map.lanes[0],direction=building.team===1?1:-1,index=building.spawnCount++,offset=(index%5-2)*.45,castle=cf.teams.find(t=>t.team!==building.team),unit={...data,id:this.id(),unitKey:definition.unit,kind:data.kind||'wolf',name:data.name||definition.name,castleUnit:true,owner:building.owner,team:building.team,building:building.id,lane:lane.id,x:(direction===1?lane.left.x:lane.right.x),z:lane.z+offset,hp:data.hp,maxHp:data.hp,damage:data.damage,baseDamage:data.damage,armor:data.armor||0,baseArmor:data.armor||0,armorType:data.armorType||'medium',attackType:data.attackType||'normal',range:data.range||1.5,speed:data.speed||3,interval:data.interval||1.3,canHitAir:data.targetsAir??data.canHitAir??(data.range>=3||!!data.flying),flying:!!data.flying,altitude:data.flying?2:0,size:data.size||1,alive:true,cd:0,stun:0,route:[{x:direction===1?lane.right.x:lane.left.x,z:lane.z},{x:castle.x-direction*3,z:castle.z}],pathIndex:0};const spawn=castleSpawnPoint(cf,unit,castleNavigationRadius(unit),{maxDistance:3,flying:unit.flying,ignoreUnits:false});if(!spawn){building.spawnCount--;return null;}Object.assign(unit,spawn);cf.units.push(unit);this.fx('summon',unit.x,unit.z,{source:unit.id,buildingId:building.id,castle:true});return unit;
  },
 
  castleBotThink(u){
   const cf=this.castleFight,p=cf.players[u.owner];if(!u.bot||cf.elapsed<p.nextBot)return;p.nextBot=cf.elapsed+3;
   const choices=Object.entries(CASTLE_BUILDINGS).filter(([,b])=>b.race===p.race&&!b.requiresBuilding&&playable(b)&&b.cost<=u.gold&&(b.lumberCost||0)<=(u.lumber||0));if(!choices.length)return;const start=Math.floor(this.random()*choices.length);
-  for(let i=0;i<choices.length;i++){const [key,b]=choices[(start+i)%choices.length],zone=cf.map.buildZones.find(z=>z.team===p.team),points=[];const footprint=b.footprint||{w:3,d:3};for(let x=Math.ceil((zone.minX+footprint.w/2)/cf.map.grid)*cf.map.grid;x<=zone.maxX-footprint.w/2;x+=cf.map.grid)for(let z=Math.ceil((zone.minZ+footprint.d/2)/cf.map.grid)*cf.map.grid;z<=zone.maxZ-footprint.d/2;z+=cf.map.grid)if(castleBuildPosition(cf.map,p.team,{x,z},footprint,cf.buildings))points.push({x,z});if(!points.length)continue;const first=Math.floor(this.random()*points.length);for(let j=0;j<points.length;j++)if(this.castleCommand(u,{type:'cfBuild',building:key,...points[(first+j)%points.length]}))return;}
+  for(let i=0;i<choices.length;i++){const [key,b]=choices[(start+i)%choices.length],zone=cf.map.buildZones.find(z=>z.team===p.team),points=[];const footprint=b.footprint||{w:3,d:3};for(let x=Math.ceil((zone.minX+footprint.w/2)/cf.map.grid)*cf.map.grid;x<=zone.maxX-footprint.w/2;x+=2.5)for(let z=Math.ceil((zone.minZ+footprint.d/2)/cf.map.grid)*cf.map.grid;z<=zone.maxZ-footprint.d/2;z+=2.5)if(castleBuildPosition(cf.map,p.team,{x,z},footprint,[...cf.buildings,...cf.obstacles]))points.push({x,z});if(!points.length)continue;const first=Math.floor(this.random()*points.length);for(let j=0;j<points.length;j++)if(this.castleCommand(u,{type:'cfBuild',building:key,...points[(first+j)%points.length]}))return;}
  },
 
  tickCastleFight(dt){
@@ -126,7 +141,7 @@ export const CastleFightMethods={
   this.castleCompleteBuildings();
   for(const builder of this.heroes()){builder.castleBuilder=true;builder.target=null;builder.moving=false;if(builder.destination&&move(cf,builder,builder.destination,dt)){builder.destination=null;builder.order='stop';}this.castleBotThink(builder);}
   for(const building of cf.buildings.filter(b=>b.alive)){if(building.pendingUpgrade||!catalogUnit(CASTLE_BUILDINGS[building.key])||cf.elapsed<building.nextSpawn)continue;const unit=this.castleSpawn(building);if(unit)building.nextSpawn=cf.elapsed+building.spawnInterval;}
-  this.castleItemTick(dt);this.castleSupportTick(dt);
+  tickCastleItemProjectiles(this,dt,(target,damage,shot)=>hurt(this,target,damage,{id:shot.source,owner:shot.owner,attackType:'spells'},'arcane'));this.castleItemTick(dt);this.castleSupportTick(dt);this.castleDefenseTick(dt);
   for(const unit of cf.units.filter(u=>u.alive)){
    unit.cd=Math.max(0,unit.cd-dt);unit.stun=Math.max(0,unit.stun-dt);unit.moving=false;if(unit.stun>0)continue;
    const enemyUnits=cf.units.filter(t=>t.alive&&t.team!==unit.team&&canHit(unit,t)&&distance(unit,t)<=9),enemyStructures=[...cf.buildings,...cf.teams].filter(t=>t.alive&&t.team!==unit.team&&distance(unit,t)<=unit.range+radius(t)+2),target=[...enemyUnits,...enemyStructures].sort((a,b)=>distance(unit,a)-distance(unit,b)||a.id-b.id)[0];
@@ -134,7 +149,7 @@ export const CastleFightMethods={
    else{unit.target=null;const destination=unit.route[Math.min(unit.pathIndex,unit.route.length-1)],speed=unit.speed;unit.speed*=1+(unit.castleSpeedBonus||0)+((unit.hasteUntil||0)>cf.elapsed?unit.hasteMoveSpeed||0:0);if(move(cf,unit,destination,dt)&&unit.pathIndex<unit.route.length-1)unit.pathIndex++;unit.speed=speed;}
   }
   // Keep ground and air formations separate without consuming game RNG.
-  const units=cf.units.filter(u=>u.alive);for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){const a=units[i],b=units[j];if(a.flying!==b.flying)continue;const min=radius(a)+radius(b),d=distance(a,b);if(d>=min)continue;const dx=d?(b.x-a.x)/d:(a.id<b.id?1:-1),dz=d?(b.z-a.z)/d:0,push=(min-d)*.5;for(const [u,sign]of [[a,-1],[b,1]]){const point=castlePoint(cf.map,{x:u.x+dx*push*sign,z:u.z+dz*push*sign});if(u.flying||passable(cf,point,radius(u))){u.x=point.x;u.z=point.z;}}}
+  const units=cf.units.filter(u=>u.alive);for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){const a=units[i],b=units[j];if(a.flying!==b.flying)continue;const min=radius(a)+radius(b),d=distance(a,b);if(d>=min)continue;const dx=d?(b.x-a.x)/d:(a.id<b.id?1:-1),dz=d?(b.z-a.z)/d:0,push=(min-d)*.5;for(const [u,sign]of [[a,-1],[b,1]]){const point=castlePoint(cf.map,{x:u.x+dx*push*sign,z:u.z+dz*push*sign});if(passable(cf,point,radius(u),{flying:u.flying})&&castleSegmentClear(cf,u,point,radius(u),{flying:u.flying})){u.x=point.x;u.z=point.z;}}}
   cf.units=cf.units.filter(u=>u.alive||this.time-(u.died||0)<1.2);cf.buildings=cf.buildings.filter(b=>b.alive||this.time-(b.died||0)<1.2);
   const surviving=cf.teams.filter(t=>t.alive);if(surviving.length<2){cf.finished=true;cf.winnerTeam=surviving[0]?.team||null;this.winningOwners=Object.values(cf.players).filter(p=>p.team===cf.winnerTeam).map(p=>p.owner);this.winner=this.winningOwners[0]||null;this.phase='victory';this.message=cf.winnerTeam?`A equipe ${cf.winnerTeam} destruiu o castelo inimigo!`:'Os dois castelos ruíram. Empate.';}
  },

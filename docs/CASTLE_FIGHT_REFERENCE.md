@@ -123,6 +123,20 @@ O W3E contém **97×65 vértices**, portanto **96×64 tiles**, tileset **Ashenva
 
 O pedido de uma **torre central de itens** é atendido como adaptação declarada em `CASTLE_LAYOUT.tower.adapted`. Na referência analisada, quem vende os nove itens é o Main Castle, não uma torre central. A posição relativa das bases/pistas e os materiais do terreno podem ser fiéis à fonte sem atribuir essa mudança ao autor original.
 
+## Arma defensiva do castelo: adaptação declarada
+
+Não foi confirmado ataque próprio do **Main Castle** no exemplar v1.14b fixado. O objeto `hcas` contém 5.000 HP e regeneração de 0,5 HP/s, a lista de itens e habilidades de interação, mas não sobrescreve dano, intervalo ou alcance de arma. O JASS cria os castelos e remove a invulnerabilidade no início da rodada; suas referências à reação do castelo atacado tratam a IA/Rescue Strike. Não foi localizado um disparador de arma próprio para `hcas`. A [tabela primária de construções humanas da Blizzard](https://classic.battle.net/war3/human/buildingstats.shtml) também separa o Castle sem arma das torres com estatísticas de ataque.
+
+Para atender ao pedido de castelos defensivos sem atribuir números inventados ao original, a arma pode reutilizar a **Watch Tower do próprio v1.14b**, `h006` / `human_h006`: Pierce, **45 de dano médio**, intervalo de **0,5 s**, alcance nativo **950** (950/256 no catálogo). O tooltip registra 90 DPS; os dados incluem dano-base 39 e faces 11, compatíveis com a média de 45 do ataque herdado. A transferência dessa arma para o Main Castle é uma adaptação explícita; não significa que o castelo original a possuía.
+
+## Blast Staff: aquisição e projétil
+
+O item `I001` usa a habilidade `A02D`: dano 60, intervalo de 1 segundo, área de aquisição nativa 750 e velocidade de projétil `amsp = 1000`. `shared/castle-item-effects.js` converte distância/velocidade na mesma escala 1/256 do catálogo e mantém o dano-base.
+
+O disparo precisa de um inimigo vivo e elegível dentro da área. Polling sem alvo não consome uma recarga. Depois do lançamento, o projétil segue o alvo e aplica dano somente ao impacto; sair do alcance inicial não cancela uma bala já lançada. Alvo morto ou convertido para aliado cancela a bala sem dano. A posição do projétil é independente da posição posterior do portador.
+
+O dano usa a linha **Spells** da matriz: por exemplo, Hero recebe 70% e Divine recebe 25%. Armadura física e buffs de dano de ataque não ampliam/reduzem esse dano. Uma resistência mágica explícita já aplicada pelo motor pode reduzi-lo; o módulo não inventa efeitos a partir de IDs de habilidades nativas ainda não implementadas. Projéteis são dados serializáveis em `castleFight.projectiles`, permitindo representação visível durante o trajeto. Testes cobrem aquisição, cadência, trajetória, alvos voadores, counters e morte sem dano duplicado.
+
 ## Economia confirmada e diferenças restantes
 
 O JASS registra, no modo padrão, **250 de ouro e 125 de madeira iniciais**. A renda parte de `yx = 0,5`; a conclusão da construção adiciona `fator × custo registrado / 100` à base, e `gI` calcula `floor(yx × pe × 10)` antes dos modificadores de Treasure Box, impostos e equipe. `pe` é **1 por padrão**; o JASS usa 1,33 para computadores na dificuldade Insane. Os fatores registrados são 0,20 para tropas comuns, 0,18 para cerco, 0,08 para torres e 0,09/0,12 para categorias especiais.

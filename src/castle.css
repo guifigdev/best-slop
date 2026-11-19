@@ -3,3 +3,5 @@
 #arena-select[hidden],.castlefight #climate,.castlefight .inventory-dock{display:none!important}.cf-build-card:disabled{opacity:.5;cursor:default}.cf-build-card:disabled:hover{outline:none}#cf-camera-nav{display:none}.castlefight #cf-camera-nav{display:flex;position:absolute;left:24px;top:176px;gap:4px;z-index:5;background:#f1ebd5e8;border:1px solid #fff8;border-radius:7px;padding:4px}.castlefight #cf-camera-nav button{border:0;border-radius:4px;background:transparent;color:#365440;padding:7px 10px;cursor:pointer;font:10px Outfit}.castlefight #cf-camera-nav button:hover{background:#d9dcbf}.castlefight .hero-card .resources:last-of-type,.castlefight .hero-card .bar.mana{display:none}.castlefight .worldhead h1{padding-right:120px}
 
 .mode-grid[hidden]{display:none!important}#startmodal .game-picker{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:720px){#startmodal .game-picker{grid-template-columns:1fr}}
+
+.cf-build-reason{color:#f1c1a4!important}.cf-owned-item{display:flex;flex-direction:column;gap:3px;padding:5px 9px;font-size:11px;color:#f1d394}.cf-owned-item small{color:#cfdec2}
