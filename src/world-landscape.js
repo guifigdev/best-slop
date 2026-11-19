@@ -71,6 +71,7 @@ export function createWorldLandscape({scene,base,material}){
  function batch(boxes,kind,castShadow,mat){if(!boxes.length)return;const mesh=new T.InstancedMesh(geometry,mat,boxes.length);mesh.name='landscape-'+kind;mesh.castShadow=castShadow;mesh.receiveShadow=true;for(const [i,b]of boxes.entries()){matrix.position.set(b.x,b.y,b.z);matrix.rotation.set(0,0,0);matrix.scale.set(b.w,b.h,b.d);matrix.updateMatrix();mesh.setMatrixAt(i,matrix.matrix);mesh.setColorAt(i,color.setHex(b.color));}mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;mesh.computeBoundingSphere();root.add(mesh);}
  return{
   update(options={}){if(disposed)return null;const key=landscapeKey(options);if(current?.key!==key){clear();current=landscapeLayout(options);batch(current.ground,'ground',false,surfaceMaterial);batch(current.decor,'decor',true,surfaceMaterial);batch(current.glow,'glow',false,glowMaterial);}horizon.setHex(current.palette.horizon);scene.background=horizon;if(scene.fog)scene.fog.color.copy(horizon);return current.palette;},
+  setVisible(value){root.visible=!!value;},
   get palette(){return current?.palette||null;},
   dispose(){if(disposed)return;disposed=true;clear();root.removeFromParent();if(ownGeometry)geometry.dispose();surfaceMaterial.dispose();glowMaterial.dispose();if(scene.background===horizon)scene.background=previousBackground;if(scene.fog&&previousFog)scene.fog.color.copy(previousFog);}
  };

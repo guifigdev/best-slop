@@ -1,4 +1,6 @@
 export const MODES={
+ treetag:{name:'Tree Tag',tag:'FUGA E CAÇADA',description:'Ents se escondem, constroem e resgatam aliados. Infernals caçam pela floresta antes de acabar o tempo.'},
+ warlock:{name:'Warlock',tag:'ARENA DE MAGOS',description:'Duelos de magia, projéteis e empurrões. Evite a lava, compre feitiços e sobreviva aos rounds.'},
  castlefight:{name:'Castle Fight',tag:'CONSTRUÇÃO EM EQUIPES',description:'Dois castelos, duas equipes e tropas automáticas. Construa produtores, combine tipos de ataque e armadura e destrua o castelo inimigo. Seu construtor não luta.'},
  linewars:{name:'Guerra das Linhas',tag:'LINE WARS',description:'Defenda sua linha. Clique nas casinhas para enviar criaturas ao adversário e ampliar sua renda. Cada invasor que cruza o portal retira vidas da base.'},
  campaign:{name:'Torneio dos Nove Reinos',tag:'CLÁSSICO',description:'50 ondas, desafios de velocidade, mercado a cada 5 e uma grande final todos contra todos.'},
@@ -6,5 +8,5 @@ export const MODES={
  best:{name:'Best of All',tag:'COMPETIÇÃO INDIVIDUAL',description:'Provas individuais em arenas separadas. Tempo e vida restante valem pontos. Todos contra todos a cada 10 ondas, até a onda 50.'},
  war:{name:'Guerra de equipes',tag:'PARTIES',description:'De 2 a 5 equipes, com 2 ou 5 heróis cada. Provas por equipe e confrontos em um campo procedural a cada 5 ou 10 ondas.'}
 };
-export function modeOptions(input={}){const mode=['linewars','castlefight'].includes(input.game)?input.game:Object.hasOwn(MODES,input.mode)?input.mode:'campaign';return{game:['linewars','castlefight'].includes(mode)?mode:'survival',mode,teamSize:input.teamSize===5?5:2,teamCount:[2,3,4,5].includes(input.teamCount)?input.teamCount:5,clashEvery:input.clashEvery===10?10:5,towerLimit:[50,100].includes(input.towerLimit)?input.towerLimit:0,...(mode==='linewars'?{lineTeams:input.lineTeams===true,...(input.lineTeams===true?{teamSize:2,teamCount:2}:{})}:{}),...(mode==='castlefight'?{laneCount:input.laneCount===1?1:2}:{})};}
-export function capacity(options){return options.mode==='war'?options.teamSize*options.teamCount:4;}
+export function modeOptions(input={}){const mode=['linewars','castlefight','treetag','warlock'].includes(input.game)?input.game:Object.hasOwn(MODES,input.mode)?input.mode:'campaign';return{game:['linewars','castlefight','treetag','warlock'].includes(mode)?mode:'survival',mode,teamSize:input.teamSize===5?5:2,teamCount:[2,3,4,5].includes(input.teamCount)?input.teamCount:5,clashEvery:input.clashEvery===10?10:5,towerLimit:[50,100].includes(input.towerLimit)?input.towerLimit:0,...(mode==='linewars'?{lineTeams:input.lineTeams===true,...(input.lineTeams===true?{teamSize:2,teamCount:2}:{})}:{}),...(mode==='castlefight'?{laneCount:input.laneCount===1?1:2}:{})};}
+export function capacity(options){return options.mode==='treetag'?12:options.mode==='war'?options.teamSize*options.teamCount:4;}

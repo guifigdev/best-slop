@@ -1,8 +1,9 @@
-export function cameraBounds(state){if(state?.options?.mode==='castlefight'){const m=state.castleFight?.map;return {minX:m?.minX??-52,maxX:m?.maxX??52,minZ:m?.minZ??-28,maxZ:m?.maxZ??28};}const m=state?.options?.mode==='linewars'&&state.voxelMap;return m?{minX:m.origin.x-3,maxX:m.origin.x+m.width*m.tileSize+3,minZ:m.origin.z-3,maxZ:m.origin.z+m.height*m.tileSize+3}:{minX:-35,maxX:35,minZ:-35,maxZ:35};}
+export function cameraBounds(state){if(state?.options?.mode==='treetag')return{minX:-47,maxX:47,minZ:-47,maxZ:47};if(state?.options?.mode==='warlock'){const r=state.warlock?.mapRadius||30;return{minX:-r,maxX:r,minZ:-r,maxZ:r};}if(state?.options?.mode==='castlefight'){const m=state.castleFight?.map;return {minX:m?.minX??-52,maxX:m?.maxX??52,minZ:m?.minZ??-28,maxZ:m?.maxZ??28};}const m=state?.options?.mode==='linewars'&&state.voxelMap;return m?{minX:m.origin.x-3,maxX:m.origin.x+m.width*m.tileSize+3,minZ:m.origin.z-3,maxZ:m.origin.z+m.height*m.tileSize+3}:{minX:-35,maxX:35,minZ:-35,maxZ:35};}
 export const cameraDragIsPan=(event,mode='pan')=>(event.pointerType==='touch'||event.button===0)&&mode==='pan';
 // Coordinates are already local to the displayed player's arena.
 export function cameraDestination(state,owner,zone='battle'){
  const map=state?.voxelMap,m=map?.markers||{},hero=state?.units?.find(u=>u.id===state.players?.[owner]),fountain=m.fountain||hero||{x:0,z:0};
+ if(state?.options?.mode==='warlock')return{x:0,z:0,distance:zone==='overview'?105:78};if(state?.options?.mode==='treetag'&&zone==='overview')return{x:0,z:0,distance:170};
  if(zone==='base')return{...fountain,distance:44};
  if(zone==='recruitment'){const houses=state?.lineWars?.buildings?.filter(b=>b.owner===owner)||[],points=houses.length?houses:m.buildings||[];return points.length?{x:points.reduce((s,p)=>s+p.x,0)/points.length,z:points.reduce((s,p)=>s+p.z,0)/points.length,distance:45}:{...fountain,distance:45};}
  if(zone==='overview'&&map)return{x:map.origin.x+map.width*map.tileSize/2,z:map.origin.z+map.height*map.tileSize/2,distance:Math.min(230,Math.max(map.width,map.height)*map.tileSize*1.65)};

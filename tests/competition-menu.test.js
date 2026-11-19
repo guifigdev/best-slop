@@ -11,7 +11,7 @@ class Element {
 function fixture(){
  const ids=Object.fromEntries(['arena-select','start','online','start-title','war-options','tower-options','party-section','party-code','party-status','party-create','party-join','party-queue','party-leave','line-format-info','line-format','castle-lanes','castle-format-info','castle-options','line-options'].map(id=>[id,new Element()]));ids['start-title'].nextElementSibling=new Element();
  for(const [id,value]of [['team-size','2'],['team-count','5'],['clash-every','5'],['tower-limit','0']])ids[id]=Object.assign(new Element(),{value});
- const kinds=['survival','linewars','castlefight'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
+ const kinds=['survival','linewars','castlefight','treetag','warlock'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight','treetag','warlock'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
  for(const [name,inputs]of Object.entries(groups)){const cards=inputs.map(input=>{const card=new Element();card.querySelector=()=>input;return card;});ids[name].querySelectorAll=()=>cards;}
  root.querySelector=selector=>{if(selector==='.game-picker')return picker;if(selector==='.mode-grid')return grid;const checked=selector.match(/input\[name="([^"]+)"\]:checked/);if(checked)return groups[checked[1]].find(radio=>radio.checked);const mode=selector.match(/data-game-mode="([^"]+)"/);if(mode)return modes.find(b=>b.dataset.gameMode===mode[1]);throw Error('Unexpected selector '+selector);};
  root.querySelectorAll=selector=>selector==='[data-game-mode]'?modes:selector==='[data-game-kind]'?kinds:selector==='.format-choices'?[ids['line-format'],ids['castle-lanes']]:selector.startsWith('select,')?[...Object.values(groups).flat(),...modes,...kinds,...['team-size','team-count','clash-every','tower-limit','party-create','party-join','party-code'].map(id=>ids[id])]:[];
@@ -43,4 +43,10 @@ test('switching games notifies the character picker and a locked party cannot re
   menu.renderParty({code:'TEST',host:'p',players:[{id:'p',hero:'knight'}],options:{teamSize:2,teamCount:2,clashEvery:5},queued:false},'p');
   f.kinds[2].onclick();assert.equal(calls.length,3);
  }finally{globalThis.document=previous;}
+});
+
+
+test('Tree Tag and Warlock cards select independent options and restore the existing survival choices',()=>{
+ const f=fixture(),previous=globalThis.document;globalThis.document=f.document;
+ try{const calls=[],menu=installCompetitionMenu({connect(){},getSocket(){return null;},onGameChange:k=>calls.push(k)});f.kinds[3].click();assert.equal(menu.options().mode,'treetag');assert.equal(f.ids['arena-select'].hidden,true);f.kinds[4].click();assert.equal(menu.options().mode,'warlock');assert.equal(f.ids['arena-select'].hidden,true);f.kinds[0].click();assert.equal(menu.options().mode,'campaign');assert.equal(f.ids['arena-select'].hidden,false);assert.deepEqual(calls,['treetag','warlock','survival']);}finally{globalThis.document=previous;}
 });

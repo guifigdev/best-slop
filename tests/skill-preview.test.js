@@ -23,3 +23,9 @@ test('movement sweep previews stop at walls without mutating the hero or state',
 test('aim validity exposes mana, cooldown, ally target and wall overlap failures',()=>{assert.match(make('stomp',1,{hero:{...hero(),mana:0},mode:'aim'}).reason,/Mana/);assert.match(make('stomp',1,{hero:{...hero(),cooldowns:{stomp:2}},mode:'aim'}).reason,/recarga/);assert.match(make('bolt',1,{mode:'aim',target:{id:2,alive:true,x:0,z:2,team:1}}).reason,/inimigo/);assert.equal(make('icewall',1,{mode:'aim',point:{x:0,z:5},state:{phase:'wave',units:[{id:2,alive:true,x:0,z:5}],options:{mode:'campaign'}}}).valid,false);});
 test('aura radii are factual; personal lifesteal is not falsely presented as an aura',()=>{assert.equal(make('endurance').shapes.find(s=>s.role==='secondary').radius,9);assert.equal(make('vampiric').shapes.some(s=>s.radius===9),false);assert.equal(PREVIEW_RANGES.bounce,5);});
 test('loot colors follow all five shared rarities with safe unknown fallback',()=>{const colors=new Set();for(const rarity of Object.values(LOOT_RARITIES)){assert.equal(lootRarityVisual(rarity.id).color,rarity.color);colors.add(rarity.color);}assert.equal(colors.size,5);assert.equal(lootRarityVisual('unknown'),LOOT_RARITIES.common);assert.equal(lootRarityVisual('__proto__'),LOOT_RARITIES.common);});
+
+
+test('native spell previews preserve exact radii and directional projectiles accept a far aiming cursor',()=>{
+ const skill={target:'ground',kind:'active',mana:0,distance:12.5,castRange:12.5,radius:25/64,previewShape:'line',directionOnly:true};const data=skillPreview({key:'S000',skill,hero:hero(),point:{x:20,z:0},mode:'aim',state:{phase:'wave',units:[]}});assert.equal(data.valid,true);assert.equal(effect(data).type,'corridor');assert.equal(effect(data).radius,25/64);assert.equal(effect(data).length,12.5);
+ const self=skillPreview({key:'destroyTrees',skill:{target:'self',kind:'active',radius:2.5,mana:0},hero:hero()});assert.equal(effect(self).radius,2.5);
+});

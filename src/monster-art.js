@@ -1,13 +1,15 @@
+import {buildNordicMonster} from './nordic-monster-art.js';
 // Original voxel silhouettes. These body parts are merged by the view into one
 // coloured mesh; the existing 8 Hz body clips supply locomotion. Wings are
 // returned as local voxel descriptors so the view can retain animated pivots.
 export function buildMonster(kind,body,voxel){
- if(['raven','lynx','helhound'].includes(kind)){
-  const b=(...p)=>voxel(body,...p),fur=kind==='lynx'?0xbc9d6c:kind==='raven'?0x333e56:0x424658;
+ const nordic=buildNordicMonster(kind,body,voxel);if(nordic)return nordic;
+ if(['raven','lynx'].includes(kind)){
+  const b=(...p)=>voxel(body,...p),fur=kind==='lynx'?0xbc9d6c:0x333e56;
   b(0,.95,0,.92,.78,1.5,fur);b(0,1.55,.62,.9,.82,.87,fur);b(0,1.35,1.15,.7,.34,.38,kind==='lynx'?0xe7d3a8:0x8e9eaa);
-  for(const x of [-.28,.28]){b(x,1.72,1.075,.13,.14,.06,kind==='helhound'?0xbd89ff:0x9ddce9);b(x,2.09,.54,.24,.44,.26,fur);b(x,2.33,.53,.08,.2,.1,0x39424c);}
+  for(const x of [-.28,.28]){b(x,1.72,1.075,.13,.14,.06,0x9ddce9);b(x,2.09,.54,.24,.44,.26,fur);b(x,2.33,.53,.08,.2,.1,0x39424c);}
   if(kind==='raven'){b(0,1.43,1.38,.22,.26,.4,0xbcc7cb);b(0,.93,-.9,.62,.22,.65,0x263547);const wings=[-1,1].map(side=>({side,pivot:[side*.45,1.18,0],parts:[[side*.52,0,-.1,1.15,.17,.8,0x52627d],[side*1.12,-.1,-.2,.5,.16,.67,0x354460],[side*.65,.04,.24,.8,.1,.2,0x8cabc4]]}));return{fur,wings};}
-  b(0,.97,-1,.33,.32,kind==='lynx'?.5:.9,fur);if(kind==='helhound'){for(let i=0;i<5;i++)b(0,1.44,-.6+i*.28,.15,.4,.17,0x9d93cf);b(-.49,.95,0,.06,.34,.54,0x9a84c3);b(.49,.95,0,.06,.34,.54,0x9a84c3);}else for(const x of [-.48,.48])for(let i=0;i<3;i++)b(x,1.1,-.45+i*.4,.04,.16,.13,0x695d4b);
+  b(0,.97,-1,.33,.32,.5,fur);for(const x of [-.48,.48])for(let i=0;i<3;i++)b(x,1.1,-.45+i*.4,.04,.16,.13,0x695d4b);
   return{fur,wings:[]};
  }
  if(!['lion','rhino','griffin','chimera','dragon','sphinx','valkyrie','harpy','phoenix','frostwyrm','basilisk'].includes(kind))return null;

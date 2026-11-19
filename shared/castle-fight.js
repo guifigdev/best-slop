@@ -71,6 +71,7 @@ export const CastleFightMethods={
    const building=cf.buildings.find(b=>b.id===c.buildingId&&b.alive&&b.owner===u.owner);if(!building)return false;const refund=Math.floor(building.invested*.65*clamp(building.hp/building.maxHp,0,1));building.alive=false;cf.navigationRevision++;building.sold=true;building.died=this.time;u.gold+=refund;this.fx('castleSell',building.x,building.z,{source:u.id,amount:refund,buildingId:building.id});return true;
   }
   if(c.type==='cfItem')return this.castleBuyItem(u,c);
+  if(c.type==='cfUseItem'){if(!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;const entry=u.inventory[c.slot];if(!entry)return false;return this.castleBuyItem(u,{...c,item:entry.key},c.slot);}
   return false;
  },
 
@@ -103,11 +104,15 @@ export const CastleFightMethods={
   u.gold-=definition.cost;u.lumber-=definition.lumberCost||0;building.invested+=definition.cost;building.pendingUpgrade=key;building.w=Math.max(building.w,definition.footprint.w);building.d=Math.max(building.d,definition.footprint.d);cf.navigationRevision++;building.workRemaining=building.workTotal=Math.max(.05,definition.buildTime||0);building.workProgress=0;building.readyAt=null;building.nextSpawn=null;queueCastleWork(u,building);this.fx('castleUpgrade',building.x,building.z,{source:u.id,buildingId:building.id,building:key,duration:definition.buildTime||0});return true;
  },
 
- castleBuyItem(u,c){
+ castleBuyItem(u,c,inventorySlot=null){
   const cf=this.castleFight,p=cf.players[u.owner],item=own(CASTLE_ITEMS,c.item)?CASTLE_ITEMS[c.item]:null,handlers=new Set(['speed_aura','repair_aura','damage_aura','passive_blast','double_damage','quad_damage','chain_orb','stone_scroll','legendary_slot']);
-  if(!item||!item.playable||!handlers.has(item.effect)||distance(u,cf.map.tower)>cf.map.tower.radius||u.gold<item.cost||(u.lumber||0)<(item.lumberCost||0)||!itemReady(this,u,c.item)||cf.elapsed<(cf.shop.availableAt[c.item]||0)||cf.shop.stock[c.item]===0||passiveItems.has(item.effect)&&p.items[c.item])return false;
+  const fromInventory=inventorySlot!==null,stored=fromInventory?u.inventory[inventorySlot]:null,passive=!!item&&passiveItems.has(item.effect),store=c.store===true&&!passive&&!fromInventory;
+  if(!item||!item.playable||!handlers.has(item.effect)||fromInventory&&(!stored||stored.key!==c.item||!(stored.charges>0)||passive)||!store&&!itemReady(this,u,c.item)||!fromInventory&&(distance(u,cf.map.tower)>cf.map.tower.radius||u.gold<item.cost||(u.lumber||0)<(item.lumberCost||0)||cf.elapsed<(cf.shop.availableAt[c.item]||0)||cf.shop.stock[c.item]===0||passive&&p.items[c.item]))return false;
+  if(!fromInventory&&(store||passive)&&u.inventory.filter(Boolean).length>=6){this.commandFailureReason='Sua mochila está cheia. Use um consumível antes de comprar.';return false;}
+  const spendPurchase=()=>{u.gold-=item.cost;u.lumber-=item.lumberCost||0;if(cf.shop.stock[c.item]!==null){cf.shop.stock[c.item]--;if(!cf.shop.nextStock[c.item])cf.shop.nextStock[c.item]=cf.elapsed+(item.sourceStats?.stockReplenish||Infinity);}};
+  if(store){spendPurchase();const slot=u.inventory.findIndex(i=>!i);const entry={key:c.item,charges:1};if(slot<0)u.inventory.push(entry);else u.inventory[slot]=entry;this.fx('castleItem',u.x,u.z,{source:u.id,item:c.item,pickup:true});return true;}
   const allies=cf.units.filter(unit=>unit.alive&&unit.team===p.team),point=castlePoint(cf.map,c.x===undefined?cf.map.tower:c);if(!point)return false;let changed=false;
-  if(passiveItems.has(item.effect)){p.items[c.item]={key:c.item,boughtAt:cf.elapsed,nextAt:cf.elapsed};changed=true;}
+  if(passiveItems.has(item.effect)){p.items[c.item]={key:c.item,boughtAt:cf.elapsed,nextAt:cf.elapsed};const index=u.inventory.findIndex(i=>!i),entry={key:c.item,charges:1,passive:true};if(index<0)u.inventory.push(entry);else u.inventory[index]=entry;changed=true;}
   if(item.effect==='legendary_slot'){p.legendarySlots+=item.extraSlots||1;changed=true;}
   if(item.effect==='stone_scroll')for(const target of allies.filter(t=>distance(t,point)<=item.radius)){target.hp=Math.min(target.maxHp,target.hp+item.heal);target.mana=Math.min(target.maxMana||0,(target.mana||0)+item.mana);target.castleBuffs||={};target.castleBuffs[c.item]={until:cf.elapsed+item.duration,armor:item.armor};changed=true;this.fx('heal',target.x,target.z,{source:u.id,amount:item.heal,castle:true});}
   if(['double_damage','quad_damage'].includes(item.effect))for(const target of allies.filter(t=>distance(t,point)<=item.radius)){target.castleBuffs||={};target.castleBuffs[c.item]={until:cf.elapsed+item.duration,damageBonus:item.damageBonus};changed=true;}
@@ -115,7 +120,7 @@ export const CastleFightMethods={
    let target=c.target===undefined?cf.units.filter(t=>t.alive&&t.team!==p.team&&distance(u,t)<=(item.range||100)).sort((a,b)=>distance(u,a)-distance(u,b)||a.id-b.id)[0]:cf.units.find(t=>t.id===c.target&&t.alive&&t.team!==p.team&&distance(u,t)<=(item.range||100)),from=u;const visited=new Set();
    for(let i=0;target&&i<item.jumps;i++){visited.add(target.id);hurt(this,target,item.damage*item.retention**i,{...u,attackType:'spells'},'lightning');this.fx('bolt',from.x,from.z,{source:u.id,tx:target.x,tz:target.z,castle:true});from=target;changed=true;target=cf.units.filter(t=>t.alive&&t.team!==p.team&&!visited.has(t.id)&&distance(from,t)<=item.radius).sort((a,b)=>distance(from,a)-distance(from,b)||a.id-b.id)[0];}
   }
-  if(!changed)return false;u.gold-=item.cost;u.lumber-=item.lumberCost||0;p.cooldowns[c.item]=cf.elapsed+Math.max(0,item.cooldown||0);if(cf.shop.stock[c.item]!==null){cf.shop.stock[c.item]--;if(!cf.shop.nextStock[c.item])cf.shop.nextStock[c.item]=cf.elapsed+(item.sourceStats?.stockReplenish||Infinity);}this.fx('castleItem',point.x,point.z,{source:u.id,item:c.item,radius:item.radius||4});return true;
+  if(!changed)return false;if(fromInventory){stored.charges--;if(stored.charges<=0)u.inventory[inventorySlot]=null;}else spendPurchase();p.cooldowns[c.item]=cf.elapsed+Math.max(0,item.cooldown||0);this.fx('castleItem',point.x,point.z,{source:u.id,item:c.item,radius:item.radius||4});return true;
  },
 
  castleBuildingDefinition(building){return CASTLE_BUILDINGS[building.key];},

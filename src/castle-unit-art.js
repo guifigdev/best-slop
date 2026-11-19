@@ -55,6 +55,18 @@ export function castleUnitVisual(value){
   if(family==='dragon-turtle'){b(0,1.35,-.1,1.5,.68,1.75,0x5d7c66);b(0,1.8,-.1,.9,.25,1.1,p.trim);for(const x of [-.6,0,.6])b(x,1.75,-.1,.19,.37,.2,ivory);}
   if(family==='hydra')for(const side of [-1,0,1]){b(side*.63,1.7,0,.32,1.35,.4,color);b(side*.63,2.42,.29,.55,.5,.8,color);b(side*.63,2.24,.77,.48,.19,.27,0xd7ccb1);eye(side*.63-.16,2.5,.7);eye(side*.63+.16,2.5,.7);}
   if(family==='magnataur'){b(0,1.9,.1,1.2,1.2,.7,color);b(0,2.7,.14,.7,.66,.6,color);for(const side of [-1,1]){b(side*.8,2,.1,.4,1.25,.5,color);b(side*.43,2.85,.25,.2,.8,.25,ivory);eye(side*.18,2.83,.47);}b(0,1.8,.49,.8,.22,.12,p.trim);}
+ }else if(family==='murloc'){
+  // The native chain changes species and silhouette, rather than recoloring
+  // the same soldier: Murloc, Mutant, Flesheater and Nightcrawler.
+  const tier={n003:0,n00I:1,n00J:2,n00K:3}[key]??0;
+  const skin=[0x7da99b,0x6b9a8a,0x8eaa72,0x555e74][tier],fin=[0xc6b775,0xd5aa75,0xc8b778,0x8c7dad][tier];
+  const bulk=1+tier*.12;motion='waddle';
+  b(0,.91,0,.84*bulk,.9,.66*bulk,skin);b(0,1.55,.16,.96*bulk,.76,.72*bulk,skin);b(0,1.32,.6,.82*bulk,.27,.37,0xb9c7a0);b(0,1.4,.81,.58,.12,.035,dark);
+  for(const side of [-1,1]){b(side*.46*bulk,1.82,.43,.36,.34,.3,ivory);eye(side*.48*bulk,1.82,.6,tier===3?0xd6a2b1:dark);b(side*.66*bulk,.97,.1,.28,.67,.35,skin);b(side*.63*bulk,.63,.3,.37,.2,.48,skin);leg(side*.29*bulk,.06,skin,.35,.36,.18,.48);b(side*.29*bulk,.13,.33,.42,.16,.6,skin);for(const x of [-.1,.1])b(side*.29*bulk+x,.14,.65,.07,.09,.2,ivory);}
+  for(let i=0;i<4+tier;i++)b(0,.64+i*.22,-.43,.12,.26,.28+(i%2)*.12,fin);
+  if(tier<3){b(.79*bulk,1.03,.3,.1,1.6+tier*.14,.1,0x816849);b(.79*bulk,1.93+tier*.07,.3,.28,.44,.15,p.metal);if(tier>0){b(-.81*bulk,1.04,.28,.18,.74+tier*.12,.67,p.metal);b(-.92*bulk,1.04,.28,.05,.49,.37,fin);}}
+  if(tier===2){for(const side of [-1,1])b(side*.58,1.32,0,.42,.24,.72,p.metal);b(0,2.02,.1,.58,.14,.52,fin);for(const x of [-.23,0,.23])b(x,2.18,.1,.1,.28,.16,ivory);}
+  if(tier===3){b(0,1.87,-.05,1.15,.22,.81,0x444654);b(0,1.13,-.42,.9,1.12,.18,0x444654);for(const side of [-1,1]){b(side*.8,1.04,.55,.11,.72,.13,p.metal);b(side*.8,.73,.55,.31,.08,.18,fin);}b(0,1.12,.65,.66,.17,.08,0x444654);}
  }else if(family==='naga'){
   motion='serpent';for(let i=0;i<4;i++)b(0,.24+i*.17,-.75+i*.27,1.1-i*.17,.25,1.15-i*.15,p.skin);b(0,1.15,0,.7,1.25,.52,p.cloth);b(0,2,.06,.61,.63,.55,p.skin);for(const side of [-1,1]){b(side*.48,1.25,.05,.24,.8,.3,p.skin);eye(side*.18,2.12,.36);b(side*.37,2.05,-.03,.25,.47,.12,p.trim);}b(0,1.82,-.3,.2,1,.18,p.trim);if(/guard/.test(name)){b(.68,1.3,.2,.11,2.4,.12,p.metal);b(.68,2.58,.2,.35,.4,.17,p.trim);}else staff(0xc7d9b8);
  }else if(family==='spirit'){
@@ -65,16 +77,40 @@ export function castleUnitVisual(value){
   else if(family==='zombie'){for(const side of [-1,1])b(side*.53,.83,.2,.26,.4,.3,skin);b(0,1.24,.29,.52,.15,.05,0x778875);if(/plague/.test(name))b(0,1.13,-.43,.7,.85,.36,0x8a9d6d);}
   else if(family==='demon'){for(const side of [-1,1]){b(side*.55,.78,.3,.3,.3,.4,p.skin);for(const x of [-.08,.08])b(side*.55+x,.78,.56,.07,.16,.24,ivory);}if(/quill/.test(name))for(const x of [-.45,0,.45])b(x,1.6,-.34,.13,.8,.2,ivory);if(/succubus/.test(name))staff(0xd5a7c6);if(/succubus|incubus/.test(name))for(const side of [-1,1])wings.push({side,pivot:[side*.32,1.35,-.27],parts:[[side*.38,.12,0,.7,.16,.72,p.cloth],[side*.68,-.15,-.08,.42,.48,.3,p.skin]]});}
   else if(family==='caster'){staff(race==='undead'?0xb6d598:race==='north'?0xb5e4eb:0xc8b6df);b(0,2.08,-.02,.8,.25,.73,p.cloth);if(/wizard|lich|queen/.test(name)){b(0,2.34,-.02,.48,.35,.5,advanced?p.trim:p.cloth);b(0,2.6,-.02,.2,.2,.25,p.trim);}}
-  else if(family==='rifleman'||/flamegunner/.test(name)){b(.51,1.15,.45,.23,.24,.62,0x856d50);b(.51,1.23,.98,.13,.13,.7,p.metal);b(.51,1.23,1.35,.2,.2,.13,dark);b(.51,1.42,.62,.15,.14,.23,p.trim);if(/sniper/.test(name)){b(.51,1.49,.72,.18,.2,.48,dark);b(.51,1.23,1.6,.11,.11,.55,p.metal);}if(/heavy|flame/.test(name)){b(0,1.2,-.46,.73,.8,.35,/flame/.test(name)?0xab7056:p.cloth);b(.57,1.23,1.08,.27,.27,.63,p.metal);}}
-  else if(family==='archer'){b(.62,1.3,.3,.1,1.55,.12,p.trim);b(.77,1.3,.3,.08,1.1,.1,ivory);b(.69,.6,.3,.25,.12,.15,p.trim);b(.69,2,.3,.25,.12,.15,p.trim);b(0,1.2,-.4,.5,.7,.3,0x826b4e);}
+  else if(family==='rifleman'||/flamegunner/.test(name)){b(.51,1.15,.45,.23,.24,.62,0x856d50);b(.51,1.23,.98,.13,.13,.7,p.metal);b(.51,1.23,1.35,.2,.2,.13,dark);b(.51,1.42,.62,.15,.14,.23,p.trim);if(/sniper|marksman/.test(name)){b(.51,1.49,.72,.2,.2,.63,dark);b(.51,1.49,1.06,.15,.15,.08,0x80b9bf);b(.51,1.23,1.65,.11,.11,.72,p.metal);b(.51,1.23,2.05,.18,.18,.22,dark);b(.51,1.01,.15,.28,.17,.5,0x755e44);}if(/heavy|flame/.test(name)){b(0,1.2,-.46,.73,.8,.35,/flame/.test(name)?0xab7056:p.cloth);b(.57,1.23,1.08,.27,.27,.63,p.metal);}}
+  else if(family==='archer'){
+   // Stepped recurved limbs, a taut string and a nocked arrow face the target.
+   b(.66,1.24,.48,.14,.34,.18,0x8c6947);
+   for(const side of [-1,1]){b(.66,1.24+side*.3,.55,.12,.3,.16,p.trim);b(.66,1.24+side*.55,.67,.1,.25,.14,p.trim);b(.66,1.24+side*.72,.8,.12,.14,.17,0xb69a67);}
+   b(.66,1.24,.85,.035,1.46,.035,ivory);b(.66,1.24,1.05,.045,.045,.95,0xba9e67);b(.66,1.24,1.55,.09,.09,.2,p.metal);
+   b(0,1.2,-.4,.5,.7,.3,0x826b4e);for(const x of [-.16,0,.16]){b(x,1.66,-.43,.05,.5,.05,p.trim);b(x,1.94,-.43,.14,.15,.08,ivory);}
+  }
   else if(family==='goblin'){if(/lunatic/.test(name)){b(.55,1.05,.37,.65,.8,.65,0xb77859);b(.55,1.52,.37,.08,.2,.08,0xe1cd86);}else{b(.62,1.15,.25,.14,1,.14,p.metal);b(.62,1.73,.25,.5,.22,.2,p.metal);b(0,1.2,-.42,.6,.6,.35,p.trim);}b(0,2.02,.05,.69,.18,.65,p.metal);}
   else if(family==='murloc'){b(0,1.32,-.35,.13,1.4,.3,p.trim);for(const side of [-1,1])b(side*.25,2.02,.1,.25,.32,.23,ivory);b(.65,1.25,.15,.1,1.7,.13,p.metal);}
   else if(family==='beastman'){for(const side of [-1,1]){b(side*.28,2.15,0,.17,.55,.2,ivory);b(side*.48,1.2,.1,.32,.9,.42,skin);}b(0,1.05,.31,.2,.7,.15,ivory);}
   else{b(.65,1.28,.35,.15,1.45,.18,p.metal);b(.65,.72,.35,.52,.1,.3,p.trim);b(-.65,1.13,.2,.2,.85,.72,p.cloth);b(-.77,1.13,.2,.06,.3,.32,p.trim);if(/paladin|champion/.test(name)){b(.65,1.9,.35,.5,.32,.4,p.trim);}}
   if(advanced){b(0,2.12,.04,.66,.16,.59,p.trim);for(const side of [-1,1])b(side*.48,1.5,0,.4,.25,.65,p.trim);}
  }
+ // Equipment and anatomy distinguish native evolutions even when they share
+ // a family. These boxes also generate the portrait used in the upgrade UI.
+ if(key==='h05C'){b(0,1.28,-.4,.82,1.08,.17,0x657650);b(.51,.94,1.38,.08,.55,.08,dark);b(.51,1.49,.75,.28,.25,.78,dark);}
+ if(key==='n00X'){for(const side of [-1,1])b(side*.48,1.7,.02,.42,.32,.64,p.metal);for(const x of [-.25,0,.25])b(x,2.43,.05,.12,.4,.18,p.trim);}
+ if(key==='n00Y'){b(0,1.15,-.4,1.1,1.25,.2,0xe4e3cf);b(-.78,1.3,.35,.15,1.5,.2,p.metal);}
+ if(key==='n01K'){b(0,1.17,-.5,.95,1.06,.45,0x747c50);for(const x of [-.3,0,.3])b(x,1.23,.36,.13,.6,.12,0x59634d);b(0,1.5,.35,.73,.23,.2,0x59634d);}
+ if(key==='o00B'){b(0,2.6,0,.12,1.25,.14,p.metal);b(0,3.13,0,.76,.45,.19,0xa6c5df);}
+ if(key==='o008'){for(const side of [-1,1]){b(side*.62,1.66,-.3,.7,.16,.8,0xb77b59);b(side*.62,2,-.3,.1,.58,.15,ivory);}}
+ if(key==='o006'){for(const side of [-1,1]){b(side*.72,1.15,.07,.22,.91,1.26,p.metal);b(side*.85,1.15,.07,.08,.6,.63,p.trim);}}
+ if(key==='o005'){b(.65,1.86,.35,.93,.46,.22,p.metal);b(-.65,1.87,.35,.73,.37,.22,p.metal);}
+ if(key==='n01O'){b(-.79,1.39,.38,.9,.76,.08,ivory);for(const x of [-1.09,-.79,-.49])b(x,1.39,.44,.035,.8,.035,dark);for(const y of [1.13,1.39,1.65])b(-.79,y,.44,.94,.035,.035,dark);}
+ if(key==='o00A'){for(const side of [-1,1]){b(side*.48,2.19,0,.55,.17,.23,0xa7d3df);b(side*.69,2.38,0,.13,.43,.17,ivory);}b(0,1.63,.35,.46,.38,.14,0x7f609a);}
+ if(key==='n01H'){b(0,2.6,-.03,1.26,.6,.88,0x626f54);for(const side of [-1,1])b(side*.86,1.17,.4,.32,.65,.23,0x9ba57b);}
+ if(key==='n027'){for(const side of [-1,1]){b(side*.9,1.23,.43,.7,.68,.45,0x8c7eab);b(side*1.21,1.28,.43,.18,.94,.28,ivory);}b(0,2.69,.05,.21,.86,.26,0xb59bd9);}
+ if(key==='n01E'){for(const side of [-1,1]){b(side*.36,1.57,-.38,.25,.8,.27,dark);b(side*.36,1.83,-.38,.32,.12,.34,0xb8d876);}b(0,1.04,.85,.8,.37,.12,0x9dbb70);}
+ if(key==='n01B'){b(0,1.32,0,.84,.83,1.12,0x595d79);for(const side of [-1,1])b(side*.28,2.25,.57,.16,.65,.19,0xaba1cb);}
+ if(key==='e00J'){b(0,1.1,-.4,1.05,1.34,.22,0x789765);for(const side of [-1,1]){b(side*.37,2.31,0,.16,.58,.18,0xc7b391);b(side*.53,2.55,0,.45,.13,.16,0xc7b391);}}
+ if(key==='e004'){for(const side of [-1,1])b(side*.49,1.49,0,.42,.24,.64,p.metal);b(0,2.12,.03,.3,.48,.31,0x9c6c7c);b(0,1.16,-.49,.62,.87,.28,p.metal);}
  const projectileKind=family==='aircraft'||family==='rifleman'?'bullet':/flamegunner|red dragon|infernal machine|infernal tank/.test(name)?'fire':family==='tank'||family==='artillery'?'siege':/frost wyrm|azure drake|ice queen|ice troll/.test(name)?'frost':/winged serpent|hydra/.test(name)?'poison':['caster','spirit'].includes(family)||['magic','spells'].includes(unit.attackType)?'arcane':'arrow';
- const height=Math.max(1.5,...parts.map(part=>part[1]+part[4]/2),...rotors.map(r=>r.pivot[1]+.2)),visual={key,name:unit.name.trim(),race,family,palette,parts,legs,wings,rotors,projectileKind,motion,vehicle:motion==='vehicle',height,eyeLine:height*.68,fur:palette.skin,muzzle:palette.trim};cache.set(key,visual);return visual;
+ const height=Math.max(1.5,...parts.map(part=>part[1]+part[4]/2),...rotors.map(r=>r.pivot[1]+.2)),visual={key,name:unit.name.trim(),race,family,palette,parts,legs,wings,rotors,projectileKind,motion,vehicle:motion==='vehicle',height,weapon:family==='archer'?'bow':family==='rifleman'?/sniper|marksman/.test(name)?'sniper-rifle':'rifle':null,eyeLine:height*.68,fur:palette.skin,muzzle:palette.trim};cache.set(key,visual);return visual;
 }
 export function castleBasicProjectile(event,unit){if(!unit?.castleUnit||!event?.basicAttack||!event.castle||event.skill||event.projectileKind==='siege')return null;return castleUnitVisual(unit)?.projectileKind||null;}
 export function buildCastleUnitModel(unit,body,voxel){const visual=castleUnitVisual(unit);if(!visual)return null;for(const part of visual.parts)voxel(body,...part);return visual;}

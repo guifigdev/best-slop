@@ -6,7 +6,7 @@ import {animalBasicProjectile} from '../shared/animal-projectiles.js';
 import {projectileStyle,voxelProjectileGeometry} from '../src/projectile-art.js';
 
 test('animal shots have readable species identities and keep explicit weapons and spell shapes',()=>{
- for(const [unit,style]of [[{kind:'goblin'},'egg'],[{kind:'duck'},'egg'],[{hero:'raccoon'},'scrap'],[{hero:'mage'},'carrot'],[{hero:'owl'},'feather'],[{kind:'tortoise'},'shell'],[{kind:'bat'},'sonic']]){
+ for(const [unit,style]of [[{kind:'goblin'},'thorn'],[{kind:'duck'},'egg'],[{hero:'raccoon'},'scrap'],[{hero:'mage'},'carrot'],[{hero:'owl'},'feather'],[{kind:'tortoise'},'shell'],[{kind:'bat'},'sonic']]){
   assert.equal(animalBasicProjectile(unit),style);assert.equal(projectileStyle({projectileKind:style},unit),style);assert.ok(voxelProjectileGeometry(style).attributes.color);
  }
  assert.equal(animalBasicProjectile({kind:'goblin',projectileKind:'bullet'}),'bullet');assert.equal(animalBasicProjectile({kind:'tortoise',attackType:'siege'}),'siege');assert.equal(projectileStyle({element:'fire'},{}),'fire');
@@ -22,6 +22,6 @@ test('raccoon throws scrap at the existing melee reach while caster animal objec
  }
 });
 
-test('a chicken monster visibly launches an egg without changing its actual physical attack',()=>{
- const g=new Game(19,{mode:'tower'});g.addPlayer('p');g.phase='wave';const p=g.player('p'),chicken=g.spawnEnemy('goblin',p.x+1,p.z,{hp:100,damage:20,skills:[],range:1.4});Object.assign(p,{armor:0,evasion:0,perfectEvasion:0});Object.assign(chicken,{accuracy:1,critChance:0});g.random=()=>.5;const hp=p.hp;g.attack(chicken,p);assert.ok(Math.abs(hp-p.hp-chicken.damage)<1e-6);assert.ok(g.effects.some(e=>e.type==='arrow'&&e.projectileKind==='egg'&&e.source===chicken.id));assert.equal(chicken.range,1.4);
+test('a draugr visibly throws a thorn shard while retaining its actual physical attack',()=>{
+ const g=new Game(19,{mode:'tower'});g.addPlayer('p');g.phase='wave';const p=g.player('p'),draugr=g.spawnEnemy('goblin',p.x+1,p.z,{hp:100,damage:20,skills:[],range:1.4});Object.assign(p,{armor:0,evasion:0,perfectEvasion:0});Object.assign(draugr,{accuracy:1,critChance:0});g.random=()=>.5;const hp=p.hp;g.attack(draugr,p);assert.ok(Math.abs(hp-p.hp-draugr.damage)<1e-6);assert.ok(g.effects.some(e=>e.type==='arrow'&&e.projectileKind==='thorn'&&e.source===draugr.id));assert.equal(draugr.range,1.4);
 });

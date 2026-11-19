@@ -32,7 +32,7 @@ export const MONSTERS={
 
 // The Pátio is original fiction: creatures from different mythologies crossed
 // Bifrost together. Nordic names are a setting, not a historical bestiary claim.
-const NORDIC_FAUNA={goblin:'Pintinho de Midgard',duck:'Pato dos Fiordes',frog:'Sapo de Yggdrasil',hare:'Lebre de Skadi',brute:'Javali das Runas',ram:'Bode de Jotunheim',bat:'Morcego de Helheim',tortoise:'Cágado de Asgard',hedgehog:'Ouriço das Raízes',champion:'Urso Einherjar',wolf:'Lobo de Fenrir',bonus:'Eco das Nornas'};
+const NORDIC_FAUNA={goblin:'Draugr de Midgard',duck:'Pato dos Fiordes',frog:'Sapo de Yggdrasil',hare:'Lebre de Skadi',brute:'Jotun das Runas',ram:'Sátiro dos Fiordes',bat:'Gárgula de Helheim',tortoise:'Cágado de Asgard',hedgehog:'Ouriço das Raízes',champion:'Jotun Ancestral de Niflheim',wolf:'Lobo de Fenrir',bonus:'Eco das Nornas'};
 for(const [key,name]of Object.entries(NORDIC_FAUNA))MONSTER_PROFILES[key].name=name;
 const NORDIC_BEASTS={
  lion:['Leão da Juba de Sol','Um visitante de terras distantes atravessou Bifrost e recebeu uma juba marcada pelo sol. Seu rugido anuncia uma breve explosão de força.'],

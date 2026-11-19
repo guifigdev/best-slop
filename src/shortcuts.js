@@ -20,7 +20,8 @@ export function useShortcuts({target=window,context,onAction}){
   if(e.key==='Enter'&&c.repeatBuild){e.preventDefault();held.add('Enter');return;}
   if(e.key.startsWith('Arrow')){e.preventDefault();held.add(e.key);return;}
   if(e.repeat)return;
-  if(KEYS.includes(key)){e.preventDefault();onAction('skill',KEYS.indexOf(key));}
+  if(c.legacyKeys?.[key]){e.preventDefault();onAction('legacySkill',c.legacyKeys[key]);}
+  else if(KEYS.includes(key)){e.preventDefault();onAction('skill',KEYS.indexOf(key));}
   else if(/^[1-6]$/.test(key)){e.preventDefault();onAction('item',Number(key)-1);}
   else if(key==='G')onAction('interact');
   else if(key==='T')onAction('inspect');

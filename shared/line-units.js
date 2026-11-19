@@ -1,16 +1,16 @@
-// Northern animal reinterpretations of Warcraft III unit roles. Numbers below
+// Original northern monsters and fauna reinterpret Warcraft III unit roles. Numbers below
 // are original Line Wars balance values, not extracted custom-map statistics.
 const guide=(race,unit)=>`https://classic.battle.net/war3/${race}/units/${unit}.shtml`;
 const unit=(name,kind,clan,reference,race,path,cost,income,hp,damage,armor,speed,interval,range,extra={})=>({name,kind,clan,reference,source:guide(race,path),cost,income,hp,damage,armor,speed,interval,range,lifeDamage:1,bounty:Math.max(6,Math.round(cost*.12)),size:1,accuracy:.92,evasion:0,critChance:0,critMultiplier:1.5,flying:false,altitude:0,skills:[],...extra});
 
 export const LINE_UNITS={
- shieldling:unit('Pintinho escudeiro','goblin','Clã do Sol','Footman','human','footman',50,3,125,9,2,2.7,1.35,1.4,{size:.78,role:'Infantaria de escudo · resistente e acessível'}),
+ shieldling:unit('Draugr escudeiro','goblin','Clã do Sol','Footman','human','footman',50,3,125,9,2,2.7,1.35,1.4,{size:.78,role:'Infantaria de escudo · resistente e acessível'}),
  quillshot:unit('Ouriço do fiorde','hedgehog','Clã do Sol','Rifleman','human','rifleman',80,4,105,14,0,2.6,1.7,6.5,{size:.85,role:'Disparo longo · apoia a linha de frente'}),
  oathhorn:unit('Rinoceronte juramentado','rhino','Clã do Sol','Knight','human','knight',250,11,490,24,5,3.5,1.5,1.5,{size:1.35,lifeDamage:2,skills:['bash'],role:'Cavalaria pesada · interrompe o defensor'}),
  stormgriffin:unit('Grifo de Skadi','griffin','Clã do Sol','Gryphon Rider','human','gryphonrider',500,20,670,38,3,2.6,1.9,5.5,{size:1.3,flying:true,altitude:1.5,element:'lightning',skills:['chain'],lifeDamage:3,role:'Voador elétrico · relâmpagos em cadeia'}),
- boarguard:unit('Javali da muralha','brute','Clã da Brasa','Grunt','orc','grunt',80,5,240,16,1,2.5,1.6,1.5,{size:1.16,skills:['rage'],role:'Infantaria robusta · fúria de batalha'}),
+ boarguard:unit('Jotun da muralha','brute','Clã da Brasa','Grunt','orc','grunt',80,5,240,16,1,2.5,1.6,1.5,{size:1.16,skills:['rage'],role:'Infantaria robusta · fúria de batalha'}),
  marshspear:unit('Sapo arpoador','frog','Clã da Brasa','Troll Headhunter','orc','headhunters',80,4,115,14,0,2.8,1.6,5.5,{size:.85,skills:['poison'],role:'Arremesso à distância · veneno persistente'}),
- frostcharger:unit('Carneiro saqueador','ram','Clã da Brasa','Raider','orc','raider',170,8,280,19,2,4.1,1.35,1.5,{size:1.05,critChance:.08,skills:['critical'],role:'Corredor veloz · ameaça brechas e críticos'}),
+ frostcharger:unit('Sátiro saqueador','ram','Clã da Brasa','Raider','orc','raider',170,8,280,19,2,4.1,1.35,1.5,{size:1.05,critChance:.08,skills:['critical'],role:'Corredor veloz · ameaça brechas e críticos'}),
  runebull:unit('Leão dos monólitos','lion','Clã da Brasa','Tauren','orc','tauren',360,15,700,29,4,2.3,1.8,1.7,{size:1.5,skills:['stomp'],lifeDamage:3,role:'Colosso terrestre · pisada atordoante'}),
  moonhare:unit('Lebre das auroras','hare','Clã da Lua','Archer','nightelf','archer',45,3,90,13,0,3.2,1.4,6,{size:.78,evasion:.05,role:'Arqueira leve · alcance e mobilidade'}),
  moonhunter:unit('Lince da lua crescente','lynx','Clã da Lua','Huntress','nightelf','huntress',150,7,290,17,1,3.7,1.5,4.8,{size:.95,skills:['bounce'],role:'Caçadora ágil · glaives ricocheteantes'}),
