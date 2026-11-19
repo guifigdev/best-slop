@@ -13,5 +13,5 @@ test('own buildings retain training and upgrades while allied resource income re
  const enemy=markup(state,hero,hero,{...building('eC09'),team:2});assert.match(enemy,/Construção inimiga/);assert.doesNotMatch(enemy,/data-legacy-repair|data-legacy-upgrade/);
 });
 test('left clicking an allied building selects it without issuing movement, attack or ownership commands',()=>{
- const calls=[],commands=[],controller=createLegacyUI({getState:()=>state,getOwner:()=> 'p',send:c=>(commands.push(c),true),view:{setLegacyBuild(){},setInteraction(){},setLegacySelection:id=>calls.push(id),setInspected(){}},toast(){}});controller.point({point:{x:5,z:6},legacyBuilding:10,button:0});assert.deepEqual(calls,[10]);assert.deepEqual(commands,[]);controller.reset();assert.equal(calls.at(-1),null);
+ state.treeTag.buildings=[building('e000')];const calls=[],commands=[],controller=createLegacyUI({getState:()=>state,getOwner:()=> 'p',send:c=>(commands.push(c),true),view:{setLegacyBuild(){},setInteraction(){},setLegacySelection:id=>calls.push(id),setInspected(){}},toast(){}});controller.point({point:{x:5,z:6},legacyBuilding:10,button:0});assert.deepEqual(calls,[[10]]);assert.deepEqual(commands,[]);controller.reset();assert.equal(calls.at(-1),null);
 });

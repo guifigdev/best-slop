@@ -13,6 +13,22 @@ function clear(g){g.treeTag.trees.length=0;g.treeTag.navigationRevision++;}
 function finish(g,b){for(let i=0;i<1500&&b.workRemaining>0;i++)tick(g,.1);assert.equal(b.workRemaining,0);}
 function build(g,e,key,x=-25,z=-25){e.gold=e.lumber=10000;assert.equal(g.treeTagCommand(e,{type:'ttBuild',building:key,x,z}),true,g.commandFailureReason);return g.treeTag.buildings.at(-1);}
 
+test('several foundation orders keep the builder on its current work and finish subsequent jobs in order',()=>{
+ const {g,e}=setup();clear(g);e.x=-25;e.z=-21;const first=build(g,e,'eC09'),second=build(g,e,'eC23',-21.5,-25),third=build(g,e,'eC23',-18,-25);assert.equal(e.treeTagAction.target,first.id);assert.deepEqual(e.treeTagBuildQueue,[second.id,third.id]);tick(g,3);assert.ok(first.workRemaining<first.workTotal);assert.equal(second.workRemaining,second.workTotal);assert.equal(e.treeTagWorking,true);assert.equal(e.moving,false);tick(g,35);assert.ok([first,second,third].every(b=>b.workRemaining===0));assert.deepEqual(e.treeTagBuildQueue,[]);assert.equal(e.treeTagAction,null);tick(g,.1);assert.equal(e.treeTagWorking,false);
+});
+
+test('moving or stopping pauses construction and Resume finishes the foundation without charging twice',()=>{
+ const {g,e,a}=setup();clear(g);e.x=-25;e.z=-23;const b=build(g,e,'eC09');tick(g,2);assert.ok(b.workRemaining<15);assert.equal(g.treeTagCommand(e,{type:'ttMove',x:-20,z:-20}),true);const remaining=b.workRemaining;tick(g,3);assert.equal(b.workRemaining,remaining);assert.equal(e.treeTagWorking,false);const gold=e.gold,wood=e.lumber;assert.equal(g.treeTagCommand(a,{type:'ttResume',buildingId:b.id}),false);assert.equal(g.treeTagCommand(e,{type:'ttResume',buildingId:b.id}),true);assert.equal(e.gold,gold);assert.equal(e.lumber,wood);finish(g,b);assert.equal(b.hp,b.maxHp);assert.equal(g.treeTagCommand(e,{type:'ttResume',buildingId:b.id}),false);
+});
+
+test('an unreachable build retains its order, reports blocked and never animates work or consumes construction time',()=>{
+ const {g,e}=setup();clear(g);e.x=-25;e.z=-20;const b=build(g,e,'eC09');g.treeTag.trees.push({id:'barrier',x:-25,z:-25,w:8,d:8,alive:true,hp:100});g.treeTag.navigationRevision++;tick(g,1);assert.equal(b.workRemaining,15);assert.equal(e.treeTagAction.target,b.id);assert.equal(e.treeTagBlocked,true);assert.equal(e.treeTagWorking,false);g.treeTag.trees[0].alive=false;g.treeTag.navigationRevision++;finish(g,b);assert.equal(b.workRemaining,0);
+});
+
+test('a builder reaches and works beside adjacent buildings and trees instead of settling outside work range',()=>{
+ const {g,e}=setup();clear(g);e.x=-22;e.z=-21;const b=build(g,e,'eC09');for(const [x,z]of [[-27.5,-25],[-25,-27.5],[-22.5,-25]])g.treeTag.trees.push({id:'edge-'+x+':'+z,x,z,w:1,d:1,alive:true,hp:100});g.treeTag.navigationRevision++;tick(g,22);assert.equal(b.workRemaining,0);assert.ok(Number.isFinite(e.x)&&Number.isFinite(e.z));assert.equal(e.treeTagBlocked,false);
+});
+
 test('Tree Tag reference pins the classic map bytes, explicit character objects, original timing and four reachable researches',()=>{
  assert.equal(TREE_TAG_REFERENCE.sha256,'7c1ad8d581f63a908ab5ada6062b008d57999c80b22d92f5d3d27e0e2eb945c5');assert.equal(TREE_TAG_REFERENCE.bytes,223412);assert.equal(TREE_TAG_REFERENCE.version,'Tree Tag, Final v5.13');assert.equal(R.duration,1800);assert.equal(R.infernalDelay,30);assert.equal(R.incomeInterval,5);
  assert.deepEqual(Object.keys(C),['ent','blaze','pyra','burnin']);assert.equal(C.ent.hp,25);assert.equal(C.ent.speed,290/128);assert.equal(C.blaze.rawStats.hp,10000);assert.equal(C.blaze.rawStats.damage,90);assert.equal(C.blaze.hp,10375);assert.equal(C.burnin.hp,10500);assert.equal(TREE_TAG_FOREST.length,1353);assert.deepEqual(B.eC45.research,['Resw','Rerh','R000']);assert.deepEqual(B.e000.research,['R002']);assert.equal(RESEARCH.R000.cost,100);

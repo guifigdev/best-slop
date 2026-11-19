@@ -1,5 +1,5 @@
 import {TREE_TAG_CHARACTERS as CHARACTERS,TREE_TAG_SKILLS as SKILLS,TREE_TAG_BUILDINGS as BUILDINGS,TREE_TAG_ITEMS as ITEMS,TREE_TAG_UNITS as UNITS,TREE_TAG_RESEARCH as RESEARCH,TREE_TAG_FOREST,TREE_TAG_RULES as RULES,treeTagSkillAt} from './tree-tag-catalog.js';
-import {castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit} from './castle-navigation.js';
+import {castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit,castleSegmentClear} from './castle-navigation.js';
 import {TREE_TAG_WORKER_SKILLS,treeTagWorkerCatalog} from './tree-tag-catalog.js';
 
 const own=(object,key)=>typeof key==='string'&&Object.hasOwn(object,key);
@@ -14,13 +14,15 @@ const nav=g=>{const tt=g.treeTag;tt.navigation.map=tt.map;tt.navigation.elapsed=
 const point=(g,p)=>finitePoint(p)&&p.x>=g.treeTag.map.minX+.5&&p.x<=g.treeTag.map.maxX-.5&&p.z>=g.treeTag.map.minZ+.5&&p.z<=g.treeTag.map.maxZ-.5?{x:p.x,z:p.z}:null;
 const fail=(g,text)=>{g.commandFailureReason=text;return false;};
 const fx=(g,type,u,extra={})=>g.fx(type,u.x,u.z,{source:u.id,treeTag:true,...extra});
-const clearOrder=u=>{u.destination=null;u.treeTagAction=null;u.order='stop';u.moving=false;};
+const clearOrder=u=>{u.destination=null;u.treeTagAction=null;u.treeTagBuildQueue=[];u.treeTagWorking=false;u.treeTagBlocked=false;u.order='stop';u.moving=false;};
 const itemOwned=(u,key)=>(u.inventory||[]).some(i=>i.id===key);
 const wallet=(game,u)=>game.player?.(u.owner)||game.units?.find(t=>t.id===game.players?.[u.owner])||u;
+const approachGoals=new WeakMap();
 
 export function treeTagBuildCheck(game,unit,key,where){
  const tt=game?.treeTag,definition=own(BUILDINGS,key)?BUILDINGS[key]:null;
  if(!active(game)||!live(unit)||unit.treeTagRole!=='ent')return{allowed:false,reason:'Somente um Ent ou construtor ativo pode construir.'};
+ if(unit.treeTagTrained&&!unit.treeTagWorker)return{allowed:false,reason:'Esta tropa não é construtora. Selecione o Ent ou um Advanced Builder.'};
  const worker=unit.treeTagWorker?treeTagWorkerCatalog(unit):null,bank=wallet(game,unit);
  if(unit.treeTagWorker&&(!worker||!worker.buildings.includes(key)))return{allowed:false,reason:'Esta unidade não constrói essa estrutura. Selecione o Ent ou um Advanced Builder adequado.'};
  if(!definition)return{allowed:false,reason:'Construção desconhecida.'};
@@ -38,12 +40,22 @@ export function treeTagBuildCheck(game,unit,key,where){
 function killTrees(game,center,radius){let changed=0;for(const t of game.treeTag.trees)if(t.alive&&distance(t,center)<=radius){t.alive=false;t.hp=0;changed++;}if(changed){game.treeTag.navigationRevision++;game.treeTag.forestRevision++;}return changed;}
 function nearestTree(game,p){return game.treeTag.trees.filter(t=>t.alive).sort((a,b)=>distance(a,p)-distance(b,p))[0];}
 function approach(game,u,target,range){
- const context=nav(game);if(distance(u,target)<=range)return true;
- const angle=Math.atan2(u.x-target.x,u.z-target.z),radius=Math.max(.5,range*.85),candidates=[];
+ const context=nav(game);if(distance(u,target)<=range){u.treeTagBlocked=false;return true;}
+ const angle=Math.atan2(u.x-target.x,u.z-target.z),radius=Math.max(.5,range*.98),candidates=[];
  for(let i=0;i<16;i++){const a=angle+i*Math.PI/8;candidates.push({x:target.x+Math.sin(a)*radius,z:target.z+Math.cos(a)*radius});}
- const destination=candidates.sort((a,b)=>distance(a,u)-distance(b,u)).find(p=>castlePassable(context,p,u.collisionRadius||.25)&&castleRouteAvailable(context,u,p,u.collisionRadius||.25));
+ if(target.w&&target.d){const gap=(u.collisionRadius||.25)+.015;for(const side of [-1,1]){candidates.push({x:target.x+side*(target.w/2+gap),z:target.z});candidates.push({x:target.x,z:target.z+side*(target.d/2+gap)});}}
+ let plan=approachGoals.get(u),destination=plan&&plan.target===target&&plan.x===target.x&&plan.z===target.z&&plan.range===range&&plan.revision===game.treeTag.navigationRevision&&castlePassable(context,plan.destination,u.collisionRadius||.25)?plan.destination:null;
+ if(!destination){destination=candidates.filter(p=>distance(p,target)<=range+.00001).sort((a,b)=>distance(a,u)-distance(b,u)).find(p=>castlePassable(context,p,u.collisionRadius||.25)&&castleRouteAvailable(context,u,p,u.collisionRadius||.25));if(destination){plan={target,x:target.x,z:target.z,range,revision:game.treeTag.navigationRevision,destination,stalled:0};approachGoals.set(u,plan);}}
  if(!destination){u.treeTagBlocked=true;u.moving=false;return false;}
- u.treeTagBlocked=false;moveCastleUnit(context,u,destination,game.treeTag.step);return distance(u,target)<=range;
+ u.treeTagBlocked=false;moveCastleUnit(context,u,destination,game.treeTag.step);
+ const remaining=distance(u,destination);if(!u.moving&&remaining>.00001&&remaining<=.15&&distance(u,target)>range){const step=Math.min(remaining,u.speed*game.treeTag.step),end={x:u.x+(destination.x-u.x)*step/remaining,z:u.z+(destination.z-u.z)*step/remaining};if(castleSegmentClear(context,u,end,u.collisionRadius||.25)){u.facing=Math.atan2(end.x-u.x,end.z-u.z);Object.assign(u,end);u.moving=true;}}
+ if(!u.moving&&distance(u,target)>range){plan.stalled+=game.treeTag.step;if(plan.stalled>=.6){approachGoals.delete(u);u.treeTagBlocked=true;}}else plan.stalled=0;
+ return distance(u,target)<=range+.00001;
+}
+function queueConstruction(game,u,b){
+ u.treeTagBuildQueue||=[];const active=game.treeTag.buildings.find(t=>t.id===u.treeTagAction?.target&&t.alive&&t.workRemaining>0);
+ if(u.treeTagAction?.type==='build'&&active){if(active.id!==b.id&&!u.treeTagBuildQueue.includes(b.id))u.treeTagBuildQueue.push(b.id);return;}
+ u.destination=null;u.order='build';u.treeTagAction={type:'build',target:b.id};
 }
 function reviveEnt(game,u){
  u.treeTagCaptured=false;u.treeTagState='active';u.hp=u.maxHp;u.alive=true;u.invulnerableUntil=game.treeTag.elapsed+1;u.kind='treant';u.size=.8;clearOrder(u);fx(game,'levelup',u,{rescue:true});
@@ -74,7 +86,7 @@ function applyResearch(game,target){
 function summon(game,source,raw,where,lifetime,scout=false,trained=false){
  const data=UNITS[raw];if(!data)return null;const context=nav(game),found=castleSpawnPoint(context,where,.3,{maxDistance:3})||(!trained&&castleSpawnPoint(context,source,.3,{maxDistance:3}));if(!found)return null;
  const profile=trained&&treeTagWorkerCatalog(raw),skills=profile?[...profile.skills]:[];
- const u={...data,id:game.id(),owner:source.owner,team:source.team,kind:profile?.role==='harvester'?'wisp':scout?'infernal':raw==='h004'||raw==='h005'?'waterElemental':source.treeTagRole==='ent'?'treant':'infernal',treeTagSummon:true,treeTagTrained:trained,treeTagWorker:!!profile,workerType:profile?raw:null,sourceBuilding:trained?where.id:null,treeTagScout:scout,treeTagRole:source.treeTagRole,summon:true,size:profile?.role==='harvester'?.38:scout?.4:.65,...found,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,collisionRadius:.25,expiresAt:trained?null:game.treeTag.elapsed+lifetime,cd:0,stun:0,speed:data.speed||source.speed,skills,skillLevels:Object.fromEntries(skills.map(k=>[k,1])),cooldowns:{},inventory:[],order:'stop',destination:null,treeTagAction:null};applyResearch(game,u);game.units.push(u);fx(game,'summon',u,{duration:1});return u;
+ const u={...data,id:game.id(),owner:source.owner,team:source.team,kind:profile?.role==='harvester'?'wisp':scout?'infernal':raw==='h004'||raw==='h005'?'waterElemental':source.treeTagRole==='ent'?'treant':'infernal',treeTagSummon:true,treeTagTrained:trained,treeTagWorker:!!profile,workerType:profile?raw:null,sourceBuilding:trained?where.id:null,treeTagScout:scout,treeTagRole:source.treeTagRole,summon:true,size:profile?.role==='harvester'?.38:scout?.4:.65,...found,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,collisionRadius:.25,expiresAt:trained?null:game.treeTag.elapsed+lifetime,cd:0,stun:0,speed:data.speed||source.speed,skills,skillLevels:Object.fromEntries(skills.map(k=>[k,1])),cooldowns:{},inventory:[],order:trained?'hold':'stop',destination:null,treeTagAction:null};applyResearch(game,u);game.units.push(u);fx(game,'summon',u,{duration:1});return u;
 }
 function workerCast(game,u,c){
  const key=typeof c.skill==='string'?c.skill:u.skills[Math.floor(c.slot)],profile=treeTagWorkerCatalog(u);
@@ -93,22 +105,29 @@ function workerCast(game,u,c){
  u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=game.time;return true;
 }
 function skillTarget(game,u,c){return c.target==null?null:game.units.find(t=>t.id===c.target&&t.team!==u.team&&live(t));}
+function ungrowTarget(game,u,c){
+ const targets=[...game.treeTag.buildings.filter(b=>b.alive&&b.owner===u.owner),...game.treeTag.trees.filter(t=>t.alive)];
+ if(c.target!=null)return targets.find(t=>t.id===c.target)||null;
+ const p=point(game,c);return p?targets.filter(t=>Math.abs(t.x-p.x)<(t.w||.75)/2+.4&&Math.abs(t.z-p.z)<(t.d||.75)/2+.4).sort((a,b)=>distance(a,p)-distance(b,p))[0]||null:null;
+}
+const ungrowRange=(u,t,s)=>(s.range||.25)+Math.max(t?.w||.75,t?.d||.75)/2+(u.collisionRadius||.25);
 function cast(game,u,c,fromOrder=false){
  const key=typeof c.skill==='string'?c.skill:u.skills[Math.floor(c.slot)],level=u.skillLevels?.[key]||0,s=treeTagSkillAt(key,level),tt=game.treeTag;
  if(!s||!u.skills.includes(key)||!level)return fail(game,'Aprenda esta habilidade antes de usá-la.');
  if(s.kind==='passive')return fail(game,'Esta habilidade é passiva.');
  if((u.cooldowns[key]||0)>0)return fail(game,'Habilidade em recarga.');
  if(u.mana<s.mana)return fail(game,'Mana insuficiente.');
- const target=skillTarget(game,u,c),p=s.target==='self'?{x:u.x,z:u.z}:target||point(game,c);
+ const target=key==='ungrow'?ungrowTarget(game,u,c):skillTarget(game,u,c),p=s.target==='self'?{x:u.x,z:u.z}:target||point(game,c);
+ if(key==='ungrow'&&!target)return fail(game,'Escolha uma árvore da floresta ou uma construção sua.');
  if(!p)return fail(game,'Escolha um alvo ou uma região válida.');
- const range=key==='blink'?s.distance:key==='ungrow'?s.range+.75:s.range||7;
- if(key!=='blink'&&distance(u,p)>range){if(!fromOrder){u.treeTagAction={...c,type:'cast',skill:key};u.destination=null;return true;}return false;}
+ const range=key==='blink'?s.distance:key==='ungrow'?ungrowRange(u,target,s):s.range||7;
+ if(key!=='blink'&&distance(u,p)>range){if(!fromOrder){clearOrder(u);u.treeTagAction={...c,...(target?{target:target.id}:{}),type:'cast',skill:key};return true;}return false;}
  if(key==='ensnare'&&!target)return fail(game,'Escolha um inimigo para enredar.');
  if(key==='blink'){
   const d=distance(u,p),end={x:u.x+(p.x-u.x)*Math.min(1,range/(d||1)),z:u.z+(p.z-u.z)*Math.min(1,range/(d||1))},land=castleSpawnPoint(nav(game),end,u.collisionRadius,{maxDistance:1.5});if(!land)return fail(game,'Destino ocupado pelas árvores.');
   const start={x:u.x,z:u.z};Object.assign(u,land);clearOrder(u);fx(game,'blink',start,{source:u.id,tx:u.x,tz:u.z});
  }else if(key==='ungrow'){
-  const tree=nearestTree(game,p);if(!tree||distance(u,tree)>range)return fail(game,'Aproxime-se de uma árvore.');killTrees(game,tree,.05);u.hp=Math.min(u.maxHp,u.hp+25);fx(game,'heal',u,{amount:25});
+  if(target.treeTagStructure){game.treeTagCommand(game.player(u.owner),{type:'ttDemolish',buildingId:target.id});}else{killTrees(game,target,.05);u.hp=Math.min(u.maxHp,u.hp+25);fx(game,'heal',u,{amount:25});}
  }else if(key==='destroyTrees'||key==='infernalDestroy'){killTrees(game,p,s.radius);fx(game,'fireball',p,{source:u.id,radius:s.radius});}
  else if(key==='ensnare'){target.treeTagRootUntil=tt.elapsed+s.duration;fx(game,'ensnare',target,{source:u.id,duration:s.duration});}
  else if(key==='speedFlames'){u.treeTagSpeedUntil=tt.elapsed+s.duration;u.treeTagSpeedMultiplier=s.nativeData.DataA;fx(game,'rage',u,{duration:s.duration});}
@@ -123,7 +142,7 @@ function cast(game,u,c,fromOrder=false){
   fx(game,'shockwave',u,{tx:p.x,tz:p.z,radius:s.radius});
  }else if(key==='avatar'){u.treeTagAvatarUntil=tt.elapsed+s.duration;u.treeTagAvatarBonus={hp:s.nativeData.DataB,damage:s.nativeData.DataC,armor:s.nativeData.DataA};u.maxHp+=s.nativeData.DataB;u.hp+=s.nativeData.DataB;u.damage+=s.nativeData.DataC;u.armor+=s.nativeData.DataA;fx(game,'rage',u,{duration:s.duration});}
  else return fail(game,'Esta habilidade ainda não tem ação ativa.');
- u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=game.time;u.treeTagAction=null;return true;
+ u.mana-=s.mana;u.cooldowns[key]=s.cooldown;u.castAt=game.time;u.treeTagAction=null;u.treeTagBuildQueue=[];return true;
 }
 function attack(game,u,target,dt){
  if(!target?.alive||target.treeTagCaptured||target.treeTagWaiting)return;
@@ -133,22 +152,23 @@ function attack(game,u,target,dt){
  const critical=!tree&&itemOwned(u,'I004')&&game.random()<.2,shield=actors(game).some(a=>a.team===u.team&&live(a)&&itemOwned(a,'I003')&&distance(a,u)<=7);hurt(game,target,(tree?(u.treeDamage||u.damage):u.damage)*(critical?2:1)*(shield?1.1:1),u);if(critical)fx(game,'crit',target,{source:u.id,amount:Math.round(u.damage*2)});fx(game,u.range>1?'arrow':'slash',u,{target:target.id,tx:target.x,tz:target.z});
 }
 function tickOrders(game,u,dt){
- const tt=game.treeTag;
+ const tt=game.treeTag;u.treeTagWorking=false;
+ if(!u.treeTagAction&&!u.destination&&u.treeTagBuildQueue?.length){let next;while(u.treeTagBuildQueue.length&&!next){const id=u.treeTagBuildQueue.shift();next=tt.buildings.find(b=>b.id===id&&b.owner===u.owner&&b.alive&&b.workRemaining>0);}if(next)queueConstruction(game,u,next);}
    const speed=u.speed;u.speed*=u.treeTagSpeedUntil>game.treeTag.elapsed?u.treeTagSpeedMultiplier||1:1;
    if(!(u.treeTagRootUntil>game.treeTag.elapsed)){
     if(u.destination){moveCastleUnit(nav(game),u,u.destination,game.treeTag.step);if(distance(u,u.destination)<.35)u.destination=null;}
     else if(u.treeTagAction){const action=u.treeTagAction,target=[...game.units,...tt.buildings,...tt.trees].find(t=>t.id===action.target&&t.alive);
-     if(action.type==='cast'){const s=treeTagSkillAt(action.skill,u.skillLevels[action.skill]),p=skillTarget(game,u,action)||point(game,action);if(p&&approach(game,u,p,(s?.range||1)+.2))cast(game,u,action,true);}
+     if(action.type==='cast'){const s=treeTagSkillAt(action.skill,u.skillLevels[action.skill]),p=action.skill==='ungrow'?ungrowTarget(game,u,action):skillTarget(game,u,action)||point(game,action),range=action.skill==='ungrow'?ungrowRange(u,p,s):s?.range||1;if(p&&approach(game,u,p,range))cast(game,u,action,true);else if(!p)clearOrder(u);}
      else if(action.type==='attack'){if(target)attack(game,u,target,dt);else u.treeTagAction=null;}
      else if(action.type==='gather'){const profile=treeTagWorkerCatalog(u);if(target&&profile?.role==='harvester'){if(approach(game,u,target,.9)){u.treeTagGatherProgress=(u.treeTagGatherProgress||0)+dt;u.treeTagWorking=true;while(u.treeTagGatherProgress+1e-9>=profile.harvestInterval){wallet(game,u).lumber+=profile.harvestAmount;u.treeTagGatherProgress=Math.max(0,u.treeTagGatherProgress-profile.harvestInterval);}}}else clearOrder(u);}
      else if(target){if(approach(game,u,target,Math.max(target.w,target.d)/2+.6)){
-      if(action.type==='build'&&target.workRemaining>0){target.workRemaining=Math.max(0,target.workRemaining-dt);target.workProgress=1-target.workRemaining/target.workTotal;target.hp=Math.min(target.maxHp,target.hp+target.maxHp*.9*dt/target.workTotal);u.treeTagWorking=true;
+      if(action.type==='build'&&target.workRemaining>0){target.workRemaining=Math.max(0,target.workRemaining-dt);target.workProgress=1-target.workRemaining/target.workTotal;target.hp=Math.min(target.maxHp,target.hp+target.maxHp*.9*dt/target.workTotal);u.treeTagWorking=true;u.facing=Math.atan2(target.x-u.x,target.z-u.z);
        if(target.workRemaining===0){target.hp=target.maxHp;if(target.pendingUpgrade){const d=BUILDINGS[target.pendingUpgrade];Object.assign(target,d,{key:d.key,hp:d.hp,maxHp:d.hp});delete target.pendingUpgrade;}u.treeTagAction=null;game.treeTag.navigationRevision++;fx(game,'levelup',target);}}
-      else if(action.type==='repair'){const bank=wallet(game,u),heal=Math.min(target.maxHp-target.hp,35*dt),cost=heal/target.maxHp*target.cost*.35;if(bank.gold>=cost){bank.gold-=cost;target.hp+=heal;}if(target.hp>=target.maxHp)u.treeTagAction=null;}
+      else if(action.type==='repair'){const bank=wallet(game,u),heal=Math.min(target.maxHp-target.hp,35*dt),cost=heal/target.maxHp*target.cost*.35;if(bank.gold>=cost){bank.gold-=cost;target.hp+=heal;u.treeTagWorking=heal>0;}if(target.hp>=target.maxHp)u.treeTagAction=null;}
      }}else u.treeTagAction=null;
     }
    }
-   u.speed=speed;u.treeTagWorking=!!(['build','repair','gather'].includes(u.treeTagAction?.type)&&!u.moving);
+   u.speed=speed;
 }
 function rescueNearby(game,u){for(const ash of actors(game).filter(t=>t.treeTagCaptured&&distance(u,t)<=RULES.rescueRadius))reviveEnt(game,ash);}
 
@@ -197,26 +217,45 @@ export const TreeTagMethods={
   if(c.type==='ready'||c.type==='ttReady'){if(this.treeTag||this.phase!=='preparation')return false;u.ready=true;if(actors(this).length>=2&&actors(this).every(x=>x.ready||x.bot))return this.initTreeTag();return true;}
   if(!active(this)||!u.alive)return false;
   const controller=u,bank=wallet(this,u);
-  if(c.workerId!=null){const worker=Number.isInteger(c.workerId)&&this.units.find(t=>t.id===c.workerId&&t.owner===controller.owner&&t.treeTagWorker&&live(t));if(!worker||controller.treeTagCaptured)return fail(this,'Selecione um worker vivo do seu jogador.');u=worker;}
+  if(c.type==='ttBatch'){
+   const actions={train:'ttTrain',upgrade:'ttUpgrade',research:'ttResearch',resume:'ttResume',demolish:'ttDemolish'},type=own(actions,c.action)?actions[c.action]:null,ids=Array.isArray(c.buildingIds)?[...new Set(c.buildingIds)]:[],selected=ids.map(id=>this.treeTag.buildings.find(b=>Number.isInteger(id)&&b.id===id&&b.alive&&b.owner===controller.owner));
+   if(!type||!ids.length||selected.some(b=>!b)||selected.some(b=>b.key!==selected[0].key))return fail(this,'Selecione construções suas do mesmo tipo.');
+   let succeeded=0;for(const buildingId of ids)if(this.treeTagCommand(controller,{...c,type,buildingId}))succeeded++;
+   controller.treeTagLastBatch={action:c.action,requested:ids.length,succeeded,failed:ids.length-succeeded,at:this.treeTag.elapsed};if(succeeded)this.commandFailureReason=null;return succeeded>0;
+  }
+  if(c.type==='ttUnitBatch'){
+   const actions={move:'ttMove',stop:'ttStop',attack:'ttAttack',gather:'ttGather',cast:'ttCast'},type=own(actions,c.action)?actions[c.action]:null,ids=Array.isArray(c.unitIds)?[...new Set(c.unitIds)]:[],selected=ids.map(id=>this.units.find(t=>Number.isInteger(id)&&t.id===id&&t.owner===controller.owner&&(t.id===controller.id||t.treeTagTrained)&&live(t)));
+   if(!type||!ids.length||selected.some(t=>!t))return fail(this,'Selecione unidades vivas do seu jogador.');
+   let succeeded=0;const cols=Math.ceil(Math.sqrt(ids.length));for(const [i,actor]of selected.entries()){let goal=c;if(c.action==='move'){const spacing=Math.max(.8,2*(actor.collisionRadius||.25)+.2),center={x:c.x+((i%cols)-(cols-1)/2)*spacing,z:c.z+(Math.floor(i/cols)-(Math.ceil(ids.length/cols)-1)/2)*spacing},p=point(this,center)&&castleSpawnPoint(nav(this),center,actor.collisionRadius||.25,{maxDistance:3});if(!p)continue;goal={...c,...p};}if(this.treeTagCommand(controller,{...goal,type,workerId:actor.id===controller.id?undefined:actor.id}))succeeded++;}
+   controller.treeTagLastBatch={action:c.action,requested:ids.length,succeeded,failed:ids.length-succeeded,at:this.treeTag.elapsed};if(succeeded)this.commandFailureReason=null;return succeeded>0;
+  }
+  const controlledId=c.workerId??c.unitId;if(controlledId!=null&&controlledId!==controller.id){const worker=Number.isInteger(controlledId)&&this.units.find(t=>t.id===controlledId&&t.owner===controller.owner&&t.treeTagTrained&&live(t));if(!worker||controller.treeTagCaptured)return fail(this,'Selecione uma unidade viva do seu jogador.');u=worker;}
   if(u.treeTagWorker&&c.type==='ttAttack')return fail(this,'Este worker não possui ataque.');
+  if(u.treeTagTrained&&!u.treeTagWorker&&['ttBuild','ttResume','ttUpgrade','ttRepair'].includes(c.type))return fail(this,'Esta tropa não constrói nem repara. Selecione o Ent ou um Advanced Builder.');
   if(u.treeTagWorker&&c.type==='ttGather'){const profile=treeTagWorkerCatalog(u),target=this.treeTag.trees.find(t=>t.id===c.target&&t.alive);if(profile?.role!=='harvester'||!target)return fail(this,'Selecione um Wisp e uma árvore viva.');clearOrder(u);u.treeTagGatherProgress=0;u.treeTagAction={type:'gather',target:target.id};u.order='gather';return true;}
 
   if(c.type==='ttStop'){clearOrder(u);return true;}
   if(u.treeTagWaiting)return fail(this,'Os Infernals serão libertados após os 30 segundos de preparação.');
   if(u.treeTagCaptured){if(c.type==='ttMove'){const p=point(this,c);if(!p||distance(p,this.treeTag.map.prison)>1.7)return false;u.destination=p;return true;}return fail(this,'Aguarde um Ent aliado para resgatar suas cinzas na prisão central.');}
   if(c.type==='ttMove'){const p=point(this,c);if(!p)return false;clearOrder(u);u.destination=p;u.order='move';return true;}
-  if(c.type==='ttAttack'){const target=[...this.units,...this.treeTag.buildings,...this.treeTag.trees].find(t=>t.id===c.target&&t.alive);if(!target)return false;if(target.treeTagCaptured&&u.treeTagRole==='ent'){u.destination={x:target.x,z:target.z};u.treeTagAction=null;return true;}if(target.team===u.team)return false;u.treeTagAction={type:'attack',target:target.id};u.destination=null;return true;}
+  if(c.type==='ttAttack'){const target=[...this.units,...this.treeTag.buildings,...this.treeTag.trees].find(t=>t.id===c.target&&t.alive);if(!target)return false;if(target.treeTagCaptured&&u.treeTagRole==='ent'){u.destination={x:target.x,z:target.z};u.treeTagAction=null;return true;}if(target.team===u.team)return false;clearOrder(u);u.treeTagAction={type:'attack',target:target.id};u.order='attack';return true;}
   if(c.type==='ttCast')return u.treeTagWorker?workerCast(this,u,c):cast(this,u,c);
   if(c.type==='ttLearn'){
    const s=own(SKILLS,c.skill)?SKILLS[c.skill]:null;if(u.treeTagRole!=='infernal'||!s||!u.skills.includes(c.skill)||u.skillPoints<1||(u.skillLevels[c.skill]||0)>=s.maxLevel)return false;
    const rank=u.skillLevels[c.skill]||0,minimum=s.requiredLevel+rank*s.levelSkip;if(u.level<minimum)return fail(this,'Esta habilidade exige nível '+minimum+'.');u.skillLevels[c.skill]=rank+1;u.skillPoints--;if(c.skill==='attributeBonus'){u.maxHp+=100;u.hp+=100;u.maxMana+=60;u.mana+=60;u.damage+=4;u.armor+=1.2;}fx(this,'levelup',u);return true;
   }
   if(c.type==='ttBuild'){
-   const check=treeTagBuildCheck(this,u,c.building,c);if(!check.allowed)return fail(this,check.reason);const d=check.definition,b={...d,id:this.id(),owner:u.owner,team:u.team,...check.point,maxHp:d.hp,hp:d.hp*.1,alive:true,treeTagStructure:true,workRemaining:d.buildTime,workTotal:d.buildTime,created:this.treeTag.elapsed,productionQueue:[],trainRemaining:0};applyResearch(this,b);this.treeTag.buildings.push(b);this.treeTag.navigationRevision++;bank.gold-=d.cost;bank.lumber-=d.lumberCost;u.destination=null;u.treeTagAction={type:'build',target:b.id};fx(this,'castleBuild',b,{duration:d.buildTime});return true;
+   const check=treeTagBuildCheck(this,u,c.building,c);if(!check.allowed)return fail(this,check.reason);const d=check.definition,b={...d,id:this.id(),owner:u.owner,team:u.team,...check.point,maxHp:d.hp,hp:d.hp*.1,alive:true,treeTagStructure:true,workRemaining:d.buildTime,workTotal:d.buildTime,created:this.treeTag.elapsed,productionQueue:[],trainRemaining:0};applyResearch(this,b);this.treeTag.buildings.push(b);this.treeTag.navigationRevision++;bank.gold-=d.cost;bank.lumber-=d.lumberCost;queueConstruction(this,u,b);fx(this,'castleBuild',b,{duration:d.buildTime});return true;
+  }
+  if(c.type==='ttResume'){
+   const b=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&b.alive&&b.workRemaining>0),d=b&&BUILDINGS[b.pendingUpgrade||b.key],worker=u.treeTagWorker?treeTagWorkerCatalog(u):null;
+   if(!b||u.treeTagRole!=='ent'||u.treeTagWorker&&!worker?.buildings.includes(d.key)||d.advanced&&!worker?.buildings.includes(d.key))return fail(this,'Selecione o Ent ou um construtor adequado e uma obra sua incompleta.');
+   for(const other of this.units.filter(t=>t.owner===u.owner&&t.id!==u.id)){if(other.treeTagAction?.type==='build'&&other.treeTagAction.target===b.id){other.treeTagAction=null;other.treeTagWorking=false;}if(other.treeTagBuildQueue)other.treeTagBuildQueue=other.treeTagBuildQueue.filter(id=>id!==b.id);}
+   queueConstruction(this,u,b);return true;
   }
   if(c.type==='ttUpgrade'){
    if(u.treeTagWorker&&!treeTagWorkerCatalog(u)?.buildings.length)return fail(this,'Selecione um construtor para evoluir esta estrutura.');
-   const b=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&structureReady(this,b)),d=own(BUILDINGS,c.building)?BUILDINGS[c.building]:null;if(!b||!d||!b.upgradesTo.includes(c.building)||bank.gold<d.cost||bank.lumber<d.lumberCost)return false;bank.gold-=d.cost;bank.lumber-=d.lumberCost;b.pendingUpgrade=d.key;b.upgradeGoldPaid=d.cost;b.upgradeWoodPaid=d.lumberCost;b.workRemaining=b.workTotal=d.buildTime;u.treeTagAction={type:'build',target:b.id};u.destination=null;return true;
+   const b=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&structureReady(this,b)),d=own(BUILDINGS,c.building)?BUILDINGS[c.building]:null;if(!b||!d||!b.upgradesTo.includes(c.building)||bank.gold<d.cost||bank.lumber<d.lumberCost)return false;bank.gold-=d.cost;bank.lumber-=d.lumberCost;b.pendingUpgrade=d.key;b.upgradeGoldPaid=d.cost;b.upgradeWoodPaid=d.lumberCost;b.workRemaining=b.workTotal=d.buildTime;queueConstruction(this,u,b);return true;
   }
   if(c.type==='ttDemolish'){const b=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&b.alive);if(!b)return false;if(b.workRemaining>0){bank.gold+=b.pendingUpgrade?b.upgradeGoldPaid||0:b.cost;bank.lumber+=b.pendingUpgrade?b.upgradeWoodPaid||0:b.lumberCost;if(b.pendingUpgrade){delete b.pendingUpgrade;b.workRemaining=0;b.hp=b.maxHp;}else b.alive=false;}else b.alive=false;this.treeTag.navigationRevision++;if(u.treeTagAction?.target===b.id)clearOrder(u);return true;}
   if(c.type==='ttLinkTunnel'){const a=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&b.type==='tunnel'&&structureReady(this,b)),b=this.treeTag.buildings.find(b=>b.id===c.targetId&&b.owner===u.owner&&b.type==='tunnel'&&structureReady(this,b));if(!a||!b||a.id===b.id)return false;a.linkedTunnel=b.id;return true;}
@@ -272,7 +311,7 @@ export const TreeTagMethods={
    if(b.productionQueue.length){if(b.trainRemaining==null||b.trainRemaining===0&&!b.trainingBlocked)b.trainRemaining=Math.max(1,UNITS[b.productionQueue[0]]?.buildTime||5);b.trainRemaining=Math.max(0,b.trainRemaining-dt);if(b.trainRemaining<=1e-8){b.trainRemaining=0;const raw=b.productionQueue[0],trained=summon(this,this.player(b.owner),raw,b,null,false,true);b.trainingBlocked=!trained;if(trained){b.productionQueue.shift();b.trainRemaining=0;}}}
   }
   for(const worker of this.units.filter(u=>u.treeTagWorker&&u.alive)){worker.cd=Math.max(0,(worker.cd||0)-dt);worker.moving=false;for(const key of Object.keys(worker.cooldowns))worker.cooldowns[key]=Math.max(0,worker.cooldowns[key]-dt);worker.hp=Math.min(worker.maxHp,worker.hp+(worker.hpRegen||0)*dt);worker.mana=Math.min(worker.maxMana,worker.mana+(worker.manaRegen||0)*dt);tickOrders(this,worker,dt);}
-  for(const u of this.units.filter(u=>u.treeTagSummon&&u.alive&&!u.treeTagWorker)){if(Number.isFinite(u.expiresAt)&&tt.elapsed>=u.expiresAt){u.alive=false;continue;}u.cd=Math.max(0,u.cd-dt);if(u.treeTagScout){const prey=actors(this).filter(t=>t.team!==u.team&&live(t)).sort((a,b)=>distance(u,a)-distance(u,b))[0];if(prey)moveCastleUnit(nav(this),u,prey,tt.step);continue;}const target=[...actors(this),...tt.buildings].filter(t=>t.team!==u.team&&live(t)).sort((a,b)=>distance(u,a)-distance(u,b))[0];if(target){if(u.treeTagTrap){if(distance(u,target)<=u.range&&u.cd<=0){hurt(this,target,u.damage,u);u.cd=u.interval;}}else attack(this,u,target,dt);}}
+  for(const u of this.units.filter(u=>u.treeTagSummon&&u.alive&&!u.treeTagWorker)){if(Number.isFinite(u.expiresAt)&&tt.elapsed>=u.expiresAt){u.alive=false;continue;}u.cd=Math.max(0,u.cd-dt);if(u.treeTagTrained){u.moving=false;tickOrders(this,u,dt);if(!u.destination&&!u.treeTagAction){const target=[...actors(this),...tt.buildings].filter(t=>t.team!==u.team&&live(t)&&distance(u,t)<=u.range+(u.collisionRadius||.25)+(t.collisionRadius||.3)).sort((a,b)=>distance(u,a)-distance(u,b))[0];if(target)attack(this,u,target,dt);}continue;}if(u.treeTagScout){const prey=actors(this).filter(t=>t.team!==u.team&&live(t)).sort((a,b)=>distance(u,a)-distance(u,b))[0];if(prey)moveCastleUnit(nav(this),u,prey,tt.step);continue;}const target=[...actors(this),...tt.buildings].filter(t=>t.team!==u.team&&live(t)).sort((a,b)=>distance(u,a)-distance(u,b))[0];if(target){if(u.treeTagTrap){if(distance(u,target)<=u.range&&u.cd<=0){hurt(this,target,u.damage,u);u.cd=u.interval;}}else attack(this,u,target,dt);}}
   for(const z of tt.zones.filter(z=>tt.elapsed>=z.created+z.delay&&tt.elapsed<z.expiresAt))for(const target of [...this.units,...tt.buildings].filter(t=>t.team!==z.team&&t.alive&&!t.treeTagCaptured&&distance(t,z)<=z.r))hurt(this,target,z.damage*dt,this.player(z.owner),true);
   tt.zones=tt.zones.filter(z=>tt.elapsed<z.expiresAt);const ents=actors(this).filter(u=>u.treeTagRole==='ent'),infernals=actors(this).filter(u=>u.treeTagRole==='infernal');
   if(tt.elapsed>=RULES.duration)this.finishTreeTag('ent');else if(ents.length&&ents.every(u=>u.treeTagCaptured))this.finishTreeTag('infernal');else if(tt.elapsed>=RULES.infernalDelay&&infernals.length&&infernals.every(u=>!u.alive))this.finishTreeTag('ent');

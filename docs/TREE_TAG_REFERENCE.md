@@ -32,3 +32,15 @@ Regrow Trees (`A00F`) custa **100 mana** no objeto do mapa. Herda **8s de recarg
 O campo passou de **94 × 94 para 116 × 116** a pedido do usuário. Isso é uma adaptação espacial declarada: posições de decorações do mapa multiplicadas por 116/94, amostragem de 1.353 entre 4.939 árvores nativas, mesma clareira/prisão central. Os valores de velocidade, alcance, mana, recarga, dano e treinamento continuam na escala de referência 1/128 e não foram multiplicados junto ao terreno.
 
 Comandos compartilhados entre cliente e servidor: `ttMove`, `ttStop`, `ttBuild`, `ttRepair`, `ttUpgrade` e `ttCast` aceitam `workerId` numérico de um worker vivo do próprio jogador. `ttGather` recebe `workerId` e `target` como ID de árvore. Recursos são sempre debitados/creditados na carteira do jogador, sem criar ouro ou madeira paralelos no worker. Captura do Ent elimina suas estruturas e workers, conforme a regra de perda da base já aplicada ao modo.
+
+## Controles RTS e construção no navegador
+
+As construções são selecionadas pelo modelo 3D, incluindo a copa, e mostram dono, vida, armadura e função. Duplo clique seleciona prédios iguais do mesmo dono visíveis na câmera. Unidades treinadas podem ser selecionadas individualmente, por duplo clique ou Ctrl + arraste; o botão Selecionar oferece o mesmo gesto sem teclado. Ordens de grupo são validadas pela simulação e nunca comandam unidades alheias.
+
+Tropas treinadas mantêm posição e revidam em alcance, sem perseguir inimigos distantes automaticamente. Mover, atacar, parar e coletar com Wisps são ordens explícitas. O grupo se desloca para destinos próximos distintos. Ataque ao mover usa uma ordem de deslocamento quando não há alvo clicado; não reproduz integralmente o comportamento nativo de aquisição de alvos em trânsito.
+
+Novas obras encomendadas ao mesmo construtor entram em fila; cada uma só progride enquanto ele trabalha ao alcance dela. Mover ou parar interrompe o trabalho. Continuar construção (ou botão direito na fundação própria) retoma uma obra sem nova cobrança. O ponto de aproximação é estável e respeita o perímetro, evitando oscilações junto a prédios próximos. A fila de obras é uma adaptação de usabilidade, mantendo os tempos do catálogo.
+
+Desenraizar identifica a árvore ou construção própria clicada, aproxima o usuário até a borda e remove o alvo; construções de aliados não podem ser removidas. A demolição de estruturas próprias usa a regra de cancelamento já implementada, sem tratar essas construções como madeira coletável.
+
+Treinar, evoluir, continuar obras e desenraizar aceitam grupos de prédios próprios do mesmo tipo. Recursos são cobrados por prédio; o resultado informa quantos receberam a ação e quantos não tinham recursos/requisitos. Treinamento mostra retratos, descrições, progresso, tempo restante e sequência real. Retratos e modelos dos oito combatentes usam os mesmos descritores voxel próprios.
