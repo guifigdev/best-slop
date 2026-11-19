@@ -86,7 +86,7 @@ export function moveCastleUnit(cf,u,destination,dt){
  let path,following=null,indexBase=0;if(clear(c,u,goal,r,flying)){path=[goal];unitPaths.delete(u);}else{
   const key=`${Math.round(goal.x/CELL)},${Math.round(goal.z/CELL)}`,old=unitPaths.get(u),newIntent=old&&hypot(old.goal,goal)>4,stale=!old||old.signature!==c.signature||old.radius!==r||old.key!==key&&(now>=old.nextSearch||newIntent);
   if(stale){path=plan(c,u,goal,r);unitPaths.set(u,{signature:c.signature,radius:r,key,goal:{...goal},path,index:0,nextSearch:now+1});}else path=old.path;
-  const record=unitPaths.get(u);if(!path){u.castleNavigationBlocked=true;return false;}let index=record.index;while(index<path.length-1&&hypot(u,path[index])<.16)index++;
+  const record=unitPaths.get(u);if(!path){u.castleNavigationBlocked=true;return false;}let index=record.index;while(index<path.length-1&&hypot(u,path[index])<.16&&clear(c,u,path[index+1],r))index++;
   // Smooth only through verified clear segments; never cut an inflated corner.
   for(let next=Math.min(path.length-1,index+14);next>index;next--)if(clear(c,u,path[next],r)){index=next;break;}record.index=index;following=record;indexBase=index;path=path.slice(index);
  }

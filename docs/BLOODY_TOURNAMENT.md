@@ -6,11 +6,13 @@ O modo implementa uma competição de composição de exércitos. Cada jogador c
 
 ## Referência e limites da reprodução
 
-O vídeo informado foi consultado em `https://www.youtube.com/watch?v=QdDI60ckoxo`, mas o provedor recusou a leitura durante a pesquisa. Não foi possível afirmar o conteúdo visual ou a revisão exata daquele vídeo.
+O vídeo indicado é [Warcraft 3 Star Wars Blood Tournament #233, de Sarkosiis](https://www.youtube.com/watch?v=QdDI60ckoxo). Seus metadados e quadros de storyboard foram consultados no próprio YouTube. A referência de terreno fixada é [Star Wars Blood Tournament 6.4d, de Billy-Jack/Baal](https://www.epicwar.com/maps/331579/), com a mesma organização de jardins privados com três manchas verdes vista no vídeo. A revisão exata exibida no vídeo não foi identificada.
 
-Como referência primária verificável, foi consultado o [repositório do autor de Blood Tournament Reloaded](https://github.com/Jaccouille/wc3-blood-tournament). Sua apresentação confirma torneio de sete rodadas, grupos produzidos por construções, composição de tropas, moeda de sangue obtida em abates e melhorias. O modo deste projeto é uma adaptação nórdica desse ciclo, com código e arte voxel próprios já presentes no jogo. Nenhum script Wurst, modelo, textura ou áudio do mapa foi importado.
+O mapa usa o terreno e as regiões numéricas extraídas: oito jardins privados sobre a água, entradas cardeais e campo central com areia, lava, vegetação e gelo. Modelos, texturas, personagens, áudio e scripts de Star Wars/Warcraft não são importados como assets executáveis. A arte voxel permanece própria. Fontes, hashes e limites estão em [BLOODY_NATIVE_REFERENCE.md](BLOODY_NATIVE_REFERENCE.md).
 
-Preços, grupos disponíveis, graduações, formações, limite de suprimentos, renda de recuperação, duração de batalha e variante em equipes são regras desta adaptação. Não são apresentados como valores extraídos da versão do vídeo. Perfis e máscaras de ataque usam o catálogo existente do projeto, derivado da pesquisa do Castle Fight; isso não prova igualdade com Blood Tournament.
+A preparação permanece nos jardins privados; ao iniciar a rodada, a formação é projetada nas entradas do campo central. Os comandantes ficam protegidos nas bases. A navegação usa o caminhamento nativo, incluindo água e penhascos bloqueados. As superfícies caminháveis são niveladas para o renderer atual; o relevo visual não representa reprodução física exata das alturas nativas.
+
+O individual comporta oito participantes como a referência. A opção cinco contra cinco é uma adaptação, com dois jardins extras e compartilhamento das entradas nativas. Preços, catálogo, graduações, suprimentos, renda de recuperação, duração das rodadas e pontuação ainda são regras deste projeto; não são anunciados como valores extraídos do vídeo. Perfis e máscaras de ataque usam o catálogo já existente, sem comprovar igualdade estatística com Blood Tournament.
 
 ## Regras jogáveis
 
@@ -22,7 +24,7 @@ Preços, grupos disponíveis, graduações, formações, limite de suprimentos, 
 - Entre rodadas, todos recebem 180 de ouro. Quem não venceu recebe mais 60 para reorganizar sua composição.
 - Venda devolve 70% do ouro efetivamente investido. O sangue gasto em graduação não é devolvido.
 - Combate máximo de cem segundos. Se ninguém eliminar todos os adversários, a força sobrevivente considera fração de vida e suprimentos dos grupos. Esse desempate é registrado como limite de tempo, não como eliminação fictícia.
-- Ataques respeitam alvos terrestres/aéreos e tipos de armadura. Unidades sem antiaéreo não atingem voadores. Sacerdotes curam aliados feridos; bombardas causam dano secundário de área. Corpos têm separação e navegação em torno dos pilares.
+- Ataques respeitam alvos terrestres/aéreos e tipos de armadura. Unidades sem antiaéreo não atingem voadores. Sacerdotes curam aliados feridos; bombardas causam dano secundário de área. Corpos têm separação e navegação pelo campo e seus acessos.
 - O comandante fica protegido fora do combate. Ele não recebe controle indevido do exército de outro jogador.
 
 ## Integração online

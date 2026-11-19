@@ -1,14 +1,16 @@
+import {BLOODY_BATTLEFIELD,bloodyPreparationPlot} from './bloody-battlefield.js';
 import {CASTLE_UNITS} from './castle-catalog.js';
 
 export const BLOODY_REFERENCE=Object.freeze({
  requestedVideo:'https://www.youtube.com/watch?v=QdDI60ckoxo',
  mechanicsSource:'https://github.com/Jaccouille/wc3-blood-tournament',
- title:'Blood Tournament Reloaded',
- verified:'Seven army-composition rounds, blood earned from kills, faction units and upgrades.',
- adaptation:'Original Nordic tournament using existing original voxel assets; the requested video could not be fetched. Economy, rosters, formations and team rules below are browser adaptations, not extracted native map values.'
+ terrainSource:BLOODY_BATTLEFIELD.source.source,
+ title:'Star Wars Blood Tournament 6.4d',
+ verified:'Native W3E terrain, WPM pathability, doodad positions, eight private color plots and eight battlefield fronts extracted from the map.',
+ adaptation:'Original Nordic voxel art. Browser economy, army catalog and seven-round rules remain adaptations; eight-player free-for-all uses the native plots, five-versus-five adds two isolated preparation gardens.'
 });
 export const BLOODY_RULES=Object.freeze({rounds:7,preparationTime:45,battleTime:100,resultTime:8,startingGold:420,roundGold:180,catchupGold:60,startingBlood:0,maxFood:30,maxWarbands:12,maxRank:3,killBloodCap:120,unitScale:1.55});
-export const BLOODY_MAP=Object.freeze({minX:-39,maxX:39,minZ:-27,maxZ:27,width:78,depth:54,obstacles:[{x:0,z:-15,w:3,d:3},{x:0,z:15,w:3,d:3}]});
+export const BLOODY_MAP=BLOODY_BATTLEFIELD.map;
 const unit=(key,name,source,count,cost,food,category,description,extra={})=>Object.freeze({key,name,source,count,cost,food,category,description,...extra});
 export const BLOODY_UNITS=Object.freeze({
  shieldwall:unit('shieldwall','Muralha de Midgard','hfoo',3,65,3,'frontline','Três guerreiros de escudo. Protegem os aliados frágeis e atacam somente alvos terrestres.'),
@@ -36,4 +38,4 @@ export function bloodyUnitAt(key,rank=1){
 }
 export function bloodyUpgradePrice(entry){return{gold:Math.round((BLOODY_UNITS[entry?.key]?.cost||0)*(.7+(entry?.rank||1)*.15)),blood:20*(entry?.rank||1)};}
 export function bloodyRosterFood(player){return (player?.btRoster||[]).reduce((n,e)=>n+(BLOODY_UNITS[e.key]?.food||0),0);}
-export function bloodyFormationArea(seat=0){const side=seat%2?-1:1,slot=Math.floor(seat/2)%5;return{minX:side<0?-34:20,maxX:side<0?-20:34,minZ:-22+slot*9,maxZ:-15+slot*9};}
+export function bloodyFormationArea(seat=0){return bloodyPreparationPlot(seat);}

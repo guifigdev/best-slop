@@ -63,7 +63,7 @@ Não há promessa de quantidade de salas por VPS. Os limites configuráveis são
 
 **Renomear sozinho não garante ausência de processos.** Há diferença entre uma ideia de jogo e a expressão concreta dessa ideia, e nomes também podem envolver marcas. Não venda este projeto como produto oficial Warcraft, Ragnarok, Dota, Isaac ou Megabonk. Evite seus logos, sons, arquivos extraídos, textos copiados e versões reconhecíveis de personagens proprietários. Audite também dados/scripts dos mapas e permissões dos autores. A política de custom games da Blizzard não equivale a uma licença para vender um standalone. [Copyright Office](https://www.copyright.gov/help/faq/faq-protect.html), [política Blizzard](https://www.blizzard.com/en-us/legal/2749df07-2b53-4990-b75e-a7cb3610318b/custom-game-acceptable-use-policy).
 
-A revisão do Phase Killer usa coordenadas e terreno extraídos do mapa como referência de fidelidade do protótipo. Essa origem precisa entrar na auditoria: para uma versão comercial, obter permissão aplicável ou substituir por um layout próprio. O fato de os voxels terem sido modelados aqui não libera automaticamente o layout, scripts ou dados de terceiros.
+As revisões do Phase Killer e do terreno do Bloody Tournament usam coordenadas e terreno extraídos dos mapas como referência de fidelidade do protótipo. Essa origem precisa entrar na auditoria: para uma versão comercial, obter permissão aplicável ou substituir por um layout próprio. O fato de os voxels terem sido modelados aqui não libera automaticamente o layout, scripts ou dados de terceiros.
 
 Para a versão comercial, proponho rótulos próprios na interface:
 
