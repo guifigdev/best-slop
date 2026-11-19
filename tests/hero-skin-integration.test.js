@@ -23,6 +23,6 @@ test('new hero weapons project matching basic effects without changing authorita
  const event={type:'arrow',basicAttack:true,projectileKind:'scrap',source:4,amount:27,time:10,tx:3,tz:4},before=JSON.stringify(event);
  for(const hero of ['knight','turtle','raccoon']){const e=customHeroAttackEffect(event,{hero,range:1.8});assert.equal(e.type,'slash');assert.equal(e.amount,27);assert.equal(e.time,10);}
  assert.equal(customHeroAttackEffect(event,{hero:'mage',range:7}).projectileKind,'arcane');assert.equal(customHeroAttackEffect(event,{hero:'owl',range:7}).projectileKind,'arcane');assert.equal(customHeroAttackEffect(event,{hero:'ranger',range:8}).projectileKind,'arrow');assert.equal(JSON.stringify(event),before);
- for(const source of [{hero:'owl',castleBuilderKey:'north'},{hero:'mage',warlockCharacter:'heretic'},{hero:'knight',treeTagCharacter:'ent'},{kind:'duck'}])assert.equal(customHeroAttackEffect(event,source),event);
+ for(const source of [{hero:'owl',castleBuilderKey:'north'},{hero:'mage',warlockCharacter:'heretic'},{hero:'knight',treeTagCharacter:'ent'},{hero:'knight',kodoTagCharacter:'runner'},{kind:'duck'}])assert.equal(customHeroAttackEffect(event,source),event);
  const skill={...event,basicAttack:false,skill:'poison'};assert.equal(customHeroAttackEffect(skill,{hero:'raccoon',range:1.8}),skill);
 });

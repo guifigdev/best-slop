@@ -1,3 +1,4 @@
+import {voxelTagPortrait} from './tag-character-art.js';
 import {createMoltenLavaMaterial} from './lava-material.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -12,7 +13,7 @@ const fireFamilies=new Set(['fireball','spray','meteor','scourge','bane','ritual
 const familyOf=value=>{const key=value?.key||value?.skill||value?.skillKey;return value?.family||WARLOCK_SKILLS[key]?.family||value?.type||key||'arcane';};
 const familyColour=family=>fireFamilies.has(family)?0xf2a354:family==='lightning'||family==='arc'?0xe7e5a5:['gravity','disable','link','timeshift','mirror'].includes(family)?0xb5a2e3:['shield','dome','windwalk','rush'].includes(family)?0x92d6c7:family==='homing'?0xb9d891:family==='splitter'?0xbca3e2:family==='fragment'?0xe7c080:0x9ecbdc;
 
-function buildingSpec(key,w,d){
+export function treeTagBuildingSpec(key,w,d){
  const def=TREE_TAG_BUILDINGS[key]||{},type=key==='eC01'?'invisible':key==='eC45'?'upgrade':key==='eC32'?'angry':def.type||'barracks',parts=[],b=(x,y,z,bw,bh,bd,c)=>parts.push([x,y,z,bw,bh,bd,c]),wood=0x856b45,dark=0x504e37,bark=0x6a5b3e,leaf=0x77994e,moss=0x577e45,stone=0x98a08d,gold=0xd8be77;
  const width=w*.88,depth=d*.88,roof=(y,colour=leaf)=>{b(0,y,0,width*1.05,.23,depth*1.06,colour);b(0,y+.19,0,width*.76,.2,depth*.77,colour);b(0,y+.34,0,width*.47,.12,depth*.49,moss);};
  b(0,.11,0,w*.95,.22,d*.95,0x727b5b);
@@ -64,7 +65,7 @@ function buildingSpec(key,w,d){
 export function createLegacyWorld({scene}){
  const root=new T.Group(),treeRoot=new T.Group(),warRoot=new T.Group(),forest=new T.Group(),structures=new T.Group();root.name='legacy-world';treeRoot.name='tree-tag-world';warRoot.name='warlock-world';forest.name='tree-tag-forest';structures.name='tree-tag-structures';treeRoot.add(forest,structures);root.add(treeRoot,warRoot);scene.add(root);
  const boxGeometry=new T.BoxGeometry(1,1,1),ringGeometry=new T.RingGeometry(.965,1,96),mat=new T.MeshLambertMaterial(),vertexMat=new T.MeshLambertMaterial({vertexColors:true}),glowMat=new T.MeshBasicMaterial({vertexColors:true,toneMapped:false}),ringMat=new T.MeshBasicMaterial({transparent:true,opacity:.65,side:T.DoubleSide,depthWrite:false,toneMapped:false}),barMat=new T.MeshBasicMaterial({toneMapped:false});
- const matrix=new T.Object3D(),colour=new T.Color(),batches=new Map(),buildings=new Map(),geometryCache=new Map();let disposed=false,treeFloorKey='',forestKey='',forestPose=-1,warRadius=-1,currentTree=null,buildKey=null,buildOwner=null,cursor=null;
+ const matrix=new T.Object3D(),colour=new T.Color(),batches=new Map(),buildings=new Map(),geometryCache=new Map();let disposed=false,treeFloorKey='',forestKey='',forestPose=-1,warRadius=-1,currentTree=null,buildKey=null,buildOwner=null,buildWorker=null,cursor=null;
  const initialBackground=scene.background,initialFog=scene.fog?.color.clone(),forestBackground=new T.Color(0x61794e),lavaBackground=new T.Color(0x2d1d1b),prepTree={map:{...TREE_TAG_RULES.map,prison:TREE_TAG_RULES.prison},trees:TREE_TAG_FOREST,buildings:[]},prepWar={arenaRadius:22,fields:[],projectiles:[],pillars:[]};
  const meshes=new Set(),ownedGeometries=new Set([boxGeometry,ringGeometry]);
  function ensure(name,parent,capacity,geometry=boxGeometry,material=mat){
@@ -91,7 +92,7 @@ export function createLegacyWorld({scene}){
  const ghostMaterial=new T.MeshBasicMaterial({color:0x8ce4ac,transparent:true,opacity:.25,depthWrite:false,toneMapped:false}),ghost=new T.Mesh(boxGeometry,ghostMaterial),ghostEdgeGeometry=new T.EdgesGeometry(boxGeometry),ghostEdgeMaterial=new T.LineBasicMaterial({color:0xbcebd1,transparent:true,opacity:.95,depthWrite:false,toneMapped:false}),ghostEdges=new T.LineSegments(ghostEdgeGeometry,ghostEdgeMaterial);ownedGeometries.add(ghostEdgeGeometry);ghost.name='tree-tag-build-ghost';ghost.add(ghostEdges);ghost.visible=false;ghost.renderOrder=8;treeRoot.add(ghost);
  function updateBuildGhost(snapshot){
   const def=buildKey&&TREE_TAG_BUILDINGS[buildKey];ghost.visible=!!(treeRoot.visible&&def&&cursor);if(!ghost.visible)return;
-  const unit=(snapshot.units||[]).find(u=>buildOwner!=null?u.owner===buildOwner:u.treeTagCharacter&&u.treeTagRole==='ent'&&!u.bot),check=treeTagBuildCheck(snapshot,unit,buildKey,cursor),point=check.point||{x:Math.round(cursor.x*2)/2,z:Math.round(cursor.z*2)/2};
+  const unit=(snapshot.units||[]).find(u=>buildOwner!=null?u.owner===buildOwner&&(buildWorker==null?!u.treeTagWorker:u.id===buildWorker):u.treeTagCharacter&&u.treeTagRole==='ent'&&!u.bot),check=treeTagBuildCheck(snapshot,unit,buildKey,cursor),point=check.point||{x:Math.round(cursor.x*2)/2,z:Math.round(cursor.z*2)/2};
   ghost.position.set(point.x,.31,point.z);ghost.scale.set(def.w,.4,def.d);ghostMaterial.color.setHex(check.allowed?0x8ce4ac:0xf18a72);ghostEdgeMaterial.color.setHex(check.allowed?0xc7f2ca:0xffbc97);ghost.userData.allowed=check.allowed;ghost.userData.reason=check.reason;
  }
  function updateAshes(snapshot){
@@ -102,7 +103,7 @@ export function createLegacyWorld({scene}){
  const prisonStones=ensure('tree-tag-prison-stones',treeRoot,16);for(let i=0;i<12;i++){const a=i/12*Math.PI*2;put(prisonStones,i,Math.sin(a)*2.15,.27,Math.cos(a)*2.15,.37,.49,.37,i%3===0?0xb6c8a1:0x848f79,a);}finish(prisonStones,12);
  function updateTreeBuildings(entries,time){
   const seen=new Set();for(const b of entries||[]){if(b.alive===false||!Number.isFinite(b.x)||!Number.isFinite(b.z))continue;seen.add(b.id);const def=TREE_TAG_BUILDINGS[b.key]||{},w=finite(b.w,def.w||2),d=finite(b.d,def.d||2),key=b.key+':'+w+':'+d;let entry=buildings.get(b.id);
-   if(!entry||entry.key!==key){if(entry)entry.group.removeFromParent();const group=new T.Group(),body=new T.Mesh(compile('structure:'+key,buildingSpec(b.key,w,d)),vertexMat);body.castShadow=body.receiveShadow=true;group.add(body);group.name='tree-tag-building-'+b.id;structures.add(group);const scaffoldingParts=[];for(const side of [-1,1])for(const z of [-d*.45,d*.45])scaffoldingParts.push([side*w*.45,1,z,.09,2,.09,0xc2ae7c]);scaffoldingParts.push([0,1.9,d*.45,w,.12,.13,0xb49b6e],[0,.8,-d*.45,w,.12,.13,0xb49b6e]);const scaffold=new T.Mesh(compile('scaffold:'+w+':'+d,scaffoldingParts),vertexMat);group.add(scaffold);entry={group,body,scaffold,key};buildings.set(b.id,entry);}
+   if(!entry||entry.key!==key){if(entry)entry.group.removeFromParent();const group=new T.Group(),body=new T.Mesh(compile('structure:'+key,treeTagBuildingSpec(b.key,w,d)),vertexMat);body.castShadow=body.receiveShadow=true;group.add(body);group.name='tree-tag-building-'+b.id;structures.add(group);const scaffoldingParts=[];for(const side of [-1,1])for(const z of [-d*.45,d*.45])scaffoldingParts.push([side*w*.45,1,z,.09,2,.09,0xc2ae7c]);scaffoldingParts.push([0,1.9,d*.45,w,.12,.13,0xb49b6e],[0,.8,-d*.45,w,.12,.13,0xb49b6e]);const scaffold=new T.Mesh(compile('scaffold:'+w+':'+d,scaffoldingParts),vertexMat);group.add(scaffold);entry={group,body,scaffold,key};buildings.set(b.id,entry);}
    entry.group.position.set(b.x,.12,b.z);entry.group.rotation.y=finite(b.rotation);const progress=clamp(finite(b.workProgress,Number.isFinite(b.workRemaining)&&Number.isFinite(b.workTotal)?1-b.workRemaining/Math.max(.001,b.workTotal):1),0,1);entry.body.scale.y=.18+progress*.82;entry.scaffold.visible=progress<.999;
   }
   for(const[id,entry]of buildings)if(!seen.has(id)){entry.group.removeFromParent();buildings.delete(id);}
@@ -137,13 +138,16 @@ export function createLegacyWorld({scene}){
  }
  return{
   root,
-  setBuild(key,owner){buildKey=typeof key==='string'&&Object.hasOwn(TREE_TAG_BUILDINGS,key)?key:null;if(owner!==undefined)buildOwner=owner;if(!buildKey)ghost.visible=false;},
+  setBuild(key,owner,workerId=null){buildWorker=workerId;buildKey=typeof key==='string'&&Object.hasOwn(TREE_TAG_BUILDINGS,key)?key:null;if(owner!==undefined)buildOwner=owner;if(!buildKey)ghost.visible=false;},
   setCursor(point){cursor=Number.isFinite(point?.x)&&Number.isFinite(point?.z)?{x:point.x,z:point.z}:null;if(!cursor)ghost.visible=false;},
   update(snapshot,time){if(disposed)return;const now=parseTime(snapshot,time),mode=snapshot?.options?.mode,tree=mode==='treetag'?(snapshot.treeTag||prepTree):null,war=mode==='warlock'?(snapshot.warlock||prepWar):null;treeRoot.visible=mode==='treetag';warRoot.visible=mode==='warlock';root.visible=treeRoot.visible||warRoot.visible;currentTree=treeRoot.visible?tree:null;if(root.visible){scene.background=treeRoot.visible?forestBackground:lavaBackground;if(scene.fog)scene.fog.color.copy(scene.background);}else if(scene.background===forestBackground||scene.background===lavaBackground){scene.background=initialBackground;if(scene.fog&&initialFog)scene.fog.color.copy(initialFog);}
    if(treeRoot.visible){treeFloor(tree.map||{});updateForest(tree.trees,now);updateTreeBuildings(tree.buildings,now);updateBuildGhost(snapshot);updateAshes(snapshot);const prison=tree.map?.prison||tree.prison||{x:0,z:0,radius:2};prisonRing.position.set(finite(prison.x),.18,finite(prison.z));prisonRing.scale.setScalar(finite(prison.radius,2));prisonRing.material.opacity=.67+Math.sin(Math.floor(now*8)*.16)*.13;prisonStones.position.set(finite(prison.x),0,finite(prison.z));}
    if(warRoot.visible){updateArena(war.arenaRadius??war.radius??20,now);updateWarEffects(war,now);}
   },
-  pick(point){if(!currentTree||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;const b=(currentTree.buildings||[]).filter(b=>b.alive!==false&&Math.abs(point.x-b.x)<=(b.w||TREE_TAG_BUILDINGS[b.key]?.w||2)/2&&Math.abs(point.z-b.z)<=(b.d||TREE_TAG_BUILDINGS[b.key]?.d||2)/2).sort((a,b)=>Math.hypot(point.x-a.x,point.z-a.z)-Math.hypot(point.x-b.x,point.z-b.z))[0];return b?{legacyBuilding:b.id}:null;},
+  pick(point){if(!currentTree||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;const b=(currentTree.buildings||[]).filter(b=>b.alive!==false&&Math.abs(point.x-b.x)<=(b.w||TREE_TAG_BUILDINGS[b.key]?.w||2)/2&&Math.abs(point.z-b.z)<=(b.d||TREE_TAG_BUILDINGS[b.key]?.d||2)/2).sort((a,b)=>Math.hypot(point.x-a.x,point.z-a.z)-Math.hypot(point.x-b.x,point.z-b.z))[0];if(b)return{legacyBuilding:b.id};const tree=(currentTree.trees||[]).find(t=>t.alive!==false&&Math.hypot(point.x-t.x,point.z-t.z)<Math.max(.65,(t.w||.8)/2));return tree?{legacyTree:tree.id}:null;},
   dispose(){if(disposed)return;disposed=true;for(const mesh of meshes)mesh.dispose();for(const geometry of ownedGeometries)geometry.dispose();for(const material of [mat,vertexMat,glowMat,ringMat,barMat,lavaMaterial,boundary.material,prisonRing.material,ghostMaterial,ghostEdgeMaterial])material.dispose();buildings.clear();batches.clear();geometryCache.clear();root.removeFromParent();if(scene.background===forestBackground||scene.background===lavaBackground){scene.background=initialBackground;if(scene.fog&&initialFog)scene.fog.color.copy(initialFog);}}
  };
 }
+
+const treePortraits=new Map();
+export function treeTagBuildingPortrait(key){if(treePortraits.has(key))return treePortraits.get(key);const b=typeof key==='string'&&Object.hasOwn(TREE_TAG_BUILDINGS,key)?TREE_TAG_BUILDINGS[key]:null;if(!b)return '';const svg=voxelTagPortrait(treeTagBuildingSpec(key,b.w,b.d),'tree-building-portrait');treePortraits.set(key,svg);return svg;}

@@ -1,81 +1,65 @@
-// Castle Fight builders have their own identities; combat heroes keep their art.
-// Portraits use these same boxes and colours, so species and faction stay in sync.
-const palettes={
- orc:{fur:0x9c7757,muzzle:0xbca078,cloth:0x5c7651,trim:0xc7a56a,eye:0x334437,ivory:0xeee1bd},
- undead:{fur:0x394957,muzzle:0x849b9c,cloth:0x536b72,trim:0xb8cabb,eye:0x9be3ce,ivory:0xe9ead0},
- chaos:{fur:0xc99555,muzzle:0xe3c38a,cloth:0x825848,trim:0xe0b566,eye:0x463c35,ivory:0xf5dfb0},
- corrupted:{fur:0x687266,muzzle:0xa8b399,cloth:0x6e577e,trim:0xb4a6bd,eye:0xcab8e5,ivory:0xe5e3c8}
-};
-
-function geometry(key){
- if(typeof key!=='string'||!Object.hasOwn(palettes,key))return null;
- const c=palettes[key];
- const boxes=[],wings=[],box=(...p)=>boxes.push(p),leg=(x,z,w=.27,h=.44,d=.34,color=c.fur,y=.28)=>({x,y,z,w,h,d,color});
- let legs=[leg(-.35,-.48),leg(.35,-.48),leg(-.35,.48),leg(.35,.48)],height=2.3,eyeLine=1.65;
- const eyes=(y,z,spacing=.3)=>{for(const side of [-1,1]){box(side*spacing,y,z,.14,.18,.055,c.eye);box(side*spacing-.025,y+.04,z+.035,.035,.045,.02,c.ivory);}};
- const clasp=(y,z)=>{box(0,y,z,.25,.22,.08,c.trim);box(0,y,z+.05,.09,.1,.03,c.cloth);};
- if(key==='orc'){
-  // A broad boar snout, two ivory tusks and a bristle ridge, rather than horns.
-  box(0,.93,-.06,1.08,.96,1.57,c.fur);box(0,1.48,.6,1.03,.83,.88,c.fur);
-  box(0,1.28,1.1,.8,.43,.5,c.muzzle);box(0,1.32,1.385,.67,.32,.12,0x997557);
-  for(const side of [-1,1]){box(side*.42,2.0,.48,.35,.38,.3,c.fur);box(side*.42,2.03,.65,.17,.2,.035,0x715c49);box(side*.41,1.18,1.21,.17,.38,.22,c.ivory);box(side*.46,1.39,1.24,.13,.23,.16,c.ivory);box(side*.17,1.34,1.455,.11,.08,.025,0x534a3b);}
-  eyes(1.69,1.065,.34);for(let i=0;i<5;i++)box(0,1.52,-.62+i*.28,.18,.3,.18,0x615440);
-  box(0,.97,.03,1.13,.34,1.45,c.cloth);box(0,1.15,.82,.73,.13,.12,c.ivory);clasp(.98,.87);
-  // A mason's mallet is worn at the hip, away from the face and tusks.
-  box(-.68,.76,.0,.12,.9,.12,0x92734f);box(-.68,1.25,.0,.55,.27,.29,0x85938b);box(-.68,1.25,.16,.25,.17,.04,c.trim);
-  box(0,1.02,-.99,.18,.17,.38,c.fur);height=2.27;eyeLine=1.69;
+// Independent faction builders. Stable Castle Fight identity keys choose these
+// original vertex-colour models; combat heroes and animal NPCs keep their art.
+const palettes=Object.freeze({
+ knight:{skin:0xd4b391,cloth:0x5d8296,trim:0xd6bc7e,metal:0xaab9b7,hair:0x806144},
+ mage:{skin:0xe4d4b5,cloth:0x548b78,trim:0xe2cd86,metal:0xadbcb0,hair:0xd7c18d},
+ ranger:{skin:0xa68db8,cloth:0x555d86,trim:0xd2d4c4,metal:0x9eafba,hair:0xbdd0d4},
+ turtle:{skin:0x72a49b,cloth:0x4b776d,trim:0xd6c886,metal:0xa1b5a5,hair:0x4c827c},
+ owl:{skin:0xc5c5b3,cloth:0x5e849b,trim:0xe0d1a1,metal:0xa4bdc3,hair:0xe4e4d4},
+ raccoon:{skin:0x8fa76f,cloth:0x68776b,trim:0xd7b775,metal:0xa5b6b2,hair:0x57634e},
+ orc:{skin:0x7c9a62,cloth:0x866646,trim:0xc7a56a,metal:0x94a19a,hair:0x465341},
+ undead:{skin:0xaeb9aa,cloth:0x4e576c,trim:0xb8cabb,metal:0x8f9f9f,hair:0x394957},
+ chaos:{skin:0xad7362,cloth:0x65515c,trim:0xe0b566,metal:0x92939b,hair:0x553d42},
+ corrupted:{skin:0x7b7264,cloth:0x657354,trim:0xb4a6bd,metal:0x96a99b,hair:0x8c799f}
+});
+const cache=new Map(),portraits=new Map(),DARK=0x2f403c,IVORY=0xe9e0c4;
+const valid=key=>typeof key==='string'&&Object.hasOwn(palettes,key);
+export function castleBuilderSpec(key){
+ if(!valid(key))return null;if(cache.has(key))return cache.get(key);
+ const c=palettes[key],boxes=[],legs=[],wings=[],b=(...p)=>boxes.push(p),leg=(x,color=c.cloth,h=.43)=>legs.push({x,y:h/2+.05,z:0,w:.3,h,d:.42,color});
+ const eyes=(y=1.85,z=.415,glow=DARK)=>{for(const side of [-1,1]){b(side*.18,y,z,.12,.15,.05,glow);b(side*.18-.022,y+.032,z+.035,.033,.04,.02,IVORY);}};
+ const head=(skin=c.skin)=>{b(0,1.76,.02,.75,.7,.68,skin);b(0,1.61,.4,.19,.17,.15,skin);eyes();};
+ const body=(cloth=c.cloth,skin=c.skin)=>{b(0,.99,0,.81,.88,.58,cloth);b(0,.61,.025,.9,.16,.67,0x4e5042);b(0,.65,.39,.24,.19,.08,c.trim);for(const side of [-1,1]){b(side*.55,1.03,0,.29,.67,.34,cloth);b(side*.55,.72,.04,.29,.24,.36,skin);}leg(-.24);leg(.24);head(skin);};
+ const apron=()=>{b(0,.87,.36,.64,.75,.14,c.cloth);b(0,.54,.38,.71,.12,.16,c.trim);b(-.2,1.06,.45,.22,.2,.05,c.metal);};
+ const mallet=(x=.76,y=1.03)=>{b(x,y,.23,.13,1,.13,0x806747);b(x,y+.58,.23,.7,.35,.43,c.metal);b(x,y+.79,.23,.56,.08,.34,IVORY);};
+ const robe=()=>{b(0,.51,.02,1.01,.42,.76,c.cloth);b(0,.27,.03,1.1,.15,.81,c.trim);};
+ const scroll=(x=-.76)=>{b(x,1.06,.26,.42,.62,.18,IVORY);b(x,1.4,.26,.49,.12,.23,c.trim);b(x,.72,.26,.49,.12,.23,c.trim);b(x,1.06,.38,.27,.06,.025,c.cloth);};
+ const hood=()=>{b(0,2.12,-.04,.91,.26,.84,c.cloth);b(0,2.31,-.08,.6,.17,.56,c.cloth);for(const side of [-1,1])b(side*.41,1.83,-.05,.21,.56,.77,c.cloth);};
+ const pointedEars=()=>{for(const side of [-1,1]){b(side*.48,1.89,.03,.36,.14,.22,c.skin);b(side*.67,1.96,.02,.18,.1,.16,c.skin);}};
+ let eyeLine=1.85;
+ if(key==='knight'){
+  body();apron();mallet();scroll(-.78);b(0,2.12,-.02,.85,.2,.76,c.hair);for(const side of [-1,1]){b(side*.36,1.88,-.08,.17,.47,.66,c.hair);b(side*.42,1.43,0,.35,.16,.62,c.metal);}b(0,1.52,.42,.44,.13,.11,c.hair);b(0,2.14,.39,.77,.1,.1,c.trim);b(0,2.22,.4,.21,.18,.11,c.metal);
+ }else if(key==='mage'){
+  body();robe();pointedEars();for(const side of [-1,1])b(side*.35,1.77,-.09,.18,.79,.69,c.hair);b(0,2.12,0,.85,.18,.76,c.hair);b(0,2.11,.42,.83,.1,.1,c.trim);b(0,2.25,.45,.16,.31,.12,0xa2c9ce);scroll();b(.74,1.25,.14,.11,1.76,.12,0x8b7550);b(.74,2.25,.14,.42,.44,.38,c.metal);b(.74,2.56,.14,.23,.2,.24,0xc3e3cf);b(0,1.36,.37,.23,.22,.07,c.trim);
+ }else if(key==='ranger'){
+  body();robe();hood();pointedEars();for(const side of [-1,1]){b(side*.23,1.57,.38,.13,.37,.13,c.hair);b(side*.45,1.41,0,.38,.2,.61,c.metal);}b(0,2.23,.45,.5,.1,.12,c.trim);for(const side of [-1,1])b(side*.25,2.34,.45,.1,.2,.12,c.trim);b(0,1.02,-.4,1.02,1.1,.17,c.cloth);scroll(-.79);b(.72,1.15,.2,.12,1.45,.12,c.metal);b(.72,1.94,.2,.44,.17,.3,c.trim);b(.72,2.12,.2,.13,.3,.14,c.metal);
+ }else if(key==='turtle'){
+  // A long tapered tail replaces the legs; the upper body is a naga craftsperson.
+  for(let i=0;i<5;i++)b(0,.18+i*.12,-.79+i*.25,1.1-i*.12,.25,1.08-i*.11,i%2?c.skin:c.hair);
+  b(0,1.13,.04,.79,1.18,.57,c.cloth);head();for(const side of [-1,1]){b(side*.55,1.13,.07,.28,.77,.34,c.skin);b(side*.55,.78,.15,.29,.23,.35,c.skin);b(side*.41,1.96,-.07,.3,.56,.14,c.trim);b(side*.55,2.12,-.07,.2,.24,.13,c.hair);}b(0,2.11,-.02,.14,.6,.33,c.hair);b(0,1.23,-.32,.14,1.13,.26,c.trim);scroll(-.79);mallet(.78,1.02);b(0,1.12,.36,.21,.23,.07,c.trim);
+ }else if(key==='owl'){
+  body();apron();mallet(.83,1.04);scroll(-.81);b(0,2.12,.01,.88,.23,.8,c.metal);for(const side of [-1,1]){b(side*.39,1.91,0,.19,.46,.72,c.metal);b(side*.44,1.45,.01,.45,.24,.68,c.hair);b(side*.23,1.56,.4,.19,.37,.2,c.hair);}b(0,1.48,.45,.55,.23,.18,c.hair);b(0,1.26,.47,.4,.24,.2,c.hair);b(0,1.06,.48,.21,.17,.17,c.hair);b(0,2.17,.44,.79,.12,.11,c.trim);b(0,2.31,.02,.24,.22,.32,0xcbe0da);b(0,1.12,-.41,.9,.86,.2,c.cloth);
+ }else if(key==='raccoon'){
+  body();apron();pointedEars();b(0,1.65,.42,.44,.16,.1,c.skin);b(0,2.11,.01,.88,.18,.76,c.cloth);b(0,2.13,.39,.81,.13,.13,c.trim);for(const side of [-1,1]){b(side*.2,2.15,.47,.3,.23,.12,c.metal);b(side*.2,2.15,.55,.19,.15,.055,0x8ebcc5);}b(0,2.15,.48,.16,.09,.09,c.trim);b(0,1.18,-.47,.83,.94,.41,c.metal);for(const side of [-1,1]){b(side*.27,1.3,-.74,.23,.75,.2,c.trim);b(side*.27,1.71,-.74,.27,.14,.25,DARK);}mallet(-.8,.9);b(.78,.98,.22,.14,1.08,.14,c.metal);b(.78,1.62,.22,.49,.16,.2,c.metal);b(.56,1.78,.22,.14,.23,.2,c.metal);b(1,1.78,.22,.14,.23,.2,c.metal);
+ }else if(key==='orc'){
+  body();apron();b(0,1.53,.34,.83,.34,.36,c.skin);for(const side of [-1,1]){b(side*.29,1.48,.56,.13,.32,.14,IVORY);b(side*.51,1.83,.03,.32,.2,.25,c.skin);b(side*.47,1.39,.02,.49,.29,.73,c.cloth);}b(0,2.13,-.06,.54,.2,.62,c.hair);b(0,2.34,-.14,.23,.3,.31,c.hair);mallet(.86,1.02);scroll(-.83);b(0,1.12,-.4,.81,.83,.3,0x735d45);b(0,1.6,-.4,.85,.12,.34,c.trim);
+ }else if(key==='undead'){
+  body();robe();hood();eyes(1.85,.45,0xb4dfcd);b(0,1.56,.4,.47,.22,.13,c.skin);for(const x of [-.16,0,.16])b(x,1.56,.48,.055,.13,.035,DARK);b(0,1.74,.46,.13,.17,.04,DARK);for(const side of [-1,1])b(side*.45,1.41,0,.35,.18,.64,c.metal);scroll(-.8);b(.76,1.16,.13,.11,1.8,.12,0x756b5f);b(.76,2.18,.13,.42,.45,.38,c.skin);b(.76,2.19,.35,.28,.18,.05,DARK);for(const side of [-1,1])b(.76+side*.08,2.2,.38,.06,.07,.025,0xb7e2cf);b(.76,2.49,.13,.21,.19,.23,0xa9d4bb);
+ }else if(key==='chaos'){
+  body();apron();for(const side of [-1,1]){b(side*.35,2.16,-.02,.2,.44,.25,IVORY);b(side*.48,2.42,-.08,.22,.21,.19,c.trim);b(side*.52,2.61,-.12,.15,.2,.15,IVORY);b(side*.44,1.42,.03,.43,.24,.67,c.metal);b(side*.12,1.56,.47,.08,.17,.07,IVORY);}eyes(1.85,.45,0xe7be7d);b(0,2.09,.01,.67,.14,.64,c.hair);b(0,1.12,-.42,.96,1.13,.17,c.cloth);mallet(-.82,.99);for(const x of [.73,.89])b(x,1.03,.18,.075,1.05,.08,c.metal);b(.81,1.58,.18,.28,.1,.1,c.trim);b(.81,1.79,.18,.31,.27,.29,0xe9a25d);
+ }else{
+  // A corrupted walking tree has bark, roots and a violet leaf crown, no wolf body.
+  body(c.skin,c.skin);b(0,1.15,.35,.21,.69,.17,0x4d5044);for(const side of [-1,1]){b(side*.37,1.65,-.06,.16,.81,.72,c.skin);b(side*.68,1.18,.05,.24,.87,.28,c.skin);b(side*.8,1.48,.04,.17,.46,.21,c.skin);b(side*.94,1.71,.04,.35,.15,.2,c.skin);b(side*.5,.22,.25,.55,.19,.48,0x625c50);b(side*.44,2.18,-.11,.17,.8,.22,c.skin);b(side*.67,2.47,-.1,.53,.17,.26,c.skin);}b(0,2.36,-.02,1.25,.52,.92,c.hair);b(-.49,2.57,-.04,.68,.35,.66,0x6f6682);b(.5,2.59,-.03,.7,.39,.7,0xa18bae);b(0,2.76,-.04,.64,.25,.59,0xb3a0ba);eyes(1.85,.46,0xcab8e5);scroll(-.86);b(.81,1.02,.27,.12,.98,.13,c.skin);b(.81,1.58,.27,.65,.26,.38,c.metal);
  }
- if(key==='undead'){
-  // Upright raven: no mammal muzzle, ears or four-legged body template.
-  box(0,1.02,-.04,.88,1.12,.8,c.fur);box(0,1.79,.13,.86,.79,.75,c.fur);
-  box(0,1.6,.67,.34,.28,.43,c.muzzle);box(0,1.5,.91,.24,.18,.2,0xa5b8ae);
-  eyes(1.88,.535,.26);box(0,2.19,.02,.4,.18,.34,0x526570);box(0,2.32,-.08,.24,.16,.25,c.fur);
-  box(0,.8,.15,.94,.35,.71,c.cloth);box(0,1.01,.5,.63,.13,.1,c.ivory);clasp(.84,.54);
-  box(0,.68,-.58,.5,.18,.46,0x2e3d48);box(0,.61,-.84,.34,.13,.23,0x4a5e68);
-  for(const side of [-1,1])wings.push({side,pivot:[side*.42,1.2,-.04],parts:[[side*.12,0,-.04,.29,.87,.61,0x2d3d49],[side*.16,-.31,.09,.25,.29,.4,0x526874],[side*.15,.2,.15,.28,.16,.36,c.muzzle]]});
-  // Mortar scrolls and a pale belt distinguish the spectral architect.
-  box(.57,.85,-.05,.25,.6,.35,c.cloth);box(.57,1.2,-.05,.23,.13,.32,c.ivory);box(.57,.9,.15,.17,.22,.06,c.trim);
-  legs=[leg(-.22,.13,.23,.26,.42,c.muzzle,.2),leg(.22,.13,.23,.26,.42,c.muzzle,.2)];height=2.5;eyeLine=1.88;
- }
- if(key==='chaos'){
-  // Square flame-coloured mane and a cream muzzle remain unmistakably leonine.
-  box(0,.96,-.08,1.03,.94,1.57,c.fur);box(0,1.57,.54,1.32,1.17,.83,0x975b3c);
-  box(0,2.13,.53,1.03,.25,.76,0xc97c42);for(const side of [-1,1]){box(side*.61,1.6,.56,.25,.86,.73,0xb16a3b);box(side*.48,2.04,.62,.27,.27,.32,c.fur);box(side*.53,1.12,.57,.25,.33,.67,0x85563a);}
-  box(0,1.61,.88,.87,.78,.66,c.fur);box(0,1.39,1.27,.73,.35,.3,c.muzzle);box(0,1.49,1.445,.23,.14,.065,0x594236);eyes(1.77,1.225,.29);
-  box(0,1.02,-1.12,.23,.24,.71,c.fur);box(.08,1.17,-1.49,.27,.37,.3,0x975b3c);
-  box(0,.94,-.08,1.09,.31,1.2,c.cloth);box(0,1.12,.62,.77,.12,.13,c.ivory);clasp(.96,.72);
-  // Ember forge apron, tongs and a glowing forge stone, rather than spell VFX.
-  box(-.64,.88,-.1,.27,.56,.48,c.cloth);box(-.66,1.2,-.1,.29,.16,.32,0xe3a24f);for(const x of [.57,.7])box(x,.92,.05,.055,.7,.07,0x8d9585);box(.635,1.27,.05,.2,.07,.08,c.trim);
-  height=2.33;eyeLine=1.77;
- }
- if(key==='corrupted'){
-  // Narrow wolf muzzle, tall dark ears, pale cheek tufts and a long brush tail.
-  box(0,.94,-.08,.96,.91,1.52,c.fur);box(0,1.55,.51,.91,.84,.78,c.fur);
-  box(0,1.34,1.0,.59,.33,.45,c.muzzle);box(0,1.31,1.28,.35,.24,.18,c.muzzle);box(0,1.38,1.405,.23,.13,.06,0x3c4842);
-  for(const side of [-1,1]){box(side*.32,2.12,.37,.27,.55,.29,c.fur);box(side*.32,2.15,.54,.13,.34,.04,0x493d55);box(side*.48,1.47,.74,.23,.4,.38,c.muzzle);}
-  eyes(1.72,.93,.28);box(0,.99,-1.09,.36,.37,.8,c.fur);box(0,1.05,-1.53,.4,.39,.38,0x88917a);
-  box(0,.97,.06,1.02,.32,1.19,c.cloth);box(0,1.15,.7,.71,.12,.11,c.ivory);clasp(.99,.77);
-  // Root-bound satchel and pruned violet branches echo the corrupted faction.
-  box(-.62,.9,-.11,.25,.62,.46,c.cloth);for(const z of [-.25,-.05]){box(-.63,1.4,z,.08,.48,.08,0x5c5348);box(-.63,1.65,z,.24,.14,.19,0x9280a3);}height=2.45;eyeLine=1.72;
- }
- return{boxes,fur:c.fur,muzzle:c.muzzle,wings,legs,height,eyeLine};
+ const height=Math.max(...boxes.map(p=>p[1]+p[4]/2),...legs.map(p=>p.y+p.h/2));
+ const spec=Object.freeze({key,theme:'castle-builder',boxes:Object.freeze(boxes.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze(wings),fur:c.skin,muzzle:c.skin,height,eyeLine});cache.set(key,spec);return spec;
 }
-
-export function buildCastleBuilderModel(unit,body,voxel){
- const model=geometry(unit?.castleBuilderKey);if(!model)return null;
- for(const part of model.boxes)voxel(body,...part);
- const{boxes,...descriptor}=model;return descriptor;
-}
-
-const portraitCache=new Map();
+export function buildCastleBuilderModel(unit,body,voxel){const spec=castleBuilderSpec(unit?.castleBuilderKey);if(!spec)return null;for(const part of spec.boxes)voxel(body,...part);return spec;}
+const shade=(color,tint)=>'#'+[16,8,0].map(shift=>Math.round(((color>>shift)&255)*tint).toString(16).padStart(2,'0')).join('');
 export function castleBuilderPortrait(key,fallback=''){
- if(portraitCache.has(key))return portraitCache.get(key);
- const model=geometry(key);if(!model)return fallback;
- const c=palettes[key],boxes=[...model.boxes,...model.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])];
- for(const wing of model.wings)for(const[x,y,z,w,h,d,color]of wing.parts)boxes.push([x+wing.pivot[0],y+wing.pivot[1],z+wing.pivot[2],w,h,d,color]);
- // Front orthographic projection keeps faces readable at small HUD sizes.
- const hex=n=>'#'+n.toString(16).padStart(6,'0');
- const shapes=boxes.sort((a,b)=>(a[2]+a[5]/2)-(b[2]+b[5]/2)).map(([x,y,z,w,h,d,color])=>`<rect x="${(48+(x-w/2)*29).toFixed(2)}" y="${(86-(y+h/2)*29).toFixed(2)}" width="${(w*29).toFixed(2)}" height="${(h*29).toFixed(2)}" fill="${hex(color)}"/>`).join('');
- const svg=`<svg viewBox="0 0 96 96" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="90" height="90" rx="9" fill="${hex(c.cloth)}" opacity=".15"/><path d="M19 84h58l-10 6H29z" fill="${hex(c.cloth)}" opacity=".25"/>${shapes}</svg>`;
- portraitCache.set(key,svg);return svg;
+ const spec=castleBuilderSpec(key);if(!spec)return fallback;if(portraits.has(key))return portraits.get(key);
+ const boxes=[...spec.boxes,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],polygons=[],project=([x,y,z])=>[x*.88-z*.72,-y+z*.38+x*.27];
+ for(const[x,y,z,w,h,d,color]of boxes){const a=x-w/2,b=x+w/2,l=y-h/2,t=y+h/2,n=z-d/2,f=z+d/2;for(const[corners,tint,depth]of [[[[a,t,n],[b,t,n],[b,t,f],[a,t,f]],1,x+z-.01],[[[b,l,n],[b,t,n],[b,t,f],[b,l,f]],.77,x+z+.02],[[[a,l,f],[a,t,f],[b,t,f],[b,l,f]],.9,x+z+.03]])polygons.push({points:corners.map(project),color:shade(color,tint),depth});}
+ const all=polygons.flatMap(p=>p.points),minX=Math.min(...all.map(p=>p[0])),maxX=Math.max(...all.map(p=>p[0])),minY=Math.min(...all.map(p=>p[1])),maxY=Math.max(...all.map(p=>p[1])),scale=Math.min(80/(maxX-minX),81/(maxY-minY)),ox=(96-(maxX-minX)*scale)/2-minX*scale,oy=(92-(maxY-minY)*scale)/2-minY*scale;
+ const svg=`<svg viewBox="0 0 96 96" class="army-portrait castle-builder-portrait" aria-hidden="true"><path d="m6 82 42-11 42 11-42 12z" fill="#607b6b" opacity=".23"/>${polygons.sort((a,b)=>a.depth-b.depth).map(p=>`<polygon points="${p.points.map(([x,y])=>(x*scale+ox).toFixed(2)+','+(y*scale+oy).toFixed(2)).join(' ')}" fill="${p.color}"/>`).join('')}</svg>`;portraits.set(key,svg);return svg;
 }

@@ -1,6 +1,7 @@
+import {KODO_TAG_SKILLS} from '../shared/kodo-tag-catalog.js';
 import {SKILLS,ITEMS} from '../shared/catalog.js';
 import {WARLOCK_SKILLS,WARLOCK_ITEMS,WARLOCK_MASTERIES} from '../shared/warlock-catalog.js';
-import {TREE_TAG_SKILLS,TREE_TAG_ITEMS} from '../shared/tree-tag-catalog.js';
+import {TREE_TAG_SKILLS,TREE_TAG_ITEMS,TREE_TAG_WORKER_SKILLS} from '../shared/tree-tag-catalog.js';
 import {CASTLE_ITEMS} from '../shared/castle-catalog.js';
 
 // Original miniature paintings made from angular SVG shapes. The central
@@ -258,7 +259,9 @@ function register(game,kind,catalog,drawings){for(const [key,definition]of Objec
 register('survival','skill',SKILLS,survivalSkills);register('survival','item',ITEMS,survivalItems);
 register('warlock','skill',WARLOCK_SKILLS,Object.fromEntries(Object.entries(WARLOCK_SKILLS).map(([key,s])=>[key,warlockSkills[s.family]])));
 register('warlock','item',WARLOCK_ITEMS,warlockItems);register('warlock','mastery',WARLOCK_MASTERIES,masteries);
-register('treetag','skill',TREE_TAG_SKILLS,treeSkills);register('treetag','item',TREE_TAG_ITEMS,treeItems);
+register('treetag','skill',TREE_TAG_SKILLS,treeSkills);
+register('treetag','skill',TREE_TAG_WORKER_SKILLS,{regrow:['nature',tree()+G(spark(0,0),25,-4,.45)],detonate:['arcane',orb()+G(explosion(),-5,18,.65)]});
+register('kodotag','skill',KODO_TAG_SKILLS,{harvest:['gold',L('M19 56 40 16','accent',8)+P('m18 17 17-9 23 12-6 11-16-9-13 7z','light')+R(8,44,9,9,'bright')+R(45,39,11,11,'accent')]});register('treetag','item',TREE_TAG_ITEMS,treeItems);
 register('castlefight','item',CASTLE_ITEMS,castleItems);register('castlefight','skill',Object.fromEntries(Object.keys(castleAbilities).map(k=>[k,{name:k}])),castleAbilities);
 export function gameIllustrationSpec(game,kind,key){return registry.get(`${normalize(game)}/${kind}/${key}`)||null;}
 export function illustrationCatalog(){return Array.from(registry.values());}

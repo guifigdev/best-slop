@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {TreeTagMethods,treeTagBuildCheck,treeTagCanSee} from '../shared/tree-tag.js';
-import {TREE_TAG_REFERENCE,TREE_TAG_RULES as R,TREE_TAG_CHARACTERS as C,TREE_TAG_SKILLS as S,TREE_TAG_BUILDINGS as B,TREE_TAG_RESEARCH as RESEARCH,TREE_TAG_FOREST,treeTagSkillAt} from '../shared/tree-tag-catalog.js';
+import {TREE_TAG_REFERENCE,TREE_TAG_RULES as R,TREE_TAG_CHARACTERS as C,TREE_TAG_SKILLS as S,TREE_TAG_BUILDINGS as B,TREE_TAG_RESEARCH as RESEARCH,TREE_TAG_UNITS as UNITS,TREE_TAG_FOREST,TREE_TAG_WORKERS,TREE_TAG_WORKER_SKILLS,treeTagWorkerCatalog,treeTagSkillAt} from '../shared/tree-tag-catalog.js';
 
 function setup(role='blaze'){
  const g=new Game(513,{mode:'campaign'});Object.assign(g,TreeTagMethods);g.addPlayer('ent','knight');g.addPlayer('ally','knight');g.addPlayer('fire','knight');
@@ -15,7 +15,7 @@ function build(g,e,key,x=-25,z=-25){e.gold=e.lumber=10000;assert.equal(g.treeTag
 
 test('Tree Tag reference pins the classic map bytes, explicit character objects, original timing and four reachable researches',()=>{
  assert.equal(TREE_TAG_REFERENCE.sha256,'7c1ad8d581f63a908ab5ada6062b008d57999c80b22d92f5d3d27e0e2eb945c5');assert.equal(TREE_TAG_REFERENCE.bytes,223412);assert.equal(TREE_TAG_REFERENCE.version,'Tree Tag, Final v5.13');assert.equal(R.duration,1800);assert.equal(R.infernalDelay,30);assert.equal(R.incomeInterval,5);
- assert.deepEqual(Object.keys(C),['ent','blaze','pyra','burnin']);assert.equal(C.ent.hp,25);assert.equal(C.ent.speed,290/128);assert.equal(C.blaze.rawStats.hp,10000);assert.equal(C.blaze.rawStats.damage,90);assert.equal(C.blaze.hp,10375);assert.equal(C.burnin.hp,10500);assert.equal(TREE_TAG_FOREST.length,900);assert.deepEqual(B.eC45.research,['Resw','Rerh','R000']);assert.deepEqual(B.e000.research,['R002']);assert.equal(RESEARCH.R000.cost,100);
+ assert.deepEqual(Object.keys(C),['ent','blaze','pyra','burnin']);assert.equal(C.ent.hp,25);assert.equal(C.ent.speed,290/128);assert.equal(C.blaze.rawStats.hp,10000);assert.equal(C.blaze.rawStats.damage,90);assert.equal(C.blaze.hp,10375);assert.equal(C.burnin.hp,10500);assert.equal(TREE_TAG_FOREST.length,1353);assert.deepEqual(B.eC45.research,['Resw','Rerh','R000']);assert.deepEqual(B.e000.research,['R002']);assert.equal(RESEARCH.R000.cost,100);
 });
 
 test('native cooldowns, mana costs and non-linear skill ranks remain factual and separate from Survival attributes',()=>{
@@ -68,7 +68,7 @@ test('six inventory slots, native active item mana and cooldowns are authoritati
 });
 
 test('Upgrade Center researches exact inherited costs and map-overridden times, then upgrades owned structures',()=>{
- const {g,e}=setup();clear(g);e.x=-23;e.z=-25;e.treeTagAdvancedBuilder=true;const life=build(g,e,'e000');life.workRemaining=0;life.hp=life.maxHp;const center=build(g,e,'eC45',-30,-25);center.workRemaining=0;center.hp=center.maxHp;e.gold=e.lumber=1000;
+ const {g,e}=setup();clear(g);e.x=-23;e.z=-25;const life=build(g,e,'e000');life.workRemaining=0;life.hp=life.maxHp;g.treeTagCommand(e,{type:'ttStop'});assert.equal(g.treeTagCommand(e,{type:'ttTrain',buildingId:life.id,unit:'uC43'}),true);tick(g,15);const worker=g.units.find(u=>u.treeTagWorker&&u.workerType==='uC43');assert.ok(worker);assert.equal(g.treeTagCommand(e,{type:'ttBuild',workerId:worker.id,building:'eC45',x:-30,z:-25}),true);const center=g.treeTag.buildings.at(-1);center.workRemaining=0;center.hp=center.maxHp;e.gold=e.lumber=1000;
  assert.equal(g.treeTagCommand(e,{type:'ttResearch',buildingId:center.id,research:'R000'}),true);assert.equal(e.gold,900);assert.equal(e.lumber,975);assert.equal(g.treeTag.players.ent.researching.remaining,30);const hp=life.maxHp;tick(g,30);assert.equal(g.treeTag.players.ent.researchLevels.R000,1);assert.equal(g.treeTag.players.ent.researching,null);assert.ok(Math.abs(life.maxHp-hp*1.1)<1e-8);assert.equal(life.armor,B.e000.armor+B.e000.armorUpgrade);
 });
 
@@ -77,10 +77,38 @@ test('trees occlude Infernal sight and temporary reveal is localized, while alli
 });
 
 test('snapshots expose stable role, prison, structure and remaining cooldown data without navigation caches',()=>{
- const {g,e,f}=setup();const snap=JSON.parse(JSON.stringify(g.snapshotTreeTag()));assert.equal(snap.remaining,1800);assert.equal(snap.releaseAt,30);assert.equal(snap.releaseRemaining,30);assert.equal(snap.trees.length,900);assert.equal(snap.navigation,undefined);assert.equal(snap.players.ent.role,'ent');assert.equal(snap.players.fire.role,'infernal');assert.equal(e.cooldowns.blink,undefined);assert.equal(f.treeTagState,'waiting');
+ const {g,e,f}=setup();const snap=JSON.parse(JSON.stringify(g.snapshotTreeTag()));assert.equal(snap.remaining,1800);assert.equal(snap.releaseAt,30);assert.equal(snap.releaseRemaining,30);assert.equal(snap.trees.length,1353);assert.equal(snap.navigation,undefined);assert.equal(snap.players.ent.role,'ent');assert.equal(snap.players.fire.role,'infernal');assert.equal(e.cooldowns.blink,undefined);assert.equal(f.treeTagState,'waiting');
 });
 
 
 test('native secondary tree weapon and Berserk haste preserve damage rather than tripling each hit',()=>{
  const {g,f}=setup();clear(g);tick(g,30);f.x=15;f.z=15;f.gold=10000;const tree={id:'weapon-tree',x:15.5,z:15,w:.5,d:.5,hp:1000,maxHp:1000,armor:0,alive:true};g.treeTag.trees.push(tree);g.treeTag.navigationRevision++;g.treeTagCommand(f,{type:'ttAttack',target:tree.id});tick(g,.1);assert.equal(tree.hp,1000-C.blaze.treeDamage);const baseline=f.cd;f.inventory.push({id:'I001',key:'I001',charges:0});assert.equal(g.treeTagCommand(f,{type:'ttUseItem',slot:f.inventory.length-1}),true);f.cd=0;tick(g,.1);assert.equal(tree.hp,1000-C.blaze.treeDamage*2);assert.ok(Math.abs(f.cd-baseline/3)<1e-8);
+});
+
+
+test('the requested larger map expands both axes and resamples native forest positions without altering skill range',()=>{
+ assert.equal(R.map.width,116);assert.equal(R.map.depth,116);assert.equal(R.nativeMap.width,94);assert.equal(R.mapScale,116/94);assert.equal(R.forestRenderedCount,1353);assert.equal(R.forestNativeCount,4939);assert.ok(TREE_TAG_FOREST.some(t=>Math.abs(t.x)>50));assert.ok(TREE_TAG_FOREST.some(t=>Math.abs(t.z)>50));assert.ok(TREE_TAG_FOREST.every(t=>Math.abs(t.x)<=58&&Math.abs(t.z)<=58));assert.equal(treeTagSkillAt('blink').distance,1000/128);
+});
+
+function readyLife(g,e){clear(g);e.x=-23;e.z=-25;const life=build(g,e,'e000');life.workRemaining=0;life.hp=life.maxHp;g.treeTagCommand(e,{type:'ttStop'});return life;}
+function train(g,e,life,raw){e.gold=e.lumber=10000;assert.equal(g.treeTagCommand(e,{type:'ttTrain',buildingId:life.id,unit:raw}),true);tick(g,UNITS[raw].buildTime+.1);const worker=g.units.filter(u=>u.treeTagWorker&&u.workerType===raw).at(-1);assert.ok(worker,raw);return worker;}
+
+test('Tree of Life trains real native workers with separate bodies and native prices rather than granting an Ent a permanent global build flag',()=>{
+ const {g,e}=setup(),life=readyLife(g,e);e.gold=e.lumber=1000;assert.equal(g.treeTagCommand(e,{type:'ttTrain',buildingId:life.id,unit:'uC43'}),true);assert.equal(e.gold,940);assert.equal(e.lumber,940);assert.equal(g.units.some(u=>u.treeTagWorker),false);tick(g,14.9);assert.equal(g.units.some(u=>u.treeTagWorker),false);tick(g,.1);const worker=g.units.find(u=>u.treeTagWorker);assert.equal(worker.workerType,'uC43');assert.equal(worker.sourceBuilding,life.id);assert.equal(worker.expiresAt,null);assert.equal(worker.maxHp,25);assert.equal(e.treeTagAdvancedBuilder,undefined);assert.equal(worker.gold,undefined);assert.equal(worker.lumber,undefined);assert.ok(Math.hypot(worker.x-life.x,worker.z-life.z)<4);assert.equal(g.treeTagCommand(e,{type:'ttBuild',building:'eC45',x:-30,z:-25}),false);assert.match(g.commandFailureReason,/selecione/);assert.equal(treeTagWorkerCatalog(worker),TREE_TAG_WORKERS.uC43);
+});
+
+test('selecting an Advanced Builder moves, constructs and repairs independently while debiting only its controlling player',()=>{
+ const {g,e,a}=setup(),life=readyLife(g,e),worker=train(g,e,life,'uC43'),start={x:e.x,z:e.z};e.gold=e.lumber=1000;const allyGold=a.gold;assert.equal(g.treeTagCommand(a,{type:'ttMove',workerId:worker.id,x:-35,z:-25}),false);assert.equal(g.treeTagCommand(e,{type:'ttMove',workerId:worker.id,x:-35,z:-25}),true);tick(g,1);assert.ok(worker.x<life.x);assert.deepEqual({x:e.x,z:e.z},start);assert.equal(g.treeTagCommand(e,{type:'ttBuild',workerId:worker.id,building:'eC45',x:-35,z:-25}),true);assert.equal(e.gold,900);assert.equal(e.lumber,900);const b=g.treeTag.buildings.at(-1);finish(g,b);assert.equal(worker.treeTagAction,null);assert.equal(b.hp,b.maxHp);b.hp-=50;const gold=e.gold;assert.equal(g.treeTagCommand(e,{type:'ttRepair',workerId:worker.id,buildingId:b.id}),true);tick(g,2);assert.equal(b.hp,b.maxHp);assert.ok(e.gold<gold+2,'repair spends owner gold while ordinary income continues');assert.equal(a.gold>=allyGold,true);assert.equal(worker.gold,undefined);assert.equal(g.treeTagCommand(e,{type:'ttStop',workerId:worker.id}),true);
+});
+
+test('Wisps harvest five lumber each native eight-second cycle and never acquire an automatic combat target',()=>{
+ const {g,e,f}=setup(),life=readyLife(g,e),wisp=train(g,e,life,'e001');assert.equal(wisp.name,'Wisp');assert.equal(wisp.treeTagAction,null);assert.equal(wisp.expiresAt,null);const tree={id:'worker-harvest-tree',x:wisp.x+.7,z:wisp.z,w:.75,d:.75,hp:50,alive:true};g.treeTag.trees.push(tree);g.treeTag.navigationRevision++;e.lumber=100;g.treeTag.incomeAt=1000;assert.equal(g.treeTagCommand(e,{type:'ttGather',workerId:wisp.id,target:tree.id}),true);tick(g,8);assert.equal(e.lumber,105);assert.equal(tree.hp,50);tick(g,8);assert.equal(e.lumber,110);assert.equal(g.treeTagCommand(e,{type:'ttBuild',workerId:wisp.id,building:'eC23',x:-35,z:-35}),false);g.treeTagCommand(e,{type:'ttStop',workerId:wisp.id});f.x=wisp.x+.5;f.z=wisp.z;tick(g,.1);assert.equal(wisp.treeTagAction,null);assert.equal(f.hp,f.maxHp);
+});
+
+test('Nature Lover regrows native-radius trees using its own mana and cooldown, and never turns into a builder',()=>{
+ const {g,e}=setup(),life=readyLife(g,e),worker=train(g,e,life,'e002');assert.deepEqual(worker.skills,['blink','regrow']);const point={x:worker.x,z:worker.z+3.5},tree={id:'worker-regrow-tree',...point,w:.75,d:.75,hp:0,alive:false};g.treeTag.trees.push(tree);const mana=worker.mana;assert.equal(g.treeTagCommand(e,{type:'ttCast',workerId:worker.id,skill:'regrow',...point}),true,g.commandFailureReason);assert.equal(tree.alive,true);assert.equal(worker.mana,mana-100);assert.equal(worker.cooldowns.regrow,8);assert.equal(TREE_TAG_WORKER_SKILLS.regrow.radius,200/128);assert.equal(g.treeTagCommand(e,{type:'ttBuild',workerId:worker.id,building:'eC23',x:-35,z:-35}),false);
+});
+
+test('workers survive without summon expiry and a captured owner cannot keep commanding them',()=>{
+ const {g,e,f}=setup(),life=readyLife(g,e),worker=train(g,e,life,'uC43');assert.equal(Number.isFinite(worker.expiresAt),false);tick(g,30);Object.assign(f,{x:15,z:15,cd:0});Object.assign(e,{x:15.5,z:15});assert.equal(g.treeTagCommand(f,{type:'ttAttack',target:e.id}),true);tick(g,.1);assert.equal(e.treeTagCaptured,true);assert.equal(worker.alive,false);assert.equal(g.treeTagCommand(e,{type:'ttMove',workerId:worker.id,x:-20,z:-20}),false);
 });

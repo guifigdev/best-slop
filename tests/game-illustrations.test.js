@@ -1,8 +1,9 @@
+import {KODO_TAG_SKILLS} from '../shared/kodo-tag-catalog.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {SKILLS,ITEMS} from '../shared/catalog.js';
 import {WARLOCK_SKILLS,WARLOCK_ITEMS,WARLOCK_MASTERIES} from '../shared/warlock-catalog.js';
-import {TREE_TAG_SKILLS,TREE_TAG_ITEMS} from '../shared/tree-tag-catalog.js';
+import {TREE_TAG_SKILLS,TREE_TAG_ITEMS,TREE_TAG_WORKER_SKILLS} from '../shared/tree-tag-catalog.js';
 import {CASTLE_ITEMS} from '../shared/castle-catalog.js';
 import {gameIllustration,gameIllustrationSpec,illustrationCatalog} from '../src/game-illustrations.js';
 
@@ -11,16 +12,16 @@ test('all five games have original illustrations for every current skill, item a
  for(const [game,kind,catalog]of [
   ['survival','skill',SKILLS],['survival','item',ITEMS],
   ['warlock','skill',WARLOCK_SKILLS],['warlock','item',WARLOCK_ITEMS],['warlock','mastery',WARLOCK_MASTERIES],
-  ['treetag','skill',TREE_TAG_SKILLS],['treetag','item',TREE_TAG_ITEMS],['castlefight','item',CASTLE_ITEMS]
+  ['treetag','skill',TREE_TAG_SKILLS],['treetag','skill',TREE_TAG_WORKER_SKILLS],['kodotag','skill',KODO_TAG_SKILLS],['treetag','item',TREE_TAG_ITEMS],['castlefight','item',CASTLE_ITEMS]
  ])for(const [key,definition]of Object.entries(catalog)){
   const spec=gameIllustrationSpec(game,kind,key);assert.ok(spec,`${game}/${kind}/${key}`);assert.equal(spec.name,definition.name);assert.ok(spec.paths.length>80);assert.ok(Object.isFrozen(spec));assert.ok(gameIllustration(game,kind,key));count++;
  }
  for(const key of ['blink','cancel','repair','rescue']){assert.ok(gameIllustration('castlefight','skill',key));count++;}
- assert.equal(illustrationCatalog().length,count);assert.equal(count,170);
+ assert.equal(illustrationCatalog().length,count);assert.equal(count,173);
 });
 
 test('related actions have distinct central subjects, rather than merely a different frame or palette over one fallback bolt',()=>{
- for(const game of ['survival','warlock','treetag','castlefight'])for(const kind of ['skill','item','mastery']){
+ for(const game of ['survival','warlock','treetag','castlefight','kodotag'])for(const kind of ['skill','item','mastery']){
   const entries=illustrationCatalog().filter(s=>s.game===game&&s.kind===kind);
   assert.equal(new Set(entries.map(s=>s.paths)).size,entries.length,`${game}/${kind}`);
  }
