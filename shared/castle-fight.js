@@ -1,4 +1,5 @@
 import {launchCastleBlast,tickCastleItemProjectiles} from './castle-item-effects.js';
+import {advanceCastleRoute} from './castle-marching.js';
 import {castleBuildCheck,CASTLE_BUILDING_LIMIT} from './castle-build-rules.js';
 import {castlePassable,castleSpawnPoint,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
 import {castleBuilderFor} from './castle-builders.js';
@@ -144,9 +145,10 @@ export const CastleFightMethods={
   tickCastleItemProjectiles(this,dt,(target,damage,shot)=>hurt(this,target,damage,{id:shot.source,owner:shot.owner,attackType:'spells'},'arcane'));this.castleItemTick(dt);this.castleSupportTick(dt);this.castleDefenseTick(dt);
   for(const unit of cf.units.filter(u=>u.alive)){
    unit.cd=Math.max(0,unit.cd-dt);unit.stun=Math.max(0,unit.stun-dt);unit.moving=false;if(unit.stun>0)continue;
+   advanceCastleRoute(cf,unit);
    const enemyUnits=cf.units.filter(t=>t.alive&&t.team!==unit.team&&canHit(unit,t)&&distance(unit,t)<=9),enemyStructures=[...cf.buildings,...cf.teams].filter(t=>t.alive&&t.team!==unit.team&&distance(unit,t)<=unit.range+radius(t)+2),target=[...enemyUnits,...enemyStructures].sort((a,b)=>distance(unit,a)-distance(unit,b)||a.id-b.id)[0];
    if(target){unit.target=target.id;const reach=unit.range+radius(target);if(distance(unit,target)<=reach){if(unit.cd<=0){const haste=(unit.hasteUntil||0)>cf.elapsed?1+(unit.hasteAttackSpeed||0)+(unit.castleAttackBonus||0):1+(unit.castleAttackBonus||0),amount=unit.damage*castleDamageMultiplier(unit.attackType,target.armorType)/(1+.06*Math.max(0,target.armor||0));unit.attackAt=this.time;unit.cd=unit.interval/haste;unit.facing=Math.atan2(target.x-unit.x,target.z-unit.z);this.fx(unit.range>=3||unit.flying?'arrow':'slash',unit.x,unit.z,{source:unit.id,target:target.id,tx:target.x,tz:target.z,element:['magic','spells'].includes(unit.attackType)?'arcane':null,castle:true});hurt(this,target,amount,unit);}}else{const speed=unit.speed;unit.speed*=1+(unit.castleSpeedBonus||0)+((unit.hasteUntil||0)>cf.elapsed?unit.hasteMoveSpeed||0:0);move(cf,unit,target,dt);unit.speed=speed;}}
-   else{unit.target=null;const destination=unit.route[Math.min(unit.pathIndex,unit.route.length-1)],speed=unit.speed;unit.speed*=1+(unit.castleSpeedBonus||0)+((unit.hasteUntil||0)>cf.elapsed?unit.hasteMoveSpeed||0:0);if(move(cf,unit,destination,dt)&&unit.pathIndex<unit.route.length-1)unit.pathIndex++;unit.speed=speed;}
+   else{unit.target=null;const destination=unit.route[Math.min(unit.pathIndex,unit.route.length-1)],speed=unit.speed;unit.speed*=1+(unit.castleSpeedBonus||0)+((unit.hasteUntil||0)>cf.elapsed?unit.hasteMoveSpeed||0:0);if(move(cf,unit,destination,dt)&&unit.pathIndex<unit.route.length-1)unit.pathIndex++;advanceCastleRoute(cf,unit);unit.speed=speed;}
   }
   // Keep ground and air formations separate without consuming game RNG.
   const units=cf.units.filter(u=>u.alive);for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){const a=units[i],b=units[j];if(a.flying!==b.flying)continue;const min=radius(a)+radius(b),d=distance(a,b);if(d>=min)continue;const dx=d?(b.x-a.x)/d:(a.id<b.id?1:-1),dz=d?(b.z-a.z)/d:0,push=(min-d)*.5;for(const [u,sign]of [[a,-1],[b,1]]){const point=castlePoint(cf.map,{x:u.x+dx*push*sign,z:u.z+dz*push*sign});if(passable(cf,point,radius(u),{flying:u.flying})&&castleSegmentClear(cf,u,point,radius(u),{flying:u.flying})){u.x=point.x;u.z=point.z;}}}

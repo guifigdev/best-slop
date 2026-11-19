@@ -99,7 +99,7 @@ const view=createView($('world'),$('combat-overlay'),({point,unit,button,drop,np
  else if(session.mode==='move'){send({type:'move',...point});view.mark(point);setMode();}
  else if(unit){inspectTarget(unit);if(unit.id===p.id)view.setSelected(true);}
 });
-const castleUI=createCastleUI({send,getState:()=>session.snapshot,getOwner:()=>session.playerId,view,toast,portrait,onEnd:()=>{$('newgame').click();}});
+const castleUI=createCastleUI({send,isBuildRepeatHeld:()=>shortcuts.held.has('Enter'),getState:()=>session.snapshot,getOwner:()=>session.playerId,view,toast,portrait,onEnd:()=>{$('newgame').click();}});
 function openRecruitment({building,unitKey,target}){const b=session.snapshot?.lineWars?.buildings.find(b=>b.id===building);if(!b||lineAllies(session.snapshot,b.owner,session.playerId))return;lineContext='recruitment';attackTarget=target||b.owner;if(session.snapshot.options.lineTeams)view.watchPlayer(b.owner);selectedRecruit=building;view.setRecruitment(building);document.querySelector('[data-tab=line]').click();shopSig='';renderShop();}
 function navigateLine(zone,owner=null){
  const state=session.snapshot;if(state?.options.mode!=='linewars')return;
@@ -195,7 +195,7 @@ function updateEquipment(){const panel=$('equipment-panel'),p=me();if(!panel||!p
 }
 $('ready').onclick=()=>{if(session.dialog.length)closeDialog();send({type:'ready'});};
 function activate(slot){if(session.snapshot?.options?.mode==='castlefight'){castleUI.shortcut('skill',slot);return;}const compatibility=skillCompatibility(me(),me()?.skills[slot]);if(!compatibility.allowed){toast(compatibility.reason);return;}if(view.isSpectating()){toast('Volte à sua linha para mirar uma técnica.');return;}const p=me(),s=p?currentSkill(p,p.skills[slot]):null;if(!s)return;if(p.stageDone&&session.snapshot.phase==='wave'){toast('Sua prova já terminou. Aguarde os outros competidores.');return;}if(s.kind==='passive'){toast(`${s.name} é automática: ${s.description}`);return;}if(!['wave','bonus','final'].includes(session.snapshot.phase)){toast('As técnicas ficam disponíveis durante as provas.');return;}if((p.cooldowns[p.skills[slot]]||0)>0){toast('Essa técnica ainda está recarregando.');return;}if(p.mana<s.mana){toast('Mana insuficiente.');return;}if(s.target==='self')send({type:'cast',slot});else{setMode('cast',slot);toast(s.target==='enemy'?'Clique em um inimigo. Esc cancela.':'Clique no chão. Esc cancela.');}}
-const shortcuts=useShortcuts({context:()=>({dialog:session.dialog.length>0,playing:!!session.snapshot&&$('startmodal').classList.contains('hidden'),modal:!!$('overlay-modal')||!!mapEditor}),onAction:(action,value)=>{
+const shortcuts=useShortcuts({context:()=>({repeatBuild:session.snapshot?.options?.mode==='castlefight'&&castleUI.isBuilding(),dialog:session.dialog.length>0,playing:!!session.snapshot&&$('startmodal').classList.contains('hidden'),modal:!!$('overlay-modal')||!!mapEditor}),onAction:(action,value)=>{
  if(session.snapshot?.options?.mode==='castlefight'&&!['escape','dialogNext','help'].includes(action)){castleUI.shortcut(action,value);return;}
  if(action==='escape'&&session.snapshot?.options?.mode==='castlefight')castleUI.cancel();
  if(view.isSpectating()&&['skill','interact','attackMove','move','stop','hold'].includes(action)){toast('Observando rival · Espaço/F1 para voltar ao seu herói.');return;}

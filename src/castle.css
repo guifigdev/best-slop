@@ -5,3 +5,5 @@
 .mode-grid[hidden]{display:none!important}#startmodal .game-picker{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:720px){#startmodal .game-picker{grid-template-columns:1fr}}
 
 .cf-build-reason{color:#f1c1a4!important}.cf-owned-item{display:flex;flex-direction:column;gap:3px;padding:5px 9px;font-size:11px;color:#f1d394}.cf-owned-item small{color:#cfdec2}
+
+.cf-repeat{position:sticky;top:28px;z-index:2;width:100%;margin:0 0 12px;padding:11px;border:1px solid #9dab7e;border-radius:6px;background:#2a4a3b;color:#e5dfbd;cursor:pointer}.cf-repeat[aria-pressed="true"]{background:#dfc17f;color:#243f31;border-color:#f1d493}

@@ -1,6 +1,6 @@
 import {KEYS} from '../shared/catalog.js';
 export const SHORTCUTS=[
- ['Castle Fight','Q + clique','Blink do construtor; W ou Esc cancela'],['Castle Fight','E','Demolir a construção própria selecionada'],['Castle Fight','G','Visitar a torre central de itens'],['Castle Fight','Catálogo + clique no terreno','Posicionar construção na região da sua equipe'],
+ ['Castle Fight','Q + clique','Blink do construtor; W ou Esc cancela'],['Castle Fight','E','Demolir a construção própria selecionada'],['Castle Fight','G','Visitar a torre central de itens'],['Castle Fight','Catálogo + clique no terreno','Posicionar construção na região da sua equipe'],['Castle Fight','Segurar Enter + clique','Manter a construção selecionada para construir várias; botão Construir várias no toque'],
  ['Comandos','Botão direito','Mover no chão / atacar inimigo'],['Comandos','A + clique','Atacar ao mover'],['Comandos','M + clique','Mover'],['Comandos','G','Falar com o comerciante mais próximo'],['Comandos','S','Parar / interromper canalização'],['Comandos','H','Manter posição'],
  ['Técnicas','Botão direito na técnica','Ativar / desativar conjuração automática'],['Câmera','Avatar de jogador','Observar a linha dele no Line Wars'],['Técnicas','Q W E R D F C','Usar os sete espaços de técnicas'],['Técnicas','1 2 3 4 5 6','Usar consumível no espaço da mochila'],['Técnicas','I','Abrir atributos e equipamentos'],['Técnicas','L','Abrir espólios e trocar técnicas especiais'],['Técnicas','Shift + clique no item','Vender equipamento/consumível na loja'],
  ['Comandos','T','Examinar próximo inimigo'],['Comandos','Clique esquerdo no inimigo','Consultar atributos e técnicas'],
@@ -17,6 +17,7 @@ export function useShortcuts({target=window,context,onAction}){
   if(c.modal)return;
   if(c.dialog){if(e.key==='Enter'||e.code==='Space'){e.preventDefault();if(!e.repeat)onAction('dialogNext');}return;}
   if(!c.playing||c.modal)return;
+  if(e.key==='Enter'&&c.repeatBuild){e.preventDefault();held.add('Enter');return;}
   if(e.key.startsWith('Arrow')){e.preventDefault();held.add(e.key);return;}
   if(e.repeat)return;
   if(KEYS.includes(key)){e.preventDefault();onAction('skill',KEYS.indexOf(key));}
