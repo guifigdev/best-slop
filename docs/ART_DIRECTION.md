@@ -118,3 +118,8 @@ O Golpe de resgate possui uma carga por partida e mira com alcance/raio reais. S
 ## Faixa de lava do coliseu
 
 Na Forja de Muspelheim, um canal animado contorna o limite externo do campo e termina antes da primeira arquibancada. Reutiliza o material de lava opaca do Warlock, com fissuras e pulsos em oito quadros por segundo; basalto e quatro pontes de pedra ligam o campo aos portões. Toda a lava fica além do limite de movimento, sem acrescentar perigos à simulação. O canal usa apenas duas chamadas de desenho e acompanha a visibilidade do coliseu: fica oculto nos demais temas, no Line Wars, no Castle Fight e em campos expandidos. Recursos próprios são liberados ao descartar o cenário; a geometria base compartilhada permanece válida.
+
+
+## Distribuição de objetos na arena
+
+Árvores, pedras e runas passam a usar amostragem uniforme em toda a área útil do coliseu, recortada pelo mesmo quadrado de cantos arredondados do movimento. Foi removido o anel central de 4,8–8,2m. A quantidade permanece dez objetos por campo; o afastamento mínimo entre centros aumenta para 3,25m e há margem para circulação junto à borda. O centro de entrada, as fachadas e o acesso das lojas, os perigos do bioma e os corpos de unidades vivas ficam livres. O terreno é igual nas arenas privadas dos competidores, varia por onda e usa uma nova semente em cada partida iniciada pela interface ou sala online. O plantio ao entrar no PvP também respeita as posições finais dos heróis. As margens das lanes continuam seguindo os caminhos e as marcações de seus mapas.

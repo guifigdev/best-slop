@@ -1,5 +1,6 @@
 import {ARENA_BOUNDS} from './arena-size.js';
 import {mapTileAt} from './voxel-map.js';
+import {SHOPS} from './shops.js';
 
 // Original voxel parts, shared by renderers and their authoritative footprint.
 // Parts are [x,y,z,width,height,depth,color]. Trees collide at their trunks;
@@ -16,13 +17,15 @@ const protectedBy=(p,zone,padding)=>Number.isFinite(zone.w)?Math.abs(p.x-zone.x)
 export function generateScenery({seed=7381,mode='survival',bounds=ARENA_BOUNDS,map=null,keepClear=[],count=mode==='linewars'?26:16}={}){
  let value=seed>>>0;const random=()=>((value=(Math.imul(value,1664525)+1013904223)>>>0)/4294967296),result=[],kinds=Object.keys(SCENERY_ASSETS),line=mode==='linewars'&&map;
  const clear=[...keepClear];if(line){const m=map.markers;clear.push(...(m.buildings||[]).map(p=>({...p,r:1.8})),...(m.shops||[]).map(p=>({...p,r:3.4})));for(const [key,r]of [['fountain',6],['portal',3],['heroSpawn',3],['spawn',3]])if(m[key])clear.push({...m[key],r});for(const route of m.routes||[])clear.push({...route.spawn,r:3});}
- else clear.push({x:0,z:0,r:4.2},{x:0,z:2,w:12,d:3},{x:0,z:-10.8,w:31,d:8});
+ else clear.push({x:0,z:0,r:4.2},{x:0,z:2,w:12,d:3},...Object.values(SHOPS).filter(shop=>!shop.lineWarsOnly).map(shop=>({x:shop.x,z:shop.z,w:3.4,d:3.2})),{x:0,z:-8.8,w:31,d:1.2});
  for(let attempt=0;attempt<2400&&result.length<Math.min(96,Math.max(0,count));attempt++){
   const kind=kinds[Math.floor(random()*kinds.length)],scale=.82+random()*.35,rotation=Math.floor(random()*4)*Math.PI/2,asset=SCENERY_ASSETS[kind],padding=Math.max(asset.collider.w,asset.collider.d)*scale/2;
-  let x,z;if(line){x=map.origin.x+random()*map.width*map.tileSize;z=map.origin.z+random()*map.height*map.tileSize;}else{const angle=random()*Math.PI*2,r=4.8+random()*Math.min(3.4,bounds*.2);x=Math.sin(angle)*r;z=Math.cos(angle)*r;}
-  const p={x,z};if(clear.some(zone=>protectedBy(p,zone,padding+.6)))continue;if(result.some(other=>Math.hypot(other.x-x,other.z-z)<2.35))continue;
+  let x,z;if(line){x=map.origin.x+random()*map.width*map.tileSize;z=map.origin.z+random()*map.height*map.tileSize;}else{x=(random()*2-1)*bounds;z=(random()*2-1)*bounds;}
+  // Uniform area sampling, clipped to the same rounded square as movement.
+  // Keep enough room between props and the border to walk around their bodies.
+  if(!line&&(Math.max(Math.abs(x),Math.abs(z))+padding+1>bounds||Math.hypot(x,z)+padding*Math.SQRT2+1>bounds+2.5))continue;
+  const p={x,z};if(clear.some(zone=>protectedBy(p,zone,padding+.6)))continue;if(result.some(other=>Math.hypot(other.x-x,other.z-z)<(line?2.35:3.25)))continue;
   if(line){const samples=[[0,0],[padding+.25,0],[-padding-.25,0],[0,padding+.25],[0,-padding-.25]],tiles=samples.map(([dx,dz])=>mapTileAt(map,x+dx,z+dz));if(tiles.some(t=>!t?.walkable)||tiles[0].palette.id==='road')continue;const roads=(map.markers.routes?.length?map.markers.routes:[{path:map.markers.path||[]}]);if(roads.some(route=>route.path.some((a,i)=>i&&segmentDistance(p,route.path[i-1],a)<3.2+padding)))continue;}
-  else if(Math.abs(x)<1.3||Math.abs(z)<1.3)continue;
   result.push({id:`scenery-${seed}-${result.length}`,kind,x:Number(x.toFixed(4)),z:Number(z.toFixed(4)),scale:Number(scale.toFixed(4)),rotation});
  }
  return result;
