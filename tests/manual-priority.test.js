@@ -52,5 +52,5 @@ test('guard orders retain their position, pending manual aim stops automatic att
 });
 
 test('inspection never transfers hero control and defeat/completed trials have explicit input feedback',()=>{
- const p={alive:true};assert.equal(controlBlockReason(p), '');assert.match(controlBlockReason(p,{spectating:true}),/observando outro herói/);p.alive=false;assert.match(controlBlockReason(p,{spectating:true}),/derrotado/);assert.match(controlBlockReason(p,{mode:'linewars'}),/renascimento/);p.alive=true;p.stageDone=true;assert.match(controlBlockReason(p,{phase:'wave'}),/Sua prova terminou/);
+ const p={alive:true};assert.equal(controlBlockReason(p), '');assert.match(controlBlockReason(p,{spectating:true}),/observando outra arena/);p.alive=false;assert.match(controlBlockReason(p,{spectating:true}),/derrotado/);assert.match(controlBlockReason(p,{mode:'linewars'}),/renascimento/);p.alive=true;p.stageDone=true;assert.match(controlBlockReason(p,{phase:'wave'}),/Sua prova terminou/);
 });

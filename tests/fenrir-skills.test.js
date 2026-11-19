@@ -1,3 +1,4 @@
+import {summonAttributeStats} from '../shared/summon-attributes.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -39,7 +40,7 @@ test('Fenrir bite is physical, scales with ATK, respects melee reach and magic i
 test('scarabs use their own model identity, scale per rank, expire and replace only their summoning group',()=>{
  const{g,p}=setup(['scarabs','odinsravens'],5);assert.equal(cast(g,p,'odinsravens'),true);assert.equal(cast(g,p,'scarabs'),true);
  let summoned=g.units.filter(u=>u.summoner===p.id&&u.summonSkill==='scarabs');assert.equal(summoned.length,4);
- for(const s of summoned){assert.equal(s.kind,'scarab');assert.equal(s.size,.65);assert.equal(s.team,p.team);assert.equal(s.owner,p.owner);assert.equal(s.maxHp,400);assert.equal(s.monsterBase.damage,35);assert.equal(s.expires,30);assert.equal(s.flying,false);assert.deepEqual(s.skills,[]);}
+ for(const s of summoned){assert.equal(s.kind,'scarab');assert.equal(s.size,.65);assert.equal(s.team,p.team);assert.equal(s.owner,p.owner);assert.equal(s.monsterBase.hp,400);assert.equal(s.maxHp,Math.round((400+p.totalAttributes.vit*20)*(1+p.totalAttributes.vit*.01)));assert.equal(s.monsterBase.damage,35);assert.equal(s.expires,30);assert.equal(s.flying,false);assert.deepEqual(s.skills,[]);}
  const old=new Set(summoned.map(u=>u.id)),ravens=g.units.filter(u=>u.summonSkill==='odinsravens').map(u=>u.id);p.cooldowns.scarabs=0;assert.equal(cast(g,p,'scarabs'),true);
  summoned=g.units.filter(u=>u.summoner===p.id&&u.summonSkill==='scarabs');assert.equal(summoned.length,4);assert.ok(summoned.every(u=>!old.has(u.id)));assert.deepEqual(g.units.filter(u=>u.summonSkill==='odinsravens').map(u=>u.id),ravens);
  g.time=30.1;g.tick(.01);assert.ok(summoned.every(u=>!u.alive));assert.equal(armyPortrait('scarab'),scarabPortrait());assert.ok(ARMY_PORTRAIT_KINDS.includes('scarab'));
@@ -47,7 +48,7 @@ test('scarabs use their own model identity, scale per rank, expire and replace o
 
 test('pack and life auras affect allies and summons using the strongest copy exactly once, then revert outside range',()=>{
  const{g,p,q}=setup(['packaura','lifeaura','scarabs'],5);q.skills=['packaura','lifeaura'];q.skillLevels={packaura:1,lifeaura:1};assert.equal(cast(g,p,'scarabs'),true);
- const s=g.units.find(u=>u.summonSkill==='scarabs');g.refresh(s);const base=s.monsterBase;close(s.damage,base.damage*1.18);close(s.hpRegen,3.5);close(s.magicDefense,base.magicDefense+6);
+ const s=g.units.find(u=>u.summonSkill==='scarabs');g.refresh(s);const base=summonAttributeStats(g,s,s.monsterBase).base;close(s.damage,base.damage*1.18);close(s.hpRegen,base.hpRegen+3.5);close(s.magicDefense,base.magicDefense+6);
  const original={damage:s.damage,hpRegen:s.hpRegen,magicDefense:s.magicDefense};for(let i=0;i<20;i++)g.refresh(s);for(const k of Object.keys(original))close(s[k],original[k]);
  g.refresh(q);const high=q.damage;q.skills=[];q.skillLevels={};g.refresh(q);close(q.damage,high);
  p.x=20;g.refresh(s);close(s.damage,base.damage);close(s.hpRegen,base.hpRegen);close(s.magicDefense,base.magicDefense);
@@ -104,5 +105,5 @@ test('Line Wars uses the same summons, protections and howl without affecting an
  const own=g.spawnEnemy('scarab',p.x+1,p.z,{lineLane:p.lineLane,cell:p.cell,hp:10000,damage:10,skills:[],speed:0,team:99});const other=g.spawnEnemy('scarab',q.x+1,q.z,{lineLane:q.lineLane,cell:q.cell,hp:10000,damage:10,skills:[],speed:0,team:99});
  assert.equal(cast(g,p,'scarabs'),true);const summons=g.units.filter(u=>u.summonSkill==='scarabs');assert.equal(summons.length,4);assert.ok(summons.every(u=>u.lineLane===p.lineLane&&u.cell===p.cell));
  assert.equal(cast(g,p,'runicbarrier'),true);assert.ok(summons.every(u=>u.shield>0&&u.shieldHits===7));assert.equal(q.shield,undefined);
- assert.equal(cast(g,p,'weakeninghowl'),true);assert.equal(own.damageReduction,.24);assert.equal(other.damageReduction,undefined);for(const u of summons)close(u.damage,u.monsterBase.damage*1.18);
+ assert.equal(cast(g,p,'weakeninghowl'),true);assert.equal(own.damageReduction,.24);assert.equal(other.damageReduction,undefined);for(const u of summons)close(u.damage,summonAttributeStats(g,u,u.monsterBase).base.damage*1.18);
 });

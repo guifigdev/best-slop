@@ -1,1 +1,20 @@
-{"name":"custom-hero-voxel","private":true,"version":"0.1.0","type":"module","scripts":{"dev":"vite --host 0.0.0.0","server":"node server/index.js","build":"vite build","test":"node --test tests/*.test.js"},"dependencies":{"three":"^0.180.0","ws":"^8.18.3"},"devDependencies":{"vite":"^7.2.2"}}
+{
+  "name": "custom-hero-voxel",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "server": "node server/index.js",
+    "build": "node scripts/build-game-site.mjs",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "three": "^0.180.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "vite": "^7.2.2"
+  }
+}

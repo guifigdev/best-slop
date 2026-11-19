@@ -1,3 +1,5 @@
+import {PHASE_KILLER_SKILLS,PHASE_KILLER_ITEMS} from '../shared/phase-killer-catalog.js';
+import {PHASE_KILLER_SKILL_ILLUSTRATIONS,PHASE_KILLER_ITEM_ILLUSTRATIONS} from './phase-killer-art.js';
 import {FENRIR_SKILL_ILLUSTRATIONS as packArt} from './fenrir-art.js';
 import {KODO_TAG_SKILLS} from '../shared/kodo-tag-catalog.js';
 import {SKILLS,ITEMS} from '../shared/catalog.js';
@@ -272,6 +274,7 @@ const registry=new Map(),cache=new Map();
 const normalize=game=>['survival','campaign','best','tower','war','linewars','customhero','hero'].includes(game)?'survival':game==='treeTag'||game==='tree_tag'?'treetag':game==='castleFight'||game==='castle_fight'?'castlefight':game;
 function register(game,kind,catalog,drawings){for(const [key,definition]of Object.entries(catalog)){const drawing=drawings[key];if(!drawing)throw Error(`Missing illustration: ${game}/${kind}/${key}`);const [palette,paths]=drawing;registry.set(`${game}/${kind}/${key}`,Object.freeze({game,kind,key,name:definition.name||key,palette,paths}));}}
 Object.assign(survivalSkills,{fenrirfang:packArt.fenrirFang,scarabs:packArt.scarabSwarm,packaura:packArt.packAura,runicbarrier:packArt.runicBarrier,spiritward:packArt.spiritWard,weakeninghowl:packArt.weakeningHowl,lifeaura:['nature',L('M32 54V18m0 19L16 25m16 18 17-15','accent',5)+P('m32 17-7-9 7-5 7 5z','bright')+P('m15 21-8 3 8 11 9-3z','light')+P('m50 24 8 5-9 11-9-5z','light')]});
+register('phasekiller','skill',PHASE_KILLER_SKILLS,PHASE_KILLER_SKILL_ILLUSTRATIONS);register('phasekiller','item',PHASE_KILLER_ITEMS,PHASE_KILLER_ITEM_ILLUSTRATIONS);
 register('survival','skill',SKILLS,survivalSkills);register('survival','item',ITEMS,survivalItems);
 register('warlock','skill',WARLOCK_SKILLS,Object.fromEntries(Object.entries(WARLOCK_SKILLS).map(([key,s])=>[key,warlockSkills[s.family]])));
 register('warlock','item',WARLOCK_ITEMS,warlockItems);register('warlock','mastery',WARLOCK_MASTERIES,masteries);

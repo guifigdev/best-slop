@@ -1,0 +1,131 @@
+/* Phase Killer keeps investigation in the side panel and seven actions in the
+   world HUD. Hover changes color only; pressed controls never move. */
+.phasekiller{--pk-paper:#eee8d2;--pk-gold:#e8c887;--pk-line:#718b74;--pk-ink:#203f38;--pk-muted:#bacab2}
+.phasekiller .side-top h2{font-size:23px;line-height:1.2;overflow-wrap:anywhere}
+.phasekiller .side-top p{line-height:1.6;max-width:34em}
+.phasekiller #gold{font-size:24px;overflow-wrap:anywhere}
+.phasekiller #slots{font-size:11px;line-height:1.6;text-align:right}
+.phasekiller #shop{padding:0 14px 22px;scroll-padding-top:64px;overscroll-behavior:contain}
+.phasekiller .pk-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;top:0;padding:10px 0;background:#19382f;isolation:isolate}
+.phasekiller .pk-tabs button{padding:8px 2px;min-width:0;min-height:41px;font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.phasekiller [hidden]{display:none!important}
+.phasekiller .pk-panel-heading{padding:8px 0 12px}
+.phasekiller .pk-panel-heading h3{font-size:19px;line-height:1.3;margin:0 0 8px;color:#efe6c7}
+.phasekiller .pk-panel-heading p,.phasekiller .pk-empty,.phasekiller .pk-spellbook>p{font-size:12px;line-height:1.7;color:#becdb6;margin:0}
+.phasekiller .pk-empty{padding:18px 10px;border:1px dashed #73856a;border-radius:9px;margin:10px 0}
+.phasekiller .pk-empty h3{margin:0 0 8px;font-size:18px;color:#e8dcb7}
+.phasekiller .pk-empty p{margin:0}
+.phasekiller .pk-skill-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.phasekiller .pk-skill-grid button{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;min-height:112px;padding:10px 5px 8px;border:1px solid #6f8b70;border-radius:9px;background:#294e40;color:#eee5c8;cursor:pointer;transform:none;transition:background-color .12s,border-color .12s}
+.phasekiller .pk-skill-grid button:hover{background:#365c49;border-color:#c6bd90;transform:none}
+.phasekiller .pk-skill-grid button.selected{background:#555841;border-color:#e9ce8e;box-shadow:inset 0 0 0 1px #d7be7b}
+.phasekiller .pk-skill-grid button.unavailable{border-style:dashed}
+.phasekiller .pk-skill-grid button>.game-illustration,.phasekiller .pk-skill-grid button>svg{width:48px;height:48px;flex:0 0 48px}
+.phasekiller .pk-skill-grid b{font-size:11px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;text-align:center}
+.phasekiller .pk-skill-grid small{font-size:10px;line-height:1.4;color:#c7cfb4}
+.phasekiller .pk-spellbook{border:1px solid #b5a573;background:#294b3c;padding:11px;border-radius:9px;margin:14px 0}
+.phasekiller .pk-spellbook .pk-skill-grid{margin-top:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.phasekiller .pk-spellbook>.pk-group-resource{margin-top:9px;padding:8px;background:#173a2d;border-radius:5px;color:#e9cf95;font-size:11px}
+.phasekiller .pk-gateway-recipe{padding:12px;border:1px solid #a69a73;border-radius:8px;margin-bottom:18px;background:#354e40}
+.phasekiller .pk-gateway-recipe h3{font-size:16px;line-height:1.4;margin:0 0 8px;color:#ead49e}
+.phasekiller .pk-gateway-recipe>p{font-size:11px;line-height:1.7;color:#c8d1b5;margin:0 0 10px}
+.phasekiller .pk-group-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.phasekiller .pk-group-heading h3{margin:0;font-size:16px;line-height:1.4;color:#efd89f}
+.phasekiller .pk-group-heading button{padding:7px 9px;font-size:11px;border:1px solid #8a9476;border-radius:5px;background:#244437;color:#dfdfbf}
+.phasekiller .legacy-detail{background:#294c3d;border-color:#75896b;padding:14px;margin:14px 0;color:#e9e2c8;overflow:hidden}
+.phasekiller .pk-detail-art{width:66px;height:66px;float:left;margin:0 12px 10px 0}
+.phasekiller .pk-detail-art>.game-illustration,.phasekiller .pk-detail-art>svg{width:100%;height:100%}
+.phasekiller .pk-kicker{display:block;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:#c8c695;margin:3px 0 6px;line-height:1.5}
+.phasekiller .legacy-detail h3{font-size:20px;line-height:1.25;overflow-wrap:anywhere;margin:0 0 12px}
+.phasekiller .legacy-detail p{font-size:12px;line-height:1.75;margin:12px 0}
+.phasekiller .legacy-detail dl{clear:both;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;padding:12px 0;margin:0;border-top:1px solid #71856a6b;font-size:12px}
+.phasekiller .legacy-detail dt,.phasekiller .legacy-detail dd{line-height:1.45;overflow-wrap:anywhere}
+.phasekiller .legacy-detail>button{display:block;width:100%;min-height:43px;line-height:1.5}
+.phasekiller .pk-action-reason{display:block;clear:both;font-size:11px!important;line-height:1.7;color:#c3d0b4;margin:9px 0 0}
+.phasekiller button:disabled{cursor:default;opacity:.5;transform:none}
+.phasekiller button:focus-visible,.phasekiller input:focus-visible,.phasekiller select:focus-visible,.phasekiller summary:focus-visible{outline:2px solid #ffe2a3;outline-offset:3px}
+.phasekiller .pk-item-actions{display:grid;gap:7px;clear:both;margin-top:12px}
+.phasekiller .pk-item-actions button{display:flex;align-items:center;gap:9px;text-align:left;padding:8px;margin:0;min-height:49px;line-height:1.5;min-width:0}
+.phasekiller .pk-item-actions button>.game-illustration,.phasekiller .pk-item-actions button>svg{width:33px;height:33px;flex:0 0 33px}
+.phasekiller .pk-item-actions button span{flex:1;font-size:12px}
+.phasekiller .pk-item-actions button small{font-size:11px}
+.phasekiller .pk-secondary-actions{display:flex;gap:7px;clear:both;margin-top:12px}
+.phasekiller .pk-secondary-actions button{flex:1;margin:0;font-size:11px;line-height:1.5;padding:10px 6px;background:#355a45;color:#e8d5a2;border:1px solid #8a9b7a;min-height:41px}
+.phasekiller .pk-charges{color:#e9c982}
+.phasekiller .pk-combine-notice{padding:12px;background:#595b39;border:1px solid #d5c183;border-radius:7px;color:#fff0c3;font-size:12px;line-height:1.6}
+.phasekiller .pk-combine-notice button{display:block;margin-top:8px;padding:7px 10px;background:#e8cb8b;border:0;border-radius:4px;color:#294739}
+.phasekiller .pk-subheading{font-size:14px;margin:20px 0 10px;color:#e6d8ae}
+.phasekiller .pk-item-matches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.phasekiller .pk-item-matches>span{padding:8px 4px;border:1px solid #667d63;border-radius:7px;text-align:center;min-width:0}
+.phasekiller .pk-item-matches .game-illustration{display:block;width:43px;height:43px;margin:0 auto 7px}
+.phasekiller .pk-item-matches small{display:block;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.phasekiller .pk-recipes{display:grid;gap:10px}
+.phasekiller .pk-recipes article{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:11px 7px;border:1px solid #698568;border-radius:8px;background:#294d3d;min-width:0}
+.phasekiller .pk-recipes article>span{flex:1;min-width:0;text-align:center}
+.phasekiller .pk-recipes article>b{flex:0 0 auto;color:#e6c98a;font-size:17px}
+.phasekiller .pk-recipes .game-illustration{display:block;width:42px;max-width:100%;height:42px;margin:0 auto 6px}
+.phasekiller .pk-recipes small{display:block;font-size:10px;line-height:1.5;overflow-wrap:anywhere;color:#dedec0}
+.phasekiller .pk-secret{margin:18px 0;border:1px solid #a18a70;border-radius:9px;padding:12px;background:#3b493b}
+.phasekiller .pk-secret summary{cursor:pointer;font-size:14px;font-weight:600;line-height:1.5;color:#edd6a7}
+.phasekiller .pk-secret summary small{display:block;font-weight:400;font-size:10px;color:#c7b99a;margin-top:4px}
+.phasekiller .pk-secret p{font-size:12px;line-height:1.7;color:#cfceb2}
+.phasekiller .pk-secret h3{font-size:15px;line-height:1.4;margin:20px 0 9px}
+.phasekiller .pk-secret label{display:block;font-size:11px;line-height:1.5;margin:12px 0 5px}
+.phasekiller .pk-secret select{max-width:100%;width:100%;padding:10px;border:1px solid #9d9d79;border-radius:5px;font-size:13px;background:#efe8cf;color:#29483a}
+.phasekiller .pk-secret>button{margin:10px 0 0;padding:11px;width:100%;border:0;border-radius:6px;background:#e1c285;color:#294739;font-weight:600}
+.phasekiller .pk-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.phasekiller .pk-form-grid button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:9px;border:1px solid #86967a;border-radius:7px;background:#2b493c;color:#e9dfc0;min-width:0;transform:none}
+.phasekiller .pk-form-grid button.selected{border-color:#e7c991;background:#5b5a40;box-shadow:inset 0 0 0 1px #c5ab75}
+.phasekiller .pk-form-grid svg{width:78px;height:82px;max-width:100%}
+.phasekiller .pk-form-grid b{font-size:12px}
+.phasekiller .pk-form-grid small{font-size:10px;line-height:1.6;text-align:center}
+.phasekiller .pk-people{display:grid;gap:7px}
+.phasekiller .pk-people article{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #667f65;border-radius:7px;background:#274a3a}
+.phasekiller .pk-people article>svg{width:48px;height:52px;flex:0 0 48px}
+.phasekiller .pk-people article>span{min-width:0}
+.phasekiller .pk-people b{display:block;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.phasekiller .pk-people small{display:block;font-size:11px;line-height:1.5;color:#becdaf;margin-top:5px}
+.phasekiller .pk-person-portrait{float:left;width:65px;height:74px;margin:0 12px 10px 0}
+.phasekiller .pk-person-portrait svg{width:100%;height:100%}
+.phasekiller .pk-chat{display:flex;flex-direction:column;min-height:340px;max-height:none;padding:8px 0 0}
+.phasekiller .pk-chat-heading{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin:0 0 9px}
+.phasekiller .pk-chat-heading h3{font-size:18px;margin:0;color:#eee4c5}
+.phasekiller .pk-chat-heading small{font-size:10px;color:#c3c8a6;line-height:1.6}
+.phasekiller .pk-chat-hint{margin:0 0 12px;font-size:11px;line-height:1.7;color:#bdcdb1}
+.phasekiller #pk-chat-log{height:clamp(180px,38vh,430px);overflow-y:auto;overscroll-behavior:contain;padding:10px;border:1px solid #668063;border-radius:8px;background:#112f27;scrollbar-gutter:stable;overflow-anchor:none}
+.phasekiller #pk-chat-log p{padding:8px 0;margin:0;border-bottom:1px solid #4e695640;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.phasekiller #pk-chat-log p:last-child{border-bottom:0}
+.phasekiller #pk-chat-log b{display:block;font-size:10px;letter-spacing:.02em;color:#e5c78d;margin-bottom:3px}
+.phasekiller #pk-chat-log span{white-space:pre-wrap;color:#e0e4d0}
+.phasekiller #pk-chat-log .ghost b{color:#bdb7e1}
+.phasekiller #pk-chat-log .ghost span{color:#c6c2d5}
+.phasekiller #pk-chat-log .pk-chat-empty{color:#9eb198;font-size:12px}
+.phasekiller #pk-chat-form{margin-top:12px}
+.phasekiller #pk-chat-form label{display:block;font-size:11px;color:#d8d6b7;margin-bottom:7px}
+.phasekiller .pk-chat-compose{display:flex;gap:6px}
+.phasekiller #pk-chat-input{flex:1;min-width:0;width:100%;min-height:43px;padding:10px;border:1px solid #9da986;border-radius:6px;background:#f0ead5;color:#203d32;font:inherit;font-size:14px}
+.phasekiller #pk-chat-input::placeholder{font-size:11px;color:#6c7c64}
+.phasekiller #pk-chat-form button{padding:10px 12px;border:0;border-radius:6px;background:#e8c788;color:#234235;font-weight:650;font-size:12px}
+.phasekiller #pk-chat-form>small{display:block;font-size:10px;line-height:1.6;margin-top:8px;color:#acbd9e}
+.phasekiller #abilities{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;overflow:visible;max-width:100%}
+.phasekiller #abilities:empty{display:none}
+.phasekiller #abilities .ability{min-width:0;min-height:54px;aspect-ratio:1;transform:none;border:1px solid #b4ba8c;background:#254d3ed9;border-radius:7px;padding:3px;overflow:hidden}
+.phasekiller #abilities .ability>.game-illustration{display:block;width:100%;height:100%}
+.phasekiller #abilities .ability small{font-size:9px;position:absolute;top:2px;left:4px;line-height:1.4;color:#f0e6c5;background:#203c31d9;border-radius:2px;padding:0 3px;z-index:1}
+.phasekiller #abilities .ability em{position:absolute;bottom:2px;left:2px;right:2px;padding:2px 1px;background:#203b32df;color:#f0e6c9;font-size:8px;line-height:1.25;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal;border-radius:2px}
+.phasekiller #abilities .ability.unavailable{filter:saturate(.55);border-style:dashed}
+.phasekiller #abilities .ability.active{border-color:#ffe2a1;box-shadow:0 0 0 2px #d9bf8580}
+.phasekiller #inventory{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.phasekiller .inventory-slot{min-height:44px;position:relative;transform:none}
+.phasekiller .inventory-slot>.game-illustration{display:block;width:100%;height:100%;pointer-events:none}
+.phasekiller .inventory-slot.selected,.phasekiller .inventory-slot.combining{border-color:#f1d08d;box-shadow:inset 0 0 0 1px #e8ce8b}
+.phasekiller .inventory-slot.combining{background:#685f3a}
+.phasekiller .inventory-slot:disabled{opacity:.35}
+.phasekiller .pk-results{max-height:calc(100% - 32px);overflow:auto}
+.phasekiller .pk-results>div:not(.eyebrow){text-align:left;padding:8px 0}
+.phasekiller .pk-results p{font-size:13px;line-height:1.7}
+@media(max-width:1000px){.phasekiller .pk-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.phasekiller .pk-tabs button{font-size:11px;min-height:36px}.phasekiller .pk-skill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phasekiller .side-top h2{font-size:21px}}
+@media(max-width:720px){.phasekiller .layout{grid-template-rows:minmax(420px,58dvh) minmax(340px,auto)}.phasekiller .side{min-height:340px;max-height:none}.phasekiller .side-top{padding:14px 16px}.phasekiller .side-top p{margin-bottom:8px}.phasekiller #shop{max-height:440px;min-height:230px}.phasekiller .pk-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.phasekiller .pk-tabs button{font-size:10px;min-height:43px}.phasekiller .pk-skill-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.phasekiller .pk-skill-grid button{min-height:105px}.phasekiller .pk-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.phasekiller #pk-chat-log{height:230px}.phasekiller #pk-chat-input{font-size:16px}.phasekiller .pk-recipes{grid-template-columns:repeat(2,minmax(0,1fr))}.phasekiller #abilities{gap:4px}.phasekiller #abilities .ability{min-height:42px}.phasekiller .pk-chat{min-height:340px}}
+@media(max-width:430px){.phasekiller .pk-skill-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.phasekiller .pk-recipes{grid-template-columns:1fr}.phasekiller .pk-tabs button{font-size:9px}.phasekiller .side-top h2{font-size:20px}.phasekiller #gold{font-size:21px}.phasekiller .pk-detail-art{width:57px;height:57px}.phasekiller #abilities .ability em{font-size:7px}.phasekiller .pk-chat-heading{align-items:flex-start;flex-direction:column;gap:4px}}
+
+@media(max-width:720px){.phasekiller #app{height:auto;min-height:100dvh;overflow:visible;grid-template-rows:66px auto 40px}.phasekiller .side{display:flex}.phasekiller .side-footer{display:block;flex-shrink:0}.phasekiller .layout{min-height:0}.phasekiller #shop{flex:1;overflow:auto}}

@@ -19,7 +19,7 @@ export function installCompetitionMenu({connect,getSocket,onGameChange}){
  root.querySelector('.game-picker').insertAdjacentHTML('beforeend','<button data-game-kind="castlefight" aria-pressed="false"><small>ESTRATÉGIA EM EQUIPES</small><b>Castle Fight</b><span>Construa sua base · vença pelos counters</span></button>');
  root.querySelector('.game-picker').insertAdjacentHTML('beforeend','<button data-game-kind="treetag" aria-pressed="false"><small>FUGA E CAÇADA</small><b>Tree Tag</b><span>Ents contra Infernals · floresta e resgates</span></button><button data-game-kind="warlock" aria-pressed="false"><small>ARENA DE MAGOS</small><b>Warlock</b><span>Feitiços, empurrões e lava</span></button>');
  root.querySelector('.game-picker').insertAdjacentHTML('beforeend','<button data-game-kind="kodotag" aria-pressed="false"><small>CAÇADA COOPERATIVA</small><b>Kodo Tag</b><span>Construa, colete ouro e fuja dos Kodos</span></button>');
- root.querySelector('.game-picker').insertAdjacentHTML('beforeend','<button class=hidden hidden data-phase-unreleased data-game-kind=phasekiller aria-pressed=false><small>IDENTIDADES SECRETAS</small><b>Phase Killer</b><span>Três mundos · disfarces · combinações · chat</span></button>');
+ root.querySelector('.game-picker').insertAdjacentHTML('beforeend','<button data-game-kind=phasekiller aria-pressed=false><small>IDENTIDADES SECRETAS</small><b>Phase Killer</b><span>Três mundos · disfarces · combinações · chat</span></button>');
  root.insertAdjacentHTML('beforeend',castleFormatCards());
  root.insertAdjacentHTML('beforeend',lineFormatCards());
  root.querySelector('[data-game-mode="castlefight"]').hidden=true;

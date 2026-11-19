@@ -1,3 +1,4 @@
+import {PHASE_KILLER_SKILLS,PHASE_KILLER_ITEMS} from '../shared/phase-killer-catalog.js';
 import {KODO_TAG_SKILLS} from '../shared/kodo-tag-catalog.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,10 +8,10 @@ import {TREE_TAG_SKILLS,TREE_TAG_ITEMS,TREE_TAG_WORKER_SKILLS} from '../shared/t
 import {CASTLE_ITEMS} from '../shared/castle-catalog.js';
 import {gameIllustration,gameIllustrationSpec,illustrationCatalog} from '../src/game-illustrations.js';
 
-test('all five games have original illustrations for every current skill, item and mastery including archived Castle items',()=>{
+test('all six games have original illustrations for every current skill, item and mastery including archived Castle items',()=>{
  let count=0;
  for(const [game,kind,catalog]of [
-  ['survival','skill',SKILLS],['survival','item',ITEMS],
+  ['phasekiller','skill',PHASE_KILLER_SKILLS],['phasekiller','item',PHASE_KILLER_ITEMS],['survival','skill',SKILLS],['survival','item',ITEMS],
   ['warlock','skill',WARLOCK_SKILLS],['warlock','item',WARLOCK_ITEMS],['warlock','mastery',WARLOCK_MASTERIES],
   ['treetag','skill',TREE_TAG_SKILLS],['treetag','skill',TREE_TAG_WORKER_SKILLS],['kodotag','skill',KODO_TAG_SKILLS],['treetag','item',TREE_TAG_ITEMS],['castlefight','item',CASTLE_ITEMS]
  ])for(const [key,definition]of Object.entries(catalog)){

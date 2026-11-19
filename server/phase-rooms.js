@@ -4,8 +4,8 @@ import {Game} from '../shared/simulation.js';
 // message, player join and elapsed simulation time commit atomically together.
 export const PHASE_ROOM_LIMITS=Object.freeze({players:12,rooms:128,ttlMs:2*60*60*1000,maxCatchup:.75,step:.05,retries:8,bodyBytes:8192,pollsPerSecond:8,commandsPerSecond:30,documentBytes:1500000});
 const ROOM=/^[A-Z0-9]{4,10}$/,TOKEN=/^[a-f0-9-]{36}$/i,REQUEST_ID=/^[A-Za-z0-9_-]{8,64}$/;
-const TYPES=new Set(['pkReady','ready','pkChat','pkName','pkDisguise','pkForm','pkStop','pkMove','pkAttack','pkCast','pkPickup','pkDrop','pkCombine','pkGateway']);
-const KEYS=['worldSeed','seed','time','units','effects','players','phase','wave','timer','serial','message','phaseKiller','winningOwners','options'];
+const TYPES=new Set(['pkReady','ready','pkChat','pkName','pkDisguise','pkForm','pkStop','pkMove','pkAttack','pkCast','pkPickup','pkDrop','pkCombine','pkGateway','pkStore','pkTake']);
+const KEYS=['worldSeed','seed','time','units','effects','players','phase','wave','timer','serial','message','phaseKiller','pkLobbyMessages','winningOwners','options'];
 class PhaseError extends Error{constructor(status,code,message){super(message);this.status=status;this.code=code;}}
 const fail=(status,code,message)=>{throw new PhaseError(status,code,message);};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
