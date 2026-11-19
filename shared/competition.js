@@ -1,14 +1,17 @@
+import {waveResultMethods} from './wave-results.js';
 import {ARENA_BOUNDS,ARENA_SCALE,WAR_BOUNDS} from './arena-size.js';
 import {ARENAS} from './arenas.js';
 import {homeCell,privateTrials} from './instances.js';
 import {generateField} from './field.js';
 export const competitionMethods={
+ ...waveResultMethods,
  homeTeam(u){if(this.options.mode==='linewars'&&this.options.lineTeams)return 11+Math.floor(u.seat/2);return this.options.mode==='war'?u.squad:['campaign','best'].includes(this.options.mode)?10+u.seat:1;},
  groupKey(u){return ['campaign','best'].includes(this.options.mode)?u.owner:this.options.mode==='war'?`team-${u.squad}`:null;},
  weatherStrike(){const x=this.random()*20-10,z=this.random()*20-10,places=this.phase==='wave'&&this.cells?.length?this.cells.map(cell=>({x:cell.x+x*cell.r/ARENA_BOUNDS,z:cell.z+z*cell.r/ARENA_BOUNDS,r:2.2*cell.r/ARENA_BOUNDS})):[{x,z,r:2.2}];for(const point of places)this.zones.push({id:this.id(),type:'lightning',...point,strike:this.time+2,expires:this.time+3});},
  standings(){if(this.options.mode==='war'){const teams=new Map();for(const u of this.heroes()){const row=teams.get(u.squad)||{team:u.squad,name:`Equipe ${u.squad}`,score:0};row.score+=u.score||0;teams.set(u.squad,row);}return [...teams.values()].sort((a,b)=>b.score-a.score||a.team-b.team);}return this.heroes().map(u=>({owner:u.owner,name:u.name,score:u.score||0,team:u.squad})).sort((a,b)=>b.score-a.score||a.owner.localeCompare(b.owner));},
  clearField(){this.bounds=ARENA_BOUNDS;this.obstacles=[];this.field=null;this.cells=[];this.obstacleRevision++;this.effects=this.effects.filter(e=>!e.channel&&e.type!=='gravity');for(const u of this.units){delete u.cell;delete u.challenge;u.pathKey=null;u.vx=u.vz=0;}},
  spawnCompetitionWave(){this.clearField();this.phase='wave';this.wave++;this.waveStarted=this.time;this.stageResults=[];this.units=this.units.filter(u=>u.hero&&!u.summon);this.setArena(this.arenaAt(this.wave));this.restoreHeroes(this.wave%5===1);this.waveKind=this.wave%10===0?'boss':this.options.mode==='tower'&&this.wave%5===0?'miniboss':'normal';
+  this.beginSurvivalWave();
   const individual=privateTrials(this.options.mode),groups=new Map();for(const h of this.heroes()){h.stageDone=false;const key=this.groupKey(h)||'coop';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(h);}
   // Every competitor gets the same enemy composition and relative terrain.
   // Group size scales the count; random rolls do not make one trial harder.
@@ -19,11 +22,18 @@ export const competitionMethods={
    if(this.waveKind!=='normal')this.spawnEnemy('champion',cell?.x||0,(cell?.z||0)-(cell?cell.r*.7:10),{hp:(this.waveKind==='boss'?900:450)+this.wave*60,damage:25+this.wave*2,armor:this.waveKind==='boss'?6:3,team:100+i,challenge:individual?key:null,cell,boss:this.waveKind,variantRoll:(this.wave*.173)%1,cd:.5});i++;}
   this.cells=cells;if(cells.length)this.bounds=Math.max(...cells.map(c=>Math.abs(c.x)+c.r+2));if(individual)this.zones=cells.flatMap(cell=>arenaZones.map((zone,j)=>{const scale=cell.r/ARENA_BOUNDS;return{...zone,id:`trial-${this.wave}-${cell.key}-${j}`,x:cell.x+zone.x*scale,z:cell.z+zone.z*scale,r:zone.r*scale};}));this.message=`${this.options.mode==='tower'?'Andar':'Prova'} ${this.wave}${this.options.mode==='tower'?(this.options.towerLimit?'/'+this.options.towerLimit:' · ∞'):'/50'} · ${this.waveKind==='boss'?'CHEFE':this.waveKind==='miniboss'?'MINICHEFE':ARENAS[this.arena].name}`;
  },
- checkCompetitionWave(){if(this.phase!=='wave')return;if(this.options.mode==='tower'){if(!this.heroes().some(h=>h.alive)){this.phase='defeat';this.message=`A equipe alcançou o andar ${this.wave}. A torre espera seu retorno.`;}else if(!this.units.some(e=>!e.hero&&!e.summon&&e.alive))this.finishWave();return;}
-  const groups=new Map();for(const h of this.heroes()){const key=this.groupKey(h);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(h);}for(const [key,heroes]of groups){if(heroes.every(h=>h.stageDone))continue;const elapsed=Math.min(180,this.time-this.waveStarted),survived=heroes.some(h=>h.alive),cleared=survived&&this.time-this.waveStarted<=180&&!this.units.some(e=>!e.hero&&!e.summon&&e.challenge===key&&e.alive),failed=!survived||this.time-this.waveStarted>=180;if(!cleared&&!failed)continue;for(const h of heroes){h.stageDone=true;const life=h.alive?Math.max(0,Math.min(1,h.hp/h.maxHp)):0,score=cleared?Math.round(1000*Math.max(0,1-elapsed/180)+500*life):0;h.score=(h.score||0)+score;this.stageResults.push({owner:h.owner,name:h.name,team:h.squad,time:elapsed,life,score,cleared});}for(const e of this.units)if(e.challenge===key&&!e.hero){e.alive=false;e.died=this.time;}}
-  if(this.heroes().every(h=>h.stageDone)){if(this.options.mode==='campaign'&&!this.stageResults.some(r=>r.cleared)){this.phase='defeat';this.message='Todos os heróis caíram em suas arenas.';}else this.finishWave();}
+ checkCompetitionWave(){
+  if(this.phase!=='wave')return;const elapsed=Number.isFinite(this.waveStarted)?Math.max(0,this.time-this.waveStarted):0;
+  if(this.options.mode==='tower'){
+   if(!this.heroes().some(h=>h.alive)){this.recordSurvivalGroup(this.heroes(),{completed:false,time:null,elapsed});this.settleSurvivalWave({payBase:false});this.phase='defeat';this.message=`A equipe alcançou o andar ${this.wave}. A torre espera seu retorno.`;}
+   else if(!this.units.some(e=>!e.hero&&!e.summon&&e.alive)){this.recordSurvivalGroup(this.heroes(),{completed:true,time:elapsed,elapsed});this.finishWave();}return;
+  }
+  const groups=new Map();for(const h of this.heroes()){const key=this.groupKey(h);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(h);}
+  for(const[key,heroes]of groups){if(heroes.every(h=>h.stageDone))continue;const survived=heroes.some(h=>h.alive),cleared=survived&&elapsed<=180&&!this.units.some(e=>!e.hero&&!e.summon&&e.challenge===key&&e.alive),failed=!survived||elapsed>=180;if(!cleared&&!failed)continue;this.recordSurvivalGroup(heroes,{completed:cleared,time:cleared?elapsed:null,elapsed:Math.min(180,elapsed)});for(const e of this.units)if(e.challenge===key&&!e.hero){e.alive=false;e.died=this.time;}}
+  if(this.heroes().every(h=>h.stageDone)){if(this.options.mode==='campaign'&&!this.stageResults.some(r=>r.cleared)){this.settleSurvivalWave({payBase:false});this.phase='defeat';this.message='Todos os heróis caíram em suas arenas.';}else this.finishWave();}
  },
- finishCompetitionWave(){for(const h of this.heroes()){h.gold+=100+this.wave*12;this.gainXp(h,30);}this.units=this.units.filter(u=>u.hero&&!u.summon);this.clearField();
+
+ finishCompetitionWave(){this.settleSurvivalWave();this.units=this.units.filter(u=>u.hero&&!u.summon);this.clearField();
   if(this.options.mode==='tower'){if(this.options.towerLimit&&this.wave>=this.options.towerLimit){this.phase='victory';this.winningOwners=this.heroes().map(h=>h.owner);this.winner=this.winningOwners[0];this.message=`A equipe conquistou os ${this.options.towerLimit} andares da torre!`;return;}if(this.wave%5===0)this.openShop();else this.competitionIntermission();return;}
   if(this.wave%(this.options.mode==='best'?10:this.options.clashEvery)===0){this.phase='finalCountdown';this.timer=10;this.restoreHeroes();this.message=`Confronto ${this.options.mode==='war'?'entre equipes':'todos contra todos'} em 10s. O resultado rende pontos!`;return;}if(this.wave%5===0)this.openShop();else this.competitionIntermission();
  },
