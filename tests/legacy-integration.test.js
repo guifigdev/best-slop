@@ -1,3 +1,4 @@
+import {wlSkillAt} from '../shared/warlock-catalog.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -10,7 +11,7 @@ test('native games start through the actual Game commands and serialize isolated
 });
 
 test('Warlock targeting preview follows native fireball reach and purchased range mastery',()=>{
- const g=new Game(102,{mode:'warlock'});g.addPlayer('p','warlock');g.addPlayer('q','heretic');g.initWarlock();assert.equal(g.command('p',{type:'wlBuy',mastery:'range'}),true);for(const owner of ['p','q'])g.command(owner,{type:'wlReady'});const {controller}=ui(g);controller.shortcut('legacySkill','S000');const preview=controller.skillPreview();assert.equal(preview.key,'S000');assert.equal(preview.skill.previewShape,'line');assert.equal(preview.skill.radius,25/64);assert.ok(Math.abs(preview.skill.distance-1000/64*1.12)<1e-8);assert.equal(controller.hotkeys().G,'S000');assert.match(legacyHelpMarkup('warlock'),/11 rounds|11 round|11/);
+ const g=new Game(102,{mode:'warlock'});g.addPlayer('p','warlock');g.addPlayer('q','heretic');g.initWarlock();assert.equal(g.command('p',{type:'wlBuy',mastery:'range'}),true);for(const owner of ['p','q'])g.command(owner,{type:'wlReady'});const {controller}=ui(g);controller.shortcut('legacySkill','S000');const preview=controller.skillPreview();assert.equal(preview.key,'S000');assert.equal(preview.skill.previewShape,'line');assert.equal(preview.skill.radius,wlSkillAt('S000',1).radius);assert.equal(wlSkillAt('S000',1).native.radius,25);assert.ok(Math.abs(preview.skill.distance-wlSkillAt('S000',1).range*1.12)<1e-8);assert.equal(controller.hotkeys().G,'S000');assert.match(legacyHelpMarkup('warlock'),/11 rounds|11 round|11/);
 });
 
 test('Tree Tag sentry inventory waits for a ground click and submits the chosen location',()=>{

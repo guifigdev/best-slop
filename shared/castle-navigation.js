@@ -48,6 +48,17 @@ export function castleSpawnPoint(cf,preferred,radius=.4,options={}){
  candidates.sort((a,b)=>hypot(a,preferred)-hypot(b,preferred)||(options.toward?hypot(a,options.toward)-hypot(b,options.toward):0)||a.x-b.x||a.z-b.z);return candidates[0]||null;
 }
 
+// Plan all exits before charging for a foundation. No one may be sealed inside
+// a new footprint; if an exit is unavailable the placement can be rejected.
+export function constructionDisplacements(cf,building,units){
+ const movers=units.filter(u=>u.alive&&!u.flying&&!u.treeTagCaptured&&!u.kodoTagCaptured&&!u.castleStructure&&!u.treeTagStructure&&!u.kodoTagStructure&&overlaps(u,building,castleNavigationRadius(u))),plans=[];
+ if(!movers.length)return plans;
+ const context={...cf,buildings:[...(cf.buildings||[]).filter(b=>b!==building),building],units:units.map(u=>({...u}))};
+ for(const u of movers){const point=castleSpawnPoint(context,u,castleNavigationRadius(u),{maxDistance:Math.max(building.w,building.d)+2,ignoreUnits:false,ignoreId:u.id});if(!point)return null;plans.push({unit:u,point});Object.assign(context.units.find(t=>t.id===u.id),point);}
+ return plans;
+}
+export function applyConstructionDisplacements(plans){for(const {unit,point}of plans){Object.assign(unit,point);unitPaths.delete(unit);unitGoals.delete(unit);}}
+
 function gridFor(c,radius){const radiusKey=Math.ceil((radius-EPS)/.05)*.05,key=radiusKey.toFixed(3);let g=c.grids.get(key);if(g)return g;const b=c.bounds,minX=b.minX+radiusKey+.001,minZ=b.minZ+radiusKey+.001,nx=Math.floor((b.maxX-radiusKey-minX)/CELL)+1,nz=Math.floor((b.maxZ-radiusKey-minZ)/CELL)+1;g={radius:radiusKey,minX,minZ,nx,nz,walk:new Int8Array(Math.max(0,nx*nz))};c.grids.set(key,g);return g;}
 const gridPoint=(g,id)=>({x:g.minX+(id%g.nx)*CELL,z:g.minZ+Math.floor(id/g.nx)*CELL});
 function walkable(c,g,id){if(id<0||id>=g.walk.length)return false;if(!g.walk[id])g.walk[id]=passable(c,gridPoint(g,id),g.radius)?1:-1;return g.walk[id]===1;}

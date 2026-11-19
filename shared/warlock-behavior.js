@@ -1,3 +1,4 @@
+import {WARLOCK_POLISH} from './warlock-polish.js';
 import {WARLOCK_REFERENCE} from './warlock-catalog.js';
 const S=WARLOCK_REFERENCE.worldScale;
 export const WARLOCK_BEHAVIOR=Object.freeze({
@@ -31,7 +32,7 @@ export function tickWarlockLinks(game,dt,hurt){
  for(const l of w.links||[]){const source=caster(game,l.source),target=l.targetKind==='pillar'?pillar(game,l.target):caster(game,l.target);if(!source||!target)continue;
   const gap=distance(source,target),contact=WARLOCK_BEHAVIOR.link.collisionPadding+30*S+(l.targetKind==='pillar'?target.radius:30*S);if(gap<=contact)continue;
   l.elapsed+=dt;const pulled=l.targetKind==='pillar'?source:target,dx=(source.x-target.x)/gap,dz=(source.z-target.z)/gap,sign=l.targetKind==='pillar'?-1:1;
-  pulled.wlVx=(pulled.wlVx||0)+dx*sign*WARLOCK_BEHAVIOR.link.pullAcceleration*dt;pulled.wlVz=(pulled.wlVz||0)+dz*sign*WARLOCK_BEHAVIOR.link.pullAcceleration*dt;
+  pulled.wlVx=(pulled.wlVx||0)+dx*sign*WARLOCK_BEHAVIOR.link.pullAcceleration*WARLOCK_POLISH.link.pullMultiplier*dt;pulled.wlVz=(pulled.wlVz||0)+dz*sign*WARLOCK_BEHAVIOR.link.pullAcceleration*WARLOCK_POLISH.link.pullMultiplier*dt;
   if(l.targetKind==='caster'&&source.team!==target.team){l.damageClock+=dt;while(l.damageClock+1e-9>=WARLOCK_BEHAVIOR.link.damageInterval&&target.alive){l.damageClock-=WARLOCK_BEHAVIOR.link.damageInterval;l.damageTicks++;const nativeFrame=Math.floor(l.damageTicks*WARLOCK_BEHAVIOR.link.damageInterval/.03),warmup=Math.max(0,1-Math.max(0,Math.floor((nativeFrame-2)/5))/5);hurt(game,source,target,l.damage+warmup,0,0,0);}}
   if(target.alive&&source.alive)keep.push(l);
  }w.links=keep;
@@ -62,7 +63,7 @@ export function reflectWarlockDomeDash(game,u,from,dash){
  const n=first.contact,dot=dash.dx*n.nx+dash.dz*n.nz;dash.dx-=2*dot*n.nx;dash.dz-=2*dot*n.nz;dash.speed*=.5;u.x=n.x+n.nx*.03;u.z=n.z+n.nz*.03;return true;
 }
 export function tickWarlockGravity(game,p,dt,hurt){
- const n=WARLOCK_BEHAVIOR.gravity,source=caster(game,p.source);if(!source)return;const level=p.level||1;
+ const n={...WARLOCK_BEHAVIOR.gravity,pullRadius:p.pullRadius||WARLOCK_BEHAVIOR.gravity.pullRadius,damageRadius:p.damageRadius||WARLOCK_BEHAVIOR.gravity.damageRadius,projectileRadius:p.projectileRadius||WARLOCK_BEHAVIOR.gravity.projectileRadius},source=caster(game,p.source);if(!source)return;const level=p.level||1;
  for(const u of game.units.filter(u=>u.warlockCharacter&&!u.wlGhost&&u.alive&&u.team!==p.team)){const d=distance(u,p);if(d<=.001||d>=n.pullRadius)continue;const item=key=>u.inventory?.find(i=>i.key===key)?.level||0,mass=1-(item('boots')?.05:0)+.1*item('helmet')+(item('aegis')?.2:0),force=(1.35+.09*level)*(1-d*d/(n.pullRadius*n.pullRadius))/(mass+1)*S/(.03*.03)*dt;u.wlVx=(u.wlVx||0)+(p.x-u.x)/d*force;u.wlVz=(u.wlVz||0)+(p.z-u.z)/d*force;}
  for(const other of game.warlock.projectiles){if(other===p||other.family==='drain_return'||other.life<=0)continue;const d=distance(other,p);if(d<=.001||d>=n.projectileRadius)continue;const force=1.5*(1-d*d/(n.projectileRadius*n.projectileRadius))*S/(.03*.03)*dt,vx=other.dx*other.speed+(p.x-other.x)/d*force,vz=other.dz*other.speed+(p.z-other.z)/d*force,speed=Math.hypot(vx,vz);if(speed>1e-6){other.dx=vx/speed;other.dz=vz/speed;other.speed=speed;}}
  p.damageClock=(p.damageClock||0)+dt;while(p.damageClock+1e-9>=n.damageInterval){p.damageClock-=n.damageInterval;for(const target of game.units.filter(u=>u.warlockCharacter&&!u.wlGhost&&u.alive&&u.team!==p.team&&distance(u,p)<=n.damageRadius))hurt(game,source,target,p.damage,0,0,0);}

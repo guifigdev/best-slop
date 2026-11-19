@@ -1,4 +1,5 @@
 import {NORDIC_MONSTER_KINDS,nordicMonsterPortrait} from './nordic-monster-art.js';
+import {scarabPortrait} from './scarab-art.js';
 // Original voxel-animal previews. They describe the troop, not its Warcraft
 // reference role. Pure SVG strings keep the barracks UI independent of Three.
 const eye=(x,y,color='#30483e')=>`<path d="M${x} ${y}h5v7h-5z" fill="${color}"/>`;
@@ -23,9 +24,10 @@ const shapes={
  frostwyrm:`${wings('#b8e2e9','#89b9cf')}<path d="M35 25h27v34H35z" fill="#b1d9de"/><path d="M29 20h40v25H29z" fill="#d2e9df"/><path d="M35 9h7v14h-7zm22 0h7v14h-7z" fill="#e8f3e6"/>${eye(34,28,'#5c88a1')}${eye(59,28,'#5c88a1')}<path d="M39 42h29v9H39z" fill="#c2e2df"/><path d="m36 53-7 9-18-6 13 15h25l12-13-4-7-12 10z" fill="#83b4cb"/>`,
  lynx:`<path d="M27 29h42v34H27z" fill="#ba9f76"/><path d="m27 30-3-20 14 13zm42 0 3-20-14 13z" fill="#dac8a2"/><path d="M23 6h5v11h-5zm45 0h5v11h-5z" fill="#5c6450"/>${eye(34,37,'#567b69')}${eye(58,37,'#567b69')}${muzzle('#e5d5af')}${feet('#a18963')}`
 };
-export const ARMY_PORTRAIT_KINDS=Object.freeze([...new Set([...Object.keys(shapes),...NORDIC_MONSTER_KINDS])]);
+export const ARMY_PORTRAIT_KINDS=Object.freeze([...new Set([...Object.keys(shapes),...NORDIC_MONSTER_KINDS,'scarab'])]);
 const cache=new Map();
 export function armyPortrait(kind){
+ const scarab=scarabPortrait(kind);if(scarab)return scarab;
  const nordic=nordicMonsterPortrait(kind);if(nordic)return nordic;
  if(cache.has(kind))return cache.get(kind);
  const shape=shapes[kind]||'<path d="M29 30h38v29H29zM35 20h10v10H35zm19 0h10v10H54z" fill="#9ab2aa"/><path d="M42 41h13v9H42z" fill="#d4d7b7"/>';

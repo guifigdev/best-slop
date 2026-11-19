@@ -10,7 +10,7 @@ import {Game} from '../shared/simulation.js';
 const fields=['hp','mana','damage','armor','range','speed','interval','skill','focus','archetype','combatRole','attackType'];
 const before={knight:[950,280,34,5,1.7,4.3,1.1,'stomp','str','physical_melee','guardian','physical'],mage:[650,520,28,1,7,4.1,1.35,'bolt','int','magic','arcanist','magic'],ranger:[740,340,30,2,8,4.9,.85,'multishot','dex','physical_ranged','archer','physical'],turtle:[1100,300,29,7,1.8,3.8,1.3,'thorns','vit','physical_melee','tank','physical'],owl:[690,560,26,2,7,4.4,1.4,'chain','int','magic','controller','magic'],raccoon:[800,320,32,3,1.8,4.8,.9,'critical','luk','physical_melee','assassin','physical']};
 test('Nordic presentation preserves every existing base stat, archetype, initial skill and stable save key in both Custom Hero games',()=>{
- assert.deepEqual(Object.keys(HEROES),Object.keys(before));
+ assert.deepEqual(Object.keys(HEROES).filter(key=>key!=='fenrir'),Object.keys(before));
  for(const [key,values]of Object.entries(before)){assert.deepEqual(fields.map(f=>HEROES[key][f]),values);assert.equal(HEROES[key].name,CUSTOM_HERO_IDENTITIES[key].name);for(const mode of ['campaign','linewars']){const g=new Game(1,{mode});assert.equal(g.addPlayer('p',key,HEROES[key].name),true);const p=g.player('p');assert.equal(p.hero,key);assert.equal(p.name,CUSTOM_HERO_IDENTITIES[key].name);assert.ok(p.skills.includes(HEROES[key].skill));}}
 });
 test('playable avatars use the exact new model projection and animal NPC portraits remain available independently',()=>{

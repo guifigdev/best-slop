@@ -1,0 +1,27 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as T from 'three';
+import {Game} from '../shared/simulation.js';
+import {wlSkillAt} from '../shared/warlock-catalog.js';
+import {WARLOCK_POLISH as P} from '../shared/warlock-polish.js';
+import {createWarlockSpellVisuals,warlockMeteorPose} from '../src/warlock-spell-visuals.js';
+const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
+function setup(skills=[],third=false){const g=new Game(102,{mode:'warlock'});g.addPlayer('p','warlock');g.addPlayer('q','heretic');if(third)g.addPlayer('r','occultist');g.initWarlock();const p=g.player('p'),q=g.player('q');p.gold=1000;for(const skill of skills)assert.equal(g.command('p',{type:'wlBuy',skill}),true);for(const u of g.heroes())g.command(u.owner,{type:'wlReady'});Object.assign(p,{x:0,z:0,wlRegen:0});Object.assign(q,{x:5,z:0,wlRegen:0});if(third)Object.assign(g.player('r'),{x:5,z:.8,wlRegen:0});return{g,p,q,r:g.player('r')};}
+const advance=(g,s)=>{for(let i=0;i<Math.round(s/.025);i++)g.tick(.025);};
+const matrices=mesh=>{const m=new T.Matrix4();for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,m);assert.ok(m.elements.every(Number.isFinite),mesh.name);}};
+
+test('battle scale tuning preserves audited native values while enlarging only the requested spells',()=>{
+ const fire=wlSkillAt('S000',1),meteor=wlSkillAt('S008',1),gravity=wlSkillAt('S018',1),link=wlSkillAt('S019',1);assert.equal(fire.native.radius,25);assert.equal(fire.native.speed,1000);assert.equal(fire.damage,7);assert.equal(fire.cooldown,4.8);assert.equal(fire.radius,P.fireball.radius);assert.ok(fire.radius>25/64);assert.equal(fire.blastRadius,1.75);assert.ok(fire.speed<1000/64);assert.equal(meteor.native.radius,225);assert.equal(meteor.radius,4.4);assert.equal(meteor.duration,1);assert.equal(gravity.pullRadius,8);assert.equal(gravity.damageRadius,4.4);assert.equal(link.native.radius,35);assert.ok(link.range>link.native.range/64);assert.equal(wlSkillAt('S011',1).range,770/64);
+});
+test('the larger Fireball keeps full impact damage and deals moderated area damage once to a nearby second opponent',()=>{
+ const {g,q,r}=setup([],true);g.command('p',{type:'wlCast',skill:'S000',x:15,z:0});const shot=g.warlock.projectiles[0];assert.equal(shot.radius,P.fireball.radius);assert.equal(shot.blastRadius,P.fireball.blastRadius);assert.equal(q.hp,100);advance(g,.4);near(q.hp,93);assert.ok(r.hp<100&&r.hp>96);assert.equal(g.warlock.projectiles.length,0);assert.equal(g.effects.filter(e=>e.type==='warlockFireballImpact').length,1);
+});
+test('Meteor has a larger honest warning, leaves time to escape and produces a single giant impact',()=>{
+ const {g,p,q}=setup(['S008']);p.z=-8;Object.assign(q,{x:4.05,z:0});g.command('p',{type:'wlCast',skill:'S008',x:0,z:0});const f=g.warlock.fields[0];near(f.radius,4.4);near(f.fireAt-g.time,1);advance(g,.8);assert.equal(q.hp,100);advance(g,.25);assert.ok(q.hp<100);assert.equal(g.effects.filter(e=>e.type==='warlockMeteorImpact').length,1);assert.equal(g.warlock.fields.length,0);
+});
+test('the arena grows modestly and the larger Gravity orb retains periodic pulling and projectile bending',()=>{
+ const {g,p,q}=setup(['S018']);assert.equal(g.warlock.arenaRadius,24);assert.equal(g.warlock.mapRadius,32);assert.ok(g.command('p',{type:'wlMove',x:31,z:0}));assert.equal(g.command('p',{type:'wlMove',x:33,z:0}),false);g.command('p',{type:'wlStop'});Object.assign(q,{x:6,z:2});g.command('p',{type:'wlCast',skill:'S018',x:18,z:0});const orb=g.warlock.projectiles[0];assert.equal(orb.visualRadius,1.15);assert.equal(orb.pullRadius,8);assert.equal(orb.projectileRadius,10.3);near(orb.life,2.65);advance(g,.25);assert.ok(q.wlVx<0&&q.wlVz<0);assert.ok(Number.isFinite(p.x)&&Number.isFinite(q.hp));
+});
+test('instanced spell visuals render a large orb, a falling meteor, warnings and finite voxel impacts without extra lights',()=>{
+ const parent=new T.Group(),view=createWarlockSpellVisuals({parent}),s={time:0,options:{mode:'warlock'},warlock:{projectiles:[{id:1,family:'fireball',x:1,z:0,dx:1,dz:0,radius:.64,life:1},{id:2,family:'gravity',x:4,z:0,dx:0,dz:1,life:2,visualRadius:1.15}],fields:[{id:3,family:'meteor',x:0,z:5,radius:4.4,warnStarted:0,fireAt:1}]},effects:[]};view.update(s,0);assert.equal(view.root.visible,true);const fire=view.root.getObjectByName('warlock-polished-fireballs'),gravity=view.root.getObjectByName('warlock-polished-gravity'),fall=view.root.getObjectByName('warlock-meteor-falls'),warning=view.root.getObjectByName('warlock-meteor-warning');assert.equal(fire.count,1);assert.equal(gravity.count,1);assert.equal(fall.count,1);assert.equal(warning.count,32);assert.ok(warlockMeteorPose(s.warlock.fields[0],0).y>14);assert.ok(warlockMeteorPose(s.warlock.fields[0],.9).y<5);view.update(s,.5);assert.equal(view.root.getObjectByName('warlock-polished-fireballs'),fire);for(const mesh of view.root.children)matrices(mesh);assert.ok(view.root.children.length<=6);assert.equal(view.root.children.some(o=>o.isLight),false);s.warlock.projectiles=[];s.warlock.fields=[];s.effects=[{type:'warlockMeteorImpact',time:1,duration:.9,x:0,z:5,radius:4.4}];view.update(s,1.2);assert.equal(view.root.getObjectByName('warlock-spell-impacts').count,24);view.update(s,2);assert.equal(view.root.visible,false);view.update(null,3);assert.equal(fire.count,0);view.dispose();view.dispose();assert.equal(parent.children.length,0);
+});

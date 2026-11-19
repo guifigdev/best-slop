@@ -1,3 +1,4 @@
+import {WARLOCK_POLISH} from '../shared/warlock-polish.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -15,7 +16,7 @@ test('Link is a flying hook that attaches a persistent tether on impact and pull
 });
 test('Hook can be recalled and cancelled during cooldown, and missing the target automatically recalls it',()=>{
  const {g,p}=setup(['S019']);g.command('p',{type:'wlCast',skill:'S019',x:-20,z:8});advance(g,.1);assert.equal(g.command('p',{type:'wlCast',skill:'S019'}),true);assert.equal(warlockLinkAction(g,p),'cancel');assert.equal(g.command('p',{type:'wlCast',skill:'S019'}),true);assert.equal(g.warlock.projectiles.length,0);assert.equal(g.command('p',{type:'wlCast',skill:'S019',x:20,z:8}),false);
- p.cooldowns.S019=0;g.command('p',{type:'wlCast',skill:'S019',x:-20,z:8});advance(g,.9);assert.equal(g.warlock.projectiles[0]?.returning,true);advance(g,1);assert.equal(g.warlock.projectiles.length,0);
+ p.cooldowns.S019=0;g.command('p',{type:'wlCast',skill:'S019',x:-20,z:8});advance(g,WARLOCK_POLISH.link.flightDuration+.05);assert.equal(g.warlock.projectiles[0]?.returning,true);advance(g,1);assert.equal(g.warlock.projectiles.length,0);
 });
 test('Hooking a pillar pulls its caster, while close contact and dead endpoints break the tether',()=>{
  const {g,p,q}=setup(['S019']),rock=g.warlock.pillars[0];g.command('p',{type:'wlCast',skill:'S019',x:rock.x,z:rock.z});advance(g,.55);assert.equal(g.warlock.links[0]?.targetKind,'pillar');advance(g,.1);assert.ok(p.wlVx<0);assert.ok(p.wlVz<0);assert.equal(q.hp,100);rock.alive=false;advance(g,.025);assert.equal(g.warlock.links.length,0);bindWarlockLink(g,p,q);q.x=p.x+.5;q.z=p.z;advance(g,.025);assert.equal(g.warlock.links.length,0);
@@ -48,7 +49,7 @@ test('Warlock final ranking uses descending authoritative scores, shared positio
  const s={warlock:{round:11},units:[{owner:'a',name:'<Ada>',warlockCharacter:'warlock',score:3,seat:0},{owner:'b',name:'B',warlockCharacter:'heretic',score:5,seat:1},{owner:'c',name:'C',warlockCharacter:'occultist',score:5,seat:2},{owner:'d',name:'D',warlockCharacter:'inquisitor',score:1,seat:3}]};assert.deepEqual(warlockRanking(s).map(r=>[r.owner,r.rank,r.score,r.winner]),[['b',1,5,true],['c',1,5,true],['a',3,3,false],['d',4,1,false]]);const html=warlockResultsMarkup(s,'b');assert.match(html,/Vitória compartilhada/);assert.match(html,/&lt;Ada&gt;/);assert.match(html,/Pontuação de todos/);assert.equal((html.match(/<tr class=/g)||[]).length,4);assert.ok(html.indexOf('>B<')<html.indexOf('&lt;Ada&gt;'));assert.equal(warlockRanking(s).length,4);assert.equal(s.units[0].score,3);
 });
 test('runtime data pins verified projectile and trigger values without treating Link as a four-second debuff',()=>{
- near(wlSkillAt('S019',1).speed,950/64);near(wlSkillAt('S019',1).radius,35/64);near(wlSkillAt('S050',1).duration,3.3);near(wlSkillAt('S056',1).radius,225/64);assert.equal(N.vector.duration,6);assert.equal(Object.hasOwn(N.link,'duration'),false);
+ near(wlSkillAt('S019',1).speed,950/64);near(wlSkillAt('S019',1).native.radius,35);near(wlSkillAt('S019',1).radius,WARLOCK_POLISH.link.radius);near(wlSkillAt('S050',1).duration,3.3);near(wlSkillAt('S056',1).radius,225/64);assert.equal(N.vector.duration,6);assert.equal(Object.hasOwn(N.link,'duration'),false);
 });
 
 test('Drain slows the enemy and delivers its base healing only when a separate noncolliding orb returns',()=>{
@@ -59,5 +60,5 @@ test('Drain supports allied healing and movement, and retargets once at its requ
  const {g,p,q}=setup(['S014']);q.x=12;q.z=6;g.command('p',{type:'wlCast',skill:'S014',x:3,z:0});advance(g,.325);const shot=g.warlock.projectiles.find(v=>v.family==='drain');assert.equal(shot.retargeted,true);assert.ok(shot.dz>0);near(shot.speed,600/64);
 });
 test('Gravity uses separate pull and damage radii, bends missiles and has no extra healing without Lifesteal mastery',()=>{
- const {g,p,q}=setup(['S018']);p.hp=50;q.x=5;q.z=2;g.command('p',{type:'wlCast',skill:'S018',x:20,z:0});const orb=g.warlock.projectiles.find(p=>p.family==='gravity');near(orb.speed,400/64);near(orb.life,2.25);const other={id:g.id(),key:'S000',family:'fireball',source:q.id,owner:q.owner,team:q.team,x:4,z:3,dx:1,dz:0,speed:5,radius:.2,life:2,age:0,damage:0,hitIds:[]};g.warlock.projectiles.push(other);advance(g,.2);assert.ok(q.wlVz<0);assert.ok(other.dz<0);assert.ok(q.hp<100);near(p.hp,50);assert.ok(g.warlock.projectiles.includes(orb));
+ const {g,p,q}=setup(['S018']);p.hp=50;q.x=5;q.z=2;g.command('p',{type:'wlCast',skill:'S018',x:20,z:0});const orb=g.warlock.projectiles.find(p=>p.family==='gravity');near(orb.speed,WARLOCK_POLISH.gravity.speed);near(orb.life,WARLOCK_POLISH.gravity.duration);const other={id:g.id(),key:'S000',family:'fireball',source:q.id,owner:q.owner,team:q.team,x:4,z:3,dx:1,dz:0,speed:5,radius:.2,life:2,age:0,damage:0,hitIds:[]};g.warlock.projectiles.push(other);advance(g,.2);assert.ok(q.wlVz<0);assert.ok(other.dz<0);assert.ok(q.hp<100);near(p.hp,50);assert.ok(g.warlock.projectiles.includes(orb));
 });

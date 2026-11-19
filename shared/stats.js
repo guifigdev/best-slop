@@ -10,6 +10,7 @@ export function recompute(u,time=0,auras={}){
  const a={...u.attributes},equipment={};u.enchantments={};u.wardResistances={};u.itemEffects={};for(const slot of u.inventory||[])if(slot&&itemAt(slot.key,slot.level||1)?.effect)u.itemEffects[slot.key]=Math.max(u.itemEffects[slot.key]||0,slot.level||1);for(const slot of u.inventory||[])if(slot&&canEnchant(slot.key,slot.enchantment)){if(isWeapon(slot.key))u.enchantments[slot.enchantment]=Math.max(u.enchantments[slot.enchantment]||0,slot.level||1);else{const ward=enchantAt(slot.enchantment,slot.level||1);u.wardResistances[ward.element]=Math.max(u.wardResistances[ward.element]||0,ward.resistance);}}
  for(const slot of u.inventory||[]){const item=itemAt(slot?.key,slot?.level||1);if(!item||item.consumable)continue;for(const [k,v]of Object.entries(item.attributes||{}))a[k]+=v;for(const [k,v]of Object.entries(item.stats||{}))equipment[k]=k==='critMultiplier'?Math.max(equipment[k]||0,v):(equipment[k]||0)+v;}
  const passive=key=>canUseSkill(u,key)&&levelOf(u,key)?skillFor(u,key):{};
+ const pack=auras.packaura||passive('packaura'),life=auras.lifeaura||passive('lifeaura');
  const fervor=auras.endurance||passive('endurance'),devotion=auras.devotion||passive('devotion'),brilliance=auras.brilliance||passive('brilliance');
  const avatar=canUseSkill(u,'avatar')&&(u.avatar||0)>time?u.avatarData||{}:{},rage=canUseSkill(u,u.rageSkill||'rage')&&(u.rageUntil||0)>time?u.rageData||{}:{};
  const oldHp=u.maxHp||base.hp,oldMana=u.maxMana||base.mana;
@@ -17,14 +18,14 @@ export function recompute(u,time=0,auras={}){
  u.totalAttributes=a;
  u.hpBonusPercent=a.vit*.01;
  u.maxHp=Math.round((base.hp+(u.level-1)*30+a.vit*20+(equipment.hp||0)+(avatar.hp||0))*(1+u.hpBonusPercent));
- u.hpRegenPercent=Math.floor(a.vit/10)*.001;u.hpRegen=1.5+a.vit*.03+u.maxHp*u.hpRegenPercent;
+ u.hpRegenPercent=Math.floor(a.vit/10)*.001;u.hpRegen=(life.hpRegen||0)+1.5+a.vit*.03+u.maxHp*u.hpRegenPercent;
  u.maxMana=base.mana+a.int*8+(equipment.mana||0);
  u.hp=Math.max(u.alive?1:0,Math.min(u.maxHp,u.hp+u.maxHp-oldHp));
  u.mana=Math.max(0,Math.min(u.maxMana,u.mana+u.maxMana-oldMana));
- u.damage=(base.damage+(u.level-1)*2+a.str*1.2+(u.range>3?a.dex*1.5:0)+(equipment.damage||0)+(avatar.damage||0))*(1+Math.floor(a.str/10)*.05)*(1+(rage.damage||0));
+ u.damage=(base.damage+(u.level-1)*2+a.str*1.2+(u.range>3?a.dex*1.5:0)+(equipment.damage||0)+(avatar.damage||0))*(1+Math.floor(a.str/10)*.05)*(1+(rage.damage||0))*(1+(pack.damageBonus||0));
  u.magicPower=1+a.int*.025;
  u.armor=base.armor+a.vit+(equipment.armor||0)+(passive('stonehide').armor||0)+(devotion.armor||0)+(avatar.armor||0);
- u.magicDefense=a.int+Math.floor(a.vit/5)+(equipment.magicDefense||0);
+ u.magicDefense=(life.magicDefense||0)+a.int+Math.floor(a.vit/5)+(equipment.magicDefense||0);
  u.manaRegen=2+Math.floor(a.int/6)*.8+(brilliance.manaRegen||0)+(equipment.manaRegen||0);
  u.accuracy=.85+a.dex*.005+Math.floor(a.dex/5)*.02;
  u.critChance=Math.min(.8,Math.floor(a.luk/3)*.01+(passive('critical').chance||0)+(equipment.crit||0));

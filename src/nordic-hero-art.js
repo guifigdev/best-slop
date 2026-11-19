@@ -1,3 +1,4 @@
+import {FENRIR_ART,fenrirSpec,fenrirPortrait} from './fenrir-art.js';
 // Independent visual skins for the six Custom Hero archetypes. All gameplay
 // identities remain the existing catalog keys; no attributes are defined here.
 export const NORDIC_HERO_ART=Object.freeze({
@@ -6,13 +7,15 @@ export const NORDIC_HERO_ART=Object.freeze({
  ranger:Object.freeze({name:'Skadi',title:'Caçadora dos picos',description:'Arco de teixo, peles claras e o azul das montanhas. A caçadora conhece cada trilha de gelo.'}),
  turtle:Object.freeze({name:'Tyr',title:'Escudo dos juramentos',description:'O deus de uma só mão veste aço e carrega um grande escudo marcado por seus juramentos.'}),
  owl:Object.freeze({name:'Odin',title:'Peregrino dos corvos',description:'Um olho coberto, uma lança e um corvo atento. O viajante dos Nove Reinos veste azul profundo.'}),
- raccoon:Object.freeze({name:'Loki',title:'Tecelão de artimanhas',description:'Verde esmeralda, ouro e lâminas curtas. Os chifres curvos anunciam o mestre das artimanhas.'})
+ raccoon:Object.freeze({name:'Loki',title:'Tecelão de artimanhas',description:'Verde esmeralda, ouro e lâminas curtas. Os chifres curvos anunciam o mestre das artimanhas.'}),
+ fenrir:FENRIR_ART
 });
 const specs=new Map(),portraits=new Map();
 const GOLD=0xd9bb71,PALE=0xe9dfc2,EYE=0x293b3a,SKIN=0xd4b298,STEEL=0x9bafb1,DARK=0x3d4c50;
 const valid=kind=>typeof kind==='string'&&Object.hasOwn(NORDIC_HERO_ART,kind);
 
 export function nordicHeroSpec(kind){
+ if(kind==='fenrir')return fenrirSpec();
  if(!valid(kind))return null;if(specs.has(kind))return specs.get(kind);
  const parts=[],legs=[],b=(...p)=>parts.push(p),leg=(x,color=DARK,w=.29,h=.44,z=0)=>legs.push({x,y:h/2+.05,z,w,h,d:.4,color});
  const eye=(x,y=1.91,color=EYE)=>{b(x,y,.405,.115,.14,.055,color);b(x-.018,y+.025,.44,.025,.033,.015,PALE);};
@@ -70,6 +73,7 @@ export function nordicHeroSpec(kind){
 export function buildNordicHeroModel(kind,body,voxel){const spec=nordicHeroSpec(kind);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
 const shade=(color,tint)=>'#'+[16,8,0].map(shift=>Math.round(((color>>shift)&255)*tint).toString(16).padStart(2,'0')).join('');
 export function nordicHeroPortrait(kind){
+ if(kind==='fenrir')return fenrirPortrait();
  const spec=nordicHeroSpec(kind);if(!spec)return '';if(portraits.has(kind))return portraits.get(kind);
  const parts=[...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],polygons=[],project=([x,y,z])=>[x*.88-z*.72,-y+z*.38+x*.27];
  for(const[x,y,z,w,h,d,color]of parts){const a=x-w/2,b=x+w/2,l=y-h/2,t=y+h/2,n=z-d/2,f=z+d/2;for(const[corners,tint,depth]of [[[[a,t,n],[b,t,n],[b,t,f],[a,t,f]],1,x+z-.01],[[[b,l,n],[b,t,n],[b,t,f],[b,l,f]],.77,x+z+.02],[[[a,l,f],[a,t,f],[b,t,f],[b,l,f]],.9,x+z+.03]])polygons.push({points:corners.map(project),color:shade(color,tint),depth});}

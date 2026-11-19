@@ -5,7 +5,7 @@ import {Game} from '../shared/simulation.js';
 import {HEROES,SKILLS} from '../shared/catalog.js';
 import {SHARED_STARTERS,isSharedStarter,isSharedSkill} from '../shared/skill-ownership.js';
 
-test('exactly the six original hero abilities are shared starters',()=>{assert.equal(SHARED_STARTERS.length,6);assert.deepEqual(new Set(SHARED_STARTERS),new Set(Object.values(HEROES).map(h=>h.skill)));assert.equal(isSharedStarter('cleave'),false);assert.equal(isSharedStarter('__proto__'),false);assert.ok(Object.isFrozen(SHARED_STARTERS));});
+test('all original and Fenrir hero abilities are shared starters',()=>{assert.equal(SHARED_STARTERS.length,7);assert.deepEqual(new Set(SHARED_STARTERS),new Set(Object.values(HEROES).map(h=>h.skill)));assert.equal(isSharedStarter('cleave'),false);assert.equal(isSharedStarter('__proto__'),false);assert.ok(Object.isFrozen(SHARED_STARTERS));});
 
 test('every animal keeps its native starter when several players choose it',()=>{for(const [type,hero]of Object.entries(HEROES)){const g=new Game();for(let i=0;i<4;i++)assert.equal(g.addPlayer(`${i}`,type),true);for(const u of g.heroes()){assert.deepEqual(u.skills,[hero.skill]);assert.equal(u.skillLevels[hero.skill],1);assert.equal(g.skillOwner(hero.skill),null);assert.equal(g.skillAvailable(u,hero.skill),true);}assert.equal(g.skillOwnership()[hero.skill],undefined);}});
 

@@ -19,12 +19,13 @@ export const monsterMethods={
  refreshMonsterStats(u){
   const base=u.monsterBase;if(!base)return;const passive=key=>levelOf(u,key)?skillFor(u,key):{};
   const aura=key=>this.auraFor(u,key)||passive(key),fervor=aura('endurance'),devotion=aura('devotion'),brilliance=aura('brilliance'),avatar=(u.avatar||0)>this.time?u.avatarData||{}:{},rage=(u.rageUntil||0)>this.time?u.rageData||{}:{};
+  const pack=aura('packaura'),life=aura('lifeaura');
   const oldHp=u.maxHp||base.hp;u.maxHp=base.hp+(avatar.hp||0);u.hp=clamp(u.hp+u.maxHp-oldHp,u.alive?1:0,u.maxHp);
-  u.maxMana=base.mana;u.mana=clamp(u.mana??u.maxMana,0,u.maxMana);u.manaRegen=base.manaRegen+(brilliance.manaRegen||0);u.hpRegen=base.hpRegen||0;
-  u.damage=(base.damage+(avatar.damage||0))*(1+(rage.damage||0));u.armor=base.armor+(passive('stonehide').armor||0)+(devotion.armor||0)+(avatar.armor||0);
+  u.maxMana=base.mana;u.mana=clamp(u.mana??u.maxMana,0,u.maxMana);u.manaRegen=base.manaRegen+(brilliance.manaRegen||0);u.hpRegen=(base.hpRegen||0)+(life.hpRegen||0);
+  u.damage=(base.damage+(avatar.damage||0))*(1+(rage.damage||0))*(1+(pack.damageBonus||0));u.armor=base.armor+(passive('stonehide').armor||0)+(devotion.armor||0)+(avatar.armor||0);
   u.speed=base.speed*(1+(fervor.moveSpeed||0));u.interval=base.interval;u.attackSpeed=Math.min(3,1+(fervor.attackSpeed||0)+(rage.attackSpeed||0));u.accuracy=base.accuracy;
   u.evasion=Math.min(.45,base.evasion+(passive('evasion').evasion||0));u.critChance=Math.min(.8,base.critChance+(passive('critical').chance||0));u.critMultiplier=Math.max(base.critMultiplier,passive('critical').multiplier||0);
-  u.lifesteal=passive('vampiric').lifesteal||0;u.magicDefense=base.magicDefense||0;u.attackType=u.element?'magic':'physical';u.basicDamage=u.damage;u.reflect=passive('thorns').reflect||0;u.magicPower=base.magicPower;
+  u.lifesteal=passive('vampiric').lifesteal||0;u.magicDefense=(base.magicDefense||0)+(life.magicDefense||0);u.attackType=u.element?'magic':'physical';u.basicDamage=u.damage;u.reflect=passive('thorns').reflect||0;u.magicPower=base.magicPower;
  },
 
  monsterThink(u,dt){

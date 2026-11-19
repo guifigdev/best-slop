@@ -17,8 +17,8 @@ test('catalog reservations show the rival safely and block learning, while an al
  p.level=9;assert.equal(catalogButton(skillShopMarkup(p,state),'blizzard')['data-access'],'level');p.level=40;p.skillPoints=0;assert.equal(catalogButton(skillShopMarkup(p,state),'blizzard')['data-access'],'points');
 });
 
-test('all six starter techniques remain shared even when a legacy snapshot reserves them to rivals',()=>{
- assert.equal(SHARED_STARTERS.length,6);const p=hero({skills:[],skillLevels:{}}),skillOwners=Object.fromEntries(SHARED_STARTERS.map(key=>[key,{owner:'rival',name:'Antigo dono'}])),markup=skillShopMarkup(p,{phase:'wave',skillOwners,units:[{owner:'rival',hero:'mage'}]});
+test('all seven starter techniques remain shared even when a legacy snapshot reserves them to rivals',()=>{
+ assert.equal(SHARED_STARTERS.length,7);const p=hero({skills:[],skillLevels:{}}),skillOwners=Object.fromEntries(SHARED_STARTERS.map(key=>[key,{owner:'rival',name:'Antigo dono'}])),markup=skillShopMarkup(p,{phase:'wave',skillOwners,units:[{owner:'rival',hero:'mage'}]});
  for(const key of SHARED_STARTERS){const type=Object.keys(HEROES).find(h=>HEROES[h].skill===key);const button=catalogButton(skillShopMarkup({...p,hero:type},{phase:'wave',skillOwners}),key);assert.equal(button.disabled,undefined,key);assert.equal(button['data-access'],'available',key);assert.ok(button['aria-label'].includes('compartilhada'),key);}
  assert.equal(markup.includes('Antigo dono'),false);assert.ok(markup.includes('Inicial compartilhada · 1 cópia por herói'));
  const learned=hero({skills:['critical'],skillLevels:{critical:1}}),upgraded=catalogButton(skillShopMarkup(learned,{phase:'wave',skillOwners}),'critical');assert.equal(upgraded['data-access'],'upgrade');assert.equal(upgraded.disabled,undefined);

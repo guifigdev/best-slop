@@ -1,3 +1,4 @@
+import {WARLOCK_POLISH} from '../shared/warlock-polish.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -28,7 +29,7 @@ test('Shield reflects a real missile back at its original caster instead of mere
 });
 
 test('Meteor announces its area before impact, while Teleport uses its exact 770-native range and reduces momentum by twenty percent',()=>{
- const {g,p}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S008'});g.command('p',{type:'wlBuy',skill:'S011'});const {q}=battle(g);g.command('p',{type:'wlCast',skill:'S008',x:5,z:0});assert.equal(g.warlock.fields[0].warning,true);advance(g,.5);assert.equal(q.hp,100);q.z=5;advance(g,.1);assert.equal(q.hp,100);assert.equal(g.warlock.fields.length,0);
+ const {g,p}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S008'});g.command('p',{type:'wlBuy',skill:'S011'});const {q}=battle(g);g.command('p',{type:'wlCast',skill:'S008',x:5,z:0});assert.equal(g.warlock.fields[0].warning,true);advance(g,.8);assert.equal(q.hp,100);q.z=6;advance(g,.21);assert.equal(q.hp,100);assert.equal(g.warlock.fields.length,0);
  Object.assign(p,{x:0,z:0,wlVx:10,wlVz:0});assert.equal(g.command('p',{type:'wlCast',skill:'S011',x:29,z:0}),true);near(p.x,770/64);near(p.wlVx,8);
 });
 

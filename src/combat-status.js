@@ -5,14 +5,16 @@ export function combatStatuses(u,time){const statuses=[],burn=Math.max(u.dots?.b
  if((u.rageUntil||0)>time)statuses.push({key:'rage',label:'FÚRIA',until:u.rageUntil});
  if((u.violentForce?.until||0)>time)statuses.push({key:'violentforce',label:'FORÇA VIOLENTA',until:u.violentForce.until});
  if(u.stun>0)statuses.push({key:'stun',label:'ATORDOADO',until:time+u.stun});
- if((u.shieldUntil||0)>time&&u.shield>0)statuses.push({key:'shield',label:'ESCUDO '+Math.ceil(u.shield),until:u.shieldUntil});
+ if((u.magicWardUntil||0)>time)statuses.push({key:'ward',label:'PROTEÇÃO MÁGICA',until:u.magicWardUntil});
+ if((u.weakenedUntil||0)>time)statuses.push({key:'weaken',label:'ENFRAQUECIDO',until:u.weakenedUntil});
+ if((u.shieldUntil||0)>time&&u.shield>0)statuses.push({key:'shield',label:'ESCUDO '+Math.ceil(u.shield)+(u.shieldPhysicalOnly?' · '+u.shieldHits+' golpes':''),until:u.shieldUntil});
  if((u.itemReflectUntil||0)>time)statuses.push({key:'reflect',label:'REFLEXÃO',until:u.itemReflectUntil});
  return statuses;
 }
 
 // Hue targets are blended into the existing vertex-colored animal at 20% by
 // the view. Positive effects never participate in the category count.
-const NEGATIVE_HUES=Object.freeze({fire:0xff6738,frost:0x67c5ff,poison:0x80c943,stun:0xffd34d});
+const NEGATIVE_HUES=Object.freeze({fire:0xff6738,frost:0x67c5ff,poison:0x80c943,stun:0xffd34d,weaken:0xb386c9});
 export function negativeTint(unit,time){
  const negatives=combatStatuses(unit||{},time).filter(status=>Object.hasOwn(NEGATIVE_HUES,status.key));
  return negatives.length===1?{key:negatives[0].key,color:NEGATIVE_HUES[negatives[0].key]}:null;

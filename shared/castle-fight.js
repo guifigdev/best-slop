@@ -7,7 +7,7 @@ import {castleArmyRoute,castleProducerSpawn} from './castle-production.js';
 import {launchCastleBlast,tickCastleItemProjectiles} from './castle-item-effects.js';
 import {advanceCastleRoute} from './castle-marching.js';
 import {castleBuildCheck,castleUpgradeAvailability} from './castle-build-rules.js';
-import {castlePassable,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
+import {constructionDisplacements,applyConstructionDisplacements,castlePassable,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
 import {castleBuilderFor} from './castle-builders.js';
 import {sceneryObstacles} from './scenery.js';
 import {CASTLE_RACES,CASTLE_BUILDINGS,CASTLE_UNITS,CASTLE_ITEMS,CASTLE_ECONOMY_REFERENCE,castleDamageMultiplier} from './castle-catalog.js';
@@ -64,7 +64,7 @@ export const CastleFightMethods={
   if(c.type==='cfBuild'){
    const check=castleBuildCheck(this,u,c.building,c);if(!check.allowed){this.commandFailureReason=check.reason;return false;}const definition=check.definition,point=check.point,footprint=definition.footprint||{w:3,d:3};
    const buildTime=Math.max(0,definition.buildTime||0),spawnInterval=Math.max(1,definition.spawnInterval??definition.spawnTime??20),lane=cf.map.lanes.reduce((a,b)=>Math.abs(a.z-point.z)<=Math.abs(b.z-point.z)?a:b),maxHp=definition.hp||800+definition.cost*1.5;
-   const building={id:this.id(),key:c.building,name:definition.name,owner:u.owner,team:p.team,race:p.race,...point,...footprint,castleStructure:true,hp:maxHp*.1,maxHp,armor:definition.armor??5,armorType:definition.armorType||'fortified',alive:true,invested:definition.cost,created:cf.elapsed,readyAt:null,workRemaining:Math.max(.05,buildTime),workTotal:Math.max(.05,buildTime),workProgress:0,spawnInterval,nextSpawn:null,productionPaused:false,productionRemaining:null,lane:lane.id,spawnCount:0,economyReady:false,registeredCost:0,incomeContribution:0};u.gold-=definition.cost;u.lumber-=definition.lumberCost||0;p.hasBuilt=true;cf.buildings.push(building);cf.navigationRevision++;queueCastleWork(u,building);this.fx('castleBuild',point.x,point.z,{source:u.id,building:c.building,buildingId:building.id,duration:buildTime});return true;
+   const building={id:this.id(),key:c.building,name:definition.name,owner:u.owner,team:p.team,race:p.race,...point,...footprint,castleStructure:true,hp:maxHp*.1,maxHp,armor:definition.armor??5,armorType:definition.armorType||'fortified',alive:true,invested:definition.cost,created:cf.elapsed,readyAt:null,workRemaining:Math.max(.05,buildTime),workTotal:Math.max(.05,buildTime),workProgress:0,spawnInterval,nextSpawn:null,productionPaused:false,productionRemaining:null,lane:lane.id,spawnCount:0,economyReady:false,registeredCost:0,incomeContribution:0};const exits=constructionDisplacements(cf,building,[...this.units,...cf.units.filter(t=>!this.units.includes(t))]);if(!exits){this.commandFailureReason='Não há espaço livre ao lado para retirar as unidades da obra.';return false;}applyConstructionDisplacements(exits);u.gold-=definition.cost;u.lumber-=definition.lumberCost||0;p.hasBuilt=true;cf.buildings.push(building);cf.navigationRevision++;queueCastleWork(u,building);this.fx('castleBuild',point.x,point.z,{source:u.id,building:c.building,buildingId:building.id,duration:buildTime});return true;
   }
   if(c.type==='cfUpgrade')return this.castleUpgrade(u,c);
   if(c.type==='cfSell'){

@@ -10,9 +10,10 @@ export const HEROES = {
  owl:{name:'Noctis',animal:'Coruja da tempestade',role:'INTELIGÊNCIA · CONTROLE',color:0xb4a3cc,hp:690,mana:560,damage:26,armor:2,range:7,speed:4.4,interval:1.4,skill:'chain',focus:'int',description:'Enxerga a próxima abertura. Relâmpagos dançam sob suas asas.'},
  raccoon:{name:'Nico',animal:'Guaxinim duelista',role:'SORTE · CRÍTICOS',color:0xb4a082,hp:800,mana:320,damage:32,armor:3,range:1.8,speed:4.8,interval:.9,skill:'critical',focus:'luk',description:'Uma máscara, um sorriso e um golpe no momento perfeito.'}
 };
+HEROES.fenrir={name:'Fenrir',animal:'Lobo das correntes',role:'FORÇA · MATILHA',color:0x879a9c,hp:880,mana:360,damage:31,armor:3,range:1.8,speed:4.7,interval:1.05,skill:'summon',focus:'str',description:'O grande lobo rompe as correntes e chama sua matilha.'};
 for(const [key,identity]of Object.entries(CUSTOM_HERO_IDENTITIES))Object.assign(HEROES[key],{name:identity.name,animal:identity.title,description:identity.description});
 for(const [key,archetype,combatRole]of [
- ['knight','physical_melee','guardian'],['turtle','physical_melee','tank'],['raccoon','physical_melee','assassin'],
+ ['fenrir','physical_melee','summoner'],['knight','physical_melee','guardian'],['turtle','physical_melee','tank'],['raccoon','physical_melee','assassin'],
  ['ranger','physical_ranged','archer'],['mage','magic','arcanist'],['owl','magic','controller']
 ])Object.assign(HEROES[key],{archetype,combatRole,attackType:archetype==='magic'?'magic':'physical'});
 export const ATTRIBUTES={
@@ -26,6 +27,14 @@ export const ATTRIBUTES={
 const urls={mk:'https://classic.battle.net/war3/human/units/mountainking.shtml',tc:'https://classic.battle.net/war3/orc/units/taurenchieftain.shtml',pal:'https://classic.battle.net/war3/human/units/paladin.shtml',far:'https://classic.battle.net/war3/orc/units/farseer.shtml',bm:'https://classic.battle.net/war3/orc/units/blademaster.shtml',am:'https://classic.battle.net/war3/human/units/archmage.shtml',dl:'https://classic.battle.net/war3/undead/units/dreadlord.shtml',kg:'https://classic.battle.net/war3/nightelf/units/keepergrove.shtml'};
 function skill(name,kind,cost,target,fields,description,reference=null,source=null,originalRanks=3){return{name,kind,cost,target,description,reference,source:urls[source]||null,originalRanks:reference?originalRanks:0,levels:Array.from({length:5},(_,i)=>Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,Array.isArray(v)?v[i]:v])))};}
 export const SKILLS={
+ fenrirfang:skill('Presas de Fenrir','active',180,'enemy',{damage:[20,30,40,50,60],atkCoefficient:[.55,.7,.85,1,1.15],castRange:2.6,duration:2,mana:50,cooldown:9},'Morde um inimigo próximo com dano físico baseado no ATQ e o deixa lento por 2s.'),
+ scarabs:skill('Escaravelhos de Nidavellir','active',180,'self',{summonKind:'scarab',summonName:'Escaravelho rúnico',summonCount:[2,2,3,3,4],summonHp:[160,220,280,340,400],summonDamage:[15,20,25,30,35],summonRange:1.2,summonSpeed:4.2,summonFlying:false,summonDuration:30,mana:95,cooldown:36},'Invoca escaravelhos rúnicos de combate por 30s. Recebem auras e substituem os escaravelhos do chamado anterior.'),
+ packaura:skill('Uivo da Matilha','passive',180,'self',{damageBonus:[.06,.09,.12,.15,.18],radius:9},'Aura aumenta o dano físico de aliados e invocações em 9m. Auras iguais usam apenas a mais forte.'),
+ lifeaura:skill('Sopro de Lif','passive',180,'self',{hpRegen:[1.5,2,2.5,3,3.5],magicDefense:[2,3,4,5,6],radius:9},'Aura concede regeneração de vida e defesa mágica aos aliados e invocações em 9m. Auras iguais não se somam.'),
+ runicbarrier:skill('Selo de Frigg · Kyrie','active',180,'self',{shield:[50,75,100,125,150],shieldHpPercent:[.10,.13,.16,.19,.22],shieldHits:[3,4,5,6,7],radius:4,duration:12,mana:80,cooldown:24},'Protege você e aliados em 4m contra dano físico por até 12s, até esgotar a barreira ou suas cargas. Dano mágico e ambiente atravessam sem gastar cargas.'),
+ spiritward:skill('Véu de Eir','active',180,'self',{duration:[1.5,2,2.5,3,3.5],mana:100,cooldown:35},'Imunidade breve ao dano mágico de combate. Não impede controle nem dano do ambiente.'),
+ weakeninghowl:skill('Uivo de Gleipnir','active',180,'self',{damageReduction:[.12,.15,.18,.21,.24],radius:5,duration:6,mana:70,cooldown:20},'Reduz o dano de combate causado pelos inimigos próximos por 6s. Não acumula consigo mesmo.'),
+
  doubleattack:skill('Ecos de Sif · Ataque duplo','passive',185,'self',{chance:[.15,.20,.25,.30,.35],extraAttack:[.60,.65,.70,.75,.80]},'Após um ataque básico acertar, pode repetir um golpe físico de ATQ. O eco não causa crítico, não rouba vida e não dispara outros efeitos.'),
  violentforce:skill('Força de Magni · Força violentíssima','active',190,'self',{damageBonus:[.15,.20,.25,.30,.35],damageTaken:.10,duration:6,mana:70,cooldown:24},'Por 6s, aumenta todo dano físico causado, mas recebe 10% mais dano de combate. Não altera atributos, não quebra equipamentos e não aumenta dano mágico.'),
  hurricane:skill('Fúria de Njord · Fúria do furacão','active',190,'self',{damage:[12,16,20,24,28],radius:[2.3,2.5,2.7,2.9,3.1],pulses:4,pulseInterval:.5,duration:2,mana:90,cooldown:16},'Gira por 2s e desfere quatro pulsos físicos próximos. Pode continuar andando; dano indicado por pulso. Sem imunidade a magia e sem roubo de vida periódico.'),
@@ -90,6 +99,7 @@ for(const [key,minimum]of Object.entries(ultimateLevels))Object.assign(SKILLS[ke
 // Original ATK/MATK additions inspired by Ragnarok skill ratios. Sustained
 // spells divide their MATK budget over the full cast rather than per pulse.
 const physicalRatio=[.5,.625,.75,.875,1],magicRatio=[.4,.525,.65,.775,.9];
+SKILLS.fenrirfang.damageType='physical';
 const scaling={
  hurricane:['physical',[.1,.125,.15,.175,.2]],multishot:['physical',physicalRatio],dash:['physical',physicalRatio],hornrush:['physical',physicalRatio],bash:['physical',[.15,.2,.25,.3,.35]],
  bolt:['magic',magicRatio],drain:['magic',magicRatio],hook:['magic',magicRatio],warlockfire:['magic',magicRatio],warlockfrost:['magic',magicRatio],chain:['magic',magicRatio],
@@ -105,9 +115,9 @@ for(const [key,[type,ratios]]of Object.entries(scaling)){SKILLS[key].damageType=
 const archetypeSets={all:['physical_melee','physical_ranged','magic'],physical:['physical_melee','physical_ranged','magic'],melee:['physical_melee'],ranged:['physical_ranged','magic'],magic:['physical_melee','physical_ranged','magic']};
 const skillGroups={
  melee:['cleave'],ranged:['multishot','bounce'],
- physical:['doubleattack','violentforce','hurricane','stomp','shockwave','bash','dash','hornrush','critical','avatar','battlecry','rage'],
- all:['vampiric','endurance','devotion','evasion','thorns','stonehide'],
- magic:['manabreak','heal','freyjasgrace','shield','brilliance','blink','swap','icewall','bolt','chain','blizzard','summon','fireball','frostnova','forcepush','hook','gravity','poison','drain','flamebreath','venomcloud','stormdive','warlockfire','warlockfrost','odinsravens','thorsgoats','freyjascat','helguard','gungnir','thorsjudgment','helsfrost','firesteps','froststeps','auraflame','icepulse']
+ physical:['fenrirfang','doubleattack','violentforce','hurricane','stomp','shockwave','bash','dash','hornrush','critical','avatar','battlecry','rage'],
+ all:['packaura','lifeaura','runicbarrier','spiritward','weakeninghowl','vampiric','endurance','devotion','evasion','thorns','stonehide'],
+ magic:['scarabs','manabreak','heal','freyjasgrace','shield','brilliance','blink','swap','icewall','bolt','chain','blizzard','summon','fireball','frostnova','forcepush','hook','gravity','poison','drain','flamebreath','venomcloud','stormdive','warlockfire','warlockfrost','odinsravens','thorsgoats','freyjascat','helguard','gungnir','thorsjudgment','helsfrost','firesteps','froststeps','auraflame','icepulse']
 };
 const compatibilityLabels={all:'Utilidade',physical:'Dano físico',melee:'Ataques corpo a corpo',ranged:'Ataques à distância',magic:'Magia'};
 for(const [group,keys]of Object.entries(skillGroups))for(const key of keys){if(!Object.hasOwn(SKILLS,key)||SKILLS[key].allowedArchetypes)throw Error(`Classificação de habilidade inválida: ${key}`);Object.assign(SKILLS[key],{allowedArchetypes:Object.freeze([...archetypeSets[group]]),skillStyle:group==='all'?'utility':group==='magic'?'magic':'physical',compatibilityLabel:compatibilityLabels[group],weaponRequirement:group==='melee'?'melee':group==='ranged'?'ranged':null});}

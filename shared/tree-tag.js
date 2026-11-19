@@ -1,5 +1,5 @@
 import {TREE_TAG_CHARACTERS as CHARACTERS,TREE_TAG_SKILLS as SKILLS,TREE_TAG_BUILDINGS as BUILDINGS,TREE_TAG_ITEMS as ITEMS,TREE_TAG_UNITS as UNITS,TREE_TAG_RESEARCH as RESEARCH,TREE_TAG_FOREST,TREE_TAG_RULES as RULES,treeTagSkillAt} from './tree-tag-catalog.js';
-import {castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit,castleSegmentClear} from './castle-navigation.js';
+import {constructionDisplacements,applyConstructionDisplacements,castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit,castleSegmentClear} from './castle-navigation.js';
 import {TREE_TAG_WORKER_SKILLS,treeTagWorkerCatalog} from './tree-tag-catalog.js';
 
 const own=(object,key)=>typeof key==='string'&&Object.hasOwn(object,key);
@@ -18,6 +18,12 @@ const clearOrder=u=>{u.destination=null;u.treeTagAction=null;u.treeTagBuildQueue
 const itemOwned=(u,key)=>(u.inventory||[]).some(i=>i.id===key);
 const wallet=(game,u)=>game.player?.(u.owner)||game.units?.find(t=>t.id===game.players?.[u.owner])||u;
 const approachGoals=new WeakMap();
+// Keep the whole footprint out of the jail and leave cardinal walking exits
+// through the central clearing. A centre-only check allowed walls around it.
+function prisonPlacementBlocked(tt,p,definition){
+ const dx=Math.abs(p.x-tt.map.prison.x),dz=Math.abs(p.z-tt.map.prison.z),hw=definition.w/2,hd=definition.d/2;
+ return Math.hypot(Math.max(0,dx-hw),Math.max(0,dz-hd))<4||dx<hw+.7&&dz<hd+9||dz<hd+.7&&dx<hw+9;
+}
 
 export function treeTagBuildCheck(game,unit,key,where){
  const tt=game?.treeTag,definition=own(BUILDINGS,key)?BUILDINGS[key]:null;
@@ -31,7 +37,7 @@ export function treeTagBuildCheck(game,unit,key,where){
  if(bank.gold<definition.cost||bank.lumber<definition.lumberCost)return{allowed:false,reason:'Ouro ou madeira insuficientes.'};
  const p=point(game,where);if(!p)return{allowed:false,reason:'Escolha uma região dentro da floresta.'};
  const snapped={x:Math.round(p.x*2)/2,z:Math.round(p.z*2)/2};
- if(distance(snapped,tt.map.prison)<4)return{allowed:false,reason:'Deixe a clareira da prisão livre.'};
+ if(prisonPlacementBlocked(tt,snapped,definition))return{allowed:false,reason:'Deixe a clareira da prisão e seus caminhos de saída livres.'};
  const occupied=[...tt.trees,...tt.buildings].some(b=>b.alive&&Math.abs(snapped.x-b.x)<(definition.w+b.w)/2+.15&&Math.abs(snapped.z-b.z)<(definition.d+b.d)/2+.15);
  if(occupied)return{allowed:false,reason:'Espaço ocupado. Use Destruir árvores ou Desenraizar para abrir uma clareira.'};
  return{allowed:true,definition,point:snapped,reason:'Área livre para construir.'};
@@ -57,11 +63,19 @@ function queueConstruction(game,u,b){
  if(u.treeTagAction?.type==='build'&&active){if(active.id!==b.id&&!u.treeTagBuildQueue.includes(b.id))u.treeTagBuildQueue.push(b.id);return;}
  u.destination=null;u.order='build';u.treeTagAction={type:'build',target:b.id};
 }
-function reviveEnt(game,u){
- u.treeTagCaptured=false;u.treeTagState='active';u.hp=u.maxHp;u.alive=true;u.invulnerableUntil=game.treeTag.elapsed+1;u.kind='treant';u.size=.8;clearOrder(u);fx(game,'levelup',u,{rescue:true});
+function reviveEnt(game,u,rescuer){
+ const radius=u.collisionRadius||.2,context={...nav(game),units:game.units.filter(live)},options={maxDistance:3,ignoreUnits:false,ignoreId:u.id,toward:rescuer};
+ let found=castleSpawnPoint(context,u,radius,options);
+ // Older matches may contain a building over the ashes or a sealed pocket.
+ // Revival is local to the prison and must share a walking route with the
+ // rescuer. If the ashes' nearest space is isolated, use a free spot beside
+ // the rescuer rather than creating a live Ent inside the obstruction.
+ if(!found||!castleRouteAvailable(context,found,rescuer,radius))found=castleSpawnPoint(context,rescuer,radius,{...options,maxDistance:1.4});
+ if(!found||!castleRouteAvailable(context,found,rescuer,radius)){u.treeTagRescueBlocked=true;return false;}
+ Object.assign(u,found);u.treeTagCaptured=false;u.treeTagState='active';u.treeTagRescueBlocked=false;u.treeTagRootUntil=0;u.treeTagRescuedAt=game.treeTag.elapsed;u.hp=u.maxHp;u.alive=true;u.invulnerableUntil=game.treeTag.elapsed+1;u.kind='treant';u.size=.8;clearOrder(u);fx(game,'levelup',u,{rescue:true});return true;
 }
 function captureEnt(game,u,attacker){
- const tt=game.treeTag;u.treeTagCaptured=true;u.treeTagState='captured';u.hp=u.maxHp;u.alive=true;u.kind='treeAsh';u.size=.4;u.x=tt.map.prison.x+(u.seat%3-1)*.6;u.z=tt.map.prison.z+Math.floor(u.seat/3)*.6;clearOrder(u);
+ const tt=game.treeTag;u.treeTagCaptured=true;u.treeTagState='captured';u.treeTagRescueBlocked=false;u.hp=u.maxHp;u.alive=true;u.kind='treeAsh';u.size=.4;u.x=tt.map.prison.x+(u.seat%3-1)*.6;u.z=tt.map.prison.z+Math.floor(u.seat/3)*.6;clearOrder(u);
  for(const b of tt.buildings.filter(b=>b.owner===u.owner&&b.alive))b.alive=false;tt.navigationRevision++;
  for(const worker of game.units.filter(t=>t.treeTagWorker&&t.owner===u.owner&&t.alive)){worker.alive=false;worker.died=game.time;clearOrder(worker);}
  if(attacker?.owner){const killer=game.player(attacker.owner);if(killer){killer.gold+=RULES.entKillGold;killer.xp+=RULES.entKillXp;killer.kills++;while(killer.level<20&&killer.xp>=50*killer.level*(killer.level+3)){killer.level++;killer.skillPoints++;const p=CHARACTERS[killer.treeTagCharacter];killer.maxHp+=p.strengthGain*25;killer.hp+=p.strengthGain*25;killer.maxMana+=p.intelligenceGain*15;killer.mana+=p.intelligenceGain*15;killer.armor+=p.agilityGain*.3;killer.damage+=p[p.primary+'Gain']||0;killer.interval=p.rawStats.interval/(1+.02*(p.agility+(killer.level-1)*p.agilityGain));}}}
@@ -170,7 +184,12 @@ function tickOrders(game,u,dt){
    }
    u.speed=speed;
 }
-function rescueNearby(game,u){for(const ash of actors(game).filter(t=>t.treeTagCaptured&&distance(u,t)<=RULES.rescueRadius))reviveEnt(game,ash);}
+function rescueNearby(game,u){
+ // Movement orders finish within .35m of their clicked point. Include that
+ // same arrival tolerance so clicking the ring's edge really enters it.
+ const prison=game.treeTag.map.prison,inside=distance(u,prison)<=prison.radius+Math.max(.35,u.collisionRadius||0)+.00001;
+ for(const ash of actors(game).filter(t=>t.treeTagCaptured&&t.team===u.team&&(inside||distance(u,t)<=RULES.rescueRadius)))reviveEnt(game,ash,u);
+}
 
 export function treeTagCanSee(state,observer,target){
  const tt=state?.treeTag||state;if(!tt||!observer||!target)return false;if(observer.team===target.team||target.treeTagCaptured)return true;
@@ -245,7 +264,7 @@ export const TreeTagMethods={
    const rank=u.skillLevels[c.skill]||0,minimum=s.requiredLevel+rank*s.levelSkip;if(u.level<minimum)return fail(this,'Esta habilidade exige nível '+minimum+'.');u.skillLevels[c.skill]=rank+1;u.skillPoints--;if(c.skill==='attributeBonus'){u.maxHp+=100;u.hp+=100;u.maxMana+=60;u.mana+=60;u.damage+=4;u.armor+=1.2;}fx(this,'levelup',u);return true;
   }
   if(c.type==='ttBuild'){
-   const check=treeTagBuildCheck(this,u,c.building,c);if(!check.allowed)return fail(this,check.reason);const d=check.definition,b={...d,id:this.id(),owner:u.owner,team:u.team,...check.point,maxHp:d.hp,hp:d.hp*.1,alive:true,treeTagStructure:true,workRemaining:d.buildTime,workTotal:d.buildTime,created:this.treeTag.elapsed,productionQueue:[],trainRemaining:0};applyResearch(this,b);this.treeTag.buildings.push(b);this.treeTag.navigationRevision++;bank.gold-=d.cost;bank.lumber-=d.lumberCost;queueConstruction(this,u,b);fx(this,'castleBuild',b,{duration:d.buildTime});return true;
+   const check=treeTagBuildCheck(this,u,c.building,c);if(!check.allowed)return fail(this,check.reason);const d=check.definition,b={...d,id:this.id(),owner:u.owner,team:u.team,...check.point,maxHp:d.hp,hp:d.hp*.1,alive:true,treeTagStructure:true,workRemaining:d.buildTime,workTotal:d.buildTime,created:this.treeTag.elapsed,productionQueue:[],trainRemaining:0};const exits=constructionDisplacements(nav(this),b,this.units.filter(t=>t.treeTagCharacter||t.treeTagTrained));if(!exits)return fail(this,'Não há espaço livre ao lado para retirar as unidades da obra.');applyResearch(this,b);this.treeTag.buildings.push(b);applyConstructionDisplacements(exits);this.treeTag.navigationRevision++;bank.gold-=d.cost;bank.lumber-=d.lumberCost;queueConstruction(this,u,b);fx(this,'castleBuild',b,{duration:d.buildTime});return true;
   }
   if(c.type==='ttResume'){
    const b=this.treeTag.buildings.find(b=>b.id===c.buildingId&&b.owner===u.owner&&b.alive&&b.workRemaining>0),d=b&&BUILDINGS[b.pendingUpgrade||b.key],worker=u.treeTagWorker?treeTagWorkerCatalog(u):null;

@@ -1,15 +1,25 @@
+import {resolveUnitCollisions} from './unit-collision.js';
 import {KODO_TAG_CHARACTERS as CHARACTERS,KODO_TAG_BUILDINGS as BUILDINGS,KODO_TAG_UNITS as UNITS,KODO_TAG_RULES as RULES,KODO_TAG_MAP as MAP,KODO_TAG_MINES as MINES,KODO_TAG_FOREST as FOREST} from './kodo-tag-catalog.js';
-import {castlePassable,castleSpawnPoint,castleRouteAvailable,moveCastleUnit,castleSegmentClear} from './castle-navigation.js';
+import {constructionDisplacements,applyConstructionDisplacements,castlePassable,castleSpawnPoint,castleRouteAvailable,moveCastleUnit,castleSegmentClear} from './castle-navigation.js';
 
 const own=(o,k)=>typeof k==='string'&&Object.hasOwn(o,k),dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),finite=p=>Number.isFinite(p?.x)&&Number.isFinite(p?.z);
 const players=g=>g.units.filter(u=>u.kodoTagCharacter),live=u=>u?.alive&&!u.kodoTagCaptured,active=g=>g.kodoTag&&g.phase==='wave'&&!g.kodoTag.finished,ready=b=>b.alive&&b.workRemaining<=0;
 const reject=(g,reason)=>{g.commandFailureReason=reason;return false;};
 function usedFood(g,owner){return g.units.filter(u=>u.owner===owner&&u.kodoTagUnit&&u.alive).reduce((n,u)=>n+(u.food||0),0)+g.kodoTag.buildings.filter(b=>b.owner===owner&&b.alive).reduce((n,b)=>n+(b.food||0)+(b.productionQueue||[]).reduce((a,key)=>a+(UNITS[key]?.food||0),0),0);}
-const reset=u=>{u.destination=null;u.kodoTagAction=null;u.order='stop';u.moving=false;u.working=false;u.gathering=false;};
+const reset=u=>{u.destination=null;u.kodoTagAction=null;u.kodoTagBuildQueue=[];u.order='stop';u.moving=false;u.working=false;u.gathering=false;};
 const fx=(g,type,u,extra={})=>g.fx(type,u.x,u.z,{source:u.id,kodoTag:true,...extra});
 function nav(g){const k=g.kodoTag;Object.assign(k.navigation,{map:k.map,buildings:k.buildings,obstacles:[...k.obstacles,...k.mines.filter(m=>m.alive)],navigationRevision:k.navigationRevision,elapsed:k.elapsed,units:g.units});return k.navigation;}
 const inMap=(g,p)=>finite(p)&&p.x>=g.kodoTag.map.minX+.2&&p.x<=g.kodoTag.map.maxX-.2&&p.z>=g.kodoTag.map.minZ+.2&&p.z<=g.kodoTag.map.maxZ-.2;
 function controlled(g,hero,c){const id=c.workerId??c.unitId;if(id==null||id===hero.id)return hero;return Number.isInteger(id)?g.units.find(u=>u.id===id&&u.owner===hero.owner&&u.kodoTagUnit&&live(u)):null;}
+function queueBuild(g,u,b){
+ if(u.kodoTagAction?.type==='build'){
+  if(u.kodoTagAction.target!==b.id&&!(u.kodoTagBuildQueue||[]).includes(b.id))(u.kodoTagBuildQueue??=[]).push(b.id);
+ }else{reset(u);u.kodoTagAction={type:'build',target:b.id};}
+}
+function nextBuild(g,u){
+ const queue=[...(u.kodoTagBuildQueue||[])];reset(u);
+ while(queue.length){const id=queue.shift();if(g.kodoTag.buildings.some(b=>b.id===id&&b.owner===u.owner&&b.alive&&b.workRemaining>0)){u.kodoTagAction={type:'build',target:id};u.kodoTagBuildQueue=queue;break;}}
+}
 function approach(g,u,target,reach){
  if(dist(u,target)<=reach){u.kodoTagBlocked=false;return true;}
  const r=Math.max(reach*.98,.4),angle=Math.atan2(u.x-target.x,u.z-target.z),candidates=[];
@@ -24,8 +34,8 @@ function approach(g,u,target,reach){
  return dist(u,target)<=reach+.00001;
 }
 function addUnit(g,raw,owner,near){
- const data=UNITS[raw];if(!data)return null;const context=nav(g),pos=castleSpawnPoint(context,near,data.collisionRadius||.25,{maxDistance:4,ignoreUnits:false});if(!pos)return null;
- const u={...data,id:g.id(),unitKey:raw,owner,team:data.role==='kodo'?2:1,...pos,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,kind:data.modelKey,cd:0,stun:0,moving:false,facing:0,order:'auto',inventory:[],cooldowns:{},kodoTagUnit:true,kodoTagWorker:data.role==='worker',kodoTagKodo:data.role==='kodo',kodoTagSoldier:data.role==='soldier',carrying:null};g.units.push(u);return u;
+ const data=UNITS[raw];if(!data)return null;const context=nav(g),radius=data.role==='kodo'?Math.max(data.collisionRadius||0,(data.size||1)*.82):data.collisionRadius||.25,pos=castleSpawnPoint(context,near,radius,{maxDistance:4,ignoreUnits:false});if(!pos)return null;
+ const bodyRadius=data.role==='kodo'?Math.max(data.collisionRadius||0,(data.size||1)*.82):data.collisionRadius;const u={...data,collisionRadius:bodyRadius,id:g.id(),unitKey:raw,owner,team:data.role==='kodo'?2:1,...pos,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,kind:data.modelKey,cd:0,stun:0,moving:false,facing:0,order:'auto',inventory:[],cooldowns:{},kodoTagUnit:true,kodoTagWorker:data.role==='worker',kodoTagKodo:data.role==='kodo',kodoTagSoldier:data.role==='soldier',carrying:null};g.units.push(u);return u;
 }
 function kill(g,u,attacker){
  if(!u.alive)return;const k=g.kodoTag;
@@ -35,9 +45,9 @@ function kill(g,u,attacker){
 }
 function hurt(g,target,amount,source){if(!live(target))return;const n=Math.min(target.hp,Math.max(0,amount)/(1+.06*Math.max(0,target.armor||0)));target.hp-=n;target.hitAt=g.time;if(n)fx(g,'damage',target,{target:target.id,amount:Math.round(n)});if(target.hp<=0)kill(g,target,source);}
 function attack(g,u,target,move=true){
- const reach=(u.range||.7)+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25);
+ const reach=Math.max(u.range||.7,(u.collisionRadius||.25)+.1)+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25);
  if(dist(u,target)>reach){if(move)approach(g,u,target,reach);return;}
- if(u.cd>0||u.stun>0)return;u.attackAt=g.time;u.facing=Math.atan2(target.x-u.x,target.z-u.z);u.cd=u.interval||2;fx(g,u.range>=3?'arrow':'slash',u,{target:target.id,tx:target.x,tz:target.z,basicAttack:true,projectileKind:u.unitKey==='hC12'?'arrow':u.unitKey==='eC17'?'siege':u.kodoTagStructure?'arcane':null});hurt(g,target,u.damage,u);
+ u.kodoTagBlocked=false;if(u.cd>0||u.stun>0)return;u.attackAt=g.time;u.facing=Math.atan2(target.x-u.x,target.z-u.z);u.cd=u.interval||2;fx(g,u.range>=3?'arrow':'slash',u,{target:target.id,tx:target.x,tz:target.z,basicAttack:true,projectileKind:u.unitKey==='hC12'?'arrow':u.unitKey==='eC17'?'siege':u.kodoTagStructure?'arcane':null});hurt(g,target,u.damage,u);
  if(u.key==='oC20'){target.kodoSlowUntil=g.kodoTag.elapsed+5;target.kodoSlowFactor=.5;target.kodoPoison={until:g.kodoTag.elapsed+5,next:g.kodoTag.elapsed+1,damage:4,owner:u.owner};}
  if(u.key==='oC21'&&g.random()<.15){target.stun=2;hurt(g,target,25,u);fx(g,'stun',target);}
  if(u.unitKey==='hC12'&&u.mana>=50&&(u.kodoSlowCd||0)<=g.kodoTag.elapsed){u.mana-=50;u.kodoSlowCd=g.kodoTag.elapsed+8;target.kodoSlowUntil=g.kodoTag.elapsed+20;target.kodoSlowFactor=.4;fx(g,'frost',target);}
@@ -84,14 +94,26 @@ export const KodoTagMethods={
  kodoTagCommand(hero,c){
   if(c.type==='ready'||c.type==='ktReady'){if(this.kodoTag||this.phase!=='preparation')return false;hero.ready=true;if(players(this).every(u=>u.ready||u.bot))return this.initKodoTag();return true;}
   if(!active(this)||!live(hero))return reject(this,'Aguarde um Runner aliado resgatar sua bandeira.');const u=controlled(this,hero,c);if(!u)return reject(this,'Esta unidade não pertence a você ou não está ativa.');
+  if(c.type==='ktUnitBatch'||c.type==='ktBuildingBatch'){
+   const buildings=c.type==='ktBuildingBatch',types=buildings?{train:'ktTrain'}:{move:'ktMove',stop:'ktStop',gather:'ktGather',attack:'ktAttack'},type=own(types,c.action)?types[c.action]:null;
+   const input=buildings?c.buildingIds:c.unitIds;if(!type||!Array.isArray(input))return reject(this,'Selecione um grupo e uma ação válida.');
+   const ids=[...new Set(input)];if(!ids.length||ids.some(id=>!Number.isInteger(id)||(buildings?!this.kodoTag.buildings.some(b=>b.id===id&&b.owner===hero.owner&&b.alive):!controlled(this,hero,{unitId:id}))))return reject(this,'Selecione apenas unidades ou construções vivas do seu jogador.');let succeeded=0;const cols=Math.ceil(Math.sqrt(ids.length));
+   for(const [i,id]of ids.entries()){
+    if(buildings){if(!this.kodoTag.buildings.some(b=>b.id===id&&b.owner===hero.owner&&ready(b)))continue;}
+    else if(!controlled(this,hero,{unitId:id}))continue;
+    let point=c;if(c.action==='move'){if(!inMap(this,c))continue;const near={x:c.x+(i%cols-(cols-1)/2)*.9,z:c.z+(Math.floor(i/cols)-(Math.ceil(ids.length/cols)-1)/2)*.9},actor=controlled(this,hero,{unitId:id}),p=castleSpawnPoint(nav(this),near,actor.collisionRadius||.25,{maxDistance:3});if(!p)continue;point={...c,...p};}
+    if(this.kodoTagCommand(hero,{...point,type,workerId:buildings?undefined:id,unitId:undefined,buildingId:buildings?id:undefined}))succeeded++;
+   }
+   hero.kodoTagLastBatch={action:c.action,requested:ids.length,succeeded,failed:ids.length-succeeded,at:this.kodoTag.elapsed};if(succeeded){this.commandFailureReason=null;return true;}return reject(this,this.commandFailureReason||'A ordem não pode ser aplicada às unidades selecionadas.');
+  }
   if(c.type==='ktStop'){reset(u);return true;}
-  if(c.type==='ktMove'){if(!inMap(this,c))return false;reset(u);u.destination={x:c.x,z:c.z};u.order='move';return true;}
+  if(c.type==='ktMove'){if(!inMap(this,c))return reject(this,'Escolha um destino dentro do mapa.');reset(u);u.destination={x:c.x,z:c.z};u.order='move';return true;}
   if(c.type==='ktAttack'){const t=this.units.find(t=>t.id===c.target&&t.kodoTagKodo&&live(t));if(!t||!u.damage)return false;reset(u);u.kodoTagAction={type:'attack',target:t.id};return true;}
   if(c.type==='ktGather'||c.type==='ktCast'&&c.skill==='harvest'){
    if(!u.kodoTagCharacter&&!u.kodoTagWorker)return reject(this,'Somente Runners e camponeses coletam recursos.');const id=c.mineId??c.treeId??c.target,resource=[...this.kodoTag.mines,...this.kodoTag.trees].find(m=>m.id===id&&m.alive&&m.remaining>0);if(!resource)return reject(this,'Selecione uma mina com ouro.');if(!this.kodoTag.buildings.some(b=>b.owner===hero.owner&&b.type==='depot'&&ready(b)))return reject(this,'Construa e conclua uma Big Wall para receber os recursos.');reset(u);u.kodoTagAction={type:'gather',target:resource.id};u.gatherProgress=0;return true;
   }
-  if(c.type==='ktBuild'){const check=kodoBuildCheck(this,u,c.building,c);if(!check.allowed)return reject(this,check.reason);const d=check.definition,b={...d,...check.point,id:this.id(),owner:hero.owner,team:1,kodoTagStructure:true,alive:true,maxHp:d.hp,hp:d.hp*.1,workRemaining:d.buildTime,workTotal:d.buildTime,workProgress:0,productionQueue:[],trainRemaining:0,cd:0};this.kodoTag.buildings.push(b);this.kodoTag.navigationRevision++;hero.gold-=d.cost;hero.lumber-=d.lumberCost;reset(u);u.kodoTagAction={type:'build',target:b.id};fx(this,'castleBuild',b,{duration:d.buildTime});return true;}
-  if(c.type==='ktResume'){const b=this.kodoTag.buildings.find(b=>b.id===c.buildingId&&b.owner===hero.owner&&b.alive&&b.workRemaining>0);if(!b||!u.canBuild)return false;reset(u);u.kodoTagAction={type:'build',target:b.id};return true;}
+  if(c.type==='ktBuild'){const check=kodoBuildCheck(this,u,c.building,c);if(!check.allowed)return reject(this,check.reason);const d=check.definition,b={...d,...check.point,id:this.id(),owner:hero.owner,team:1,kodoTagStructure:true,alive:true,maxHp:d.hp,hp:d.hp*.1,workRemaining:d.buildTime,workTotal:d.buildTime,workProgress:0,productionQueue:[],trainRemaining:0,cd:0};const exits=constructionDisplacements(nav(this),b,this.units.filter(t=>t.kodoTagCharacter||t.kodoTagUnit));if(!exits)return reject(this,'Não há espaço livre ao lado para retirar as unidades da obra.');this.kodoTag.buildings.push(b);this.kodoTag.navigationRevision++;applyConstructionDisplacements(exits);hero.gold-=d.cost;hero.lumber-=d.lumberCost;queueBuild(this,u,b);fx(this,'castleBuild',b,{duration:d.buildTime});return true;}
+  if(c.type==='ktResume'){const b=this.kodoTag.buildings.find(b=>b.id===c.buildingId&&b.owner===hero.owner&&b.alive&&b.workRemaining>0);if(!b||!u.canBuild)return reject(this,'Selecione seu Runner e uma obra sua incompleta.');queueBuild(this,u,b);return true;}
   if(c.type==='ktTrain'){const b=this.kodoTag.buildings.find(b=>b.id===c.buildingId&&b.owner===hero.owner&&ready(b)),d=own(UNITS,c.unit)?UNITS[c.unit]:null;if(!b||!d||!b.train.includes(c.unit))return reject(this,'Esta construção não treina essa unidade.');if(usedFood(this,hero.owner)+(d.food||0)>(hero.foodCap??10))return reject(this,'Alimento insuficiente: seu Runner sustenta 10 de população.');if(hero.gold<d.cost||hero.lumber<d.lumberCost)return reject(this,'Ouro insuficiente para treinar.');hero.gold-=d.cost;hero.lumber-=d.lumberCost;b.productionQueue.push(c.unit);if(b.trainRemaining<=0)b.trainRemaining=UNITS[b.productionQueue[0]].buildTime;return true;}
   if(c.type==='ktDemolish'){const b=this.kodoTag.buildings.find(b=>b.id===c.buildingId&&b.owner===hero.owner&&b.alive);if(!b)return false;b.alive=false;this.kodoTag.navigationRevision++;return true;}
   return reject(this,'Esta ação não existe no Kodo Tag clássico de referência.');
@@ -104,14 +126,17 @@ export const KodoTagMethods={
   for(const task of [...k.respawns])if(k.elapsed>=task.at){if(addUnit(this,task.unit,'kodos',k.map.jail))k.respawns.splice(k.respawns.indexOf(task),1);}
   for(const u of this.units.filter(u=>live(u)&&(u.kodoTagCharacter||u.kodoTagUnit))){u.cd=Math.max(0,(u.cd||0)-dt);u.stun=Math.max(0,(u.stun||0)-dt);u.moving=false;u.working=false;u.gathering=false;if(u.mana<u.maxMana)u.mana=Math.min(u.maxMana,u.mana+dt*.65);if(u.kodoPoison&&k.elapsed>=u.kodoPoison.next){if(k.elapsed<=u.kodoPoison.until)hurt(this,u,u.kodoPoison.damage,{owner:u.kodoPoison.owner});u.kodoPoison.next+=1;}
    if(u.stun>0||!live(u))continue;
+   if((u.destination||u.kodoTagAction)&&!castlePassable(nav(this),u,u.collisionRadius||.25)){const exit=castleSpawnPoint(nav(this),u,u.collisionRadius||.25,{maxDistance:5,ignoreUnits:false,ignoreId:u.id});if(exit)Object.assign(u,exit);}
    if(u.kodoTagKodo){const targets=[...players(this).filter(live),...this.units.filter(t=>t.kodoTagUnit&&!t.kodoTagKodo&&live(t)),...k.buildings.filter(b=>b.alive)],target=targets.sort((a,b)=>dist(a,u)-dist(b,u))[0];if(target){u.target=target.id;const speed=u.speed;u.speed*=u.kodoSlowUntil>k.elapsed?u.kodoSlowFactor||.5:1;attack(this,u,target);if(u.kodoTagBlocked&&!target.kodoTagStructure){for(const barrier of k.buildings.filter(b=>b.alive).sort((a,b)=>dist(a,u)-dist(b,u)).slice(0,4)){attack(this,u,barrier);if(!u.kodoTagBlocked)break;}}u.speed=speed;}continue;}
    if(u.bot&&(!u.kodoNextThink||k.elapsed>=u.kodoNextThink)){u.kodoNextThink=k.elapsed+.8;bot(this,u);}
    if(u.kodoTagWorker&&u.order==='auto'&&!u.kodoTagAction&&!u.destination){const mine=k.mines.filter(m=>m.alive&&m.remaining>0).sort((a,b)=>dist(u,a)-dist(u,b))[0],hero=this.player(u.owner);if(mine&&hero)this.kodoTagCommand(hero,{type:'ktGather',workerId:u.id,mineId:mine.id});}
-   const a=u.kodoTagAction;if(a?.type==='build'){const b=k.buildings.find(b=>b.id===a.target&&b.alive);if(!b)reset(u);else if(approach(this,u,b,Math.max(b.w,b.d)/2+RULES.buildReach)){b.workRemaining=Math.max(0,b.workRemaining-dt);b.workProgress=1-b.workRemaining/b.workTotal;b.hp=Math.max(b.hp,b.maxHp*(.1+.9*b.workProgress));u.working=true;if(b.workRemaining<=0){b.hp=b.maxHp;reset(u);fx(this,'levelup',b);}}}
+   const a=u.kodoTagAction;if(a?.type==='build'){const b=k.buildings.find(b=>b.id===a.target&&b.alive);if(!b)nextBuild(this,u);else if(approach(this,u,b,Math.max(b.w,b.d)/2+RULES.buildReach)){b.workRemaining=Math.max(0,b.workRemaining-dt);b.workProgress=1-b.workRemaining/b.workTotal;b.hp=Math.max(b.hp,b.maxHp*(.1+.9*b.workProgress));u.working=true;if(b.workRemaining<=0){b.hp=b.maxHp;nextBuild(this,u);fx(this,'levelup',b);}}}
    else if(a?.type==='gather')gather(this,u,dt);else if(a?.type==='attack'){const t=this.units.find(t=>t.id===a.target&&live(t));if(t)attack(this,u,t);else reset(u);}
    else if(u.destination){moveCastleUnit(nav(this),u,u.destination,k.step);if(dist(u,u.destination)<.2){u.destination=null;u.order='stop';}}
    else if(u.kodoTagSoldier){const t=this.units.filter(t=>t.kodoTagKodo&&live(t)&&dist(t,u)<=Math.max(7,u.range)).sort((a,b)=>dist(a,u)-dist(b,u))[0];if(t)attack(this,u,t);}
   }
+  const collisionUnits=this.units.filter(u=>live(u)&&(u.kodoTagCharacter||u.kodoTagUnit)),collisionNav=nav(this);
+  resolveUnitCollisions({units:collisionUnits,time:this.time,bounds:Math.max(Math.abs(k.map.minX),Math.abs(k.map.maxX),Math.abs(k.map.minZ),Math.abs(k.map.maxZ)),options:{mode:'linewars'},obstacles:[],unitTerrainBlocked:(u,p,r)=>!castlePassable(collisionNav,p,r)},dt);
   for(const b of k.buildings.filter(ready)){b.cd=Math.max(0,(b.cd||0)-dt);if(b.type.toLowerCase().includes('tower')){const t=this.units.filter(u=>u.kodoTagKodo&&live(u)&&dist(u,b)<b.range+u.collisionRadius).sort((a,c)=>dist(a,b)-dist(c,b))[0];if(t)attack(this,b,t,false);}
    if(b.productionQueue.length){b.trainRemaining=Math.max(0,b.trainRemaining-dt);if(b.trainRemaining<=0){const key=b.productionQueue[0],data=UNITS[key],u=addUnit(this,key,b.owner,{x:b.x+b.w/2+data.collisionRadius+.2,z:b.z});if(u){b.productionQueue.shift();b.trainRemaining=b.productionQueue.length?UNITS[b.productionQueue[0]].buildTime:0;fx(this,'summon',u);}else b.spawnBlocked=true;}}
   }
