@@ -1,6 +1,6 @@
 Phase Killer uses an independent HTTP API in `phase-rooms.js`, with no Node server or WebSocket requirement. The Worker calls `handlerPhaseRequest(request, env)` first and serves frontend assets when it returns `null`. Bind D1 as `DB` in `.openai/hosting.json` (`"d1":"DB"`, omit `static` for the Worker build).
 
-The first schema-only migration and its journal are under `drizzle/`. Copy that directory to the deployment artifact's `dist/.openai/drizzle` (the standard helper does this automatically). Keep applied migration history immutable. The API never creates tables during requests. No account credentials or stored guest capability tokens belong in source files.
+The first schema-only migration and its journal are under `server/phase-migrations/pending/` while the new mode is staged. When enabling the hosted API, promote this directory to `drizzle/`. Copy that directory to the deployment artifact's `dist/.openai/drizzle` (the standard helper does this automatically). Keep applied migration history immutable. The API never creates tables during requests. No account credentials or stored guest capability tokens belong in source files.
 
 API contract, all payloads JSON:
 

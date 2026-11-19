@@ -8,7 +8,7 @@ import {createPhaseHandler,PHASE_ROOM_LIMITS} from '../server/phase-rooms.js';
 // Executes the actual schema and handler SQL. The asynchronous adapter mimics
 // D1 and can return stale reads deliberately to exercise optimistic retries.
 class D1Sqlite{
- constructor(){this.db=new DatabaseSync(':memory:');this.db.exec(readFileSync(new URL('../drizzle/0000_phase_rooms.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));this.delayReads=false;this.conflicts=0;}
+ constructor(){this.db=new DatabaseSync(':memory:');this.db.exec(readFileSync(new URL('../server/phase-migrations/pending/0000_phase_rooms.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));this.delayReads=false;this.conflicts=0;}
  prepare(sql){const self=this;return{bind(...args){return{async first(){const row=self.db.prepare(sql).get(...args);if(self.delayReads)await new Promise(resolve=>setTimeout(resolve,2));return row||null;},async run(){const result=self.db.prepare(sql).run(...args);if(sql.startsWith('UPDATE')&&!result.changes)self.conflicts++;return{meta:{changes:Number(result.changes)}};}};}};}
  room(code='ALDEIA'){const row=this.db.prepare('SELECT * FROM phase_rooms WHERE room_id = ?').get(code);return row?{...row,data:JSON.parse(row.data)}:null;}
  mutate(mutator,code='ALDEIA'){const row=this.room(code);mutator(row.data);this.db.prepare('UPDATE phase_rooms SET data = ? WHERE room_id = ?').run(JSON.stringify(row.data),code);}
