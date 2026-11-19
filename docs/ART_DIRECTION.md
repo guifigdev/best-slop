@@ -15,7 +15,7 @@ O estado de combate deve ter texto e forma, além da cor: fogo / frost / veneno 
 
 Quando há exatamente **uma categoria negativa**, o corpo recebe uma tonalidade leve: laranja para fogo, azul para frost/lentidão, verde para veneno ou amarelo para atordoamento. Múltiplas fontes de fogo ou de frio contam uma vez. Com duas ou mais categorias, a pelagem retorna à cor normal e os efeitos individuais continuam visíveis; fúria, barreira e reflexão não contam como negativos. A mistura de 20% preserva as cores de vértice; com fúria ativa, mistura apenas 12% sobre o vermelho existente. O material por ator é criado sob demanda e reutilizado, sem texturas ou passes extras.
 
-Espólios no chão têm corpo, halo octogonal e marcador vertical com a cor da raridade: comum claro, raro azul, épico violeta, lendário dourado e heroico coral. O rótulo de hover inclui nome e raridade. As prévias das técnicas mostram círculo, cone, linha, barreira ou destino conforme o efeito real; azul/verde sinaliza região válida e vermelho indica bloqueio acompanhado de texto.
+Espólios no chão preservam a pequena placa voxel flutuante original; apenas a cor muda por raridade, sem halo ou feixe vertical: comum claro, raro azul, épico violeta, lendário dourado e heroico coral. O rótulo de hover inclui nome e raridade. As prévias das técnicas mostram círculo, cone, linha, barreira ou destino conforme o efeito real; azul/verde sinaliza região válida e vermelho indica bloqueio acompanhado de texto.
 
 ## Implementação dos efeitos persistentes
 
@@ -56,3 +56,5 @@ Cada loja usa duas meshes consolidadas: cenário estático e animal com balanço
 ## Pré-seleção por mouse
 
 O modelo sob o mouse recebe contorno verde para aliado ou vermelho para inimigo, acompanhado de anel no chão e nome com o mesmo código de cor. A relação usa o jogador real, inclusive suas invocações e tropas enviadas a um campo rival. Corpo, pernas e asas usam a mesma geometria animada; o contorno não altera as cores de vértice e só é desenhado para o alvo do mouse.
+
+No Castle Fight, símbolos de função ficam na frente e acima da linha dos telhados para leitura isométrica: espada, rifle, arco, cajado, canhão, asas, garras/patas e moedas. A arquitetura de raça permanece como base, com anexos de oficina, viveiro ou escola. Torres defensivas têm corpo próprio compacto. O Sniper carrega rifle e usa traço de projétil, em vez do slash que era escolhido pelo corte visual de alcance.

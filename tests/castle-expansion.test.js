@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {castleBuildCheck} from '../shared/castle-build-rules.js';
 import {CASTLE_BUILDINGS,castleDamageMultiplier} from '../shared/castle-catalog.js';
-import {castlePassable,moveCastleUnit,castleSegmentClear} from '../shared/castle-navigation.js';
+import {castlePassable,castleNavigationRadius,moveCastleUnit,castleSegmentClear} from '../shared/castle-navigation.js';
 const setup=()=>{const g=new Game(319,{mode:'castlefight'});g.addPlayer('a');g.addPlayer('b');g.initCastleFight();return{g,p:g.player('a')};};
 test('preview, snapshot and authoritative build agree on exact missing resources and leave balances unchanged',()=>{
  const {g,p}=setup(),[key,b]=Object.entries(CASTLE_BUILDINGS).find(([,b])=>b.race==='human'&&b.cost===280&&!b.requiresBuilding&&b.playable);p.gold=270;p.lumber=10000;
@@ -18,8 +18,8 @@ test('whole green base is buildable including lane alignment; obstacles and cast
  assert.equal(castleBuildCheck(g,p,key,{x:-43,z:0}).code,'castle');assert.equal(castleBuildCheck(g,p,key,{x:32,z:0}).code,'territory');
  cf.obstacles.push({x:-37,z:19,w:1,d:1,scenery:true});assert.equal(castleBuildCheck(g,p,key,{x:-37,z:19}).reason,'Há uma árvore ou pedra neste espaço.');
 });
-test('expanded terrain spawns large ground units safely on both clear lanes',()=>{
- for(const team of [1,2])for(const lane of [0,1]){const {g,p}=setup();p.gold=p.lumber=100000;const owner=team===1?p:g.player('b');owner.gold=owner.lumber=100000;assert.equal(g.command(owner.owner,{type:'cfBuild',building:'human_h000',x:team===1?-32:32,z:lane===0?-9:9}),true);const b=g.castleFight.buildings.at(-1),u=g.castleSpawn(b);assert.ok(u);assert.equal(u.lane,lane);assert.ok(castlePassable(g.castleFight,u,1.1));}
+test('both lane assignments spawn clear of the actual producer footprint',()=>{
+ for(const team of [1,2])for(const lane of [0,1]){const {g,p}=setup();p.gold=p.lumber=100000;const owner=team===1?p:g.player('b');owner.gold=owner.lumber=100000;assert.equal(g.command(owner.owner,{type:'cfBuild',building:'human_h000',x:team===1?-32:32,z:lane===0?-9:9}),true);const b=g.castleFight.buildings.at(-1),u=g.castleSpawn(b);assert.ok(u);assert.equal(u.lane,lane);assert.ok(castlePassable(g.castleFight,u,castleNavigationRadius(u)));}
 });
 test('castle defense uses verified Guard Tower weapon as adaptation, attacks enemies and preserves builders',()=>{
  const {g,p}=setup(),cf=g.castleFight,c=cf.teams[0],weapon=CASTLE_BUILDINGS.human_h006.castleEffect;

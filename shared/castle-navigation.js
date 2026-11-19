@@ -54,6 +54,13 @@ function search(c,g,start,goal){
 }
 function plan(c,u,goal,radius){const g=gridFor(c,radius),start=anchor(c,g,u,radius),end=anchor(c,g,goal,radius);if(start===null||end===null)return null;const path=search(c,g,start,end);if(!path)return null;return[...path.map(p=>({...p})),{...goal}];}
 
+export function castleRouteAvailable(cf,from,to,radius=.4,options={}){
+ if(!cf||!finitePoint(from)||!finitePoint(to)||!Number.isFinite(radius)||radius<0)return false;
+ const c=context(cf),flying=options.flying??from.flying??false;
+ if(!inside(c.bounds,from,radius)||!inside(c.bounds,to,radius)||!flying&&(!passable(c,from,radius)||!passable(c,to,radius)))return false;
+ return clear(c,from,to,radius,flying)||!flying&&!!plan(c,from,to,radius);
+}
+
 export function moveCastleUnit(cf,u,destination,dt){
  if(!cf||!u||!finitePoint(u)||!finitePoint(destination)||!Number.isFinite(dt)||dt<=0||!Number.isFinite(u.speed)||u.speed<0)return false;u.moving=false;const c=context(cf),r=castleNavigationRadius(u),flying=!!u.flying,now=cf.elapsed??0;
  if(!inside(c.bounds,u,r)||!flying&&!passable(c,u,r)){const recovered=castleSpawnPoint(cf,u,r,{flying,maxDistance:Math.min(2.25,Math.max(.9,r*1.5))});if(!recovered){u.castleNavigationBlocked=true;return false;}u.x=recovered.x;u.z=recovered.z;unitPaths.delete(u);}

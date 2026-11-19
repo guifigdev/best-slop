@@ -1,3 +1,4 @@
+import {castleBuildingProfile} from './castle-building-profile.js';
 // Factual object/registration data read from the pinned v1.14b map.
 // No Warcraft art or third-party executable scripts are included.
 export const CASTLE_REFERENCE={"version":"Castle Fight v1.14b","author":"geX / gekko","archiveUrl":"https://wc3map.com/maps/castle-fight-523/castle-fight-v1-14b-28959/","downloadUrl":"https://wc3map.com/api/download/28959","sha256":"ea93d427d8171babdbb4b58a0db3352c9d27195597a9a5581bf8ff528d7e682d","verifiedFiles":{"war3map.w3u":"398b86bd67e3306f505c82a970c4e0e8e0dc7caa53d3298062c35b68aa7e4a3f","war3map.w3t":"4d2775f3c4bb30855bdbe56d86583299098d03b206fbfc3a29ae90f8d86e555d","war3map.w3a":"5bf5683e9776bc91c3c85617d7ce4bbaf960dfeeb7e4e15715e4fbfd6f8f5db8","Scripts_war3map.j":"06fb90f4eab3e7302d9ab0890d7b798299fd98d37dcc7e8430a88e43fd93806a","war3mapMisc.txt":"79774bb992ff3740af6568d767ef4477fba08de20d3d45b9c43a9ad50a27f0a4","war3map.w3e":"88b0e7e7a4c17072d9b85598a246b9d6c84d2f28cb21aba4f5423b8fa1a52910"},"runtimeScale":0.00390625,"status":"partial recreation; extracted fields and explicit adaptations; not engine-equivalent"};
@@ -12,3 +13,6 @@ export const CASTLE_MARKETPLACE_ITEMS=Object.freeze(["repair_rune", "bassline", 
 export const CASTLE_ATTACK_TYPES=Object.freeze(Object.keys(CASTLE_DAMAGE_MATRIX));
 export const CASTLE_ARMOR_TYPES=Object.freeze(Object.keys(CASTLE_DAMAGE_MATRIX.normal));
 export function castleDamageMultiplier(attackType,armorType){return typeof attackType==='string'&&typeof armorType==='string'&&Object.hasOwn(CASTLE_DAMAGE_MATRIX,attackType)&&Object.hasOwn(CASTLE_DAMAGE_MATRIX[attackType],armorType)?CASTLE_DAMAGE_MATRIX[attackType][armorType]:1;}
+
+// Requested voxel footprints are independent of native combat/economy values.
+for(const building of Object.values(CASTLE_BUILDINGS)){const unit=typeof building.unit==='string'?CASTLE_UNITS[building.unit]:building.unit;building.visualProfile=castleBuildingProfile(building,unit);building.footprint={...building.visualProfile.footprint};building.provenance.adapted=building.provenance.adapted.filter(note=>note!=='footprint simplified to 2x2');building.provenance.adapted.push('role-based voxel footprint and building decoration are adapted');}
