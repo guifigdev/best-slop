@@ -31,3 +31,14 @@ test('a gate does not skip the corridor from the wrong side, the other lane or a
  unit.z=25;assert.equal(advanceCastleRoute(cf,unit),false);unit.z=11;assert.equal(advanceCastleRoute(cf,unit),true);assert.equal(unit.pathIndex,1);
  unit.x=-20;assert.equal(advanceCastleRoute(cf,unit),false);assert.equal(unit.pathIndex,1,'combat and separation cannot regress a completed gate');
 });
+
+test('after a real off-lane skirmish inside the enemy base, troops continue to the castle instead of returning to the old entry',()=>{
+ for(const team of [1,2])for(const key of ['human_h000',serpent]){
+  const g=setup(),cf=g.castleFight,d=team===1?1:-1,lane=team===1?1:0;
+  const a=g.castleSpawn({id:901,key,team,owner:team===1?'a':'b',lane,spawnCount:0}),b=g.castleSpawn({id:902,key,team:team===1?2:1,owner:team===1?'b':'a',lane,spawnCount:0});
+  Object.assign(a,{x:d*26,z:0});Object.assign(b,{x:d*27,z:0,hp:1,cd:9999});
+  g.tick(.1);assert.equal(b.alive,false);assert.equal(a.pathIndex,1);const x=a.x;
+  for(let i=0;i<30;i++)g.tick(1/30);
+  assert.ok(d*(a.x-x)>0,'resumed movement heads further into the enemy base');assert.equal(a.pathIndex,1);assert.ok(Math.abs(a.z)<.1,'does not return sideways to its old lane gate');
+ }
+});
