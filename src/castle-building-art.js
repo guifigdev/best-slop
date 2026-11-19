@@ -1,4 +1,5 @@
-// Original geometry, baked into each building's mesh. No texture or extra loop.
+export {buildingModelSpec,createCastleBuildingArt,castleBuildingPortrait} from './castle-building-models.js';
+// Legacy decoration API retained for existing standalone consumers.
 export function decorateCastleBuilding(block,profile,{w,d,accent,team}){
  const z=d*.5+.05,wood=0x796149,iron=0xc9d9d7,gold=0xe8c779,dark=0x30443d;
  // A front plaque makes the unit's weapon readable from the default camera.

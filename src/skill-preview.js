@@ -23,7 +23,7 @@ export function skillPreview({key,skill:s,hero,point,target,mode='hover',state={
  let valid=true,reason='',anchor={...u};
  const reject=text=>{if(valid){valid=false;reason=text;}};
  const effectTarget=target?.alive?target:{x:u.x+forward.x*Math.max(1.7,Math.min(finite(u.range,1.7),8)),z:u.z+forward.z*Math.max(1.7,Math.min(finite(u.range,1.7),8))};
- if(isGround){shapes.push(circle(u,PREVIEW_RANGES.ground,'range'));if(d>PREVIEW_RANGES.ground+.001)reject('Fora do alcance de lançamento');if(distance(cursor,limitPoint(game,u,cursor))>.01)reject('Fora dos limites da arena');}
+ if(isGround){const castRange=finite(s.castRange,PREVIEW_RANGES.ground);shapes.push(circle(u,castRange,'range'));if(d>castRange+.001)reject('Fora do alcance de lançamento');if(distance(cursor,limitPoint(game,u,cursor))>.01)reject('Fora dos limites da arena');}
  if(isTarget){shapes.push(circle(u,PREVIEW_RANGES.unit,'range'));anchor=mode==='aim'&&target?target:effectTarget;if(mode==='aim'&&(!target||!target.alive||target.id===u.id))reject('Escolha um alvo');if(target&&distance(u,target)>PREVIEW_RANGES.unit)reject('Alvo fora do alcance');if(s.target==='enemy'&&target&&target.team===u.team)reject('Escolha um inimigo');shapes.push(circle(anchor,unitRadius(target||{})+.22,'target'));if(key==='chain'){shapes.push(circle(anchor,PREVIEW_RANGES.chain,'secondary'));notes.push('Saltos de até 6 m');}}
  if(['shockwave','forcepush','gungnir'].includes(key)){
   shapes.push({type:'corridor',x:u.x,z:u.z,length:key==='gungnir'?s.distance:12,radius:s.radius,angle,radial:true,role:'effect'});notes.push('Largura '+(s.radius*2).toLocaleString('pt-BR')+' m');

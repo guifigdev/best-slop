@@ -99,3 +99,17 @@ O arraste esquerdo puxa o terreno; o botão do meio gira a câmera sem modificad
 Árvores bloqueiam pelo tronco, com copas levantadas para permitir passagem abaixo delas. Pedras bloqueiam pela base visível. A navegação usa o raio real do corpo, verifica os segmentos entre os nós, evita cortar quinas e busca aproximação segura quando o destino está ocupado. Ao perder progresso, recalcula o percurso; aliados parados podem ser contornados. A animação considera o deslocamento efetivo depois das colisões, evitando o ciclo de caminhada sem sair do lugar.
 
 Os efeitos liberam buffers de instâncias ao expirar, sair do orçamento ou trocar de arena. Recursos compartilhados dos projéteis são preservados. A otimização foi validada por testes de descarte e regressões de navegação; não há promessa de FPS sem medição no dispositivo do jogador.
+
+## Identidade própria do Castle Fight
+
+`castle-building-models.js` fornece modelos para as 161 entradas do catálogo, incluindo suas evoluções. Fábricas, laboratórios, templos, viveiros e torres têm composições diferentes, mesmo ao ignorar todas as cores. Mecânicos incluem hangares e heliportos, depósitos de sucata, laboratórios de explosivos, serrarias, forjas de golems e baias de tanques. As evoluções alteram a volumetria, não apenas o nome. O maior modelo usa 27 caixas consolidadas em uma mesh, com cache e descarte por referências. Os retratos isométricos mostram a mesma geometria do mundo.
+
+As 107 tropas usam seu `unitKey` para escolher o modelo e o retrato. Helicópteros possuem cabine, cauda, esquis e rotores em poses de 8 Hz; tanques têm esteiras e armas, sem pernas ou salto de animal. Golems, soldados, arqueiros, mortos-vivos, nagas e criaturas aladas seguem a identidade de seus nomes. Os ataques básicos de máquinas usam munição coerente; projéteis explícitos de armas e habilidades são preservados. Essa apresentação é específica de Castle Fight; os animais dos outros jogos permanecem iguais.
+
+## Controles estáveis de Castle Fight
+
+O HUD e os cards usam reconciliação de DOM com identidade por comando ou construção. Atualizar vida, recursos, progresso ou recargas mantém o botão existente, evitando perder um clique entre pressionar e soltar. Listeners substituíveis não se acumulam em cada atualização. O estado aberto dos detalhes e o foco também são preservados.
+
+Duplo clique esquerdo seleciona entidades do mesmo tipo e dono cujos modelos intersectam o campo visível da câmera. O botão Selecionar iguais visíveis oferece a mesma ação por toque. Prédios selecionados compartilham um batch de anéis; o controle de produção atua no grupo, respeitando posse e limites no servidor. Evoluções e demolição aparecem na seleção individual. A produção pausada tem estado explícito e a retomada sincronizada inicia um ciclo inteiro.
+
+O Golpe de resgate possui uma carga por partida e mira com alcance/raio reais. Seu aviso breve é dourado, seguido de uma explosão blocada branca, azul e dourada. A geometria do aviso e da explosão é independente dos telegraphs de chefes do Survival. Referências, números e limites estão em `CASTLE_EMERGENCY.md`.

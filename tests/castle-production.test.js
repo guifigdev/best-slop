@@ -49,7 +49,7 @@ test('Sniper fires outside melee reach with a bullet effect and its factual refe
 });
 
 test('clicking a troop prioritizes its visible model over a building behind it',()=>{
- const selected=[],inspected=[],g=setup(),b=build(g,1,'human_h003',-40,18),unit=g.castleSpawn(b),view={setCastleSelection:id=>selected.push(id),setInspected:id=>inspected.push(id)};
+ const selected=[],inspected=[],g=setup(),b=build(g,1,'human_h003',-40,18),unit=g.castleSpawn(b),view={setCastleBuild:()=>{},setCastleSelection:ids=>selected.push(ids),setInspected:id=>inspected.push(id)};
  const ui=createCastleUI({view,send:()=>true,getState:()=>g.snapshot(),getOwner:()=> 'a',toast:()=>{},portrait:()=>'',onEnd:()=>{}});
- ui.point({point:{x:unit.x,z:unit.z},unit,button:0,building:b.id});assert.deepEqual(selected,[unit.id]);assert.deepEqual(inspected,[unit.id]);
+ ui.point({point:{x:unit.x,z:unit.z},unit,button:0,building:b.id});assert.deepEqual(selected,[[unit.id]]);assert.deepEqual(inspected,[unit.id]);
 });

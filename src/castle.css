@@ -9,3 +9,16 @@
 .cf-repeat{position:sticky;top:28px;z-index:2;width:100%;margin:0 0 12px;padding:11px;border:1px solid #9dab7e;border-radius:6px;background:#2a4a3b;color:#e5dfbd;cursor:pointer}.cf-repeat[aria-pressed="true"]{background:#dfc17f;color:#243f31;border-color:#f1d493}
 
 .cf-unit-info h3{margin:8px 0 4px;font-size:20px}.cf-unit-info>svg{float:right;width:65px}.cf-unit-role,.cf-unit-targets{color:#c3d2b8;margin:4px 0 12px}.cf-unit-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.cf-unit-stats div{min-width:0}.cf-unit-stats dt{font-size:10px;color:#aabfa8}.cf-unit-stats dd{margin:4px 0 0;font-size:13px;font-weight:600;color:#f0e3b6}.cf-matchup{padding:10px 0;border-top:1px solid #5e795a55;font-size:11px;line-height:1.5}.cf-matchup>div{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.cf-matchup span{background:#183c31;border:1px solid #60745977;border-radius:4px;padding:3px 5px}.cf-matchup.weak> b{color:#f0ab92}.cf-matchup.resistant> b,.cf-matchup.strong> b{color:#b5daa3}.cf-team-list{padding:12px;color:#bfd0b4}.cf-team-list summary{cursor:pointer}
+.cf-build-card .cf-upgrade-hint{color:#6f632e;font-weight:700;border-top:1px solid #9ca16e55;padding-top:5px;margin-top:3px}
+.cf-upgrades .cf-upgrade-choice{display:flex;flex-direction:column;gap:5px;width:100%;margin:7px 0;padding:11px;text-align:left}
+.cf-upgrade-choice strong{color:#775a23;font-size:11px}
+.cf-upgrade-choice span,.cf-upgrade-choice small{font-size:10px;line-height:1.5}
+.cf-upgrade-choice:disabled{opacity:.65}
+.cf-production-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.cf-production-controls button{flex:1;min-height:44px;margin:0;padding:9px}
+.cf-production-controls small{width:100%;font-size:10px;line-height:1.6}
+.cf-card-art .cf-building-thumb,.cf-card-art .cf-unit-thumb{display:block}
+.cf-card-art .cf-unit-thumb{border-top:1px solid #87977a55;margin-top:7px;padding-top:5px}
+.cf-unit-thumb:before{content:'Produz';display:block;color:#65785b;font-size:8px;letter-spacing:.3px;text-align:center}
+.ability.cf-rescue{color:#ffe2a0;background:#514d37;border-color:#d4b467}
+.ability.cf-rescue:disabled{opacity:.55}
