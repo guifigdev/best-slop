@@ -9,16 +9,22 @@ export function castleNavigationRadius(u){return clamp(Number.isFinite(u?.collis
 function bounds(cf){const m=cf.map||{};return{minX:m.minX??-(m.width||48)/2,maxX:m.maxX??(m.width||48)/2,minZ:m.minZ??-(m.depth||32)/2,maxZ:m.maxZ??(m.depth||32)/2};}
 function inside(b,p,r){return finitePoint(p)&&p.x>=b.minX+r-EPS&&p.x<=b.maxX-r+EPS&&p.z>=b.minZ+r-EPS&&p.z<=b.maxZ-r+EPS;}
 function shape(o){return o&&o.alive!==false&&finitePoint(o)&&Number.isFinite(o.w)&&Number.isFinite(o.d)&&o.w>0&&o.d>0;}
-function fingerprint(items){let hash=2166136261;for(const o of items){const text=`${o.id}:${o.alive!==false}:${o.x}:${o.z}:${o.w}:${o.d};`;for(let i=0;i<text.length;i++)hash=Math.imul(hash^text.charCodeAt(i),16777619);}return hash>>>0;}
+// Compare the few geometry fields directly. Stringifying every structure on
+// every passability query dominated crowded scenes despite cached A* paths.
+// Keep this check even within a frame: callers may move/replace a building
+// directly, and collision validity must not wait for the next simulation tick.
+function geometryRecords(items){return items.map(o=>({ref:o,id:o.id,x:o.x,z:o.z,w:o.w,d:o.d,alive:o.alive!==false}));}
+function sameGeometry(items,records){if(!records||items.length!==records.length)return false;for(let i=0;i<items.length;i++){const o=items[i],r=records[i];if(o!==r.ref||o.id!==r.id||o.x!==r.x||o.z!==r.z||o.w!==r.w||o.d!==r.d||(o.alive!==false)!==r.alive)return false;}return true;}
 function context(cf){
- const buildings=cf.buildings||[],castles=cf.teams?.length?cf.teams:cf.map?.castles||[],obstacles=cf.obstacles||[],b=bounds(cf),dynamic=fingerprint([...buildings,...castles]),revision=cf.navigationRevision||0,frame=cf.elapsed??0;
- let c=contexts.get(cf);const changedStatic=!c||c.obstacleSource!==obstacles||c.obstacleCount!==obstacles.length||c.revision!==revision||c.frame!==frame,staticHash=changedStatic?fingerprint(obstacles):c.staticHash;
- const signature=`${revision}:${dynamic}:${staticHash}:${b.minX}:${b.maxX}:${b.minZ}:${b.maxZ}`;
- if(!c||c.signature!==signature){
+ const buildings=cf.buildings||[],castles=cf.teams?.length?cf.teams:cf.map?.castles||[],obstacles=cf.obstacles||[],b=bounds(cf),revision=cf.navigationRevision||0,frame=cf.elapsed??0;
+ let c=contexts.get(cf);const checkStatic=!c||c.obstacleSource!==obstacles||c.obstacleCount!==obstacles.length||c.revision!==revision||c.frame!==frame;
+ const changed=!c||c.revision!==revision||!sameGeometry(buildings,c.buildingGeometry)||!sameGeometry(castles,c.castleGeometry)||checkStatic&&!sameGeometry(obstacles,c.obstacleGeometry)||b.minX!==c.bounds.minX||b.maxX!==c.bounds.maxX||b.minZ!==c.bounds.minZ||b.maxZ!==c.bounds.maxZ;
+ if(changed){
   const boxes=[...buildings,...castles,...obstacles].filter(shape),hash=new Map();for(let i=0;i<boxes.length;i++){const o=boxes[i];for(let x=Math.floor((o.x-o.w/2)/BUCKET);x<=Math.floor((o.x+o.w/2)/BUCKET);x++)for(let z=Math.floor((o.z-o.d/2)/BUCKET);z<=Math.floor((o.z+o.d/2)/BUCKET);z++){const key=`${x},${z}`,list=hash.get(key)||[];list.push(i);hash.set(key,list);}}
-  c={signature,bounds:b,boxes,hash,grids:new Map(),paths:new Map(),searches:c?.searches||0,expanded:c?.expanded||0,rebuilds:(c?.rebuilds||0)+1};contexts.set(cf,c);
+  const generation=(c?.generation||0)+1;
+  c={signature:String(generation),generation,bounds:b,boxes,hash,buildingGeometry:geometryRecords(buildings),castleGeometry:geometryRecords(castles),obstacleGeometry:geometryRecords(obstacles),grids:new Map(),paths:new Map(),searches:c?.searches||0,expanded:c?.expanded||0,rebuilds:(c?.rebuilds||0)+1};contexts.set(cf,c);
  }
- Object.assign(c,{obstacleSource:obstacles,obstacleCount:obstacles.length,revision,frame,staticHash});return c;
+ Object.assign(c,{obstacleSource:obstacles,obstacleCount:obstacles.length,revision,frame});return c;
 }
 function nearby(c,a,b=a,r=0){const found=new Set();for(let x=Math.floor((Math.min(a.x,b.x)-r)/BUCKET);x<=Math.floor((Math.max(a.x,b.x)+r)/BUCKET);x++)for(let z=Math.floor((Math.min(a.z,b.z)-r)/BUCKET);z<=Math.floor((Math.max(a.z,b.z)+r)/BUCKET);z++)for(const i of c.hash.get(`${x},${z}`)||[])found.add(i);return [...found].map(i=>c.boxes[i]);}
 function overlaps(p,o,r){return Math.abs(p.x-o.x)<o.w/2+r-EPS&&Math.abs(p.z-o.z)<o.d/2+r-EPS;}

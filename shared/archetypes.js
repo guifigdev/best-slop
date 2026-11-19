@@ -7,16 +7,17 @@ export const ARCHETYPES=Object.freeze({
 });
 export function heroArchetype(u){return typeof u?.hero==='string'&&Object.hasOwn(HEROES,u.hero)?HEROES[u.hero].archetype:null;}
 
+// Hero profiles describe their basic attacks, not a permitted build class.
 // Compatibility intentionally excludes level, mana, cooldown and ownership.
 // Native monsters and pets keep their authored loadouts regardless of range.
 export function skillCompatibility(u,key){
  const skill=typeof key==='string'&&Object.hasOwn(SKILLS,key)?SKILLS[key]:null;
- const base={archetype:heroArchetype(u),allowedArchetypes:skill?[...skill.allowedArchetypes]:[],label:skill?.compatibilityLabel||'Indisponível',skillStyle:skill?.skillStyle||null};
+ const base={archetype:heroArchetype(u),allowedArchetypes:skill?[...skill.allowedArchetypes]:[],label:skill?.compatibilityLabel||'Indisponível',skillStyle:skill?.skillStyle||null,weaponRequirement:skill?.weaponRequirement||null};
  if(!skill)return{...base,allowed:false,code:'unknown-skill',reason:'Habilidade desconhecida.'};
  if(!u||typeof u!=='object')return{...base,allowed:false,code:'missing-unit',reason:'Escolha um herói.'};
  if(!u.hero)return{...base,allowed:true,code:'native-loadout',reason:null};
  if(!base.archetype)return{...base,allowed:false,code:'unknown-hero',reason:'Arquétipo do herói desconhecido.'};
  const allowed=skill.allowedArchetypes.includes(base.archetype);
- return{...base,allowed,code:allowed?'compatible':'incompatible-archetype',reason:allowed?null:`${skill.name}: ${skill.compatibilityLabel.toLowerCase()}. Seu herói é ${ARCHETYPES[base.archetype].name.toLowerCase()}.`};
+ return{...base,allowed,code:allowed?'compatible':'incompatible-archetype',reason:allowed?null:`${skill.name} requer ataques ${skill.weaponRequirement==='melee'?'corpo a corpo':'à distância'}.`};
 }
 export const canUseSkill=(u,key)=>skillCompatibility(u,key).allowed;

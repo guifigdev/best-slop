@@ -8,7 +8,7 @@ Animais voxel originais, silhuetas compactas e legíveis e poses em passos de oi
 - **Fogo:** laranja vivo, centro amarelo claro, contorno irregular e poucas brasas quadradas que sobem. O fogo aparece sobre o corpo e persiste enquanto houver queimadura, inclusive depois de sair da lava.
 - **Frio / frost:** azul ciano, cristais curtos junto dos pés, aro de geada e brilho de borda discreto. Frost reduz movimento; não usar um bloco de gelo envolvendo todo o animal, porque isso sugeriria uma imobilização inexistente.
 - **Veneno:** fragmentos verde-limão que flutuam perto do corpo. Diferenciar do verde quente e restaurador da cura; o movimento de fragmentos e o rótulo textual reforçam o significado.
-- **Atordoamento:** estrelas acima da cabeça, separado dos cristais de frio. **Barreira:** aro violeta e indicação de absorção. Um personagem pode ter vários efeitos ao mesmo tempo.
+- **Atordoamento:** estrelas acima da cabeça, separado dos cristais de frio. **Barreira:** aro verde-sálvia e indicação de absorção; reflexão conserva o violeta. Um personagem pode ter vários efeitos ao mesmo tempo.
 - **Ilustrações:** composições de 64 × 64, silhueta central contrastada, planos facetados com luz e sombra próprias, fundo escuro e moldura fina. O significado precisa funcionar também a 35–48 pixels. Microdetalhes são secundários.
 
 O estado de combate deve ter texto e forma, além da cor: fogo / frost / veneno no HUD; estrelas para atordoamento, cristais para frio e brasas para queimadura. Isso reduz a dependência da percepção de cores.
@@ -58,3 +58,24 @@ Cada loja usa duas meshes consolidadas: cenário estático e animal com balanço
 O modelo sob o mouse recebe contorno verde para aliado ou vermelho para inimigo, acompanhado de anel no chão e nome com o mesmo código de cor. A relação usa o jogador real, inclusive suas invocações e tropas enviadas a um campo rival. Corpo, pernas e asas usam a mesma geometria animada; o contorno não altera as cores de vértice e só é desenhado para o alvo do mouse.
 
 No Castle Fight, símbolos de função ficam na frente e acima da linha dos telhados para leitura isométrica: espada, rifle, arco, cajado, canhão, asas, garras/patas e moedas. A arquitetura de raça permanece como base, com anexos de oficina, viveiro ou escola. Torres defensivas têm corpo próprio compacto. O Sniper carrega rifle e usa traço de projétil, em vez do slash que era escolhido pelo corte visual de alcance.
+
+
+A fonte do Line Wars mostra cruzes verdes, recuperação numérica e estado no HUD. Lojas durante a batalha não pausam a simulação local: antes o modal interrompia a própria cura. Guia e narrativa mantêm sua pausa local. A fonte conserva as regras existentes de 6% da vida máxima e 4% da mana máxima por segundo.
+
+
+## Revisão conjunta: projéteis e movimento
+
+O time de game design, jogabilidade e UI convergiu em legibilidade por silhueta, altura e cor. `projectile-art.js` fornece sete famílias originais: flecha de madeira com penas, bala com núcleo claro, runa arcana, brasa angular, cristal de gelo, fragmento de veneno e pedra de cerco. Cada família compartilha geometria e material com cores de vértice; projéteis de Warlock e Blast Staff usam os mesmos assets. A trajetória permanece contínua, com rotação/pulsação em poses de 8Hz. O impacto termina em lascas blocadas curtas, sem novos passes de pós-processamento.
+
+Flechas, tiros, raios, crítico, escudo e roubo de vida usam proporção e elevação do modelo ou altura do terreno. A barreira verde-sálvia acompanha a ilustração. Formações deixam de marchar em fase idêntica; animais pesados têm salto visual menor, preservando velocidade e atributos. O construtor ganha ciclo de trabalho próprio, sem travar no primeiro quadro de ataque.
+
+Em combate cheio, o orçamento de 32 textos e 96 efeitos prioriza avisos de chefe, críticos, MISS e feedback do jogador. Efeitos repetidos de tropas são descartados primeiro. A direção segue formas voxel originais; não foi aplicado filtro global.
+
+Recomendações futuras de UI discutidas: rodapé estável na seleção, painel contextual recolhível no celular, alvos de toque maiores e tratamento consistente de foco em modais. Essas sugestões não alteram regras de combate.
+
+
+## Aquisição e builds híbridas
+
+Técnicas obtíveis de monstros não são mais reservadas a um único jogador. `LOOT_SKILLS` é a mesma lista usada para montar habilidades dos monstros e para a exceção de exclusividade; hoje todo o catálogo pode aparecer nesses loadouts. Mantém-se uma cópia por herói, cinco níveis, sete espaços, raridade e requisitos de nível. Reservas antigas recebidas em snapshots são ignoradas no HUD para essas técnicas.
+
+A separação entre tipo físico e mágico descreve a escala e a defesa, sem impedir builds híbridas. Requisitos mecânicos de ataque corpo a corpo/à distância continuam nas técnicas que precisam deles. Os seis animais podem investir em magia e em defesas, mantendo suas identidades e o sistema de atributos acordado.

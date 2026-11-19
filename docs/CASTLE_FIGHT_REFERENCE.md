@@ -154,3 +154,25 @@ Permanecem adaptações explícitas: **12 construções por jogador/60 tropas po
 ## Validação
 
 `node --test tests/castle-catalog.test.js` verifica as dez raças efetivamente registradas, ligações de menu/melhorias, 161 construções/107 tropas, exemplos de estatísticas extraídas, matriz inteira, as nove ofertas do castelo e dimensões/posições do cenário derivado. Essa validação comprova consistência e proveniência do catálogo. Equivalência de combate, IA, pathing, economia e habilidades com o executável original exige testes adicionais de partidas.
+
+
+## Construção presencial, reparo e produção
+
+O construtor agora recebe uma fila autoritativa de obras. Colocar reserva os recursos e o espaço; ele caminha à borda, trabalha pelo `buildTime` do catálogo e só então libera renda e produção. Mover/Parar/Blink interrompe o trabalho; Continuar construção retoma a fila. A evolução também exige trabalho e mantém a renda anterior até concluir. A construção começa com 10% de HP e recebe os 90% restantes durante a obra. Saídas bloqueadas preservam a produção pronta junto ao produtor, sem teletransporte para a lane.
+
+Reparar vem em automático. `R` escolhe um alvo; botão direito no botão alterna o automático; botão direito numa construção aliada manda reparar. Obras têm prioridade sobre reparo automático. A velocidade de 35 HP/s, busca de 14m e alcance de trabalho de 0,35m são adaptações de ritmo. O custo proporcional usa 35% do ouro da estrutura para restaurar uma barra completa; falta de ouro pausa o serviço. Não foi alegado que a cadência adaptada reproduz toda a lógica nativa de Repair. `A071` e `A08G` no mapa herdam `Ahrp` e descrevem explicitamente o auto reparo.
+
+Selecionar o produtor ou uma de suas tropas mostra unidade produzida, progresso, próximo nascimento e prévia do ciclo contínuo. O limite populacional e a saída obstruída têm estados distintos. As duas próximas imagens representam o ciclo automático; não são compras adicionais de tropas.
+
+## Auditoria dos alvos e armas
+
+`shared/castle-weapon-data.js` registra 115 perfis de unidade/torre, gerados por `scripts/audit-castle-weapons.py`. `uaen`, `ua1g` e `ua2g` são lidos do W3U; campos ausentes são resolvidos com `UnitWeapons.slk` da [fixture primária de wc3libs](https://github.com/inwc3/wc3libs/blob/master/src/test/resources/wc3data/Units/UnitWeapons.slk). A versão exata do Warcraft dessa fixture não foi identificada: defaults herdados continuam uma limitação histórica, e campos explícitos do mapa prevalecem.
+
+- Footman: terrestre; Sniper: terrestre e aéreo.
+- Marksman e Roterothopter: arma contra tropas aéreas e segunda arma contra estruturas. Não atacam tropas terrestres com um perfil aéreo.
+- Anti-Air Tower tem segunda arma terrestre: 70 de dano médio aéreo/0,4s e 22,5 terrestre/0,6s, com alcances próprios.
+- `uaen=0`, como Gobbo Machinist, não ganha um ataque básico inventado. As habilidades nativas ainda não cobertas não são substituídas por uma arma fictícia.
+
+A simulação escolhe arma válida para o alvo e aplica seu alcance, cadência e tipo de dano. A ficha mostra os alvos e, em unidades com duas armas, ambos os ataques. Fora desse modo, os atributos personalizados do Survival/Line Wars permanecem separados.
+
+A travessia da saída agora aceita a passagem pelo plano do portão também quando a formação se dispersou lateralmente em combate. Voltar ao centro exato fazia grupos estacionarem e retornarem ali depois de cada escaramuça. A navegação até a próxima etapa continua verificando obstáculos.

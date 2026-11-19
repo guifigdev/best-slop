@@ -1,3 +1,4 @@
+import {CASTLE_WEAPON_DATA} from './castle-weapon-data.js';
 import {castleBuildingProfile} from './castle-building-profile.js';
 // Factual object/registration data read from the pinned v1.14b map.
 // No Warcraft art or third-party executable scripts are included.
@@ -16,3 +17,6 @@ export function castleDamageMultiplier(attackType,armorType){return typeof attac
 
 // Requested voxel footprints are independent of native combat/economy values.
 for(const building of Object.values(CASTLE_BUILDINGS)){const unit=typeof building.unit==='string'?CASTLE_UNITS[building.unit]:building.unit;building.visualProfile=castleBuildingProfile(building,unit);building.footprint={...building.visualProfile.footprint};building.provenance.adapted=building.provenance.adapted.filter(note=>note!=='footprint simplified to 2x2');building.provenance.adapted.push('role-based voxel footprint and building decoration are adapted');}
+
+for(const unit of Object.values(CASTLE_UNITS)){unit.weapons=CASTLE_WEAPON_DATA[unit.key]||[];unit.targetsAir=unit.weapons.some(w=>w.targets.includes('air'));unit.targetsGround=unit.weapons.some(w=>w.targets.includes('ground'));}
+for(const b of Object.values(CASTLE_BUILDINGS))if(b.castleEffect?.type==='tower')b.castleEffect.weapons=CASTLE_WEAPON_DATA[b.rawId]||[];

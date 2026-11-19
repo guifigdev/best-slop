@@ -1,3 +1,4 @@
+import {LOOT_SKILLS} from './loot-skills.js';
 import {SKILLS} from './catalog.js';
 // Original animals and mythical challengers. These are not Warcraft assets.
 // Multipliers for ordinary fauna apply once to the wave's existing base damage.
@@ -74,7 +75,7 @@ export function monsterLoadout(kind,level=1,boss=false,random){
  const isBoss=boss===true||boss==='boss'||boss==='miniboss',rarity=isBoss?(boss==='miniboss'?'miniboss':'boss'):species?'special':'normal',skills=[];
  const count=isBoss?Math.min(5,1+Math.floor(actualLevel/15)):species?1:0;
  if(!count)return{level:actualLevel,rank,rarity,skills,skillLevels:{}};
- const roll=()=>unitRoll(typeof random==='function'?random():.5),all=Object.keys(SKILLS),primary=species?.skill;
+ const roll=()=>unitRoll(typeof random==='function'?random():.5),all=LOOT_SKILLS,primary=species?.skill;
  let controls=0,sustain=0;
  for(let i=0;i<count;i++){
   let pool=all.filter(key=>!skills.includes(key)&&(!controls||!CONTROL_SKILLS.has(key))&&(!sustain||!SUSTAIN_SKILLS.has(key)));

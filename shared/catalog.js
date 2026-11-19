@@ -100,17 +100,17 @@ const scaling={
  firesteps:['magic',[.025,.035,.045,.055,.065]],froststeps:['magic',[.015,.0225,.03,.0375,.045]],auraflame:['magic',[.015,.02,.025,.03,.035]],icepulse:['magic',[.01,.015,.02,.025,.03]]
 };
 for(const [key,[type,ratios]]of Object.entries(scaling)){SKILLS[key].damageType=type;for(const [i,rank]of SKILLS[key].levels.entries())rank[type==='physical'?'atkCoefficient':'matkCoefficient']=ratios[i];}
-// Access is explicit for every skill. Attack range never decides whether a
-// hero is a physical archer or a spellcaster.
-const archetypeSets={all:['physical_melee','physical_ranged','magic'],physical:['physical_melee','physical_ranged'],melee:['physical_melee'],ranged:['physical_ranged'],magic:['magic']};
+// Damage identity is descriptive: every hero may combine physical, magical
+// and defensive techniques. Only attack-weapon mechanics limit acquisition.
+const archetypeSets={all:['physical_melee','physical_ranged','magic'],physical:['physical_melee','physical_ranged','magic'],melee:['physical_melee'],ranged:['physical_ranged','magic'],magic:['physical_melee','physical_ranged','magic']};
 const skillGroups={
  melee:['cleave'],ranged:['multishot','bounce'],
  physical:['stomp','shockwave','bash','dash','hornrush','critical','avatar','battlecry','rage'],
  all:['vampiric','endurance','devotion','evasion','thorns','stonehide'],
  magic:['heal','freyjasgrace','shield','brilliance','blink','swap','icewall','bolt','chain','blizzard','summon','fireball','frostnova','forcepush','hook','gravity','poison','drain','flamebreath','venomcloud','stormdive','warlockfire','warlockfrost','odinsravens','thorsgoats','freyjascat','helguard','gungnir','thorsjudgment','helsfrost','firesteps','froststeps','auraflame','icepulse']
 };
-const compatibilityLabels={all:'Comum',physical:'Físico',melee:'Físico corpo a corpo',ranged:'Físico à distância',magic:'Mágico'};
-for(const [group,keys]of Object.entries(skillGroups))for(const key of keys){if(!Object.hasOwn(SKILLS,key)||SKILLS[key].allowedArchetypes)throw Error(`Classificação de habilidade inválida: ${key}`);Object.assign(SKILLS[key],{allowedArchetypes:Object.freeze([...archetypeSets[group]]),skillStyle:group==='all'?'utility':group==='magic'?'magic':'physical',compatibilityLabel:compatibilityLabels[group]});}
+const compatibilityLabels={all:'Utilidade',physical:'Dano físico',melee:'Ataques corpo a corpo',ranged:'Ataques à distância',magic:'Magia'};
+for(const [group,keys]of Object.entries(skillGroups))for(const key of keys){if(!Object.hasOwn(SKILLS,key)||SKILLS[key].allowedArchetypes)throw Error(`Classificação de habilidade inválida: ${key}`);Object.assign(SKILLS[key],{allowedArchetypes:Object.freeze([...archetypeSets[group]]),skillStyle:group==='all'?'utility':group==='magic'?'magic':'physical',compatibilityLabel:compatibilityLabels[group],weaponRequirement:group==='melee'?'melee':group==='ranged'?'ranged':null});}
 for(const [key,entry]of Object.entries(SKILLS))if(!entry.allowedArchetypes)throw Error(`Classifique o arquétipo da habilidade ${key}.`);
 // Original Nordic fiction layered over stable simulation IDs. Historical skill
 // sources remain metadata for reference documentation, never in player copy.

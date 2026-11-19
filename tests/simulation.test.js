@@ -1,4 +1,4 @@
-import {isSharedStarter} from '../shared/skill-ownership.js';
+import {isSharedSkill} from '../shared/skill-ownership.js';
 import {transact} from './shop-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,8 +41,8 @@ test('seeded autonomous combat stays deterministic and produces real hero action
    if(encounterReady)for(const enemy of g.units.filter(u=>!u.hero&&!u.summon&&u.alive)){const source=g.heroes().find(h=>h.alive&&g.canTarget(h,enemy));assert.ok(source,'each encounter must have its own living defender');g.hit(enemy,enemy.maxHp*1000,source,false,true);assistedKills++;}
    if(g.phase==='final'&&g.time-g.finalStarted>=3){const winner=g.heroes().find(h=>h.alive);assert.ok(winner);for(const opponent of g.heroes().filter(h=>h.alive&&h.id!==winner.id))g.hit(opponent,opponent.maxHp*1000,winner,false,true);}
    for(const h of g.heroes())assert.equal(new Set(h.skills).size,h.skills.length,'each hero must keep one copy of each technique');
-   const exclusiveKeys=g.heroes().flatMap(h=>h.skills).filter(key=>!isSharedStarter(key));assert.equal(new Set(exclusiveKeys).size,exclusiveKeys.length,'non-starter techniques must remain unique across players');
+   const exclusiveKeys=g.heroes().flatMap(h=>h.skills).filter(key=>!isSharedSkill(key));assert.equal(new Set(exclusiveKeys).size,exclusiveKeys.length,'only techniques outside the shared-skill policy may reserve across players');
   }
   assert.equal(g.phase,'victory');assert.equal(g.wave,50);assert.equal(themes.size,5);assert.equal(bonusBlocks.size,9);assert.ok(g.winner);assert.equal(g.shopVisit,10);assert.equal(g.heroes().filter(u=>u.alive).length,1);
-  assert.ok(assistedKills>500);assert.ok(visitedShops.has('equipment'));assert.ok(visitedShops.has('smith'));assert.ok(g.heroes().every(h=>h.inventory.some(Boolean)));assert.ok(g.heroes().some(h=>h.inventory.some(slot=>(slot?.level||0)>1)));assert.ok(g.heroes().every(h=>Object.values(h.attributes).reduce((n,v)=>n+v,0)>37));assert.ok(g.heroes().some(h=>Object.values(h.skillLevels).some(rank=>rank>1)));
+  const sharedCopies=g.heroes().flatMap(h=>h.skills).filter(isSharedSkill);assert.ok(new Set(sharedCopies).size<sharedCopies.length,'the full season must permit actual shared builds across players');for(const key of new Set(sharedCopies))assert.equal(g.skillOwnership()[key],undefined);assert.ok(assistedKills>500);assert.ok(visitedShops.has('equipment'));assert.ok(visitedShops.has('smith'));assert.ok(g.heroes().every(h=>h.inventory.some(Boolean)));assert.ok(g.heroes().some(h=>h.inventory.some(slot=>(slot?.level||0)>1)));assert.ok(g.heroes().every(h=>Object.values(h.attributes).reduce((n,v)=>n+v,0)>37));assert.ok(g.heroes().some(h=>Object.values(h.skillLevels).some(rank=>rank>1)));
  });

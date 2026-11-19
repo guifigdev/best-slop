@@ -20,7 +20,22 @@ test('occupied structure centers produce a reachable approach point instead of e
 
 test('build, movement and demolition invalidate cached geometry; dead structures stop blocking',()=>{const cf=field(),u=troop(cf,{x:-12,z:0});moveCastleUnit(cf,u,{x:12,z:0},.1);const first=castleNavigationInfo(cf).rebuilds;cf.buildings.push({id:90,x:0,z:0,w:2,d:12,alive:true});cf.navigationRevision++;assert.equal(castlePassable(cf,{x:0,z:0},.4),false);advance(cf,u,{x:12,z:0},20);assert.ok(u.x>10);assert.ok(castleNavigationInfo(cf).rebuilds>first);cf.buildings[0].alive=false;cf.navigationRevision++;assert.equal(castlePassable(cf,{x:0,z:0},.4),true);u.x=-12;u.z=0;assert.equal(advance(cf,u,{x:12,z:0},12).reached,true);});
 
-test('the geometry fingerprint also sees same-length building replacement and movement',()=>{const cf=field();cf.buildings=[{id:1,x:0,z:0,w:3,d:3,alive:true}];assert.equal(castlePassable(cf,{x:0,z:0},.4),false);cf.buildings[0].x=5;assert.equal(castlePassable(cf,{x:0,z:0},.4),true);assert.equal(castlePassable(cf,{x:5,z:0},.4),false);cf.buildings[0]={id:2,x:-5,z:0,w:3,d:3,alive:true};assert.equal(castlePassable(cf,{x:5,z:0},.4),true);assert.equal(castlePassable(cf,{x:-5,z:0},.4),false);});
+test('geometry validation also sees same-length building replacement and movement',()=>{const cf=field();cf.buildings=[{id:1,x:0,z:0,w:3,d:3,alive:true}];assert.equal(castlePassable(cf,{x:0,z:0},.4),false);cf.buildings[0].x=5;assert.equal(castlePassable(cf,{x:0,z:0},.4),true);assert.equal(castlePassable(cf,{x:5,z:0},.4),false);cf.buildings[0]={id:2,x:-5,z:0,w:3,d:3,alive:true};assert.equal(castlePassable(cf,{x:5,z:0},.4),true);assert.equal(castlePassable(cf,{x:-5,z:0},.4),false);});
+
+test('same-frame geometry edits invalidate size, life, castle and bounds without depending on elapsed or revision',()=>{
+ const cf=field(),building={id:1,x:0,z:0,w:2,d:2,alive:true};cf.buildings.push(building);
+ assert.equal(castlePassable(cf,{x:2,z:0},.4),true);building.w=4;assert.equal(castlePassable(cf,{x:2,z:0},.4),false);
+ building.alive=false;assert.equal(castlePassable(cf,{x:0,z:0},.4),true);
+ cf.teams.push({id:2,x:5,z:0,w:2,d:2,alive:true});assert.equal(castlePassable(cf,{x:5,z:0},.4),false);cf.teams[0].z=5;assert.equal(castlePassable(cf,{x:5,z:0},.4),true);
+ cf.map.maxX=10;assert.equal(castlePassable(cf,{x:11,z:0},.4),false);assert.equal(cf.elapsed,0);assert.equal(cf.navigationRevision,0);
+});
+
+test('replacing a collider with identical geometry stops retaining the detached old object',()=>{
+ const cf=field(),old={id:1,x:0,z:0,w:2,d:2,alive:true};cf.buildings.push(old);assert.equal(castlePassable(cf,{x:0,z:0},.4),false);
+ cf.buildings[0]={...old};assert.equal(castlePassable(cf,{x:0,z:0},.4),false);
+ old.x=20;assert.equal(castlePassable(cf,{x:0,z:0},.4),false);assert.equal(castlePassable(cf,{x:20,z:0},.4),true);
+ const builds=castleNavigationInfo(cf).rebuilds;for(let i=0;i<100;i++)castlePassable(cf,{x:10,z:10},.4);assert.equal(castleNavigationInfo(cf).rebuilds,builds);
+});
 
 test('spawn recovery chooses a nearby free body position and refuses a point buried deep inside a large structure',()=>{const cf=field();cf.obstacles=[{x:0,z:0,w:.7,d:.7}];const point=castleSpawnPoint(cf,{x:0,z:0},.4);assert.ok(point);assert.ok(Math.hypot(point.x,point.z)<=1.01);assert.ok(castlePassable(cf,point,.4));cf.buildings=[{x:10,z:0,w:12,d:12,alive:true}];assert.equal(castleSpawnPoint(cf,{x:10,z:0},.4),null);const u=troop(cf,{x:10,z:0});assert.equal(moveCastleUnit(cf,u,{x:25,z:0},.1),false);assert.equal(u.x,10);assert.equal(u.z,0);});
 

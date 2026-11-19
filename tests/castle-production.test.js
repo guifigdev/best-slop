@@ -19,7 +19,7 @@ test('troops are born next to their own producer, then walk through their own en
 });
 
 test('a blocked producer holds production without serial, spawn count or remote-lane fallback, then resumes when cleared',()=>{
- const g=setup(),cf=g.castleFight,b=build(g,1,'human_h000',-40,18);cf.elapsed=b.nextSpawn;b.readyAt=0;const original=cf.obstacles;cf.obstacles=[...original,{id:'sealed-producer',x:b.x,z:b.z,w:9,d:9}];cf.navigationRevision++;const serial=g.serial,count=b.spawnCount,due=b.nextSpawn;
+ const g=setup(),cf=g.castleFight,b=build(g,1,'human_h000',-40,18);b.workRemaining=0;b.readyAt=0;b.hp=b.maxHp;g.castleCompleteBuildings();b.nextSpawn=b.spawnInterval;cf.elapsed=b.nextSpawn;const original=cf.obstacles;cf.obstacles=[...original,{id:'sealed-producer',x:b.x,z:b.z,w:9,d:9}];cf.navigationRevision++;const serial=g.serial,count=b.spawnCount,due=b.nextSpawn;
  assert.equal(g.castleSpawn(b),null);assert.equal(g.serial,serial);assert.equal(b.spawnCount,count);g.tick(.1);assert.equal(cf.units.length,0);assert.equal(b.nextSpawn,due);
  cf.obstacles=original;cf.navigationRevision++;g.tick(.1);assert.equal(cf.units.length,1);assert.ok(Math.hypot(cf.units[0].x-b.x,cf.units[0].z-b.z)<3);assert.equal(b.spawnCount,count+1);assert.ok(b.nextSpawn>cf.elapsed);
 });
@@ -38,8 +38,8 @@ test('large bodies and flying births both clear the producer roof and occupied g
 
 test('roles reserve different footprints and an expanding upgrade reserves its new area immediately',()=>{
  const tower=CASTLE_BUILDINGS.human_h006,warrior=CASTLE_BUILDINGS.human_h000,giant=Object.values(CASTLE_BUILDINGS).find(b=>b.visualProfile.role==='giant');assert.ok(tower.footprint.w<warrior.footprint.w);assert.ok(giant.footprint.w>warrior.footprint.w);assert.equal(warrior.visualProfile.variant,'sword');assert.equal(CASTLE_BUILDINGS.human_h003.visualProfile.variant,'rifle');
- const g=setup('turtle'),b=build(g,1,'naga_h00F',-40,18);g.castleFight.elapsed=b.readyAt;g.castleCompleteBuildings();assert.equal(g.command('a',{type:'cfUpgrade',buildingId:b.id,building:'naga_h032'}),true);assert.equal(b.w,4);assert.equal(b.d,3.5);
- assert.equal(g.command('a',{type:'cfBuild',building:'naga_h00H',x:-37,z:18}),false,'reserved growth prevents a neighbor from occupying it');g.castleFight.elapsed=b.readyAt;g.castleCompleteBuildings();assert.equal(b.w,4);assert.equal(b.key,'naga_h032');
+ const g=setup('turtle'),b=build(g,1,'naga_h00F',-40,18);b.workRemaining=0;b.readyAt=g.castleFight.elapsed;g.castleCompleteBuildings();assert.equal(g.command('a',{type:'cfUpgrade',buildingId:b.id,building:'naga_h032'}),true);assert.equal(b.w,4);assert.equal(b.d,3.5);
+ assert.equal(g.command('a',{type:'cfBuild',building:'naga_h00H',x:-37,z:18}),false,'reserved growth prevents a neighbor from occupying it');b.workRemaining=0;b.readyAt=g.castleFight.elapsed;g.castleCompleteBuildings();assert.equal(b.w,4);assert.equal(b.key,'naga_h032');
 });
 
 test('Sniper fires outside melee reach with a bullet effect and its factual reference range is retained',()=>{

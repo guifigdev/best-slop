@@ -12,7 +12,11 @@ export function advanceCastleRoute(cf,unit){
  const passed=direction*(unit.x-gate.x),base=cf.map.buildZones?.find(zone=>zone.team!==unit.team),insideEnemyBase=base&&unit.x-r>=base.minX&&unit.x+r<=base.maxX&&unit.z-r>=base.minZ&&unit.z+r<=base.maxZ;
  // Combat can pull a troop off the lane before the waypoint is recorded.
  // Once it has entered the opposing base, returning to that entry is backwards.
- if(!(passed>=-(r*.75+.15)&&Math.abs(unit.z-gate.z)<=4.2+r)&&!(passed>=r&&(gate.stage==='entry'||insideEnemyBase)))return advanced;
+ // Once a real corridor gate's plane is reached, dispersed troops may proceed
+ // to the next leg. Seeking its exact z again makes large formations collect
+ // beside the exit and return there after every short skirmish.
+ const crossedRouteGate=gate.stage&&passed>=-(r*.75+.15);
+ if(!crossedRouteGate&&!(passed>=-(r*.75+.15)&&Math.abs(unit.z-gate.z)<=4.2+r)&&!(passed>=r&&(gate.stage==='entry'||insideEnemyBase)))return advanced;
  unit.pathIndex=index+1;advanced=true;
  }
  return advanced;
