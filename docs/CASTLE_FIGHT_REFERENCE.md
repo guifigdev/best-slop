@@ -151,7 +151,7 @@ Treasure Box multiplica a renda **depois** do primeiro truncamento: `floor(floor
 
 O motor independente agora usa os **250 ouro/125 madeira iniciais**, a base dinâmica de renda, os fatores e custos registrados, a tabela de Treasure Box e a recompensa de madeira somente ao concluir investimento produtivo. Construções vendidas ou destruídas deixam de contribuir; não se concede renda extra só por iniciar uma construção. `CASTLE_ECONOMY_REFERENCE`, `registeredIncomeFactor`, `registeredKind` e `previousRegisteredCost` tornam as regras verificáveis no catálogo.
 
-Permanecem adaptações explícitas: **12 construções por jogador/60 tropas por equipe**, reembolso de **65% proporcional ao HP**, fluxo da torre central/inventário, ausência dos impostos/modificadores de equipe da fonte e das variantes completas de dificuldade. O motor preserva um espaço lendário ampliável por Cheese. Estoque/disponibilidade dos itens e custos em madeira são tratados separadamente. As habilidades nativas individuais das 107 tropas continuam sendo uma lacuna distinta; corrigir a economia não torna todo o modo equivalente ao executável original.
+Permanecem adaptações explícitas: **60 tropas por equipe**, reembolso de **65% proporcional ao HP**, fluxo da torre central/inventário, ausência dos impostos/modificadores de equipe da fonte e das variantes completas de dificuldade. O motor preserva um espaço lendário ampliável por Cheese. Estoque/disponibilidade dos itens e custos em madeira são tratados separadamente. As habilidades nativas individuais das 107 tropas continuam sendo uma lacuna distinta; corrigir a economia não torna todo o modo equivalente ao executável original.
 
 ## Validação
 

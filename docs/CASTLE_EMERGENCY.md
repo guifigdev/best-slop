@@ -19,7 +19,7 @@ API: `cfRescueStrike { x, z }`. Estado: `castleFight.players[owner].rescueCharge
 
 ## Produção em lote: sincronização deliberada
 
-API: `cfProduction { buildingIds: [...], paused: boolean }`. Somente produtores vivos pertencentes ao remetente são válidos. O lote é validado inteiro antes de qualquer modificação; IDs repetidos são deduplicados. O máximo de 12 entradas corresponde ao limite de construções deste motor. Uma entrada inimiga, desconhecida ou não produtora rejeita o lote completo.
+API: `cfProduction { buildingIds: [...], paused: boolean }`. Somente produtores vivos pertencentes ao remetente são válidos. O lote é validado inteiro antes de qualquer modificação; IDs repetidos são deduplicados. Não há limite fixo de construções ou de produtores selecionados no lote. Uma entrada inimiga, desconhecida ou não produtora rejeita o lote completo.
 
 Pausar guarda o tempo restante para exibição e impede produção, inclusive uma tentativa direta pelo motor. Construção, evolução, reparos, renda e madeira por conclusão continuam normalmente. Não há restituição ou prêmio por pausar.
 

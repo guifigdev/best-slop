@@ -4,7 +4,7 @@ import {castleWeaponFor} from './castle-weapons.js';
 import {castleArmyRoute,castleProducerSpawn} from './castle-production.js';
 import {launchCastleBlast,tickCastleItemProjectiles} from './castle-item-effects.js';
 import {advanceCastleRoute} from './castle-marching.js';
-import {castleBuildCheck,castleUpgradeAvailability,CASTLE_BUILDING_LIMIT} from './castle-build-rules.js';
+import {castleBuildCheck,castleUpgradeAvailability} from './castle-build-rules.js';
 import {castlePassable,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
 import {castleBuilderFor} from './castle-builders.js';
 import {sceneryObstacles} from './scenery.js';
@@ -17,7 +17,6 @@ export const CASTLE_START_LUMBER=CASTLE_ECONOMY_REFERENCE.defaultStartingLumber;
 export const CASTLE_RESCUE_STRIKE=Object.freeze({charges:1,radius:700/256,range:1000/256,delay:.35,damage:100000});
 export const CASTLE_INCOME_INTERVAL=10;
 export const CASTLE_BASE_INCOME=Math.floor(CASTLE_ECONOMY_REFERENCE.baseIncomeRate*CASTLE_ECONOMY_REFERENCE.defaultPlayerMultiplier*CASTLE_ECONOMY_REFERENCE.displayMultiplier);
-export {CASTLE_BUILDING_LIMIT};
 export const CASTLE_UNIT_CAP=60;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -85,7 +84,7 @@ export const CastleFightMethods={
  },
 
  castleProduction(u,c){
-  const cf=this.castleFight;if(!active(this)||!u?.alive||!u.castleBuilder||!Array.isArray(c.buildingIds)||!c.buildingIds.length||c.buildingIds.length>CASTLE_BUILDING_LIMIT||typeof c.paused!=='boolean')return false;
+  const cf=this.castleFight;if(!active(this)||!u?.alive||!u.castleBuilder||!Array.isArray(c.buildingIds)||!c.buildingIds.length||typeof c.paused!=='boolean')return false;
   const ids=[...new Set(c.buildingIds)],buildings=ids.map(id=>cf.buildings.find(b=>b.id===id&&b.alive&&b.owner===u.owner));if(buildings.some(b=>!b||!catalogUnit(CASTLE_BUILDINGS[b.key])))return false;
   // Resuming a mixed group restarts every cycle, aligning equal producers.
   // Repeating resume on an already-running group cannot manipulate its clock.
@@ -105,7 +104,7 @@ export const CastleFightMethods={
   if(!item||!item.playable||!handlers.has(item.effect)||distance(u,cf.map.tower)>cf.map.tower.radius||u.gold<item.cost||(u.lumber||0)<(item.lumberCost||0)||!itemReady(this,u,c.item)||cf.elapsed<(cf.shop.availableAt[c.item]||0)||cf.shop.stock[c.item]===0||passiveItems.has(item.effect)&&p.items[c.item])return false;
   const allies=cf.units.filter(unit=>unit.alive&&unit.team===p.team),point=castlePoint(cf.map,c.x===undefined?cf.map.tower:c);if(!point)return false;let changed=false;
   if(passiveItems.has(item.effect)){p.items[c.item]={key:c.item,boughtAt:cf.elapsed,nextAt:cf.elapsed};changed=true;}
-  if(item.effect==='legendary_slot'&&p.legendarySlots<CASTLE_BUILDING_LIMIT){p.legendarySlots=Math.min(CASTLE_BUILDING_LIMIT,p.legendarySlots+(item.extraSlots||1));changed=true;}
+  if(item.effect==='legendary_slot'){p.legendarySlots+=item.extraSlots||1;changed=true;}
   if(item.effect==='stone_scroll')for(const target of allies.filter(t=>distance(t,point)<=item.radius)){target.hp=Math.min(target.maxHp,target.hp+item.heal);target.mana=Math.min(target.maxMana||0,(target.mana||0)+item.mana);target.castleBuffs||={};target.castleBuffs[c.item]={until:cf.elapsed+item.duration,armor:item.armor};changed=true;this.fx('heal',target.x,target.z,{source:u.id,amount:item.heal,castle:true});}
   if(['double_damage','quad_damage'].includes(item.effect))for(const target of allies.filter(t=>distance(t,point)<=item.radius)){target.castleBuffs||={};target.castleBuffs[c.item]={until:cf.elapsed+item.duration,damageBonus:item.damageBonus};changed=true;}
   if(item.effect==='chain_orb'){
