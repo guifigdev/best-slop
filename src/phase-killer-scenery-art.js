@@ -1,5 +1,21 @@
 // Original voxel scenery. All solid foundations stay inside authoritative AABBs.
 export const phaseSceneryVariant=id=>[...String(id)].reduce((hash,c)=>(hash*31+c.charCodeAt(0))>>>0,7)%4;
+export function phaseGraveArt(b,c){
+ const x=b.x,z=b.z,w=b.w||1.15,d=b.d||2,variant=b.style??phaseSceneryVariant(b.id),stone=[0x8b928b,0x9b9e8d,0x788781,0xa1a28f][variant%4],parts=[[x,.12,z,w,.24,d,0x575e50],[x,.27,z,w*.88,.12,d*.9,stone]];
+ if(variant===0){parts.push([x,.97,z-d*.3,.22,1.4,.26,stone],[x,1.26,z-d*.3,w*.8,.22,.26,stone]);}
+ else if(variant===1){parts.push([x,.85,z-d*.3,w*.84,1.1,.28,stone],[x,1.43,z-d*.3,w*.64,.17,.27,stone],[x,.92,z-d*.3+.15,.13,.52,.025,0x59635e],[x,1.02,z-d*.3+.15,.43,.09,.025,0x59635e]);}
+ else if(variant===2){parts.push([x,.63,z,w*.85,.62,d*.88,stone],[x,.98,z,w,.12,d*.95,0xa8aa9b],[x,.74,z-d*.3,.2,.4,.2,0xb9b7a2]);}
+ else{parts.push([x,.8,z-d*.32,w*.7,1.04,.25,stone],[x-w*.23,1.35,z-d*.32,w*.23,.18,.25,0x8d9488],[x+w*.12,.5,z+d*.25,w*.38,.22,d*.3,stone]);}
+ parts.push([x-w*.25,.34,z+d*.25,w*.32,.06,d*.23,0x5e7453]);
+ return{parts,windows:[],windowNormal:{x:0,z:0},height:1.7,variant:'grave-'+variant};
+}
+export function phaseChurchyardArt(b,c){
+ if(b.phaseProp==='grave')return phaseGraveArt(b,c);
+ const x=b.x,z=b.z,parts=[];
+ if(b.phaseProp==='cross'){parts.push([x,.15,z,.65,.3,.65,0x747d76],[x,1.65,z,.3,2.8,.3,0xb0b1a0],[x,2.18,z,1.25,.26,.3,0xb0b1a0],[x,3.1,z,.37,.15,.37,0x939e91]);}
+ else{parts.push([x,.28,z,b.w,.55,b.d,0x788479],[x,.59,z,b.w+.05,.1,b.d+.05,0x9ba194]);const length=Math.max(b.w,b.d),vertical=b.d>b.w,count=Math.ceil(length/2);for(let i=0;i<=count;i++){const offset=(i/count-.5)*length;parts.push([x+(vertical?0:offset),.84,z+(vertical?offset:0),.22,.6,.22,0x56605a],[x+(vertical?0:offset),1.17,z+(vertical?offset:0),.29,.12,.29,0x929d90]);}}
+ return{parts,windows:[],windowNormal:{x:0,z:0},height:3.2,variant:b.phaseProp};
+}
 export function phaseHouseArt(b,c){
  const original=b,rotated=b.w<b.d;b={...b,x:0,z:0,w:rotated?b.d:b.w,d:rotated?b.w:b.d};
  const variant=phaseSceneryVariant(b.id),h=[4.6,5.0,5.6,4.8][variant],x=b.x,z=b.z,w=b.w,d=b.d,front=z+d/2,stone=[0xaaa18a,0x8d938b,0x9e9b92,0xb0a28b][variant],wall=variant===3?0x8e7257:stone,parts=[],windows=[];

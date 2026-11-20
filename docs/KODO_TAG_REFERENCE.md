@@ -13,6 +13,20 @@ Os arquivos do mapa foram lidos como dados; o JASS não foi executado. Nenhuma m
 
 O Runner usa o modelo Mountain King, tem **1 HP**, movimento 300 unidades Warcraft/s e dano básico de 1.000. Ele constrói e coleta; o camponês é uma unidade separada, treinada na **Big Wall por 300 ouro, em 20 segundos**, com 10 HP. O camponês não possui lista de construções. Uma unidade corresponde a 1/128 da distância original no cenário novo.
 
+### Velocidade auditada em 20/11/2026
+
+A auditoria releu o binário `war3map.w3u` (SHA-256 `e139e0c5e2bdd927694677e0e13a999e2c9b1debdbb9fdf459160bad8929a896`), em vez de inferir a velocidade pelo vídeo. O mapa é **Kodo Tag V1.6/TinyTauren**, arquivo de 56.595 bytes com o hash acima; versões X-Treme/Reforged podem ter outros números.
+
+| Unidade | Rawcode | Campo explícito `umvs` | Velocidade nesta engine (`/128`) | Relação com Runner |
+| --- | --- | ---: | ---: | ---: |
+| Runner | `uC13` | 300 | 2,34375 m/s | 100% |
+| CraZy Kodo | `oC06` | 305 | 2,3828125 m/s | 101,67% |
+| Genetically-Enhanced Kodo | `oC22` | 280 | 2,1875 m/s | 93,33% |
+
+Esses valores já estavam corretos e foram mantidos. O comum fecha apenas **0,0390625 m/s** de distância em uma perseguição reta: partindo de 10 m, fechar a diferença até aproximadamente 1 m exigiria cerca de 230 s sem obstáculos ou mudanças de direção. O maior raio físico do Kodo impede atalhos nos cantos e torna corredores estreitos e curvas úteis para o Runner. Isso descreve esta navegação reimplementada; não afirma que o pathing ou as animações são idênticos ao motor Warcraft. O mapa expandido não multiplica velocidade ou tamanho das unidades.
+
+Peasant (`hC19`, 190/128) e Baby Kodo (`nspd`, 270/128) herdam os valores das tabelas locais, pois não têm `umvs` explícito no W3U. Não são apresentados como valores comprovados do patch original. O Enhanced ainda não executa Berserk; o valor base acima não promete reproduzir sua velocidade sob essa habilidade.
+
 O objetivo é sobreviver **25 minutos**. Os Kodos são liberados depois de **15 segundos**. A dificuldade determina 2, 3, 4 ou 5 Kodos iniciais; a interface inicia na dificuldade fácil. As escaladas do script acrescentam um Kodo comum aos 5 minutos, um melhorado aos 10, outro aos 15 e três melhorados aos 20. O Kodo comum possui 10.000 HP, dano 6 e intervalo de ataque 1,3 s; o melhorado tem 20.000 HP, dano 10 e intervalo 0,97 s. A morte do melhorado cria dois filhotes pela habilidade nativa `Assp`.
 
 Kodos comuns mortos voltam após 45 s; depois de 20 minutos, após 30 s. O melhorado volta após 45 s. O Runner fornece 10 de população. Unidades treinadas e construções com custo de alimento reservam essa população, incluindo as filas; paredes gratuitas não têm limite artificial de quantidade.
@@ -72,6 +86,12 @@ Comandos: `ktReady`, `ktMove`, `ktStop`, `ktAttack`, `ktGather`, `ktCast` (colet
 
 ## Verificação
 
-`node --test tests/kodo-tag.test.js` executa dez testes, incluindo construção após caminhar, treinamento temporizado, entrega real do ouro, Stop persistente, propriedade, população, torre, filhotes/respawn, captura/resgate e vitória. A regressão específica verifica um Kodo vindo pela diagonal, destruindo a Big Wall e continuando em direção ao Runner.
+`node --test tests/kodo-tag.test.js` executa dez testes, incluindo construção após caminhar, treinamento temporizado, entrega real do ouro, Stop persistente, propriedade, população, torre, filhotes/respawn, captura/resgate e vitória. A regressão da diagonal verifica que o Kodo ignora uma Big Wall junto de uma rota aberta e chega ao Runner. `tests/kodo-hunt-route.test.js` cobre o labirinto S sem dano a paredes, o Runner cercado com ataque apenas ao bloqueador e uma rota enorme que excede o orçamento normal de busca.
 
-O teste integrado simula 60 segundos reais do relógio do jogo com quatro Runners, três controlados por IA, sem alterar HP, mapa ou obstáculos. Os dois Kodos deixam a prisão, atacam, destroem depósitos e continuam navegando; posições permanecem finitas. Os dez testes passaram em 19/11/2026.
+O teste integrado simula 60 segundos reais do relógio do jogo com quatro Runners, três controlados por IA, sem alterar HP, mapa ou obstáculos. Os dois Kodos deixam a prisão e perseguem Runners; nenhum teste exige mais destruir um depósito apenas por estar próximo. Posições permanecem finitas.
+
+## Feedback autoritativo de recursos e destruição
+
+`kodoGold` só é emitido quando uma entrega credita ouro de fato. O evento contém `source`, `target` (Runner ou Peasant que entregou), `owner`, `amount`, `reason: delivery` e `depot`. Retirar uma carga da mina ainda não gera moedas; uma última carga parcial continua sendo entregue mesmo que a mina se esgote nesse ciclo. Esta edição não ganhou uma renda passiva inventada.
+
+`kodoRubble` ocorre uma única vez na transição de uma construção viva para destruída: combate, demolição ou remoção após captura. O payload contém `building`/`buildingId`, `key`, `w`, `d`, `owner`, `team`, `reason` e `attacker`. O renderer usa esses dados para fragmentos limitados e reutilizáveis, sem precisar inferir destruição em cada frame. `tests/kodo-speed-feedback.test.js` verifica velocidades em movimento real, crédito exato e ausência de eventos duplicados.

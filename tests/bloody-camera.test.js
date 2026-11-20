@@ -6,7 +6,7 @@ import {modeOptions,capacity} from '../shared/modes.js';
 
 const fixture=()=>({options:{mode:'bloody'},players:{me:1},units:[{id:1,x:22,z:-31}],bloodyTournament:{round:0,stage:'preparation',map:{minX:-62,maxX:62,minZ:-48,maxZ:48},formations:[{owner:'me',minX:17,maxX:27,minZ:-34,maxZ:-28}]}});
 test('private preparation garden, central battlefield and complete map have distinct camera destinations',()=>{
- const state=fixture();assert.deepEqual(cameraDestination(state,'me','base'),{x:22,z:-31,distance:54});assert.deepEqual(cameraDestination(state,'me','battle'),{x:0,z:0,distance:65});const overview=cameraDestination(state,'me','overview');assert.equal(overview.x,0);assert.equal(overview.z,0);assert.ok(overview.distance>140);assert.deepEqual(cameraBounds(state),{minX:-66,maxX:66,minZ:-52,maxZ:52});
+ const state=fixture();assert.deepEqual(cameraDestination(state,'me','base'),{x:22,z:-31,distance:62});assert.deepEqual(cameraDestination(state,'me','battle'),{x:0,z:0,distance:65});const overview=cameraDestination(state,'me','overview');assert.equal(overview.x,0);assert.equal(overview.z,0);assert.ok(overview.distance>140);assert.deepEqual(cameraBounds(state),{minX:-66,maxX:66,minZ:-52,maxZ:52});
 });
 test('round transitions reveal the battlefield without overriding camera exploration on every snapshot',()=>{
  let state=fixture();const points=[],camera=createBloodyCamera({getState:()=>state,getOwner:()=> 'me',view:{focusPoint:p=>points.push(p)}});

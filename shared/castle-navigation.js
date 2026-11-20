@@ -22,7 +22,7 @@ function context(cf){
  if(changed){
   const boxes=[...buildings,...castles,...obstacles].filter(shape),hash=new Map();for(let i=0;i<boxes.length;i++){const o=boxes[i];for(let x=Math.floor((o.x-o.w/2)/BUCKET);x<=Math.floor((o.x+o.w/2)/BUCKET);x++)for(let z=Math.floor((o.z-o.d/2)/BUCKET);z<=Math.floor((o.z+o.d/2)/BUCKET);z++){const key=`${x},${z}`,list=hash.get(key)||[];list.push(i);hash.set(key,list);}}
   const generation=(c?.generation||0)+1;
-  c={signature:String(generation),generation,bounds:b,boxes,hash,buildingGeometry:geometryRecords(buildings),castleGeometry:geometryRecords(castles),obstacleGeometry:geometryRecords(obstacles),grids:new Map(),paths:new Map(),searches:c?.searches||0,expanded:c?.expanded||0,rebuilds:(c?.rebuilds||0)+1};contexts.set(cf,c);
+  c={signature:String(generation),generation,bounds:b,boxes,hash,buildingGeometry:geometryRecords(buildings),castleGeometry:geometryRecords(castles),obstacleGeometry:geometryRecords(obstacles),grids:new Map(),paths:new Map(),failedLimits:new Map(),searches:c?.searches||0,expanded:c?.expanded||0,rebuilds:(c?.rebuilds||0)+1};contexts.set(cf,c);
  }
  Object.assign(c,{obstacleSource:obstacles,obstacleCount:obstacles.length,revision,frame});return c;
 }
@@ -64,18 +64,32 @@ const gridPoint=(g,id)=>({x:g.minX+(id%g.nx)*CELL,z:g.minZ+Math.floor(id/g.nx)*C
 function walkable(c,g,id){if(id<0||id>=g.walk.length)return false;if(!g.walk[id])g.walk[id]=passable(c,gridPoint(g,id),g.radius)?1:-1;return g.walk[id]===1;}
 function anchor(c,g,p,r){const x=Math.round((p.x-g.minX)/CELL),z=Math.round((p.z-g.minZ)/CELL),candidates=[];for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++){const nx=x+dx,nz=z+dz;if(nx<0||nx>=g.nx||nz<0||nz>=g.nz)continue;const id=nz*g.nx+nx,q=gridPoint(g,id);if(walkable(c,g,id)&&clear(c,p,q,r))candidates.push({id,distance:hypot(p,q)});}candidates.sort((a,b)=>a.distance-b.distance||a.id-b.id);return candidates[0]?.id??null;}
 class Heap{constructor(){this.data=[];}push(n){const a=this.data;let i=a.push(n)-1;while(i){const parent=(i-1)>>1;if(a[parent].f<n.f||a[parent].f===n.f&&a[parent].id<=n.id)break;a[i]=a[parent];i=parent;}a[i]=n;}pop(){const a=this.data,first=a[0],last=a.pop();if(a.length){let i=0;while(i*2+1<a.length){let child=i*2+1;if(child+1<a.length&&(a[child+1].f<a[child].f||a[child+1].f===a[child].f&&a[child+1].id<a[child].id))child++;if(a[child].f>last.f||a[child].f===last.f&&a[child].id>=last.id)break;a[i]=a[child];i=child;}a[i]=last;}return first;}}
-function search(c,g,start,goal){
- const key=`${g.radius}:${start}:${goal}`;if(c.paths.has(key))return c.paths.get(key);c.searches++;const n=g.walk.length,cost=new Float64Array(n);cost.fill(Infinity);const previous=new Int32Array(n);previous.fill(-1);const closed=new Uint8Array(n),heap=new Heap(),end=gridPoint(g,goal);cost[start]=0;heap.push({id:start,f:hypot(gridPoint(g,start),end)});let expanded=0,found=false;
- while(heap.data.length&&expanded<Math.min(MAX_EXPANSIONS,n)){const {id}=heap.pop();if(closed[id])continue;closed[id]=1;expanded++;if(id===goal){found=true;break;}const x=id%g.nx,z=Math.floor(id/g.nx),a=gridPoint(g,id);for(const[dx,dz]of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const nx=x+dx,nz=z+dz;if(nx<0||nx>=g.nx||nz<0||nz>=g.nz)continue;const next=nz*g.nx+nx;if(closed[next]||!walkable(c,g,next))continue;const point=gridPoint(g,next);if(!clear(c,a,point,g.radius))continue;const value=cost[id]+CELL*(dx&&dz?Math.SQRT2:1);if(value>=cost[next])continue;cost[next]=value;previous[next]=id;heap.push({id:next,f:value+hypot(point,end)});}}
- c.expanded+=expanded;let result=null;if(found){result=[];for(let id=goal;id!==-1;id=previous[id])result.push(gridPoint(g,id));result.reverse();}if(c.paths.size>=MAX_SHARED_PATHS)c.paths.delete(c.paths.keys().next().value);c.paths.set(key,result);return result;
+function search(c,g,start,goal,maxExpansions=MAX_EXPANSIONS){
+ const key=`${g.radius}:${start}:${goal}`,limit=Math.min(maxExpansions,g.walk.length);if(c.paths.has(key)&&(c.paths.get(key)!==null||limit<=(c.failedLimits.get(key)||0)))return c.paths.get(key);c.searches++;const n=g.walk.length,cost=new Float64Array(n);cost.fill(Infinity);const previous=new Int32Array(n);previous.fill(-1);const closed=new Uint8Array(n),heap=new Heap(),end=gridPoint(g,goal);cost[start]=0;heap.push({id:start,f:hypot(gridPoint(g,start),end)});let expanded=0,found=false;
+ while(heap.data.length&&expanded<limit){const {id}=heap.pop();if(closed[id])continue;closed[id]=1;expanded++;if(id===goal){found=true;break;}const x=id%g.nx,z=Math.floor(id/g.nx),a=gridPoint(g,id);for(const[dx,dz]of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const nx=x+dx,nz=z+dz;if(nx<0||nx>=g.nx||nz<0||nz>=g.nz)continue;const next=nz*g.nx+nx;if(closed[next]||!walkable(c,g,next))continue;const point=gridPoint(g,next);if(!clear(c,a,point,g.radius))continue;const value=cost[id]+CELL*(dx&&dz?Math.SQRT2:1);if(value>=cost[next])continue;cost[next]=value;previous[next]=id;heap.push({id:next,f:value+hypot(point,end)});}}
+ c.expanded+=expanded;let result=null;if(found){result=[];for(let id=goal;id!==-1;id=previous[id])result.push(gridPoint(g,id));result.reverse();}if(c.paths.size>=MAX_SHARED_PATHS){const oldest=c.paths.keys().next().value;c.paths.delete(oldest);c.failedLimits.delete(oldest);}c.paths.set(key,result);if(!result)c.failedLimits.set(key,limit);else c.failedLimits.delete(key);return result;
 }
-function plan(c,u,goal,radius){const g=gridFor(c,radius),start=anchor(c,g,u,radius),end=anchor(c,g,goal,radius);if(start===null||end===null)return null;const path=search(c,g,start,end);if(!path)return null;return[...path.map(p=>({...p})),{...goal}];}
+function plan(c,u,goal,radius,maxExpansions=MAX_EXPANSIONS){const g=gridFor(c,radius),start=anchor(c,g,u,radius),end=anchor(c,g,goal,radius);if(start===null||end===null)return null;const path=search(c,g,start,end,maxExpansions);if(!path)return null;return[...path.map(p=>({...p})),{...goal}];}
 
 export function castleRouteAvailable(cf,from,to,radius=.4,options={}){
  if(!cf||!finitePoint(from)||!finitePoint(to)||!Number.isFinite(radius)||radius<0)return false;
  const c=context(cf),flying=options.flying??from.flying??false;
  if(!inside(c.bounds,from,radius)||!inside(c.bounds,to,radius)||!flying&&(!passable(c,from,radius)||!passable(c,to,radius)))return false;
  return clear(c,from,to,radius,flying)||!flying&&!!plan(c,from,to,radius);
+}
+
+// Return an authoritative route for AI decisions as well as movement. Static
+// terrain remains solid when a caller plans a possible breach through buildings.
+export function castleRoutePath(cf,from,to,radius=.4){
+ if(!cf||!finitePoint(from)||!finitePoint(to))return null;const c=context(cf);if(!passable(c,from,radius)||!passable(c,to,radius))return null;
+ return clear(c,from,to,radius)?[{x:from.x,z:from.z},{x:to.x,z:to.z}]:plan(c,from,to,radius,Infinity);
+}
+export function castleFirstRouteBlocker(path,buildings,radius=.4){
+ if(!path?.length)return null;for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],hits=buildings.filter(o=>shape(o)&&segmentBox(a,b,o,radius));if(!hits.length)continue;
+ // The route is scanned in travel order. Rank contacts on the segment by the
+ // entry point of the body's swept rectangle, not by distance to its center.
+ const entry=o=>{let t=0;for(const axis of ['x','z']){const delta=b[axis]-a[axis];if(Math.abs(delta)<EPS)continue;const half=(axis==='x'?o.w:o.d)/2+radius,near=(o[axis]+(delta>0?-half:half)-a[axis])/delta;t=Math.max(t,near);}return t;};hits.sort((x,y)=>entry(x)-entry(y));return hits[0];
+ }return null;
 }
 
 export function moveCastleUnit(cf,u,destination,dt){

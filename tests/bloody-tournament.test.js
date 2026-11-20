@@ -10,7 +10,7 @@ import {castleUnitVisual} from '../src/castle-unit-art.js';
 import {bloodyRankingMarkup,createBloodyTournamentUI} from '../src/bloody-tournament-ui.js';
 import * as T from 'three';
 
-function setup({count=2,teams=false}={}){const g=new Game(876,{mode:'tower'});Object.assign(g,BloodyTournamentMethods);for(let i=0;i<count;i++)g.addPlayer('p'+i,i%2?'mage':'knight','Comandante '+i,false,teams?(i%2)+1:null);g.options={...g.options,mode:'bloody',bloodyTeams:teams};for(const u of g.heroes())g.setupBloodyPlayer(u);g.initBloodyTournament();return{g,p:g.player('p0'),q:g.player('p1')};}
+function setup({count=2,teams=false}={}){const g=new Game(876,{mode:'bloody',bloodyTeams:teams,teamSize:5});Object.assign(g,BloodyTournamentMethods);for(let i=0;i<count;i++)g.addPlayer('p'+i,i%2?'mage':'knight','Comandante '+i,false,teams?(i%2)+1:null);g.options={...g.options,mode:'bloody',bloodyTeams:teams};for(const u of g.heroes())g.setupBloodyPlayer(u);g.initBloodyTournament();return{g,p:g.player('p0'),q:g.player('p1')};}
 const cmd=(g,p,type,extra={})=>g.bloodyTournamentCommand(p,{type:'bt'+type,...extra});
 function advance(g,seconds){for(let t=0;t<seconds;t+=.05){g.time+=.05;g.tickBloodyTournament(.05);}}
 function ready(g){for(const p of g.units.filter(u=>u.bloodyCommander))assert.equal(cmd(g,p,'Ready'),true);advance(g,2.1);assert.equal(g.bloodyTournament.stage,'battle');}
@@ -20,9 +20,9 @@ test('sixteen Nordic warbands have finite ranks, matching voxel illustrations an
  assert.equal(bloodyUnitAt('__proto__'),null);const ground={flying:false},air={flying:true};assert.ok(castleWeaponFor(bloodyUnitAt('shieldwall'),ground));assert.equal(castleWeaponFor(bloodyUnitAt('shieldwall'),air),null);assert.ok(castleWeaponFor(bloodyUnitAt('hunters'),air));
 });
 
-test('contracts reserve gold and supplies atomically and cannot mutate another commander roster',()=>{
+test('contracts reserve gold atomically without an artificial army or supply cap and cannot mutate another commander roster',()=>{
  const{g,p,q}=setup();assert.equal(cmd(g,p,'Buy',{unitKey:'shieldwall'}),true);assert.equal(p.gold,R.startingGold-65);assert.equal(p.btRoster.length,1);assert.equal(bloodyRosterFood(p),3);const gold=p.gold;assert.equal(cmd(g,p,'Buy',{unitKey:'__proto__'}),false);assert.equal(p.gold,gold);assert.equal(cmd(g,q,'Sell',{entryId:p.btRoster[0].id}),false);assert.equal(p.btRoster.length,1);
- p.gold=100000;for(let i=0;i<20;i++)cmd(g,p,'Buy',{unitKey:'shieldwall'});assert.equal(bloodyRosterFood(p),R.maxFood);const before=p.gold;assert.equal(cmd(g,p,'Buy',{unitKey:'shieldwall'}),false);assert.equal(p.gold,before);
+ p.gold=100000;for(let i=0;i<24;i++)assert.equal(cmd(g,p,'Buy',{unitKey:'shieldwall'}),true);assert.equal(p.btRoster.length,25);assert.equal(bloodyRosterFood(p),75);const before=p.gold;assert.equal(cmd(g,p,'Buy',{unitKey:'shieldwall'}),true);assert.equal(p.gold,before-C.shieldwall.cost);assert.equal(p.btRoster.length,26);
 });
 
 test('upgrades require both currencies, preserve baseline stats and sell only their actual invested gold',()=>{
@@ -77,4 +77,30 @@ test('automatic full-supply garden formation fits the actual width of three huma
  assert.ok(visual.height>2&&visual.height<2.5,'humans keep their readable human scale');
  for(const entry of p.btRoster){assert.ok(entry.x-1.8+left>=area.minX,'entire left soldier stays inside the garden');assert.ok(entry.x+1.8+right<=area.maxX,'entire right soldier stays inside the garden');}
  assert.ok(area.maxX-area.minX>8*(right-left),'garden has room for ranks rather than dwarfing every soldier into a marker');
+});
+
+
+test('large purchased armies deploy every soldier beyond the former twelve-group and thirty-supply caps',()=>{
+ const{g,p,q}=setup();p.gold=100000;for(let i=0;i<24;i++)assert.equal(cmd(g,p,'Buy',{unitKey:'shieldwall'}),true);assert.equal(cmd(g,q,'Buy',{unitKey:'shieldwall'}),true);ready(g);
+ const ours=g.units.filter(u=>u.bloodyUnit&&u.owner===p.owner);assert.equal(ours.length,72);assert.equal(new Set(ours.map(u=>u.btEntry)).size,24);assert.ok(ours.every(u=>u.alive&&Number.isFinite(u.x)&&Number.isFinite(u.z)));assert.equal(bloodyRosterFood(p),72);
+});
+
+test('opposing armies fight inside their outer square before any centre advance',()=>{
+ const{g,p,q}=setup();cmd(g,p,'Buy',{unitKey:'shieldwall'});cmd(g,q,'Buy',{unitKey:'shieldwall'});ready(g);const soldiers=g.units.filter(u=>u.bloodyUnit),before=soldiers.map(u=>u.hp);advance(g,13);
+ assert.ok(soldiers.some((u,i)=>u.hp<before[i]));assert.ok(soldiers.some(u=>u.attackAt>0&&Math.abs(u.x)>62));assert.ok(g.bloodyTournament.duels[0].status==='battle'||g.bloodyTournament.duels[0].status==='cleared');
+});
+
+test('duel survivors use the corridor and wait at the centre instead of marching into another unfinished duel',()=>{
+ const{g}=setup({count:8});for(const p of g.heroes())cmd(g,p,'Buy',{unitKey:'shieldwall'});ready(g);for(const u of g.units.filter(u=>u.bloodyUnit)){if(u.owner==='p1'){u.alive=false;u.hp=0;}else if(u.btDuel!==0){u.speed=0;u.damage=0;}}
+ const winners=g.units.filter(u=>u.bloodyUnit&&u.owner==='p0'),start=winners.map(u=>({x:u.x,z:u.z}));advance(g,.1);assert.ok(winners.every(u=>u.btBattleStage==='advance'));assert.equal(g.bloodyTournament.duels[0].winner,1);advance(g,5);assert.ok(winners.some((u,i)=>u.x>start[i].x));
+ for(let i=0;i<500&&winners.some(u=>u.btBattleStage!=='center');i++)advance(g,.1);assert.ok(winners.every(u=>u.btBattleStage==='center'));assert.ok(winners.every(u=>Math.hypot(u.x,u.z)<9));const positions=winners.map(u=>({x:u.x,z:u.z}));advance(g,5);for(const[i,u]of winners.entries())assert.ok(Math.hypot(u.x-positions[i].x,u.z-positions[i].z)<1,'central survivors wait while remote duels continue');
+});
+
+test('splash attacks never damage allies, including deliberately forged friendly targets',()=>{
+ const{g,p,q}=setup();p.gold=1000;q.gold=1000;cmd(g,p,'Buy',{unitKey:'mortar'});cmd(g,p,'Buy',{unitKey:'shieldwall'});cmd(g,q,'Buy',{unitKey:'golem'});ready(g);const mortar=g.units.find(u=>u.owner===p.owner&&u.btKey==='mortar'),allies=g.units.filter(u=>u.owner===p.owner&&u.btKey==='shieldwall'),enemy=g.units.find(u=>u.owner===q.owner&&u.bloodyUnit);
+ Object.assign(mortar,{x:-85,z:0,target:allies[0].id,cd:0});Object.assign(enemy,{x:-81,z:0,hp:100000,maxHp:100000,damage:0,speed:0});for(const[i,u]of allies.entries())Object.assign(u,{x:-81.1,z:.3+i*.2,hp:100000,maxHp:100000,damage:0,speed:0});const before=allies.map(u=>u.hp);advance(g,.2);assert.ok(enemy.hp<enemy.maxHp);assert.deepEqual(allies.map(u=>u.hp),before);assert.ok(!g.effects.some(e=>e.type==='damage'&&e.source===mortar.id&&allies.some(u=>u.id===e.target)));
+});
+
+test('ten-player parties stay in four paired arenas and all recorded hits respect team ownership',()=>{
+ const{g}=setup({count:10,teams:true});for(const p of g.heroes())cmd(g,p,'Buy',{unitKey:'shieldwall'});ready(g);const troops=g.units.filter(u=>u.bloodyUnit);assert.equal(troops.length,30);assert.equal(new Set(troops.map(u=>u.btDuel)).size,4);for(let i=0;i<4;i++)assert.deepEqual(new Set(troops.filter(u=>u.btDuel===i).map(u=>u.team)),new Set([1,2]));const hits=[],fx=g.fx.bind(g);g.fx=(type,x,z,data)=>{if(type==='damage')hits.push(data);fx(type,x,z,data);};advance(g,17);assert.ok(hits.length>0);for(const hit of hits){const a=troops.find(u=>u.id===hit.source),b=troops.find(u=>u.id===hit.target);assert.ok(a&&b);assert.notEqual(a.team,b.team);}
 });

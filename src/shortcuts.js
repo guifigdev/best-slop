@@ -17,6 +17,13 @@ export function useShortcuts({target=window,context,onAction}){
   if(c.modal)return;
   if(c.dialog){if(e.key==='Enter'||e.code==='Space'){e.preventDefault();if(!e.repeat)onAction('dialogNext');}return;}
   if(!c.playing||c.modal)return;
+  if(c.bonk){
+   if(c.bonkOffer&&key==='TAB')return;
+   if(['w','a','s','d'].includes(e.key.toLowerCase())||e.key.startsWith('Arrow')){e.preventDefault();held.add(e.key.toLowerCase());return;}
+   if(e.repeat)return;
+   if(c.bonkOffer&&/^[1-3]$/.test(e.key)){e.preventDefault();const choice=c.bonkOffer.choices[Number(e.key)-1];if(choice)onAction('bonkChoice',choice.id);return;}
+   if(e.code==='Space'){e.preventDefault();onAction('bonk','jump');}else if(e.key==='Shift'){e.preventDefault();onAction('bonk','dash');}else if(key==='E'){e.preventDefault();onAction('bonk','interact');}else if(key==='TAB'){e.preventDefault();onAction('bonk','build');}else if(key==='P'){e.preventDefault();onAction('bonk','pause');}return;
+  }
   // Record Shift before a blueprint is chosen as well as during placement.
   if(e.key==='Shift'){held.add('Shift');return;}
   if(e.key==='Enter'&&c.repeatBuild){e.preventDefault();held.add('Enter');return;}
@@ -33,7 +40,7 @@ export function useShortcuts({target=window,context,onAction}){
   else if(key==='S')onAction('stop');else if(key==='H')onAction('hold');
   else if(key==='F1'||e.code==='Space'){e.preventDefault();onAction('center');}
  }
- const up=e=>held.delete(e.key),blur=()=>held.clear();
+ const up=e=>{held.delete(e.key);held.delete(e.key.toLowerCase());},blur=()=>held.clear();
  target.addEventListener('keydown',down);target.addEventListener('keyup',up);target.addEventListener('blur',blur);
  return{held,destroy(){target.removeEventListener('keydown',down);target.removeEventListener('keyup',up);target.removeEventListener('blur',blur);held.clear();}};
 }

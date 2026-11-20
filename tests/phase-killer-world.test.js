@@ -97,7 +97,7 @@ test('forest meshes match collision footprints and realm switching keeps draw ca
  const scene=new T.Scene(),world=createPhaseKillerWorld({scene});
  try{for(const [i,dimension]of ['normal','aether','omni','normal','omni'].entries()){
   world.update({options:{mode:'phasekiller'},phaseKiller:{dimension,buildings:[]},players:{me:1},units:[{id:1,x:MAP.spawn.x,z:MAP.spawn.z+['normal','aether','omni'].indexOf(dimension)*MAP.layerOffset}]},i+1,'me');
-  assert.ok(world.root.children.length<=18,'town, forest and three campfires use bounded root batches');
+  assert.ok(world.root.children.length<=19,'town, forest and three campfires use bounded root batches');
   const trunks=world.root.getObjectByName('phase-trunks'),trees=phaseKillerForestObstacles(dimension).filter(o=>o.phaseProp==='tree');assert.equal(trunks.count,trees.length);
   const matrix=new T.Matrix4(),position=new T.Vector3(),rotation=new T.Quaternion(),scale=new T.Vector3();
   for(const index of [0,Math.floor(trees.length/2),trees.length-1]){trunks.getMatrixAt(index,matrix);matrix.decompose(position,rotation,scale);assert.ok(Math.abs(position.x-trees[index].x)<.0001);assert.ok(Math.abs(position.z-trees[index].z)<.0001);assert.ok(Math.abs(scale.x-trees[index].w)<.0001);assert.ok(Math.abs(scale.z-trees[index].d)<.0001);}

@@ -1,4 +1,4 @@
-import {castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit} from './castle-navigation.js';
+import {castleNavigationRadius,castlePassable,castleRouteAvailable,castleSpawnPoint,moveCastleUnit} from './castle-navigation.js';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export const CASTLE_REPAIR={reach:.35,scan:14,hpPerSecond:35,goldFraction:.35};
@@ -14,13 +14,13 @@ export function pauseCastleWork(builder){
  builder.castleWorkPaused=true;builder.castleRepairTarget=null;builder.castleWorking=false;builder.castleWorker=null;
 }
 function workPoint(cf,builder,target){
- const r=.45+CASTLE_REPAIR.reach,points=[],origin=castlePassable(cf,builder,.45)?builder:castleSpawnPoint(cf,builder,.45,{maxDistance:2.25});
+ const bodyRadius=castleNavigationRadius(builder),r=bodyRadius+CASTLE_REPAIR.reach,points=[],origin=castlePassable(cf,builder,bodyRadius)?builder:castleSpawnPoint(cf,builder,bodyRadius,{maxDistance:2.25});
  if(!origin)return null;
  for(const side of [-1,1])for(const fraction of [-.75,0,.75]){
   points.push({x:target.x+side*(target.w/2+r),z:target.z+fraction*target.d/2});
   points.push({x:target.x+fraction*target.w/2,z:target.z+side*(target.d/2+r)});
  }
- return points.sort((a,b)=>distance(origin,a)-distance(origin,b)).find(p=>castlePassable(cf,p,.45)&&castleRouteAvailable(cf,origin,p,.45))||null;
+ return points.sort((a,b)=>distance(origin,a)-distance(origin,b)).find(p=>castlePassable(cf,p,bodyRadius)&&castleRouteAvailable(cf,origin,p,bodyRadius))||null;
 }
 
 export function tickCastleWorker(game,builder,dt){

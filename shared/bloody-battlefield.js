@@ -1,90 +1,47 @@
 import {BLOODY_TERRAIN_DATA as DATA} from './bloody-terrain-data.js';
 
-// Enlarge every coordinate together: art, WPM collision, private gardens and
-// battle formations must describe the same world. The source data stays intact.
+// Original browser layout following the requested outer-duel -> corridor ->
+// central-clash flow. The extracted native terrain remains untouched reference.
 export const BLOODY_WORLD_SCALE=2;
-const S=BLOODY_WORLD_SCALE;
-const scaledRegion=r=>({...r,minX:r.minX*S,maxX:r.maxX*S,minZ:r.minZ*S,maxZ:r.maxZ*S,x:r.x*S,z:r.z*S});
-const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
-// Broad, continuously walkable relief is an explicit browser adaptation. The
-// central summit has a flat meeting terrace and four gently sloping approaches;
-// it does not insert an unrepresented mountain obstacle into native WPM paths.
-export function bloodyHeightAt(x,z){
- if(typeof x==='object'){z=x.z;x=x.x;}
- if(!Number.isFinite(x)||!Number.isFinite(z))return 0;
- const nx=x/S,nz=z/S,r=Math.hypot(nx,nz),falloff=1-smooth((r-3)/23);
- if(!falloff)return 0;
- const rise=6.5*falloff;
- const shoulders=Math.sin(nx*.23)*Math.sin(nz*.2)*.65*falloff*smooth(r/6);
- return rise+shoulders;
-}
-
-// WPM rows advance north in Warcraft coordinates; our world uses z=-nativeY/128.
-// Keep the exact quarter-tile pathing instead of approximating cliffs/water by
-// a square arena. The flood fill also excludes all isolated preparation pods.
-const W=DATA.pathing.width,H=DATA.pathing.height,STEP=DATA.pathing.step*S,OX=DATA.origin[0]*S,OZ=DATA.origin[1]*S;
-const flags=Uint8Array.from(DATA.pathing.flags.match(/../g),s=>parseInt(s,16));
-const index=(x,z)=>Math.floor((OZ-z)/STEP)*W+Math.floor((x-OX)/STEP);
-const connected=new Uint8Array(W*H),queue=[index(0,0)];connected[queue[0]]=1;
-for(let head=0;head<queue.length;head++){
- const i=queue[head],x=i%W,z=Math.floor(i/W);
- for(const k of [x?i-1:-1,x<W-1?i+1:-1,z?i-W:-1,z<H-1?i+W:-1])if(k>=0&&!connected[k]&&!(flags[k]&DATA.pathing.unwalkableBit)){connected[k]=1;queue.push(k);}
-}
-// Merge identical blocked horizontal runs vertically: exact collision, compact
-// enough for the existing spatial hash and navigation grid to cache once.
-const obstacles=[];let previous=new Map();
-for(let row=0;row<H;row++){
- const current=new Map();
- for(let col=0;col<W;){if(connected[row*W+col]){col++;continue;}const start=col;while(col<W&&!connected[row*W+col])col++;const key=start+':'+col,old=previous.get(key);
-  if(old){old.d+=STEP;old.z-=STEP/2;current.set(key,old);}else{const box={x:OX+(start+col)*STEP/2,z:OZ-(row+.5)*STEP,w:(col-start)*STEP,d:STEP,nativePathing:true};obstacles.push(box);current.set(key,box);}
- }
- previous=current;
-}
-// Native WPM contains cliff/water pathing, but its decorative tree placements
-// are separate. Their visible trunks and volcanic cones now have real bodies.
-const sceneryObstacles=DATA.placements.filter(p=>['ATtr','Volc'].includes(p.rawId)).map(p=>{const scale=Math.min(1.7,Math.max(.5,p.scale||1)),width=p.rawId==='ATtr'?.72*scale:5*scale;return{x:p.x*S,z:p.z*S,w:width,d:width,scenery:true,rawId:p.rawId};});
-obstacles.push(...sceneryObstacles);
-const names=['Red','Blue','Teal','Purple','Yellow','Orange','Green','Pink'];
-const nativePlots=names.map((name,seat)=>({...scaledRegion(DATA.regions[name]),seat,name,native:true,center:{x:DATA.starts[seat].x*S,z:DATA.starts[seat].z*S}}));
-// Native SW6.4d has eight players. Existing browser formats allow ten, so their
-// two additional private gardens are deliberately outside the source terrain.
-const extraPlots=[-1,1].map((sign,i)=>({seat:8+i,name:'Jardim adicional '+(i+1),native:false,minX:(sign*55-5.5)*S,maxX:(sign*55+5.5)*S,minZ:-3*S,maxZ:3*S,x:sign*55*S,z:0,center:{x:sign*55*S,z:0}}));
-const preparationPlots=Object.freeze([...nativePlots,...extraPlots]);
-const fronts=Object.freeze(['1a','1b','2a','2b','3a','3b','4a','4b'].map((key,i)=>({index:i,key,...scaledRegion(DATA.regions['Frontrank_'+key]),reinforcement:scaledRegion(DATA.regions['Reinforcements_'+key])})));
-const map=Object.freeze({minX:-62*S,maxX:62*S,minZ:-48*S,maxZ:48*S,width:124*S,depth:96*S,nativeExtent:{minX:-48*S,maxX:48*S,minZ:-48*S,maxZ:48*S},center:{x:0,z:0},scale:S,battlefieldKey:'swbt-6.4d-expanded-relief',obstacles});
-export const BLOODY_BATTLEFIELD=Object.freeze({map,scale:S,heightAt:bloodyHeightAt,source:DATA.provenance,preparationPlots,fronts,obstacles,bridges:[],adaptation:'Native terrain, private plots and approaches enlarged twofold. Smooth central summit and four-biome scenery are original browser art; ten-player formats add two private gardens.'});
+const HALF=112,STEP=1,N=224;
+const rect=(x,z,w,d)=>({x,z,w,d,minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});
+const definitions=[[-85,0,'fire','Fornalha de Muspelheim'],[0,-85,'stone','Pátio dos Titãs'],[85,0,'forest','Bosque de Yggdrasil'],[0,85,'frost','Fortaleza de Niflheim']];
+export const BLOODY_DUEL_ARENAS=Object.freeze(definitions.map(([x,z,theme,name],index)=>{const radial={x:x/85,z:z/85},side={x:-radial.z,z:radial.x},exit={x:radial.x*62,z:radial.z*62};return Object.freeze({...rect(x,z,46,46),id:'duel-'+index,index,name,theme,biome:theme,radial,side,center:{x,z},bounds:rect(x,z,46,46),exit,entrance:exit,waypoints:[exit,{x:radial.x*45,z:radial.z*45},{x:radial.x*20,z:radial.z*20},{x:0,z:0}]});}));
+const center=Object.freeze({...rect(0,0,56,56),id:'central-clash',name:'Ágora dos Campeões',theme:'stone'});
+const corridors=Object.freeze(BLOODY_DUEL_ARENAS.map(a=>({...rect(a.radial.x*45,a.radial.z*45,a.radial.x?34:14,a.radial.z?34:14),id:'bridge-'+a.index,arenaId:a.id,theme:a.theme,from:a.exit,to:{x:a.radial.x*28,z:a.radial.z*28}})));
+const plots=[];for(const a of BLOODY_DUEL_ARENAS)for(const sign of [-1,1]){const seat=a.index*2+(sign===1?1:0),x=a.radial.x*136+a.side.x*sign*17,z=a.radial.z*136+a.side.z*sign*17;plots.push({...rect(x,z,30,26),seat,name:'Jardim '+(seat+1),native:false,center:{x,z},arenaId:a.id,theme:a.theme});}
+plots.push({...rect(-85,-80,30,26),seat:8,name:'Jardim 9',native:false,center:{x:-85,z:-80},arenaId:'duel-0',theme:'fire'},{...rect(85,80,30,26),seat:9,name:'Jardim 10',native:false,center:{x:85,z:80},arenaId:'duel-0',theme:'fire'});
+const preparationPlots=Object.freeze(plots);
+const inside=(p,r)=>p.x>=r.minX&&p.x<=r.maxX&&p.z>=r.minZ&&p.z<=r.maxZ;
+const regions=[center,...BLOODY_DUEL_ARENAS,...corridors];
+const baseOpen=p=>regions.some(r=>inside(p,r));
+const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
+export function bloodyHeightAt(x,z){if(typeof x==='object'){z=x.z;x=x.x;}if(!Number.isFinite(x)||!Number.isFinite(z))return 0;if(preparationPlots.some(p=>inside({x,z},p)))return 0;const r=Math.hypot(x,z),t=Math.max(0,1-r/65),hill=t*t*(3-2*t)*4.4;const a=BLOODY_DUEL_ARENAS.find(a=>inside({x,z},a));return hill+(a?.theme==='fire'?.35*Math.sin(x*.12)*Math.sin(z*.1):a?.theme==='forest'?.25*Math.cos(x*.1)*Math.sin(z*.13):a?.theme==='frost'?.18*Math.sin(x*.16):0);}
+// Deterministic physical scenery never occupies deployment bands or the
+// corridor axes. Statues have explicit pedestals matching their colliders.
+const scenery=[];
+for(const a of BLOODY_DUEL_ARENAS){for(let i=0;i<14;i++){const u=(hash(i+a.index*93)-.5)*35,v=(i%2?1:-1)*(6+hash(i+211+a.index)*4),x=a.x+a.radial.x*u+a.side.x*v,z=a.z+a.radial.z*u+a.side.z*v,w=1.1+hash(i+817)*1.5;scenery.push({id:`realm-prop-${a.index}-${i}`,x,z,w,d:w,h:1.3+hash(i+711)*3.1,theme:a.theme,kind:a.theme==='forest'?(i%3?'tree':'boulder'):a.theme==='frost'?(i%3?'ice':'snowrock'):a.theme==='fire'?(i%3?'basalt':'vent'):'boulder',scenery:true,alive:true});}for(const sx of [-1,1])for(const sz of [-1,1])scenery.push({id:`statue-${a.index}-${sx}-${sz}`,x:a.x+sx*20.5,z:a.z+sz*20.5,w:2.3,d:2.3,h:6.8,kind:'statue',variant:(a.index+(sx===1?1:0)+(sz===1?2:0))%4,theme:a.theme,scenery:true,alive:true});}
+for(let i=0;i<12;i++){const signX=i%2?-1:1,signZ=i%4<2?-1:1,x=signX*(15+hash(i+81)*8),z=signZ*(15+hash(i+45)*8);scenery.push({id:'agora-rock-'+i,x,z,w:1.3,d:1.3,h:.8+hash(i+2)*1.7,kind:i%4===0?'column':'boulder',theme:'stone',scenery:true,alive:true});}
+for(const sx of [-1,1])for(const sz of [-1,1])scenery.push({id:`agora-statue-${sx}-${sz}`,x:sx*24,z:sz*24,w:2.3,d:2.3,h:6.8,kind:'statue',variant:(sx===1?1:0)+(sz===1?2:0),theme:'stone',scenery:true,alive:true});
+export const BLOODY_SCENERY=Object.freeze(scenery.map(Object.freeze));
+const water=[];let previous=new Map();for(let row=0;row<N;row++){const current=new Map();for(let col=0;col<N;){if(baseOpen({x:-HALF+col+.5,z:-HALF+row+.5})){col++;continue;}const start=col;while(col<N&&!baseOpen({x:-HALF+col+.5,z:-HALF+row+.5}))col++;const key=start+':'+col,old=previous.get(key);if(old){old.d++;old.z+=.5;current.set(key,old);}else{const box={id:`water-${row}-${start}`,x:-HALF+(start+col)/2,z:-HALF+row+.5,w:col-start,d:1,waterBoundary:true};water.push(box);current.set(key,box);}}previous=current;}
+const obstacles=Object.freeze([...water,...BLOODY_SCENERY]);
+const fronts=Object.freeze(BLOODY_DUEL_ARENAS.flatMap(a=>[-1,1].map((sign,i)=>{const x=a.x+a.side.x*sign*15,z=a.z+a.side.z*sign*15;return{...rect(x,z,28,7),index:a.index*2+i,key:(a.index+1)+(i?'b':'a'),arenaId:a.id,arenaIndex:a.index,side:sign,x,z,reinforcement:{x,z},exit:a.exit,waypoints:a.waypoints};})));
+const map=Object.freeze({minX:-160,maxX:160,minZ:-160,maxZ:160,width:320,depth:320,battleBounds:{minX:-HALF,maxX:HALF,minZ:-HALF,maxZ:HALF,width:224,depth:224},nativeExtent:{minX:-HALF,maxX:HALF,minZ:-HALF,maxZ:HALF},center:{x:0,z:0},scale:2,battlefieldKey:'outer-duels-four-realms-v2',obstacles,duelArenas:BLOODY_DUEL_ARENAS,corridors,centralArena:center});
+export const BLOODY_BATTLEFIELD=Object.freeze({map,scale:2,heightAt:bloodyHeightAt,source:DATA.provenance,preparationPlots,fronts,obstacles,duelArenas:BLOODY_DUEL_ARENAS,pairArenas:BLOODY_DUEL_ARENAS,centralArena:center,corridors,bridges:corridors,scenery:BLOODY_SCENERY,adaptation:'Four original themed square duel arenas and protected corridors leading to a central agora, inspired by the requested Blood Tournament flow. Native source records are reference only.'});
 export const bloodyPreparationPlot=seat=>preparationPlots[Math.max(0,Math.min(9,Math.floor(Number(seat)||0)))];
-export function bloodyPreparationValid(seat,point,radius=.2){
- const plot=bloodyPreparationPlot(seat);
- if(!Number.isFinite(point?.x)||!Number.isFinite(point?.z)||point.x<plot.minX+.8||point.x>plot.maxX-.8||point.z<plot.minZ+.8||point.z>plot.maxZ-.8)return false;
- if(!plot.native)return true;
- const minCol=Math.floor((point.x-radius-OX)/STEP),maxCol=Math.floor((point.x+radius-OX)/STEP),minRow=Math.floor((OZ-point.z-radius)/STEP),maxRow=Math.floor((OZ-point.z+radius)/STEP);
- for(let row=minRow;row<=maxRow;row++)for(let col=minCol;col<=maxCol;col++)if(flags[row*W+col]&DATA.pathing.unwalkableBit)return false;
- return true;
+export function bloodyPreparationValid(seat,p,radius=.2){const a=bloodyPreparationPlot(seat);return Number.isFinite(p?.x)&&Number.isFinite(p?.z)&&p.x>=a.minX+.8+radius&&p.x<=a.maxX-.8-radius&&p.z>=a.minZ+.8+radius&&p.z<=a.maxZ-.8-radius;}
+export function bloodyPreparationPoint(seat,preferred,occupied=[]){const a=bloodyPreparationPlot(seat),candidates=[];for(let z=a.minZ+1.1;z<=a.maxZ-1;z+=1.1)for(let x=a.minX+1.1;x<=a.maxX-1;x+=1.1)if(occupied.every(o=>Math.hypot(o.x-x,o.z-z)>=1.05))candidates.push({x,z});candidates.sort((a,b)=>Math.hypot(a.x-preferred.x,a.z-preferred.z)-Math.hypot(b.x-preferred.x,b.z-preferred.z)||a.x-b.x||a.z-b.z);return candidates[0]||null;}
+export function bloodyTerrainBlocked(p,radius=0){if(!Number.isFinite(p?.x)||!Number.isFinite(p?.z)||!Number.isFinite(radius)||radius<0||p.x-radius< -HALF||p.x+radius>HALF||p.z-radius< -HALF||p.z+radius>HALF)return true;return obstacles.some(o=>Math.abs(p.x-o.x)<o.w/2+radius-1e-5&&Math.abs(p.z-o.z)<o.d/2+radius-1e-5);}
+export function bloodyBattleFront({seat=0,team=1,teams=false,teamIndex=0}={}){const index=seat<8?seat:seat===8?0:1;return{...fronts[index],extraOffset:seat>=8?3.6:0};}
+export function bloodyBattleSpawn({seat=0,team=1,teams=false,teamIndex=0,entry,index:troopIndex=0,count=1}){const plot=bloodyPreparationPlot(seat),front=bloodyBattleFront({seat,team,teams,teamIndex}),a=BLOODY_DUEL_ARENAS[front.arenaIndex],u=Math.max(-1,Math.min(1,(entry.x-plot.x)/(plot.w/2)))*16+(troopIndex-(count-1)/2)*1.3,v=front.side*(15+(entry.z-plot.z)/(plot.d/2)*3);return{x:a.x+a.radial.x*(u+front.extraOffset)+a.side.x*v,z:a.z+a.radial.z*(u+front.extraOffset)+a.side.z*v};}
+// Deploy every purchased body into its own side of the outer arena. A saturated
+// formation may initially overlap allies, but never vanishes or crosses sides.
+export function bloodyDeploymentPoint(game,player,entry,index=0,count=1,radius=.6){
+ const seat=player.btPadSeat??player.seat??0,front=bloodyBattleFront({seat,team:player.btTeam,teams:game.options?.bloodyTeams}),arena=BLOODY_DUEL_ARENAS[front.arenaIndex],preferred=bloodyBattleSpawn({seat,entry,index,count}),flying=!!player.flying,allies=(game.units||[]).filter(u=>u.bloodyUnit&&u.alive&&!!u.flying===flying),candidates=[];
+ const safe=p=>!bloodyTerrainBlocked(p,radius)&&front.side*((p.x-arena.x)*arena.side.x+(p.z-arena.z)*arena.side.z)>=radius+1&&Math.abs(p.x-arena.x)<=23-radius&&Math.abs(p.z-arena.z)<=23-radius,clear=p=>allies.every(u=>Math.hypot(u.x-p.x,u.z-p.z)>=(u.collisionRadius||.5)+radius-.01);
+ if(safe(preferred)&&clear(preferred))return preferred;
+ const spacing=Math.max(1.05,radius*2.04);for(let v=radius+1.1;v<22-radius;v+=spacing)for(let u=-21+radius;u<21-radius;u+=spacing){const p={x:arena.x+arena.radial.x*u+arena.side.x*front.side*v,z:arena.z+arena.radial.z*u+arena.side.z*front.side*v};if(safe(p))candidates.push(p);}
+ candidates.sort((a,b)=>Math.hypot(a.x-preferred.x,a.z-preferred.z)-Math.hypot(b.x-preferred.x,b.z-preferred.z));return candidates.find(clear)||candidates[0]||{x:arena.x+arena.side.x*front.side*15,z:arena.z+arena.side.z*front.side*15};
 }
-export function bloodyPreparationPoint(seat,preferred,occupied=[]){
- const plot=bloodyPreparationPlot(seat),candidates=[];
- for(let z=plot.minZ+.85;z<=plot.maxZ-.8;z+=.25)for(let x=plot.minX+.85;x<=plot.maxX-.8;x+=.25){const p={x,z};if(bloodyPreparationValid(seat,p)&&occupied.every(o=>Math.hypot(o.x-x,o.z-z)>=1.05))candidates.push(p);}
- candidates.sort((a,b)=>Math.hypot(a.x-preferred.x,a.z-preferred.z)-Math.hypot(b.x-preferred.x,b.z-preferred.z)||a.x-b.x||a.z-b.z);
- return candidates[0]||null;
-}
-export function bloodyTerrainBlocked(point,radius=0){
- if(!Number.isFinite(point?.x)||!Number.isFinite(point?.z)||!Number.isFinite(radius)||radius<0)return true;
- const minCol=Math.floor((point.x-radius-OX)/STEP),maxCol=Math.floor((point.x+radius-OX-(radius?1e-7:0))/STEP),minRow=Math.floor((OZ-point.z-radius)/STEP),maxRow=Math.floor((OZ-point.z+radius-(radius?1e-7:0))/STEP);
- if(minCol<0||maxCol>=W||minRow<0||maxRow>=H)return true;
- for(let row=minRow;row<=maxRow;row++)for(let col=minCol;col<=maxCol;col++)if(!connected[row*W+col])return true;
- if(sceneryObstacles.some(o=>Math.abs(point.x-o.x)<o.w/2+radius-1e-5&&Math.abs(point.z-o.z)<o.d/2+radius-1e-5))return true;
- return false;
-}
-export function bloodyBattleFront({seat=0,team=1,teams=false,teamIndex=0}={}){
- if(teams){const side=team===1?0:4;return{...fronts[side+(teamIndex%2)],extraOffset:Math.floor(teamIndex/2)*1.8*S};}
- const i=seat<8?seat:seat===8?0:4;return{...fronts[i],extraOffset:seat>=8?3.6*S:0};
-}
-export function bloodyBattleSpawn({seat=0,team=1,teams=false,teamIndex=0,entry,index:troopIndex=0,count=1}){
- const plot=bloodyPreparationPlot(seat),front=bloodyBattleFront({seat,team,teams,teamIndex}),length=Math.hypot(front.x,front.z),out={x:front.x/length,z:front.z/length},side={x:-out.z,z:out.x};
- const lateral=((entry.x-(plot.minX+plot.maxX)/2)/(plot.maxX-plot.minX))*5.8*S+(troopIndex-(count-1)/2)*1.15*S+front.extraOffset;
- const depth=((entry.z-plot.minZ)/(plot.maxZ-plot.minZ)-.5)*4*S;
- return{x:front.x+side.x*lateral+out.x*depth,z:front.z+side.z*lateral+out.z*depth};
-}
-const contexts=new WeakMap();
-export function bloodyBattleContext(game){let context=contexts.get(game);if(!context){context={map:{...map,...map.nativeExtent,width:96*S,depth:96*S},buildings:[],obstacles,navigationRevision:2};contexts.set(game,context);}context.units=game.units.filter(u=>u.bloodyUnit&&u.alive);context.elapsed=game.time;return context;}
+const contexts=new WeakMap();export function bloodyBattleContext(game){let c=contexts.get(game);if(!c){c={map:{...map,...map.battleBounds},buildings:[],obstacles,navigationRevision:4};contexts.set(game,c);}c.units=game.units.filter(u=>u.bloodyUnit&&u.alive);c.elapsed=game.time;return c;}

@@ -27,7 +27,7 @@ test('entering a combat room seals every door, gathers all four party members an
  Object.assign(p,{x:room.x-room.w/2+.1,z:room.z});g.tickDungeon(.01);assert.equal(g.dungeon.rooms[1].status,'combat');
  for(const h of g.heroes()){assert.equal(dungeonRoomAt(g.dungeon.map,h),1);assert.equal(unitSolidBlocked(g,h,h),false,'the first arrival and companions remain outside the new door footprint');}
  for(const door of doors)assert.equal(unitSolidBlocked(g,{collisionRadius:.2},door),true);assert.equal(g.snapshotDungeon('p0').doors.filter(d=>d.room===1).every(d=>d.locked),true);
- const enemies=g.units.filter(u=>u.dungeonEnemy&&u.alive);assert.equal(enemies.length,R.roomWaveSize);assert.ok(enemies.every(u=>u.dungeonRoom===1));assert.ok(g.dungeon.rooms[1].pending>0);
+ const enemies=g.units.filter(u=>u.dungeonEnemy&&u.alive);assert.equal(enemies.length,12,'first-floor four-player cohort');assert.equal(g.dungeon.rooms[1].pending,g.dungeon.rooms[1].planned-12);assert.ok(enemies.every(u=>u.dungeonRoom===1));assert.ok(g.dungeon.rooms[1].pending>0);
  p.skills=['blink'];const exit=g.dungeon.map.rooms[0];assert.equal(g.dungeonCastValid(p,skillAt('blink',1),{slot:0,x:exit.x,z:exit.z}),false);assert.match(g.commandFailureReason,/seladas/);
  const door=doors[0],inside={x:door.x+(door.side==='east'?-2:door.side==='west'?2:0),z:door.z+(door.side==='south'?-2:door.side==='north'?2:0)},outside={x:door.x*2-inside.x,z:door.z*2-inside.z};assert.equal(unitSegmentClear(g,{collisionRadius:.3},inside,outside),false);
 });
@@ -42,6 +42,19 @@ test('room treasure cannot open until every wave is defeated; then only its door
 test('lazy hordes have an active cap and room counts scale with party size and depth',()=>{
  const solo=create({players:1,party:1}),party=create();start(solo);start(party);assert.ok(party.dungeon.rooms[1].planned>solo.dungeon.rooms[1].planned);const low=party.dungeon.rooms[1].planned;party.dungeon.floor=29;party.spawnDungeonFloor();assert.ok(party.dungeon.rooms[1].planned>low);
  const p=party.player('p0');for(const room of party.dungeon.rooms.filter(r=>r.status==='unvisited'))party.activateDungeonRoom(room.id,p);assert.ok(party.units.filter(u=>u.dungeonEnemy&&u.alive).length<=R.maxActiveEnemies);assert.ok(party.dungeon.rooms.some(r=>r.pending>0));assert.equal(party.dungeon.guardiansGoal,party.dungeon.rooms.reduce((n,r)=>n+r.planned,0));
+});
+
+test('early cohorts leave time to read the room and refill only after half fall without losing the planned enemies',()=>{
+ for(const [party,floor,expected]of [[1,1,6],[4,1,12],[1,7,12],[4,7,18]]){
+  const g=create({players:party,party,seed:51});start(g);if(floor>1){g.dungeon.floor=floor-1;g.spawnDungeonFloor();}const p=g.player('p0'),room=g.dungeon.map.rooms[1];Object.assign(p,{x:room.x,z:room.z});g.activateDungeonRoom(1,p);const state=g.dungeon.rooms[1],planned=state.planned,alive=()=>g.units.filter(u=>u.dungeonEnemy&&u.alive&&u.dungeonRoom===1),initial=[...alive()];assert.equal(initial.length,expected);assert.equal(state.pending,planned-expected);const pending=state.pending;
+  for(let i=0;i<expected/2-1;i++)g.hit(initial[i],initial[i].hp,p,false,false,false,true);assert.equal(state.pending,pending,'do not top up every lost enemy');assert.equal(alive().length,expected/2+1);
+  g.hit(initial[expected/2-1],initial[expected/2-1].hp,p,false,false,false,true);assert.equal(alive().length,Math.min(expected,planned-expected/2),'half-cohort threshold releases the next group');assert.equal(state.pending,Math.max(0,pending-expected/2));assert.equal(state.planned,planned,'cohort pacing cannot shrink the objective');
+  let killed=expected/2;while(state.status==='combat'){const list=alive();assert.ok(list.length>0&&list.length<=expected);for(const enemy of list){g.hit(enemy,enemy.hp,p,false,false,false,true);killed++;}}assert.equal(killed,planned);assert.equal(state.pending,0);assert.equal(alive().length,0);
+ }
+});
+
+test('the first two floor-one rooms teach a shorter objective before normal rooms and do not secretly hatch extra hordes',()=>{
+ for(const [party,first,second]of [[1,8,10],[4,16,20]]){const g=create({players:party,party,seed:51});start(g);assert.equal(g.dungeon.rooms[1].planned,first);assert.equal(g.dungeon.rooms[2].planned,second);assert.ok(g.dungeon.rooms[3].planned>second);assert.equal(g.dungeon.guardiansGoal,g.dungeon.rooms.reduce((sum,r)=>sum+r.planned,0));assert.equal(g.dungeon.objects.some(o=>o.propType==='eggNest'&&o.room<=2),false);assert.equal(g.dungeon.map.props.some(o=>o.type==='eggNest'&&o.room<=2),false);const urn=g.dungeon.objects.find(o=>o.propType==='urn'&&o.room===1);assert.ok(urn?.collider&&urn.hp>0);assert.equal(unitSolidBlocked(g,{collisionRadius:.2},urn),true,'intro replacement retains an actual colliding breakable');assert.ok(g.dungeon.objects.some(o=>o.propType==='eggNest'&&o.room>=3),'nests are introduced after the training chambers');g.spawnDungeonFloor();assert.equal(g.dungeon.rooms[1].planned,g.dungeon.rooms[2].planned,'later floors return to the full room objective');assert.ok(g.dungeon.objects.some(o=>o.propType==='eggNest'&&o.room===1));}
 });
 
 test('team snapshots hide undiscovered enemies, distant loot and another team merchant discovery',()=>{
