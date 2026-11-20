@@ -10,8 +10,8 @@ export const DUNGEON_BIOMES=Object.freeze({
 export const DUNGEON_RARITIES=Object.freeze({common:{name:'Comum',color:'#c5cfb4'},rare:{name:'Raro',color:'#9cced9'},epic:{name:'Épico',color:'#c4a0da'},legendary:{name:'Lendário',color:'#edc26c'}});
 export const DUNGEON_OBJECT_NAMES=Object.freeze({portal:'Escadaria para o próximo andar',chest:'Cofre dos viajantes',merchant:'Mercador oculto',shrine:'Santuário de Eir',equipment:'Equipamento',fragment:'Fragmento de técnica',gold:'Bolsa de ouro',corpse:'Companheiro caído',key:'Chave do cofre',prop:'Objeto quebrável'});
 
-// Original Nordic bestiary: archetype/element variety inspired by public
-// official Ragnarok material; names, art, values and abilities below are ours.
+// Combat archetypes are local. Direct Ragnarok visual reconstructions and
+// names are separately identified in monster-visual-references.js.
 export const DUNGEON_DESIGN_REFERENCES=Object.freeze([
  {url:'https://roc.gnjoy.in.th/event/update-new-dungeon/',purpose:'Official dungeon bestiary demonstrates spider/boss and elemental monster variety; no stats or art copied.'},
  {url:'https://ro.gnjoy.in.th/landingpage/limitbreak-lv260%26NewDungeons/newDungeon/index.html',purpose:'Official underground cavern and elemental dungeon theme reference.'}

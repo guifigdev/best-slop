@@ -1,3 +1,4 @@
+import {monsterVisualReference,monsterReferenceName} from './monster-visual-references.js';
 import {DUNGEON_SPECIES as SPECIES} from './dungeon-catalog.js';
 import {insideBossPattern} from './boss-patterns.js';
 import {unitSegmentClear} from './unit-collision.js';
@@ -7,7 +8,8 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),inside=(p,h)=>Math.abs(p.x-h.x
 export function spawnDungeonSpecies(g,room,key,point,{boss=false,extra=false}={}){
  const s=SPECIES[key]||SPECIES.rat,floor=g.dungeon.floor,party=1+Math.max(0,(g.dungeon.partySize||1)-1)*.2;
  const hp=Math.round((boss?(3500+floor*260)*(1+(floor-1)*.015)*Math.max(1,s.hp/3):(230+floor*12)*(1+floor*.015)*s.hp)*party),damage=(boss?48+floor*3:22+floor*1.6)*s.damage;
- const u=g.spawnEnemy('dungeon-'+key,point.x,point.z,{name:s.name,dungeonEnemy:true,dungeonSpecies:key,dungeonBehavior:s.behavior,dungeonProjectile:s.projectile||null,dungeonRoom:room.id,dungeonFloor:floor,dungeonExtra:extra,team:100,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),range:s.range||1.25,size:s.size*(boss?1.45:1),collisionRadius:s.radius*(boss?1.25:1),flying:!!s.flying,altitude:s.flying?2.3:0,element:s.element||null,skills:[],boss:false,level:floor,acquireRange:60,cd:1.2+(g.units.length%5)*.23});
+ const visual=monsterVisualReference(key,room.biome||g.dungeon.biome);
+ const u=g.spawnEnemy('dungeon-'+key,point.x,point.z,{name:monsterReferenceName(visual,s.name),ragnarokVisual:visual,dungeonBiome:room.biome||g.dungeon.biome,dungeonEnemy:true,dungeonSpecies:key,dungeonBehavior:s.behavior,dungeonProjectile:s.projectile||null,dungeonRoom:room.id,dungeonFloor:floor,dungeonExtra:extra,team:100,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),range:s.range||1.25,size:s.size*(boss?1.45:1),collisionRadius:s.radius*(boss?1.25:1),flying:!!s.flying,altitude:s.flying?2.3:0,element:s.element||null,skills:[],boss:false,level:floor,acquireRange:60,cd:1.2+(g.units.length%5)*.23});
  u.monsterBase=Object.freeze({...u.monsterBase,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),speed:s.speed,interval:s.interval,accuracy:.94,evasion:0,critChance:0,critMultiplier:1.5,magicPower:1});g.refresh(u);u.hp=u.maxHp;u.dungeonBoss=boss;u.dungeonElite=boss||s.hp>=2;u.dungeonAbilityAt=g.time+3.5+(u.id%7)*.7;u.order='auto';return u;
 }
 export function dungeonHazardPhase(h,time){if(h.type==='ice'||h.type==='pit')return{phase:'active',active:true};const phase=((time+(h.offset||0))%h.period+h.period)%h.period;return phase<h.telegraphSeconds?{phase:'warning',active:false}:phase<h.telegraphSeconds+1.35?{phase:'active',active:true}:{phase:'safe',active:false};}

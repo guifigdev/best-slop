@@ -1,11 +1,13 @@
-// Original cave fauna. The renderer merges static parts and animates only the
+import {ragnarokMonsterKey,ragnarokMonsterSpec} from './ragnarok-monster-art.js';
+// Cave fauna includes direct Ragnarok sprite reconstructions. Merge static parts and animate only the
 // returned limbs/wings through its existing eight-frame clips.
 const cache=new Map();
 export const DUNGEON_VISUAL_SPECIES=Object.freeze(['cavebat','scarab','spider','snake','worm','slime','rat','broodmother','stonebeast','guardian','mimic','archer','firemage']);
 const aliases={cave_bat:'cavebat',cavespider:'spider',cave_spider:'spider',cave_scarab:'scarab',cave_rat:'rat',cave_snake:'snake',cave_worm:'worm',spittingworm:'worm',brood_matron:'broodmother',stoneguardian:'guardian',stone_beast:'stonebeast',cave_slime:'slime'};
 function resolve(value){const raw=typeof value==='string'?value:!value?.hero?value?.dungeonSpecies:null,key=aliases[raw]||raw;return DUNGEON_VISUAL_SPECIES.includes(key)?key:null;}
-export function dungeonMonsterModelKey(unit){const key=resolve(unit);return key?'dungeon:'+key:null;}
+export function dungeonMonsterModelKey(unit){const key=resolve(unit);return key?'dungeon:'+key+(ragnarokMonsterKey(unit)?':'+ragnarokMonsterKey(unit):''):null;}
 export function dungeonMonsterSpec(value){
+ const reference=ragnarokMonsterSpec(value);if(reference)return reference;
 const key=resolve(value);if(!key)return null;if(cache.has(key))return cache.get(key);
  const parts=[],legs=[],wings=[],b=(...p)=>parts.push(p),leg=(x,z,color,w=.14,h=.4,d=.23,y=h/2)=>legs.push({x,y,z,w,h,d,color});
  const dark=0x243344,bone=0xd9cfab,glow=0xa6dbb0,fur=({cavebat:0x6c607e,scarab:0x5b7771,spider:0x63526e,snake:0x70855e,worm:0xb3a185,slime:0x79a893,rat:0x8e8275,broodmother:0x754c68,stonebeast:0x8c9186,guardian:0x7b8892,mimic:0x846444,archer:0x83937b,firemage:0x9a6958})[key];
