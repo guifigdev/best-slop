@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as T from 'three';
+import {createVoxelWeather,VOXEL_WEATHER_BUDGET} from '../src/voxel-weather.js';
+test('weather has finite bounded snow, mist and cold breath anchored to the supplied terrain and camera focus',()=>{
+ const parent=new T.Group(),weather=createVoxelWeather(parent,{seed:'frost',particles:10000});try{
+  weather.update(3,{kind:'snow',center:{x:100,y:8,z:-50},heightAt:()=>8,breath:{x:101,y:10,z:-50}});const [snow,mist,breath]=weather.root.children;assert.equal(snow.count,VOXEL_WEATHER_BUDGET.particles);assert.equal(mist.count,12);assert.equal(breath.count,3);assert.equal(weather.root.children.length,3);
+  const matrix=new T.Matrix4(),position=new T.Vector3(),rotation=new T.Quaternion(),scale=new T.Vector3();for(let i=0;i<snow.count;i++){snow.getMatrixAt(i,matrix);matrix.decompose(position,rotation,scale);assert.ok(position.x>75&&position.x<125);assert.ok(position.z>-71&&position.z<-29);assert.ok(position.y>=8);assert.ok([...matrix.elements].every(Number.isFinite));}
+  const geometry=snow.geometry;weather.update(4,{kind:'mist'});assert.equal(snow.count,0);assert.equal(mist.count,12);assert.equal(breath.count,0);assert.equal(mist.geometry,geometry);weather.update(5,{kind:'sparks'});assert.equal(snow.count,96);assert.equal(mist.count,0);weather.update(6,{enabled:false});assert.equal(weather.root.visible,false);
+ }finally{weather.dispose();}assert.equal(parent.children.length,0);
+});
+test('weather disposes its shared geometry and three materials exactly once',()=>{
+ const parent=new T.Group(),weather=createVoxelWeather(parent,{particles:NaN});let released=0;const geometry=weather.root.children[0].geometry;geometry.addEventListener('dispose',()=>released++);for(const mesh of weather.root.children)mesh.material.addEventListener('dispose',()=>released++);weather.dispose();weather.dispose();assert.equal(released,4);assert.equal(parent.children.length,0);weather.update(7);assert.equal(parent.children.length,0);
+});

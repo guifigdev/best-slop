@@ -11,11 +11,11 @@ function start(g){for(const p of g.heroes())assert.ok(g.command(p.owner,{type:'d
 function defeatRoom(g,id,p=g.player('p0')){const state=g.dungeon.rooms[id];while(state.status==='combat'){const enemies=g.units.filter(u=>u.dungeonEnemy&&u.dungeonRoom===id&&u.alive);assert.ok(enemies.length);for(const u of enemies){u.alive=false;u.hp=0;g.dungeonLoot(u,p);}}}
 
 test('expanded deterministic rooms fit four heroes and hordes; corridors are five cells wide',()=>{
- for(let seed=1;seed<=12;seed++){const map=generateDungeonFloor(seed,seed);assert.equal(map.width,85);for(const room of map.rooms){assert.ok(room.w>=25.5&&room.d>=25.5);for(const dx of [-3,3])for(const dz of [-3,3])assert.ok(dungeonWalkable(map,{x:room.x+dx,z:room.z+dz},.8));}for(const door of map.doors)assert.ok(Math.max(door.w,door.d)>=R.cellSize*5);assert.ok(map.doors.length>=16);}
+ for(let seed=1;seed<=12;seed++){const map=generateDungeonFloor(seed,seed);assert.equal(map.width,133);for(const room of map.rooms){assert.ok(room.w>=40.5&&room.d>=40.5);for(const dx of [-3,3])for(const dz of [-3,3])assert.ok(dungeonWalkable(map,{x:room.x+dx,z:room.z+dz},.8));}for(const door of map.doors)assert.ok(Math.max(door.w,door.d)>=R.cellSize*5);assert.ok(map.doors.length>=16);}
 });
 
 test('preparation and the first active floor use identical authoritative geometry and body-safe positions',()=>{
- const g=create(),map=g.dungeon.map,seed=map.seed,obstacles=JSON.stringify(g.obstacles);assert.equal(g.phase,'preparation');assert.equal(g.dungeon.stage,'lobby');assert.equal(g.bounds,map.bounds);
+ const g=create(),map=g.dungeon.map,seed=map.seed,obstacles=JSON.stringify(g.obstacles.filter(o=>!o.dungeonObject));assert.equal(g.phase,'preparation');assert.equal(g.dungeon.stage,'lobby');assert.equal(g.bounds,map.bounds);
  for(const h of g.heroes()){assert.equal(unitSolidBlocked(g,h,h),false);assert.equal(h.cell,undefined);}
  const before=g.snapshotFor('p0');assert.equal(before.dungeon.map.seed,seed);assert.deepEqual(before.dungeon.visibility.discoveredRooms,[0]);
  start(g);assert.equal(g.dungeon.map.seed,seed);assert.equal(JSON.stringify(g.obstacles.filter(o=>!o.dungeonObject)),obstacles);assert.equal(g.units.filter(u=>u.dungeonEnemy).length,0,'unvisited room hordes consume no AI or collision bodies');

@@ -20,6 +20,6 @@ test('large map ground, cliffs, collectible forest and mines use bounded reusabl
  }finally{world.dispose();}assert.equal(scene.children.length,0);
 });
 
-test('Big Wall, barracks and towers have tall architecture and human-sized doors while footprints remain unchanged',()=>{
- for(const key of ['hC08','hC11','oC16','oC20','oC21']){const parts=kodoBuildingSpec(key),height=Math.max(...parts.map(p=>p[1]+p[4]/2));assert.ok(height>=3.5&&height<=5,key+' architecture stands above the Runner');assert.equal(parts[0][3],B[key].w);assert.equal(parts[0][5],B[key].d);if(['hC08','hC11'].includes(key))assert.ok(parts.some(p=>p[3]===.85&&p[4]===2),'door opening fits a character');}
+test('low Big Walls and compact barracks pack tightly while defensive towers stay legible',()=>{
+ for(const key of ['hC08','hC11','oC16','oC20','oC21']){const parts=kodoBuildingSpec(key),height=Math.max(...parts.map(p=>p[1]+p[4]/2));if(key==='hC08')assert.ok(height>=.8&&height<=1.4,'foundation is a low wall, not a tower');else if(key==='hC11')assert.ok(height>=1.5&&height<=2.2,'barracks is a compact hut');else assert.ok(height>=3.5&&height<=5,'defensive towers retain distinct silhouettes');assert.equal(parts[0][3],B[key].w);assert.equal(parts[0][5],B[key].d);for(const p of parts){assert.ok(Math.abs(p[0])+p[3]/2<=B[key].w/2+.2);assert.ok(Math.abs(p[2])+p[5]/2<=B[key].d/2+.2);}}
 });

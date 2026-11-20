@@ -9,6 +9,11 @@ export function dungeonFogGrid(map,visibility){
 }
 // One shared world-space texture shades terrain, instanced scenery and actors.
 // It reveals no information when the camera pans into an unexplored room.
+export function softenVision(vision){
+ const size=vision.size,base=Uint8Array.from(vision.cells,c=>c==='2'?255:Math.round(255*(c==='1'?(vision.exploredLight??.52):(vision.unexploredLight??.27)))),out=new Uint8Array(base.length);
+ for(let z=0;z<size;z++)for(let x=0;x<size;x++){let sum=0,total=0;for(let dz=-2;dz<=2;dz++)for(let dx=-2;dx<=2;dx++){const xx=Math.max(0,Math.min(size-1,x+dx)),zz=Math.max(0,Math.min(size-1,z+dz)),w=(3-Math.abs(dx))*(3-Math.abs(dz));sum+=base[zz*size+xx]*w;total+=w;}out[z*size+x]=Math.round(sum/total);}
+ return out;
+}
 export function createExplorationFog(scene){
  let texture=new T.DataTexture(new Uint8Array([255]),1,1,T.RedFormat),key=null,lastScan=-Infinity;texture.needsUpdate=true;
  const uniforms={exploreMap:{value:texture},exploreBounds:{value:new T.Vector4(-1,-1,2,2)},exploreActive:{value:0}},materials=new Map();
@@ -26,8 +31,8 @@ export function createExplorationFog(scene){
  gl_FragColor.rgb*=mix(1.0,exploreLight,exploreActive);`);};material.customProgramCacheKey=()=>cache.call(material)+'|team-exploration-v1';material.needsUpdate=true;
  }
  function update(state,time=0){const mode=state?.options?.mode,vision=mode==='dungeon'?state.dungeon?.visibility:['treetag','kodotag'].includes(mode)?state.treeTag?.vision||state.kodoTag?.vision||state.explorationVision:null;uniforms.exploreActive.value=vision||mode==='dungeon'&&state.dungeon?.map?1:0;if(!uniforms.exploreActive.value)return;
-  const signature=['treetag','kodotag'].includes(mode)?vision?.cells:JSON.stringify([state.dungeon?.map?.seed,vision?.visibleRooms,vision?.discoveredRooms]);
-  if(key!==signature){key=signature;let grid;if(mode==='dungeon'&&state.dungeon?.map)grid=dungeonFogGrid(state.dungeon.map,vision);else if(vision?.cells)grid={size:vision.size,bounds:vision.bounds,cells:Uint8Array.from(vision.cells,c=>c==='2'?255:c==='1'?30:0)};
+  const signature=['treetag','kodotag'].includes(mode)?JSON.stringify([mode,vision?.size,vision?.bounds,vision?.cells]):JSON.stringify([state.dungeon?.map?.seed,vision?.visibleRooms,vision?.discoveredRooms]);
+  if(key!==signature){key=signature;let grid;if(mode==='dungeon'&&state.dungeon?.map)grid=dungeonFogGrid(state.dungeon.map,vision);else if(vision?.cells)grid={size:vision.size,bounds:vision.bounds,cells:softenVision(vision)};
    if(grid){texture.dispose();texture=new T.DataTexture(grid.cells,grid.size,grid.size,T.RedFormat);texture.magFilter=texture.minFilter=T.LinearFilter;texture.unpackAlignment=1;texture.needsUpdate=true;uniforms.exploreMap.value=texture;const b=grid.bounds;uniforms.exploreBounds.value.set(b.minX,b.minZ,b.maxX-b.minX,b.maxZ-b.minZ);}
   }
   if(time-lastScan>.2||time<lastScan){lastScan=time;scene.traverse(object=>{for(const m of Array.isArray(object.material)?object.material:[object.material])register(m);});}

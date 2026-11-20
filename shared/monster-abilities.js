@@ -73,9 +73,10 @@ export const monsterMethods={
  claimLoot(u,c){
   const drop=(this.drops||[]).find(d=>d.id===c.dropId&&d.owner===u.owner&&d.expires>this.time);
   if(drop?.item){
-   if(!u.alive||!ITEMS[drop.item]||ITEMS[drop.item].slotType!=='weapon'||['victory','defeat'].includes(this.phase))return false;
+   if(!u.alive||!ITEMS[drop.item]||(!drop.entry&&ITEMS[drop.item].slotType!=='weapon')||['victory','defeat'].includes(this.phase))return false;
    const empty=u.inventory.findIndex(slot=>!slot);if(empty<0&&u.inventory.length>=6)return false;
-   const slot={key:drop.item,level:drop.level||1,charges:1,invested:ITEMS[drop.item].cost,rarity:drop.rarity};if(empty>=0)u.inventory[empty]=slot;else u.inventory.push(slot);
+   if(drop.dropped&&Math.hypot(u.x-drop.x,u.z-drop.z)>2){u.pendingDropId=drop.id;u.destination={x:drop.x,z:drop.z};u.order='move';u.target=null;return true;}
+   const slot=drop.entry?structuredClone(drop.entry):{key:drop.item,level:drop.level||1,charges:1,invested:ITEMS[drop.item].cost,rarity:drop.rarity};if(empty>=0)u.inventory[empty]=slot;else u.inventory.push(slot);
    this.refresh(u);this.drops=this.drops.filter(d=>d.id!==drop.id);this.fx('lootClaim',u.x,u.z,{source:u.id,item:drop.item,level:slot.level});return true;
   }
   if(!drop||!u.alive||!SKILLS[drop.skill]||['victory','defeat'].includes(this.phase))return false;

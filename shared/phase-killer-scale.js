@@ -1,18 +1,26 @@
 import {PHASE_KILLER_MAP as MAP} from './phase-killer-catalog.js';
-import {phaseKillerWorldObstacles,phaseKillerForestObstacles} from './phase-killer-world.js';
+import {phaseKillerWorldObstacles,phaseKillerForestObstacles,PHASE_LEVEL_REVISION} from './phase-killer-world.js';
 import {invalidatePhaseKillerNavigation} from './phase-killer-navigation.js';
 const realms=['normal','aether','omni'];
 const pointChildren=['destination','position','point','goal','origin','from','to','start','end','targetPoint','lastKnown','cell','route','routes','path','paths','points','waypoints','center','centre','anchor','location','pkPending','pkBotGoal','pkEscapeGoal','pkTargetPoint','pkGoal','pkRoute','pkWaypoints','pkLastPosition','pkAiGoal','pkAiDestination'];
 const coordinatePairs=[['x','z'],['tx','tz'],['tX','tZ'],['ex','ez'],['startX','startZ'],['endX','endZ']];
 const values=value=>Array.isArray(value)?value:value instanceof Map?[...value.values()]:value&&typeof value==='object'?Object.values(value):[];
 const isDestroyed=object=>object?.alive===false||object?.destroyed===true||object?.hp===0;
+function upgradeLayout(game){
+ const state=game.phaseKiller;if(!state||state.levelRevision===PHASE_LEVEL_REVISION)return false;
+ const fresh=phaseKillerWorldObstacles(),old=new Map(values(state.buildings).filter(Boolean).map(b=>[b.id,b])),destroyed=new Set(state.destroyedSceneryIds||[]);
+ const changed=fresh.length!==old.size||fresh.some(b=>{const prior=old.get(b.id);return!prior||['x','z','w','d','phaseProp'].some(k=>prior[k]!==b[k]);});
+ state.levelRevision=PHASE_LEVEL_REVISION;if(!changed)return false;
+ state.buildings=fresh.map(b=>{const prior=old.get(b.id);for(const key of ['hp','maxHp','damagedAt'])if(prior&&Object.hasOwn(prior,key))b[key]=prior[key];if(destroyed.has(b.id)||isDestroyed(prior)){b.alive=false;b.destroyed=true;destroyed.add(b.id);}return b;});
+ state.destroyedSceneryIds=[...destroyed];state.sceneryRevision=(state.sceneryRevision||0)+1;game.obstacleRevision=(game.obstacleRevision||0)+1;invalidatePhaseKillerNavigation(game);return true;
+}
 
 // Coordinate-only migration: never traverse inventories, native ability data or
 // numeric stats. Aliased destinations are visited once, even across collections.
 export function migratePhaseKillerScale(game){
  if(game?.options?.mode!=='phasekiller')return false;
  const state=game.phaseKiller,target=MAP.worldScale,stored=state?state.worldScale:game.phaseWorldScale,source=Number.isFinite(stored)&&stored>0?stored:1;
- if(source===target){game.phaseWorldScale=target;return false;}
+ if(source===target){game.phaseWorldScale=target;return upgradeLayout(game);}
  const factor=target/source,seen=new WeakSet();
  function walk(value,convert){
   if(!value||typeof value!=='object'||seen.has(value))return;seen.add(value);
@@ -38,7 +46,7 @@ export function migratePhaseKillerScale(game){
   state.destroyedSceneryIds=[...destroyed];
   if(Array.isArray(state.forest)){const fresh=new Map(realms.flatMap(dimension=>phaseKillerForestObstacles(dimension)).map(o=>[o.id,o]));walk(state.forest,scaled);state.forest=state.forest.map(old=>({...old,...fresh.get(old.id),...(destroyed.has(old.id)?{alive:false,destroyed:true}:{})}));}
   for(const key of ['trees','obstacles','scenery'])walk(state[key],scaled);
-  state.worldScale=target;state.sceneryRevision=(state.sceneryRevision||0)+1;
+  state.worldScale=target;state.levelRevision=PHASE_LEVEL_REVISION;state.sceneryRevision=(state.sceneryRevision||0)+1;
  }
  game.phaseWorldScale=target;game.bounds=MAP.bounds;game.obstacleRevision=(game.obstacleRevision||0)+1;invalidatePhaseKillerNavigation(game);return true;
 }

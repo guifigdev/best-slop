@@ -1,13 +1,13 @@
 import * as T from 'three';
+import {createVoxelFire} from './voxel-fire.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Shared immutable meshes/materials, acquired lazily by the view's visibility budget.
-// Each active status is one draw call, including its particles. No actor material
+// Frost/poison each use one draw; volumetric fire uses two bounded cube batches. No actor material
 // is replaced or tinted, so animal vertex colours remain intact.
 let cache=null,users=0;
 const vertex=`
  uniform float uTime;
- uniform float uBillboard;
  attribute float aKind;
  attribute float aPhase;
  varying vec2 vUv;
@@ -29,49 +29,10 @@ const vertex=`
    p.x+=sin(uTime*1.4+aPhase*15.0)*.09;
    p.z+=cos(uTime*1.2+aPhase*18.0)*.09;
   }
-  vec4 viewPosition;
-  if(uBillboard>.5){
-   // Anchor in world space, then offset in camera space. Actor rotation is
-   // intentionally excluded; world scale still follows size and Avatar.
-   vec2 size=vec2(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz));
-   viewPosition=modelViewMatrix*vec4(0.0,0.0,0.0,1.0);
-   viewPosition.xy+=p.xy*size;
-  }else viewPosition=modelViewMatrix*vec4(p,1.0);
+  vec4 viewPosition=modelViewMatrix*vec4(p,1.0);
   vNormal=normalize(normalMatrix*normal);
   vView=-viewPosition.xyz;
   gl_Position=projectionMatrix*viewPosition;
- }
-`;
-const fireFragment=`
- uniform float uTime;
- varying vec2 vUv;
- float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
- void main(){
-   vec2 cell=floor(vUv*vec2(11.0,15.0));
-   float noise=hash(vec2(cell.x,cell.y-floor(uTime*5.0)));
-   float y=vUv.y;
-   float sway=sin(y*7.0-uTime*3.2)*(.018+y*.055);
-   float width=(1.0-y)*.43+noise*.14;
-   float x=abs(vUv.x-.5+sway);
-   float edge=width-x;
-   float alpha=smoothstep(0.0,.06,edge)*smoothstep(0.0,.1,y)*(.55+(1.0-y)*.45)*.96;
-   alpha*=(1.0-smoothstep(.88,1.0,y))*(.8+noise*.2);
-   float core=clamp((width-x)*3.0+(1.0-y)*.3,0.0,1.0);
-   vec3 colour=mix(vec3(1.0,.27,.025),vec3(1.0,.86,.25),core);
-   colour=mix(colour,vec3(1.0,.97,.69),core*core*.55);
-   // Embers are drawn inside this same sprite, not on additional planes.
-   float ember=0.0;
-   for(int i=0;i<7;i++){
-    float seed=float(i),life=fract(uTime*.52+seed/7.0);
-    vec2 centre=vec2(.16+hash(vec2(seed,3.0))*.68+sin(uTime*1.5+seed)*.025,.3+life*.66);
-    vec2 delta=abs(vUv-centre);
-    float square=1.0-smoothstep(.009,.018,max(delta.x,delta.y));
-    ember=max(ember,square*(1.0-life)*.95);
-   }
-   colour=mix(colour,vec3(1.0,.93,.52),ember);
-   alpha=max(alpha,ember);
-   if(alpha<.035)discard;
-   gl_FragColor=vec4(colour,alpha);
  }
 `;
 const frostFragment=`
@@ -112,10 +73,6 @@ function tagged(geometry,kind,phase=0){
  return out;
 }
 function merge(parts){const g=mergeGeometries(parts,false);for(const p of parts)p.dispose();g.computeBoundingSphere();return g;}
-function createFireGeometry(){
- const geometry=tagged(new T.PlaneGeometry(2.1,2.8),0);
- geometry.computeBoundingSphere();return geometry;
-}
 function createFrostGeometry(){
  const parts=[];
  const ring=tagged(new T.RingGeometry(.79,1.13,16),2);ring.rotateX(-Math.PI/2);ring.translate(0,.075,0);parts.push(ring);
@@ -130,14 +87,14 @@ function createPoisonGeometry(){
 function resources(){
  if(cache)return cache;
  const time={value:0};
- function shader(fragmentShader,billboard=false){return new T.ShaderMaterial({uniforms:{uTime:time,uBillboard:{value:billboard?1:0}},vertexShader:vertex,fragmentShader,transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false});}
- const fire=shader(fireFragment,true),frost=shader(frostFragment),poison=shader(poisonFragment);
+ function shader(fragmentShader){return new T.ShaderMaterial({uniforms:{uTime:time},vertexShader:vertex,fragmentShader,transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false});}
+ const frost=shader(frostFragment),poison=shader(poisonFragment);
  // Standard alpha blending preserves distinct orange/blue/green against bright
  // ice and sand as well as dark arenas; additive blending would wash them out.
- const fireGeometry=createFireGeometry(),frostGeometry=createFrostGeometry(),poisonGeometry=createPoisonGeometry();
+ const frostGeometry=createFrostGeometry(),poisonGeometry=createPoisonGeometry();
  // Shader displacement must fit the CPU-side culling volumes too.
  poisonGeometry.boundingSphere.radius+=.8;
- cache={time,fire,frost,poison,fireGeometry,frostGeometry,poisonGeometry};
+ cache={time,frost,poison,frostGeometry,poisonGeometry};
  return cache;
 }
 function activeDot(unit,key,time){return Number.isFinite(unit?.dots?.[key]?.until)&&unit.dots[key].until>time;}
@@ -145,26 +102,26 @@ function activeDot(unit,key,time){return Number.isFinite(unit?.dots?.[key]?.unti
 export function createStatusEffects(root,_baseGeometry){
  const data=resources();users++;
  const group=new T.Group();group.name='persistent-status-effects';group.visible=false;root.add(group);
- const fire=new T.Mesh(data.fireGeometry,data.fire),frost=new T.Mesh(data.frostGeometry,data.frost),poison=new T.Mesh(data.poisonGeometry,data.poison);
- fire.position.y=1.45;
- for(const mesh of [fire,frost,poison]){mesh.visible=false;mesh.castShadow=false;mesh.receiveShadow=false;mesh.renderOrder=2;group.add(mesh);}
+ const fire=createVoxelFire(group,{scale:.55,seed:root.uuid,smoke:false}),frost=new T.Mesh(data.frostGeometry,data.frost),poison=new T.Mesh(data.poisonGeometry,data.poison);
+ fire.root.position.y=.15;fire.root.visible=false;
+ for(const mesh of [frost,poison]){mesh.visible=false;mesh.castShadow=false;mesh.receiveShadow=false;mesh.renderOrder=2;group.add(mesh);}
  let disposed=false;
  return{
   update(unit,time,enabled=true){
    if(disposed)return;
    const active=enabled&&unit?.alive!==false&&Number.isFinite(time);
-   fire.visible=!!active&&(activeDot(unit,'burn',time)||activeDot(unit,'lava',time)||(unit?.solarUntil||0)>time);
+   fire.update(time,{enabled:!!active&&(activeDot(unit,'burn',time)||activeDot(unit,'lava',time)||(unit?.solarUntil||0)>time)});
    frost.visible=!!active&&(Math.max(unit?.frostUntil||0,unit?.abilitySlowUntil||0)>time||activeDot(unit,'frost',time));
    poison.visible=!!active&&activeDot(unit,'poison',time);
-   group.visible=fire.visible||frost.visible||poison.visible;
+   group.visible=fire.root.visible||frost.visible||poison.visible;
    if(group.visible)data.time.value=Math.floor(time*8)/8;
   },
   dispose(){
    if(disposed)return;disposed=true;
    // Detach first: the view's ordinary actor traversal must not dispose shared
    // meshes/materials. Only the final status actor releases this cache.
-   group.removeFromParent();group.clear();
-   if(--users===0&&cache){for(const key of ['fire','frost','poison','fireGeometry','frostGeometry','poisonGeometry'])cache[key].dispose();cache=null;}
+   group.removeFromParent();fire.dispose();group.clear();
+   if(--users===0&&cache){for(const key of ['frost','poison','frostGeometry','poisonGeometry'])cache[key].dispose();cache=null;}
   }
  };
 }

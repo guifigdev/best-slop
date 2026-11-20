@@ -133,3 +133,10 @@
 @media(max-width:1050px){.phasekiller .pk-overlay-chat{left:15px;bottom:275px;width:min(420px,63%)}.phasekiller #pk-chat-log{max-height:160px}.phasekiller #pk-chat-log p{font-size:12px}}
 @media(max-width:720px){.phasekiller .pk-overlay-chat{left:12px;bottom:222px;width:calc(100% - 24px);max-height:34%}.phasekiller #pk-chat-log{max-height:120px}.phasekiller #pk-chat-log p{font-size:11px}.phasekiller #pk-chat-input{font-size:16px}.phasekiller #pk-chat-form label{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.phasekiller #pk-chat-log p{animation:none;opacity:1}}
+
+/* Keep six compact squares even when the general HUD switches to one row. */
+.phasekiller .inventory-dock.inventory-panel{width:168px;max-width:100%;justify-self:end}
+.phasekiller .inventory-dock #inventory{grid-template-columns:repeat(3,minmax(0,1fr))}
+.phasekiller .inventory-dock .inventory-slot{height:auto;min-height:0;aspect-ratio:1;overflow:hidden}
+@container(max-width:850px){.phasekiller .inventory-dock.inventory-panel{width:158px}.phasekiller .worldbottom{grid-template-columns:minmax(155px,210px) minmax(0,1fr)}}
+@container(max-width:500px){.phasekiller .inventory-dock.inventory-panel{width:140px}.phasekiller .worldbottom{grid-template-columns:minmax(145px,1fr) 140px;gap:5px}}

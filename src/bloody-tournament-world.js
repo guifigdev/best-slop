@@ -3,6 +3,8 @@ import {BLOODY_UNITS as UNITS,BLOODY_RULES as RULES,bloodyUnitAt} from '../share
 import {BLOODY_TERRAIN_DATA as DATA} from '../shared/bloody-terrain-data.js';
 import {BLOODY_BATTLEFIELD as FIELD,BLOODY_WORLD_SCALE as S,bloodyHeightAt,bloodyTerrainBlocked,bloodyPreparationValid} from '../shared/bloody-battlefield.js';
 import {createMoltenLavaMaterial} from './lava-material.js';
+import {createFoliageWindMaterial,updateFoliageWind} from './foliage-wind.js';
+import {createCoastWaterMaterial} from './coast-water-material.js';
 import {castleUnitPortrait,buildCastleUnitModel} from './castle-unit-art.js';
 const TEAM_COLORS=[0xc96e62,0x748fc9,0x78bfb5,0xaf8bbb,0xd6c48e,0xd49a61,0x84ad74,0xd5a0b0];
 const PALETTE={Xdrt:0xa48a60,Dbrk:0x66403a,Xbtl:0x62556a,Xsqd:0x928a9d,Avin:0x355e37,Xhdg:0x467641,Xwmb:0x92949e,Dlvc:0x4f3432,Arck:0x767761,Iice:0xc6e2e7,cDc1:0xa34a30,cBc2:0xb6a16c,cIc1:0xa3cad8};
@@ -11,9 +13,18 @@ const random=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(
 export const bloodyUnitPortrait=key=>UNITS[key]?castleUnitPortrait(UNITS[key].source):'';
 function model(key){if(templates.has(key))return templates.get(key);const parts=[];if(UNITS[key]){const visual=buildCastleUnitModel(UNITS[key].source,null,(_,...part)=>parts.push(part));for(const p of visual?.legs||[])parts.push([p.x,p.y,p.z,p.w,p.h,p.d,p.color]);for(const wing of [...visual?.wings||[],...visual?.rotors||[]])for(const p of wing.parts)parts.push([p[0]+wing.pivot[0],p[1]+wing.pivot[1],p[2]+wing.pivot[2],...p.slice(3)]);}templates.set(key,parts);return parts;}
 export function bloodyWorldTile(x,z){const ix=Math.max(0,Math.min(DATA.width-1,Math.floor((x/S-DATA.origin[0])/DATA.step))),iz=Math.max(0,Math.min(DATA.height-1,Math.floor((DATA.origin[1]-z/S)/DATA.step))),index=iz*DATA.width+ix;return{index,rawId:DATA.textures[Number.parseInt(DATA.tiles[index],16)],water:DATA.water[index]==='1'&&DATA.heights[index]<4.05,height:bloodyHeightAt(x,z),nativeHeight:DATA.heights[index],layer:Number.parseInt(DATA.relief[index],16)};}
+// The source paints water flags over several volcanic edge textures. Keep
+// the immediate molten bank continuous, while the distant ocean stays water.
+export function bloodySurfaceKind(x,z){const t=bloodyWorldTile(x,z);if(!t.water)return 'land';if(['Dlvc','cDc1'].includes(t.rawId))return 'lava';if(x< -Math.abs(z)*.45&&!['Iice','cIc1','Xhdg','Avin'].includes(t.rawId)){for(const dx of [-S,0,S])for(const dz of [-S,0,S])if(['Dlvc','cDc1'].includes(bloodyWorldTile(x+dx,z+dz).rawId))return 'lava';}return 'water';}
+export function bloodyCoastSamples(){const result=[];for(let row=0;row<DATA.height-1;row++)for(let col=0;col<DATA.width-1;col++){
+ const x=(DATA.origin[0]+(col+.5)*DATA.step)*S,z=(DATA.origin[1]-(row+.5)*DATA.step)*S,t=bloodyWorldTile(x,z);if(!t.water||!bloodyTerrainBlocked({x,z}))continue;
+ if(![[S,0],[-S,0],[0,S],[0,-S]].some(([dx,dz])=>!bloodyTerrainBlocked({x:x+dx,z:z+dz})))continue;
+ const width=1.2+random(row*99+col)*.45,half=width/2;if(![-half,0,half].every(dx=>[-half,0,half].every(dz=>bloodyTerrainBlocked({x:x+dx,z:z+dz}))))continue;
+ result.push({x,z,w:width,d:width,h:1.1+random(row+col*101)*2.2,color:['Dlvc','cDc1','Dbrk'].includes(t.rawId)?0x4c3935:['Iice','cIc1'].includes(t.rawId)?0x91b8c2:0x6d796b});
+ }return result;}
 export function createBloodyTournamentWorld({scene}){
  const root=new T.Group();root.name='bloody-tournament-world';root.visible=false;scene.add(root);
- const geometry=new T.BoxGeometry(1,1,1),material=new T.MeshLambertMaterial(),waterMaterial=new T.MeshLambertMaterial({transparent:true,opacity:.93}),glowMaterial=new T.MeshBasicMaterial({color:0xffffff}),ghostMaterial=new T.MeshLambertMaterial({transparent:true,opacity:.58,depthWrite:false}),fireMaterial=new T.MeshBasicMaterial({transparent:true,opacity:.9,depthWrite:false,toneMapped:false}),smokeMaterial=new T.MeshLambertMaterial({transparent:true,opacity:.33,depthWrite:false}),lavaMaterial=createMoltenLavaMaterial(),dummy=new T.Object3D(),color=new T.Color(),batches=new Map(),ownedGeometry=new Set([geometry]);
+ const geometry=new T.BoxGeometry(1,1,1),material=new T.MeshLambertMaterial(),waterMaterial=createCoastWaterMaterial(),foliageMaterial=createFoliageWindMaterial({strength:.2,speed:.7}),glowMaterial=new T.MeshBasicMaterial({color:0xffffff}),ghostMaterial=new T.MeshLambertMaterial({transparent:true,opacity:.58,depthWrite:false}),fireMaterial=new T.MeshBasicMaterial({transparent:true,opacity:.9,depthWrite:false,toneMapped:false}),smokeMaterial=new T.MeshLambertMaterial({transparent:true,opacity:.33,depthWrite:false}),lavaMaterial=createMoltenLavaMaterial(),dummy=new T.Object3D(),color=new T.Color(),batches=new Map(),ownedGeometry=new Set([geometry]);
  lavaMaterial.vertexShader='varying vec3 vWorld;void main(){vec4 p=vec4(position,1.0);\n#ifdef USE_INSTANCING\np=instanceMatrix*p;\n#endif\np=modelMatrix*p;vWorld=p.xyz;gl_Position=projectionMatrix*viewMatrix*p;}';
  let state=null,built=false,disposed=false,owner=null,selected=null,placement=null,buildKey=null,buildOwner=null,waterFrame=-1,rosterSignature=null;const waterCells=[],fires=[];
  function batch(key,count,mat=material){let mesh=batches.get(key);if(mesh&&mesh.instanceMatrix.count>=Math.max(1,count))return mesh;if(mesh){mesh.removeFromParent();mesh.dispose();}mesh=new T.InstancedMesh(geometry,mat,Math.max(1,count));mesh.name=key;mesh.frustumCulled=false;mesh.castShadow=mesh.receiveShadow=true;mesh.count=0;root.add(mesh);batches.set(key,mesh);return mesh;}
@@ -24,21 +35,23 @@ export function createBloodyTournamentWorld({scene}){
   const triangle=(a,b,c,shade)=>{for(const p of [a,b,c]){vertices.push(...p);colours.push(shade.r,shade.g,shade.b);}};
   for(let iz=0;iz<DATA.height-1;iz++)for(let ix=0;ix<DATA.width-1;ix++){
    const x=(DATA.origin[0]+(ix+.5)*DATA.step)*S,z=(DATA.origin[1]-(iz+.5)*DATA.step)*S,tile=bloodyWorldTile(x,z),base=PALETTE[tile.rawId]??0x74756b,h=tile.height;
-   if(tile.water){const molten=['Dlvc','cDc1'].includes(tile.rawId),frozen=['Iice','cIc1'].includes(tile.rawId),c=frozen?0x75aeb9:tile.rawId==='Xhdg'?0x315d59:0x23485c;
+   if(tile.water){const molten=bloodySurfaceKind(x,z)==='lava',frozen=['Iice','cIc1'].includes(tile.rawId),c=frozen?0x75aeb9:tile.rawId==='Xhdg'?0x315d59:0x23485c;
     let shallow=false;for(const dx of [-.375,-.125,.125,.375])for(const dz of [-.375,-.125,.125,.375])if(!bloodyTerrainBlocked({x:x+dx*S,z:z+dz*S}))shallow=true;
     if(shallow)put(land,l++,x,h-.22,z,S*1.015,.42,S*1.015,base);
-    if(molten)put(lava,v++,x,h+(shallow?-.035:-.7),z,S*1.015,.1,S*1.015,0xffffff);else{put(water,w++,x,h+(shallow?-.045:-.7),z,S*1.015,.12,S*1.015,c);waterCells.push({x,z,color:c});}
+    if(molten)put(lava,v++,x,h-.025,z,S*1.015,.1,S*1.015,0xffffff);else{put(water,w++,x,h+(shallow?-.075:-.79),z,S*1.001,.12,S*1.001,c);waterCells.push({x,z,color:c});}
    }else{
     const corners=[[x-S/2,z-S/2],[x+S/2,z-S/2],[x-S/2,z+S/2],[x+S/2,z+S/2]].map(([px,pz])=>[px,bloodyHeightAt(px,pz),pz]);
     color.setHex(base).multiplyScalar(.94+random(ix+iz*DATA.width)*.1);triangle(corners[0],corners[2],corners[1],color);triangle(corners[1],corners[2],corners[3],color);
     const top=Math.min(...corners.map(p=>p[1]))-.025;put(land,l++,x,(top-1.6)/2,z,S*1.012,top+1.6,S*1.012,color.getHex());
     for(const [dx,dz,ww,dd]of [[1,0,.16*S,S*1.03],[0,-1,S*1.03,.16*S]])if(bloodyWorldTile(x+dx*S,z+dz*S).water){put(shore,s++,x+dx*S*.48,h-.5,z+dz*S*.48,ww,1.05,dd,['Iice','cIc1'].includes(tile.rawId)?0x7b9b9f:0x51545a);}
    }
-  }finish(land,l);finish(water,w);finish(lava,v);finish(shore,s);land.castShadow=water.castShadow=lava.castShadow=false;
+  }
+  for(const p of bloodyCoastSamples()){put(shore,s++,p.x,bloodyHeightAt(p.x,p.z)+p.h/2-.15,p.z,p.w,p.h,p.d,p.color);put(shore,s++,p.x,bloodyHeightAt(p.x,p.z)+p.h-.1,p.z,p.w*.68,.35,p.d*.72,p.color);}
+  finish(land,l);finish(water,w);finish(lava,v);finish(shore,s);land.castShadow=water.castShadow=lava.castShadow=false;
   const topGeometry=new T.BufferGeometry();topGeometry.setAttribute('position',new T.Float32BufferAttribute(vertices,3));topGeometry.setAttribute('color',new T.Float32BufferAttribute(colours,3));topGeometry.computeVertexNormals();ownedGeometry.add(topGeometry);
   const topMaterial=new T.MeshLambertMaterial({vertexColors:true}),top=new T.Mesh(topGeometry,topMaterial);top.name='bt-relief-surface';top.receiveShadow=true;top.userData.ownedMaterial=true;root.add(top);
   const backdrop=batch('bt-water-horizon',1,waterMaterial);put(backdrop,0,0,-1.1,0,340,.1,340,0x1b3040);finish(backdrop,1);backdrop.castShadow=false;
-  const architecture=batch('bt-native-architecture',DATA.placements.length*22+PLOTS.length*16),lamps=batch('bt-native-lights',DATA.placements.length*5,glowMaterial);let a=0,g=0;
+  const foliage=batch('bt-tree-canopies',DATA.placements.length*4,foliageMaterial);let canopyCount=0;const architecture=batch('bt-native-architecture',DATA.placements.length*22+PLOTS.length*16),lamps=batch('bt-native-lights',DATA.placements.length*5,glowMaterial);let a=0,g=0;
   const box=(x,y,z,w,h,d,c,angle=0)=>put(architecture,a++,x,bloodyHeightAt(x,z)+y,z,w,h,d,c,angle);
   for(const [i,p]of DATA.placements.entries()){const x=p.x*S,z=p.z*S,k=p.rawId,scale=Math.min(1.7,Math.max(.5,p.scale||1));
    if(['YTfc','YTfb','YTac'].includes(k)){
@@ -46,7 +59,7 @@ export function createBloodyTournamentWorld({scene}){
    }else if(k==='ATtr'){
     // Roots and a visible trunk share the simulation footprint; broad foliage
     // stays overhead so its visual volume does not obstruct ground movement.
-    box(x,2,z,.68*scale,4,.68*scale,0x504235);for(let j=0;j<4;j++){const crown=(3.2-j*.55)*scale;box(x+Math.sin(i)*j*.1,3.3+j*.65,z,crown,1.15,crown,[0x284c38,0x385f40,0x4e7549,0x6b8a54][j]);}
+    box(x,2,z,.68*scale,4,.68*scale,0x504235);for(let j=0;j<4;j++){const crown=(3.2-j*.55)*scale;put(foliage,canopyCount++,x+Math.sin(i)*j*.1,bloodyHeightAt(x,z)+3.3+j*.65,z,crown,1.15,crown,[0x284c38,0x385f40,0x4e7549,0x6b8a54][j]);}
     for(const side of [-1,1])box(x+side*.5, .18,z,.9,.25,.35,0x5c5140,side*.5);
    }else if(k==='Volc'){
     for(let j=0;j<5;j++)box(x,.6+j*1.15,z,(5-j*.85)*scale,1.2,(5-j*.85)*scale,j%2?0x4a3a35:0x5e4940,p.angle);
@@ -79,19 +92,19 @@ export function createBloodyTournamentWorld({scene}){
   // A walkable summit mosaic is the central structure, rather than a solid
   // column that would hide combat or contradict the source navigation.
   for(let ring=0;ring<3;ring++)for(let i=0;i<32;i++){const angle=i/32*Math.PI*2,r=3.2+ring*1.3,x=Math.sin(angle)*r,z=Math.cos(angle)*r;put(lamps,g++,x,bloodyHeightAt(x,z)+.025,z,.32,.035,.8,ring===1?0xc7bd8e:0x7caaad,-angle);}
-  finish(architecture,a);finish(lamps,g);lamps.castShadow=false;
+  finish(architecture,a);finish(foliage,canopyCount);finish(lamps,g);lamps.castShadow=false;
   const details=batch('bt-biome-details',1500);let count=0;
   for(let i=0;i<560;i++){
    const x=(random(i*4+1)*76-38)*S,z=(random(i*4+2)*76-38)*S;if(bloodyTerrainBlocked({x,z},.55)||Math.hypot(x,z)<8)continue;const t=bloodyWorldTile(x,z),h=bloodyHeightAt(x,z);
    if(t.water)continue;
-   if(z>8&&Math.abs(x)<z+12){const a=random(i+4)*Math.PI;put(details,count++,x,h+.1,z,.75,.18,.5,0xe4f0eb,a);if(i%4===0)put(details,count++,x+.25,h+.2,z,.25,.35,.3,0xbedce0,a);}
-   else if(x>Math.abs(z)*.5){put(details,count++,x,h+.2,z,.12,.4,.7,0x5d8349,random(i)*6);put(details,count++,x,h+.18,z,.6,.34,.12,0x70914e,random(i)*6);if(i%7===0)put(details,count++,x,h+.35,z,.22,.15,.22,0xd2b579);}
+   if(z>8&&Math.abs(x)<z+12){if(i%3!==0)continue;const a=random(i+4)*Math.PI,w=1.2+random(i+13)*4.4,d=.9+random(i+19)*3.3,rise=.12+random(i+37)*.65;put(details,count++,x,h+rise*.45,z,w,rise,d,0xd8e9e6,a);put(details,count++,x+w*.13,h+rise*.9,z-d*.08,w*.64,rise*.65,d*.67,0xe8f2eb,a);if(i%5===0)put(details,count++,x-w*.25,h+rise*.22,z+d*.17,w*.46,rise*.48,d*.4,0xb8d5dc,a);}
+   else if(x>Math.abs(z)*.5){const angle=random(i)*6,tuft=.22+random(i+81)*.37;for(let blade=0;blade<3;blade++){const lean=(blade-1)*.12;put(details,count++,x+lean,h+tuft*(.5+blade*.12),z+Math.sin(blade+i)*.13,.065+blade*.016,tuft*(1+blade*.24),.13,blade%2?0x88a563:0x5f834c,angle+blade*.25);}if(i%7===0){put(details,count++,x+.2,h+.3,z,.8,.5,.65,0x5d7f4d,angle);put(details,count++,x+.2,h+.62,z,.5,.25,.4,0x8fa264,angle);}}
    else if(x< -Math.abs(z)*.5){put(details,count++,x,h+.08,z,.5,.13,.35,0x453531,random(i)*6);if(i%19===0)fires.push({x,z,y:h+.04,scale:.55,seed:i+500});}
    else{put(details,count++,x,h+.08,z,.65,.14,.35,0xc4b28a,random(i)*6);}
   }finish(details,count);details.castShadow=false;
   batch('bt-fire-flames',fires.length*12,fireMaterial).castShadow=false;batch('bt-fire-smoke',fires.length*4,smokeMaterial).castShadow=false;batch('bt-fire-embers',fires.length*5,glowMaterial).castShadow=false;
  }
- function animate(time){const frame=Math.floor(time*10);if(frame===waterFrame)return;waterFrame=frame;lavaMaterial.uniforms.uTime.value=time;
+ function animate(time){const frame=Math.floor(time*10);if(frame===waterFrame)return;waterFrame=frame;lavaMaterial.uniforms.uTime.value=time;waterMaterial.uniforms.uTime.value=time;updateFoliageWind(foliageMaterial,time);
   const water=batches.get('bt-native-water');for(let i=0;i<waterCells.length;i++){const p=waterCells[i],pulse=1+Math.sin(time*.7+p.x*.14+p.z*.08)*.05;water.setColorAt(i,color.setHex(p.color).multiplyScalar(pulse));}if(water.instanceColor)water.instanceColor.needsUpdate=true;
   const flames=batches.get('bt-fire-flames'),smoke=batches.get('bt-fire-smoke'),embers=batches.get('bt-fire-embers');let f=0,s=0,e=0;
   for(const p of fires){for(let j=0;j<12;j++){const phase=(time*(.5+random(p.seed+j)*.3)+j/12)%1,a=j*2.4+p.seed,taper=1-phase,y=p.y+phase*p.scale*3,spread=(.35+phase*.15)*p.scale;put(flames,f++,p.x+Math.sin(a+time*2)*spread,y,p.z+Math.cos(a+time*1.4)*spread,(.18+taper*.48)*p.scale,(.32+taper*.75)*p.scale,(.18+taper*.45)*p.scale,j%3===0?0xffec9d:phase>.55?0xd86c2e:0xffb346,a);}
@@ -116,6 +129,6 @@ export function createBloodyTournamentWorld({scene}){
  return{root,heightAt:bloodyHeightAt,update(next,time=0,viewer=null){if(disposed)return;const active=next?.options?.mode==='bloody';root.visible=active;if(!active){state=null;return;}state=next.bloodyTournament;owner=viewer;if(!built){terrain();built=true;}animate(time);const signature=JSON.stringify([state?.stage,owner,selected,state?.formations,state?.players?.map(p=>({owner:p.owner,roster:p.roster}))]);if(signature!==rosterSignature){rosterSignature=signature;roster();}preview();},
   pick(point){if(!root.visible||state?.stage!=='preparation'||!point)return null;let best=null,distance=Infinity;for(const p of state.players||[])for(const entry of p.roster||[]){const d=Math.hypot(point.x-entry.x,point.z-entry.z);if(d<2.7&&d<distance){best={bloodyEntry:entry.id,bloodyOwner:p.owner};distance=d;}}return best;},
   setSelection(entry){selected=entry;},setPlacement(value){placement=value;},setBuildKey(key,nextOwner=null){buildKey=key;buildOwner=nextOwner;if(!key)placement=null;else if(placement)placement={...placement,key,owner:nextOwner};},setCursor(point,valid=true){placement=buildKey&&point?{key:buildKey,point,valid,owner:buildOwner}:null;},
-  dispose(){if(disposed)return;disposed=true;root.removeFromParent();for(const mesh of batches.values())mesh.dispose();for(const child of root.children)if(child.userData.ownedMaterial)child.material.dispose();for(const g of ownedGeometry)g.dispose();for(const m of [material,waterMaterial,glowMaterial,ghostMaterial,fireMaterial,smokeMaterial,lavaMaterial])m.dispose();}
+  dispose(){if(disposed)return;disposed=true;root.removeFromParent();for(const mesh of batches.values())mesh.dispose();for(const child of root.children)if(child.userData.ownedMaterial)child.material.dispose();for(const g of ownedGeometry)g.dispose();for(const m of [material,waterMaterial,foliageMaterial,glowMaterial,ghostMaterial,fireMaterial,smokeMaterial,lavaMaterial])m.dispose();}
  };
 }

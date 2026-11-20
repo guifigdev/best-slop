@@ -62,7 +62,7 @@ test('the enlarged Phase world scales coordinates and terrain spacing while nati
  const c={wall:0xaaaaaa,roof:0x556677,wood:0x65513f,accent:0xe2b66d},citizen=phaseKillerSpec('townsperson'),width=Math.max(...citizen.parts.map(p=>p[0]+p[3]/2))-Math.min(...citizen.parts.map(p=>p[0]-p[3]/2));
  assert.equal(citizen.height,2.55);
  for(const b of phaseKillerWorldObstacles().filter(b=>b.phaseProp==='house')){
-  assert.equal(b.x,b.nativeX*2);assert.equal(b.z,b.nativeZ*2);const model=phaseHouseArt(b,c);assert.ok(model.facadeWidth>=4*width);assert.ok(model.doorHeight>=citizen.height*1.4);assert.ok(model.height>=citizen.height*1.7);
+  if(!b.browserAdaptation){assert.equal(b.x,b.nativeX*2);assert.equal(b.z,b.nativeZ*2);}const model=phaseHouseArt(b,c);assert.ok(model.facadeWidth>=4*width);assert.ok(model.doorHeight>=citizen.height*1.4);assert.ok(model.height>=citizen.height*1.7);
   const foundation=model.parts[0];assert.ok(Math.abs(foundation[3]-b.w)<1e-8);assert.ok(Math.abs(foundation[5]-b.d)<1e-8,'visual foundation and collision footprint are equal after facade rotation');
  }
  assert.equal(NATIVE_TERRAIN.width,129);assert.equal(NATIVE_TERRAIN.height,193);assert.equal(PHASE_WORLD_PROVENANCE.worldScale,2);
@@ -97,7 +97,7 @@ test('forest meshes match collision footprints and realm switching keeps draw ca
  const scene=new T.Scene(),world=createPhaseKillerWorld({scene});
  try{for(const [i,dimension]of ['normal','aether','omni','normal','omni'].entries()){
   world.update({options:{mode:'phasekiller'},phaseKiller:{dimension,buildings:[]},players:{me:1},units:[{id:1,x:MAP.spawn.x,z:MAP.spawn.z+['normal','aether','omni'].indexOf(dimension)*MAP.layerOffset}]},i+1,'me');
-  assert.ok(world.root.children.length<=16,'thousands of props share bounded instance batches');
+  assert.ok(world.root.children.length<=18,'town, forest and three campfires use bounded root batches');
   const trunks=world.root.getObjectByName('phase-trunks'),trees=phaseKillerForestObstacles(dimension).filter(o=>o.phaseProp==='tree');assert.equal(trunks.count,trees.length);
   const matrix=new T.Matrix4(),position=new T.Vector3(),rotation=new T.Quaternion(),scale=new T.Vector3();
   for(const index of [0,Math.floor(trees.length/2),trees.length-1]){trunks.getMatrixAt(index,matrix);matrix.decompose(position,rotation,scale);assert.ok(Math.abs(position.x-trees[index].x)<.0001);assert.ok(Math.abs(position.z-trees[index].z)<.0001);assert.ok(Math.abs(scale.x-trees[index].w)<.0001);assert.ok(Math.abs(scale.z-trees[index].d)<.0001);}

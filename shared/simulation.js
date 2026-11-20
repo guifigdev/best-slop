@@ -25,7 +25,7 @@ import {MONSTERS,MONSTER_PROFILES,monsterKind,monsterLoadout} from './monsters.j
 import {ARENA_BOUNDS} from './arena-size.js';
 import {lineMap,mapMethods} from './map-runtime.js';
 import {AbilityMethods,abilityScaling,magicSkillDamage,physicalSkillDamage} from './ability-rules.js';
-import {resolveUnitCollisions,unitBlocked,unitRadius} from './unit-collision.js';
+import {resolveUnitCollisions,unitBlocked,unitRadius,unitSolidBlocked} from './unit-collision.js';
 import {LineWarsMethods} from './line-wars.js';
 import {permanentMethods} from './permanent-enchants.js';
 import {nordicMethods} from './nordic-skills.js';
@@ -74,7 +74,7 @@ export class Game {
  command(id,c){
   this.commandFailureReason=null;
   const u=this.player(id);if(!u||!c||typeof c!=='object'||TERMINAL.has(this.phase))return false;
-  if(this.options.mode==='bloody')return this.bloodyTournamentCommand(u,c);if(this.options.mode==='dungeon'&&c.type?.startsWith('dg'))return this.dungeonCommand(u,c);if(this.options.mode==='phasekiller')return this.phaseKillerCommand(u,c);if(this.options.mode==='kodotag')return this.kodoTagCommand(u,c);if(this.options.mode==='treetag')return this.treeTagCommand(u,c);if(this.options.mode==='warlock')return this.warlockCommand(u,c);if(this.options.mode==='castlefight')return this.castleCommand(u,c);
+  if(this.options.mode==='bloody')return this.bloodyTournamentCommand(u,c);if(this.options.mode==='dungeon'&&c.type==='dropItem')return this.dungeonCommand(u,{type:'dgDrop',slot:c.slot});if(this.options.mode==='dungeon'&&c.type?.startsWith('dg'))return this.dungeonCommand(u,c);if(this.options.mode==='phasekiller')return this.phaseKillerCommand(u,c);if(this.options.mode==='kodotag')return this.kodoTagCommand(u,c);if(this.options.mode==='treetag')return this.treeTagCommand(u,c);if(this.options.mode==='warlock')return this.warlockCommand(u,c);if(this.options.mode==='castlefight')return this.castleCommand(u,c);
   if(c.type==='queueLineUnit')return this.queueLineUnit(u,c);
   if(c.type==='cancelLineQueue')return this.cancelLineQueue(u,c);
   if(c.type==='sendLineUnit')return this.sendLineUnit(u,c);
@@ -111,6 +111,11 @@ export class Game {
   if(c.type==='upgradeItem'){
 
    if(!this.atShop(u,'smith')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6)return false;const slot=u.inventory[c.slot];if(!slot)return false;const cost=itemUpgradePrice(slot.key,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.level=(slot.level||1)+1;this.refresh(u);return true;
+  }
+  if(['move','attackMove','attack','stop','hold','interact'].includes(c.type))u.pendingDropId=null;
+  if(c.type==='dropItem'){
+   if(!u.alive||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!u.inventory[c.slot]||!ITEMS[u.inventory[c.slot].key])return false;
+   const entry=structuredClone(u.inventory[c.slot]),point=Array.from({length:8},(_,i)=>({x:u.x+Math.cos(i*Math.PI/4)*.85,z:u.z+Math.sin(i*Math.PI/4)*.85})).find(p=>!unitSolidBlocked(this,{...u,collisionRadius:.3},p))||{x:u.x,z:u.z};this.drops.push({id:this.id(),item:entry.key,entry,level:entry.level||1,rarity:entry.rarity||'common',owner:u.owner,team:u.team,dropped:true,x:point.x,z:point.z,expires:this.time+86400});u.inventory[c.slot]=null;this.refresh(u);this.fx('lootDrop',point.x,point.z,{source:u.id,item:entry.key});return true;
   }
   if(c.type==='sell'){
 
@@ -261,7 +266,7 @@ export class Game {
   lineDefenseThink(this,u);
  }
  environment(u,dt){
-  if(!BATTLE.has(this.phase)||u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode))return;const active=this.zones.filter(z=>distance(u,z)<z.r&&(!u.flying||z.type==='lightning'));u.sliding=active.some(z=>z.type==='ice');u.wading=active.some(z=>z.type==='water');
+  if(!BATTLE.has(this.phase)||u.stageDone&&this.phase==='wave'&&privateTrials(this.options.mode))return;const active=this.zones.filter(z=>distance(u,z)<z.r&&(!u.flying||z.type==='lightning'));u.sliding=active.some(z=>z.type==='ice')||(this.options.mode==='dungeon'&&!!this.dungeonIceAt?.(u));u.wading=active.some(z=>z.type==='water');
   for(const z of active.filter(z=>z.type==='trap')){const cycle=Math.floor((this.time+z.offset)/z.period),age=(this.time+z.offset)%z.period;u.trapCycles||={};if(age>=1.5&&age<2&&u.trapCycles[z.id]!==cycle){u.trapCycles[z.id]=cycle;this.hit(u,90+this.wave*3,null,true,true,false,true);u.stun=Math.max(u.stun,.6);this.fx('thunder',z.x,z.z,{radius:z.r});}}
   if(active.some(z=>z.type==='lava'))this.applyDot(u,'lava',(12+u.maxHp*.015)*(1-(u.fireResist||0)),3);
   if(active.some(z=>z.type==='frost')){u.frostUntil=this.time+2;this.applyDot(u,'frost',(8+this.wave*.3)*(1-(u.coldResist||0)),2);}
@@ -282,7 +287,7 @@ export class Game {
   for(const u of [...this.units]){
    if(!u.alive)continue;if(u.expires&&u.expires<this.time){u.alive=false;u.died=this.time;continue;}
    if(u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*u.hpRegen);for(const key of Object.keys(u.cooldowns))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(u.bot&&this.options.mode!=='dungeon')this.botThink(u);this.tickAutocast(u);}
-   if(!u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*(u.hpRegen||0));for(const key of Object.keys(u.cooldowns||{}))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(!u.summon)this.monsterThink(u,dt);}this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
+   if(!u.hero){if(this.time>=(u.nextStats||0)){u.nextStats=this.time+.5;this.refresh(u);}u.mana=Math.min(u.maxMana,u.mana+dt*u.manaRegen*(ARENAS[this.arena].manaRegen||1));u.hp=Math.min(u.maxHp,u.hp+dt*(u.hpRegen||0));for(const key of Object.keys(u.cooldowns||{}))u.cooldowns[key]=Math.max(0,u.cooldowns[key]-dt);if(!u.summon)this.monsterThink(u,dt);}if(u.pendingDropId){const d=this.drops.find(d=>d.id===u.pendingDropId);if(!d)u.pendingDropId=null;else if(distance(u,d)<=2){const id=u.pendingDropId;u.pendingDropId=null;this.claimLoot(u,{dropId:id});}}this.environment(u,dt);if(!u.alive)continue;u.cd=Math.max(0,u.cd-dt);u.stun=Math.max(0,u.stun-dt);u.moving=false;if(u.stun>0||u.channel)continue;
    const targeting=u.hero&&u.manualCastPending,canAttack=u.order!=='move'&&u.order!=='stop'&&!targeting;
    let t=canAttack&&BATTLE.has(this.phase)?this.units.find(t=>t.id===u.target&&this.canTarget(u,t)):null;
    if(canAttack&&u.order==='attack'&&!t){u.target=null;u.order='auto';}
