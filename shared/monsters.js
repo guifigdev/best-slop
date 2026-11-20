@@ -1,5 +1,6 @@
 import {LOOT_SKILLS} from './loot-skills.js';
 import {SKILLS} from './catalog.js';
+import {CUSTOM_HERO_BESTIARY,CUSTOM_HERO_SKILL_THEMES} from './customhero-bestiary.js';
 // Original animals and mythical challengers. These are not Warcraft assets.
 // Multipliers for ordinary fauna apply once to the wave's existing base damage.
 export const MONSTER_PROFILES={
@@ -63,6 +64,7 @@ const SPECIAL_PROFILES={
  basilisk:{moveSpeed:2.8,attackInterval:1.8,accuracy:.9,evasion:.03,critChance:.04,critMultiplier:1.7}
 };
 for(const [key,profile]of Object.entries(SPECIAL_PROFILES))Object.assign(MONSTERS[key],profile,{preferredDropSkill:MONSTERS[key].skill});
+Object.assign(MONSTERS,CUSTOM_HERO_BESTIARY);
 
 // A creature's anatomy and element constrain every generated skill. Bosses
 // gain variety within that identity; hero builds and acquired loot stay free.
@@ -89,7 +91,8 @@ export const MONSTER_SKILL_THEMES=Object.freeze(Object.fromEntries(Object.entrie
  hedgehog:['thorns','bounce','critical','evasion','poison','doubleattack'],
  champion:['stomp','stonehide','cleave','bash','avatar','violentforce','rage','devotion'],
  wolf:['fenrirfang','summon','packaura','weakeninghowl','critical','endurance','doubleattack'],
- bonus:['dash','evasion','endurance','critical','doubleattack']
+ bonus:['dash','evasion','endurance','critical','doubleattack'],
+ ...CUSTOM_HERO_SKILL_THEMES
 }).map(([kind,skills])=>[kind,Object.freeze(skills)])));
 
 // A boss can mix roles, but cannot fill every slot with stuns or self-sustain.

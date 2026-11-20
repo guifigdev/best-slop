@@ -23,10 +23,10 @@ export const BLOODY_UNITS=Object.freeze({
  einherjar:unit('einherjar','Colosso de Mármore','h03B',1,115,3,'frontline','Uma escultura guerreira desperta. Rompe a linha de frente com espada e escudo.',{theme:'stone',visualKey:'einherjar'}),
  berserkers:unit('berserkers','Salamandras de Muspelheim','n00V',2,110,4,'frontline','Duas feras ígneas de garras e chifres. Pressionam as formações terrestres.',{theme:'fire',visualKey:'berserkers',element:'fire'}),
  hunters:unit('hunters','Arqueiras Silvestres','n022',3,95,3,'ranged','Três guardiãs de folhas e madeira. Flechas contra inimigos terrestres e voadores.',{theme:'forest',visualKey:'hunters'}),
- sniper:unit('sniper','Impes da Brasa','hrif',2,115,4,'ranged','Dois pequenos demônios de carvão arremessam brasas de longe.',{theme:'fire',visualKey:'sniper',element:'fire',projectileKind:'fire'}),
+ sniper:unit('sniper','Salgueiros da Brasa','hrif',2,115,4,'ranged','Dois salgueiros carbonizados lançam brasas de longe.',{theme:'fire',visualKey:'sniper',element:'fire',projectileKind:'fire'}),
  marksman:unit('marksman','Caçador Boreal','h05C',1,165,4,'ranged','Um arqueiro de gelo de alcance extremo, vulnerável quando cercado.',{theme:'frost',visualKey:'marksman',element:'ice',projectileKind:'frost'}),
  druids:unit('druids','Ents de Yggdrasil','e007',2,140,4,'magic','Duas árvores antigas despertas lançam sementes arcanas contra armaduras pesadas.',{theme:'forest',visualKey:'druids',projectileKind:'thorn'}),
- shamans:unit('shamans','Bruxos da Geada','o003',2,145,4,'magic','Dois conjuradores de cristal lançam magia glacial contra a linha de frente.',{theme:'frost',visualKey:'shamans',element:'ice',projectileKind:'frost'}),
+ shamans:unit('shamans','Olhos da Geada','o003',2,145,4,'magic','Duas faces de cristal flutuantes lançam estilhaços glaciais.',{theme:'frost',visualKey:'shamans',element:'ice',projectileKind:'frost'}),
  healer:unit('healer','Druidas do Broto','n015',2,155,4,'support','Dois druidas restauram a vida do aliado ferido mais próximo a cada quatro segundos.',{heal:55,healRange:7,theme:'forest',visualKey:'healer',projectileKind:'thorn'}),
  wolves:unit('wolves','Lobos de Musgo','n017',3,105,3,'frontline','Três lobos cobertos de folhas flanqueiam o inimigo e perseguem seus atiradores.',{speedBonus:.4,theme:'forest',visualKey:'wolves'}),
  golem:unit('golem','Guardião de Granito','n01X',1,160,4,'frontline','Um grande golem de rocha estratificada absorve ataques físicos.',{theme:'stone',visualKey:'golem'}),
@@ -34,7 +34,7 @@ export const BLOODY_UNITS=Object.freeze({
  aircraft:unit('aircraft','Dracos da Fornalha','h06Q',2,170,5,'flying','Dois dracos de lava voam acima do campo e exigem ataques antiaéreos.',{theme:'fire',visualKey:'aircraft',element:'fire',projectileKind:'fire'}),
  valkyrie:unit('valkyrie','Fênix de Gelo','h016',1,160,4,'flying','Uma ave de cristal alada com ataque mágico. Exige antiaéreo para ser abatida.',{theme:'frost',visualKey:'valkyrie',element:'ice',projectileKind:'frost'}),
  hydra:unit('hydra','Serpe Vulcânica','n01P',1,280,7,'siege','Uma fera reptiliana coberta de placas incandescentes, de grande corpo e muito dano.',{theme:'fire',visualKey:'hydra',element:'fire',projectileKind:'fire'}),
- wraiths:unit('wraiths','Espectros de Niflheim','u001',2,170,5,'magic','Dois espíritos de gelo flutuantes resistem à magia, mas são frágeis contra ataques físicos.',{theme:'frost',visualKey:'wraiths',element:'ice',projectileKind:'frost'})
+ wraiths:unit('wraiths','Sussurros de Niflheim','u001',2,170,5,'magic','Dois espíritos de gelo flutuantes resistem à magia, mas são frágeis contra ataques físicos.',{theme:'frost',visualKey:'wraiths',element:'ice',projectileKind:'frost'})
 });
 
 export const BLOODY_CATEGORIES=Object.freeze({frontline:'Linha de frente',ranged:'Atiradores',magic:'Magia',support:'Apoio',flying:'Voadores',siege:'Cerco'});

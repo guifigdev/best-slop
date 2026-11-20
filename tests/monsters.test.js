@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {skillAt} from '../shared/catalog.js';
 import {MONSTERS,monsterKind} from '../shared/monsters.js';
+import {CUSTOM_HERO_BESTIARY} from '../shared/customhero-bestiary.js';
 import {monsterMethods} from '../shared/monster-abilities.js';
 Object.assign(Game.prototype,monsterMethods);
 function setup(mode='tower'){const g=new Game(8,{mode});g.addPlayer('a','knight');g.addPlayer('b','mage');g.spawnWave();g.units=g.heroes();const p=g.player('a');p.x=p.z=0;g.projectiles=[];g.specials=[];g.drops=[];return{g,p};}
@@ -10,7 +11,7 @@ const enemy=(g,x,z,data={})=>g.spawnEnemy('lion',x,z,{hp:10000,damage:0,speed:0,
 function special(g,p,key,c={x:0,z:8}){return g.castSpecial(p,key,skillAt(key,1),c);}
 function project(g,seconds){for(let i=0;i<Math.ceil(seconds*60);i++){g.time+=1/60;g.tickSpecials(1/60);}}
 
-test('new animal/mythic species unlock gradually, retaining old fauna and guaranteeing eligible mythic bosses',()=>{assert.equal(Object.keys(MONSTERS).length,11);assert.equal(monsterKind('frog',1,.1),'frog');assert.equal(monsterKind('frog',4,.1),'lion');assert.equal(monsterKind('frog',40,.8),'frog');for(let i=0;i<100;i++){const kind=monsterKind('champion',25,i/100,true);assert.ok(MONSTERS[kind].mythic&&MONSTERS[kind].unlockWave<=25);}assert.ok(MONSTERS[monsterKind('champion',32,.99,true)].mythic);for(const m of Object.values(MONSTERS))assert.ok(skillAt(m.skill,5));});
+test('new animal/mythic species unlock gradually, retaining old fauna and guaranteeing eligible mythic bosses',()=>{assert.equal(Object.keys(MONSTERS).length,11+Object.keys(CUSTOM_HERO_BESTIARY).length);assert.equal(monsterKind('frog',1,.1),'frog');assert.ok(MONSTERS[monsterKind('frog',4,.1)].unlockWave<=4);assert.equal(monsterKind('frog',40,.8),'frog');for(let i=0;i<100;i++){const kind=monsterKind('champion',25,i/100,true);assert.ok(MONSTERS[kind].mythic&&MONSTERS[kind].unlockWave<=25);}assert.ok(MONSTERS[monsterKind('champion',32,.99,true)].mythic);for(const m of Object.values(MONSTERS))assert.ok(skillAt(m.skill,5));});
 
 test('monster loot is rolled once, assigned to the actual owner, and bosses guarantee their own technique',()=>{const {g,p}=setup(),t=enemy(g,0,2,{boss:'boss'});t.alive=false;const drop=g.monsterLoot(t,p);assert.equal(drop.owner,'a');assert.equal(drop.skill,'battlecry');assert.equal(drop.expires,g.time+90);assert.equal(g.monsterLoot(t,p),null);assert.equal(g.drops.length,1);const none=enemy(g,2,2);none.alive=false;g.random=()=>.99;assert.equal(g.monsterLoot(none,p),null);});
 

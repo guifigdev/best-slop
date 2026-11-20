@@ -1,4 +1,5 @@
-// Independent voxel characters for the legacy custom-map games. No Warcraft
+import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
+// Voxel characters for the legacy custom-map games. No Warcraft
 // meshes or textures are imported. Model boxes also drive their HUD portraits.
 const TREE_KEYS=new Set(['ent','blaze','pyra','burnin']);
 const WARLOCK_KEYS=new Set(['warlock','heretic','occultist','inquisitor']);
@@ -13,19 +14,11 @@ const leg=(x,y,z,w,h,d,color)=>({x,y,z,w,h,d,color});
 export function legacyCharacterSpec(key){
  if(typeof key!=='string'||key.split(':').length!==2)return null;const[mode,kind]=key.split(':');if(!(mode==='tree'?TREE_KEYS.has(kind):mode==='warlock'&&WARLOCK_KEYS.has(kind)))return null;
  if(specs.has(key))return specs.get(key);
+ if(key==='tree:ent'){
+  const sculpture=ragnarokMonsterSpec('willow'),spec=Object.freeze({...sculpture,key,ragnarokVisual:'willow',muzzle:0xbd9580});specs.set(key,spec);return spec;
+ }
  const parts=[],legs=[],box=(...p)=>parts.push(p);let fur=0x806a47,muzzle=0xd7c59a,height=3,eyeLine=2;
- if(mode==='tree'&&kind==='ent'){
-  const bark=0x806a47,shadow=0x594e38,edge=0xa28a5c,leaf=0x719447,light=0x99b260,moss=0x556f3e;fur=bark;muzzle=edge;
-  // Rooted body: a tall irregular trunk, forward bark face and branching arms.
-  box(0,1.09,0,.8,1.65,.65,bark);box(-.25,1.24,-.08,.25,1.52,.66,shadow);box(.32,1.15,.05,.19,1.4,.61,edge);
-  box(0,1.78,.08,.98,.72,.72,bark);box(0,1.61,.48,.78,.31,.17,edge);box(0,1.43,.5,.47,.1,.12,shadow);
-  for(const side of [-1,1]){box(side*.22,1.93,.49,.16,.14,.05,0xc8e093);box(side*.24,2.05,.47,.35,.12,.12,shadow);box(side*.6,1.38,.04,.35,.86,.32,bark);box(side*.82,1.1,.15,.55,.24,.29,bark);box(side*1.08,1.33,.15,.16,.52,.2,edge);box(side*1.16,1.59,.15,.31,.14,.18,shadow);box(side*.81,1.1,.37,.15,.2,.4,edge);legs.push(leg(side*.28,.28,0,.4,.5,.58,bark));box(side*.43,.22,-.25,.5,.25,.5,shadow);box(side*.48,.17,.36,.6,.18,.35,edge);}
-  // Five leaf masses leave the trunk and face readable from the isometric view.
-  box(0,2.53,.0,1.45,.74,1.18,leaf);box(-.53,2.42,-.08,.74,.58,.92,moss);box(.57,2.55,-.05,.77,.65,.94,leaf);box(0,2.98,-.1,.85,.29,.77,light);box(.12,2.45,.51,.83,.36,.33,light);
-  box(-.48,2.19,-.23,.2,.72,.21,bark);box(.43,2.27,-.19,.18,.7,.2,edge);box(-.7,2.3,-.21,.4,.15,.18,bark);box(.64,2.4,-.17,.4,.14,.18,edge);
-  box(-.28,1.02,.36,.19,.41,.08,moss);box(.23,.82,.37,.15,.31,.07,moss);box(-.37,.71,-.35,.2,.17,.1,moss);
-  height=3.15;eyeLine=1.93;
- }else if(mode==='tree'){
+ if(mode==='tree'){
   const palette=kind==='blaze'?{rock:0x505d52,dark:0x313d35,edge:0x7f8c6c,flame:0x99cc5e,core:0xd8ed91}:kind==='pyra'?{rock:0x65574e,dark:0x423830,edge:0x918270,flame:0xeaa04d,core:0xffd681}:{rock:0x565266,dark:0x353348,edge:0x8c859c,flame:0xa990e1,core:0xe0cefa};
   const c=palette;fur=c.rock;muzzle=c.edge;
   // Each infernal is a massive stone golem, with clear gaps of living flame.

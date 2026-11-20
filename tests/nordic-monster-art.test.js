@@ -31,5 +31,5 @@ test('matching troop portraits project the very same voxel parts and stay safe f
 
 test('northern and Line Wars labels match the new monster identities instead of the replaced cute animals',()=>{
  assert.match(MONSTER_PROFILES.goblin.name,/Draugr/);assert.match(MONSTER_PROFILES.brute.name,/Jotun/);assert.match(MONSTER_PROFILES.ram.name,/Sátiro/);assert.match(MONSTER_PROFILES.bat.name,/Gárgula/);assert.match(MONSTER_PROFILES.champion.name,/Jotun/);
- assert.match(LINE_UNITS.shieldling.name,/Draugr/);assert.match(LINE_UNITS.boarguard.name,/Jotun/);assert.match(LINE_UNITS.frostcharger.name,/Sátiro/);
+ assert.match(LINE_UNITS.shieldling.name,/Draugr/);assert.equal(LINE_UNITS.boarguard.name,'Golem de Basalto');assert.equal(LINE_UNITS.frostcharger.name,'Escorpião de Cobre');
 });

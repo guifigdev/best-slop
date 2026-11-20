@@ -91,7 +91,7 @@ function fillRoom(g,state){
  const d=g.dungeon,room=d.map.rooms[state.id],biome=BIOMES[room.biome||d.biome];
  const capacity=Math.max(0,R.maxActiveEnemies-g.units.filter(u=>u.alive&&u.dungeonEnemy).length),count=Math.min(waveLimit-alive,state.pending,capacity);
  for(let i=0;i<count;i++){
-  const boss=state.id===8&&state.pending===1,key=boss?biome.boss:biome.enemies[(state.planned-state.pending)%biome.enemies.length];
+  const pool=state.id===1?biome.enemies:biome.expandedEnemies||biome.enemies,boss=state.id===8&&state.pending===1,key=boss?biome.boss:pool[(state.planned-state.pending)%pool.length];
   const point=nearbyFree(g,{x:room.x+(g.random()-.5)*room.w*.65,z:room.z+(g.random()-.5)*room.d*.65},(SPECIES[key]?.radius||.65)*(boss?1.25:1));if(!point)continue;
   const enemy=spawnDungeonSpecies(g,room,key,point,{boss});state.pending--;if(boss)d.bossId=enemy.id;
  }

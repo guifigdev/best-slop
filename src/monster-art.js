@@ -1,3 +1,4 @@
+import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 import {buildNordicMonster} from './nordic-monster-art.js';
 import {buildScarabModel} from './scarab-art.js';
 // Original voxel silhouettes. These body parts are merged by the view into one
@@ -5,6 +6,7 @@ import {buildScarabModel} from './scarab-art.js';
 // returned as local voxel descriptors so the view can retain animated pivots.
 export function buildMonster(kind,body,voxel){
  const scarab=buildScarabModel(kind,body,voxel);if(scarab)return scarab;
+ const reference=ragnarokMonsterSpec(kind);if(reference){for(const part of reference.parts)voxel(body,...part);return reference;}
  const nordic=buildNordicMonster(kind,body,voxel);if(nordic)return nordic;
  if(['raven','lynx'].includes(kind)){
   const b=(...p)=>voxel(body,...p),fur=kind==='lynx'?0xbc9d6c:0x333e56;

@@ -30,3 +30,16 @@ test('Bonk enemies and Bloody fire armies reuse the actual sculptures, including
  assert.equal(bloodyUnitSpec('aircraft').wings,ragnarokMonsterSpec('kasa').wings);
  assert.ok(bloodyUnitParts('berserkers').length>100);
 });
+
+
+test('shared species caches distinguish alternate Line Wars skins and preserve hero and summon identity',async()=>{
+ const {actorModelKey}=await import('../src/actor-identity.js');
+ const {LINE_UNITS}=await import('../shared/line-units.js');
+ const root=LINE_UNITS.runedryad,desert=LINE_UNITS.cryptbasilisk;
+ assert.equal(root.kind,desert.kind,'two recipes share a legacy body identifier');
+ const a={kind:root.kind,lineCreep:true,ragnarokVisual:root.ragnarokVisual},b={kind:desert.kind,lineCreep:true,ragnarokVisual:desert.ragnarokVisual};
+ assert.notEqual(actorModelKey(a),actorModelKey(b));assert.notEqual(ragnarokMonsterSpec(a),ragnarokMonsterSpec(b));
+ assert.equal(ragnarokMonsterSpec({summon:true,kind:'scarab'}),null,'runic summons retain their authored native model');
+ assert.equal(ragnarokMonsterSpec({hero:'knight',ragnarokVisual:'mummy'}),null);
+ for(const ref of Object.values(RAGNAROK_VOXEL_REFERENCES)){assert.notEqual(ref.name.toLowerCase(),ref.sourceName.toLowerCase());assert.ok(ragnarokMonsterSpec(ref.key));}
+});

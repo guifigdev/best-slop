@@ -1,4 +1,5 @@
-// Original voxel workers and kodos. Descriptors supply the same boxes to the
+import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
+// Voxel workers and kodos. Descriptors supply the same boxes to the
 // renderer and to selection portraits; no Warcraft models are imported.
 const cache=new Map(),portraits=new Map();
 export function tagCharacterKey(u){
@@ -12,6 +13,9 @@ export function tagCharacterKey(u){
 }
 export function tagCharacterSpec(key){
  if(typeof key!=='string'||!(/^(runner|(kodo|worker|tree-worker|soldier|elemental):[a-zA-Z0-9_-]+)$/.test(key)))return null;if(cache.has(key))return cache.get(key);
+ if(key==='soldier:hC12'){
+  const sculpture=ragnarokMonsterSpec('archerskeleton'),spec=Object.freeze({...sculpture,key,ragnarokVisual:'archerskeleton',muzzle:0xd9cfab});cache.set(key,spec);return spec;
+ }
  const parts=[],legs=[],wings=[],b=(...p)=>parts.push(p),leg=(x,z,color,w=.3,h=.48)=>legs.push({x,y:h/2+.04,z,w,h,d:.4,color});let fur=0xc3aa86,muzzle=0xe0c5a2,height=2.45,eyeLine=1.77;
  if(key.startsWith('kodo:')){
   fur=0x9b9b80;muzzle=0xc6c2a2;
@@ -36,7 +40,6 @@ export function tagCharacterSpec(key){
  }
  if(key==='runner'){b(0,2.12,.02,.87,.22,.73,0x9aadae);b(0,1.53,.43,.61,.32,.2,0xc7c5ad);b(0,1.25,.44,.43,.25,.19,0xa7ad9d);for(const side of [-1,1])b(side*.48,1.47,0,.43,.23,.61,0x9aaeb0);b(-.7,1.68,.14,.71,.37,.4,0xa6b6ae);}
  if(key==='soldier:hC10'){b(0,2.13,.03,.79,.25,.71,0x9dafb1);b(0,1.07,.33,.7,.55,.16,0x9dafb1);b(-.67,1.05,.29,.19,.81,.7,0x6b8794);b(.7,1.38,.25,.12,1.47,.14,0xd4dfd2);}
- if(key==='soldier:hC12'){for(const side of [-1,1]){b(side*.4,1.93,.08,.27,.11,.2,0xd4c6a8);b(-.74,1.19+side*.38,.48,.12,.57,.18,0xa88d60);}b(-.74,1.19,.7,.035,1.3,.035,0xe6e0bd);b(-.74,1.19,.9,.04,.04,.8,0xd7d4b2);}
  const spec=Object.freeze({key,parts:Object.freeze(parts),legs:Object.freeze(legs),wings:Object.freeze(wings),fur,muzzle,height,eyeLine});cache.set(key,spec);return spec;
 }
 export function buildTagCharacter(u,body,voxel){const spec=tagCharacterSpec(tagCharacterKey(u));if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}

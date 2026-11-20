@@ -52,8 +52,8 @@ export function createLineWarView({scene,voxel,bake,overlay,onSend=()=>{}}){
  function fillContext(entry){
   if(contentId===entry.id)return;contentId=entry.id;
   const r=entry.recipe;
-  label.innerHTML=armyPortrait(r.kind)+`<span><b>${escapeHTML(r.name)}</b><small>◆ ${r.cost} · renda +${r.income}</small></span>`;
-  tooltip.innerHTML=armyPortrait(r.kind)+`<b>${escapeHTML(r.name)}</b><p>${escapeHTML(r.role)}</p><p>◆ ${r.cost} · renda +${r.income}<br>Vida ${r.hp} · ATQ ${r.damage} · Armadura ${r.armor}<br>Velocidade ${decimal(r.speed)} · Alcance ${decimal(r.range)}<br>${r.flying?'Voador':'Terrestre'} · Portal −${r.lifeDamage}</p><small>Selecione a casinha para abrir a ficha. A tropa só entra na fila quando você confirmar.</small>`;
+  label.innerHTML=armyPortrait(r.ragnarokVisual||r.kind)+`<span><b>${escapeHTML(r.name)}</b><small>◆ ${r.cost} · renda +${r.income}</small></span>`;
+  tooltip.innerHTML=armyPortrait(r.ragnarokVisual||r.kind)+`<b>${escapeHTML(r.name)}</b><p>${escapeHTML(r.role)}</p><p>◆ ${r.cost} · renda +${r.income}<br>Vida ${r.hp} · ATQ ${r.damage} · Armadura ${r.armor}<br>Velocidade ${decimal(r.speed)} · Alcance ${decimal(r.range)}<br>${r.flying?'Voador':'Terrestre'} · Portal −${r.lifeDamage}</p><small>Selecione a casinha para abrir a ficha. A tropa só entra na fila quando você confirmar.</small>`;
   label.setAttribute('aria-label',r.name+', '+r.cost+' ouro, renda mais '+r.income+'. Abrir ficha de recrutamento neste campo inimigo.');
  }
  label.onpointerdown=e=>e.stopPropagation();label.onclick=e=>{e.preventDefault();e.stopPropagation();if(recruitEnabled&&activeEntry)onSend({building:activeEntry.id,unitKey:activeEntry.building.unitKey,target:activeEntry.building.owner});};

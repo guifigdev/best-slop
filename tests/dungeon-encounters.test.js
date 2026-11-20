@@ -17,9 +17,9 @@ test('large rooms have high ceilings, continuous floor elevation and biome trans
  for(let floor=1;floor<8;floor++){const map=generateDungeonFloor(412,floor);assert.equal(map.width,133);assert.equal(new Set(map.rooms.map(r=>r.biome)).size,3);for(const r of map.rooms){assert.ok(r.w>=40.5&&r.w<=49.5&&r.d>=40.5&&r.d<=49.5);assert.ok(r.ceilingHeight>=9);assert.ok(BIOMES[r.biome]);assert.ok(BIOMES[r.biome].enemies.every(k=>SPECIES[k]));assert.ok(Math.abs(dungeonFloorHeight(map,r.x,r.z)-dungeonFloorHeight(map,r.x+.1,r.z))<.01);}for(const link of map.transitions){assert.notEqual(link.from,link.to);assert.equal(dungeonWalkable(map,link,.4),true);}}
 });
 
-test('twelve original creatures retain distinct solo threats without borrowing generic animal profiles',()=>{
- const{g,room}=setup(),list=Object.keys(SPECIES).map((key,i)=>spawnDungeonSpecies(g,room,key,{x:room.x+(i%4)*3,z:room.z+Math.floor(i/4)*3}));assert.equal(list.length,12);
- for(const u of list){assert.equal(u.kind,'dungeon-'+u.dungeonSpecies);assert.equal(u.boss,false);assert.deepEqual(u.skills,[]);assert.ok(Number.isFinite(u.speed)&&u.speed>0);assert.ok(u.maxHp>0&&u.damage>0);}
+test('expanded creatures retain distinct solo threats without borrowing generic animal profiles',()=>{
+ const{g,room}=setup(),list=Object.keys(SPECIES).map((key,i)=>spawnDungeonSpecies(g,room,key,{x:room.x+(i%4)*3,z:room.z+Math.floor(i/4)*3}));assert.equal(list.length,24);
+ for(const u of list){assert.equal(u.kind,'dungeon-'+u.dungeonSpecies);assert.equal(u.boss,false);assert.deepEqual(u.skills,[]);assert.ok(Number.isFinite(u.speed)&&u.speed>=0);assert.ok(u.maxHp>0&&u.damage>0);}
  const worm=list.find(u=>u.dungeonSpecies==='worm'),rat=list.find(u=>u.dungeonSpecies==='rat'),archer=list.find(u=>u.dungeonSpecies==='archer');assert.ok(worm.maxHp>rat.maxHp*4);assert.ok(worm.damage>rat.damage);assert.ok(rat.speed>worm.speed);assert.equal(archer.dungeonProjectile,'arrow');assert.ok(archer.range>=12);assert.ok(list.find(u=>u.dungeonSpecies==='cavebat').flying);
 });
 

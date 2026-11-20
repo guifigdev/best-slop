@@ -28,3 +28,43 @@ Salamander aparece na fornalha. As tropas Salamandras e Dracos da Fornalha de
 Bloody usam respectivamente Salamander e Kasa, incluindo os retratos e prévias.
 Os atributos, colisões, dano e habilidades continuam definidos pelos nossos
 modos; esta revisão de arte não importa o balanceamento de Ragnarok.
+
+## Expansão do bestiário compartilhado
+
+O registro passa a ter **21 modelos**: os nove anteriores, contando Marin,
+e mais doze reconstruções estudadas diretamente nos sprites. O campo
+`sourceName` preserva o nome da referência; `name` contém o nome adaptado
+exibido no jogo. Os IDs e links continuam identificando a origem de cada
+desenho, independentemente dos nomes usados no produto.
+
+| Referência | ID | Nome no jogo | Silhueta e detalhes preservados |
+| --- | --- | --- | --- |
+| Spore | 1014 | Esporo Saltitante | Chapéu vermelho largo, lamelas e corpo claro com rosto |
+| Mandragora | 1020 | Mandrágora Selvagem | Bulbos, folhas e raízes avermelhadas |
+| Willow | 1010 | Salgueiro Andante | Tronco oco com rosto, braços de madeira e pés de raízes |
+| Elder Willow | 1033 | Salgueiro das Brasas | Madeira avermelhada, rosto escuro e pontas chamuscadas |
+| Scorpion | 1001 | Escorpião de Cobre | Pinças alaranjadas, oito pernas e cauda articulada com ferrão lilás |
+| Andre | 1095 | Formiga Escavadora | Abdome creme segmentado, seis pernas e antenas compridas |
+| Hode | 1127 | Verme das Dunas | Corpo tubular lilás com boca redonda emergindo da areia |
+| Golem | 1040 | Golem de Basalto | Pedras sobrepostas, corpo robusto, punhos grandes e sorriso |
+| Mummy | 1041 | Múmia Errante | Corpo curvado, faixas sobrepostas e tiras soltas |
+| Whisper | 1179 | Sussurro do Véu | Capuz arredondado, olhos inclinados e lençol de borda irregular |
+| Siroma | 1776 | Siro Glacial | Corpo redondo de pelo gelado, testa clara, olhos grandes e sorriso |
+| Gazeti | 1778 | Olho Glacial | Máscara cristalina flutuante, nariz comprido e fragmentos laterais |
+
+Os modelos anteriores também usam nomes adaptados: Morcego do Véu,
+Escaravelho Saqueador, Taruk, Arqueiro Ossífero, Colosso da Geada,
+Asa de Brasa, Salamandra Incandescente, Porim e Marim Boreal.
+
+Custom Hero inclui os 21 visuais como criaturas com liberação gradual e
+habilidades temáticas no seu próprio catálogo de ondas. As primeiras ondas
+também compartilham os modelos por meio de metadados de aparência; os
+atributos e a quantidade dos papéis comuns permanecem definidos pela curva
+de ondas existente. Dungeon e Frenesi distribuem as criaturas pelos seus
+ambientes. Bloody Tournament, Line Wars e famílias compatíveis de Castle
+Fight reutilizam as esculturas nas unidades, prévias e retratos apropriados,
+com os dados de combate definidos por cada modo.
+
+As reconstruções ficam em módulos de arte de caverna, elementos, floresta,
+cavernas e cripta/gelo. Elas descrevem geometria e animação; nomes, atributos,
+habilidades e regras de aparição permanecem separados dessa geometria.

@@ -1,3 +1,4 @@
+import {monsterReferenceName} from './monster-visual-references.js';
 // Original northern monsters and fauna reinterpret Warcraft III unit roles. Numbers below
 // are original Line Wars balance values, not extracted custom-map statistics.
 const guide=(race,unit)=>`https://classic.battle.net/war3/${race}/units/${unit}.shtml`;
@@ -21,6 +22,10 @@ export const LINE_UNITS={
  mosscolossus:unit('Tartaruga dos túmulos','tortoise','Clã da Névoa','Abomination','undead','abomination',320,14,600,25,3,2.2,1.85,1.7,{size:1.5,skills:['thorns'],lifeDamage:2,role:'Tanque de espinhos · devolve golpes corpo a corpo'}),
  winterwyrm:unit('Serpente da longa noite','frostwyrm','Clã da Névoa','Frost Wyrm','undead','frostwyrm',750,30,1150,48,6,2.1,2,6,{size:1.65,flying:true,altitude:1.8,element:'ice',skills:['warlockfrost'],lifeDamage:5,role:'Voador de elite · gelo e dano alto ao portal'})
 };
+
+// The same priced recipes use the shared creature sculptures; their stats,
+// attack types, native reference roles and counters remain defined above.
+for(const [key,visual]of Object.entries({quillshot:'archerskeleton',boarguard:'golem',frostcharger:'scorpion',runebull:'elderwillow',runedryad:'mandragora',mistwolf:'whisper',cryptbasilisk:'scorpion',mosscolossus:'golem',winterwyrm:'gazeti'}))Object.assign(LINE_UNITS[key],{ragnarokVisual:visual,name:monsterReferenceName(visual,LINE_UNITS[key].name)});
 
 export const LINE_UNIT_ORDER=Object.keys(LINE_UNITS);
 export const LINE_START_LIVES=30;

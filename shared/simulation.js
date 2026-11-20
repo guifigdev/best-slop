@@ -23,6 +23,8 @@ import {ARENAS,arenaForWave} from './arenas.js';
 import {ENCHANTMENTS,enchantAt,enchantPrice,isEnchantable,canEnchant} from './enchantments.js';
 import {equipmentEffectAt} from './equipment-effects.js';
 import {MONSTERS,MONSTER_PROFILES,monsterKind,monsterLoadout} from './monsters.js';
+import {CUSTOM_HERO_COMMON_VISUALS} from './customhero-bestiary.js';
+import {monsterReferenceName} from './monster-visual-references.js';
 import {ARENA_BOUNDS} from './arena-size.js';
 import {lineMap,mapMethods} from './map-runtime.js';
 import {AbilityMethods,abilityScaling,magicSkillDamage,physicalSkillDamage} from './ability-rules.js';
@@ -238,6 +240,9 @@ export class Game {
   const species=MONSTERS[kind],profile=species||MONSTER_PROFILES[kind]||{},level=Math.max(1,data.level||this.wave+(boss==='boss'?10:boss==='miniboss'?5:species?2:0));let seed=(Math.floor(variant*4294967296)^Math.imul(level,2654435761))>>>0;for(const char of kind)seed=(Math.imul(seed,31)+char.charCodeAt(0))>>>0;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;},loadout=monsterLoadout(kind,level,boss,random);
   if(species)data={...data,hp:data.hp*species.hpMultiplier,damage:data.damage*species.damageMultiplier,armor:(data.armor||0)+species.armorBonus,name:species.name,flying:!!species.flying,altitude:species.flying?species.altitude||1.4:0,range:species.range||data.range||1.4,element:species.element||null,resistances:{...(species.resistances||{})}};
   else data={...data,damage:data.damage*(profile.attackMultiplier||1)};
+  // Common wave roles retain their combat values while sharing the new art.
+  // Explicit scenario units and summons keep their own visual/name metadata.
+  if(!data.summon&&!data.hero&&!data.lineCreep&&!data.castleUnit&&!data.dungeonEnemy&&!data.bonkEnemy){const visual=data.ragnarokVisual||species?.ragnarokVisual||CUSTOM_HERO_COMMON_VISUALS[kind];if(visual)data={...data,ragnarokVisual:visual,name:monsterReferenceName(visual,data.name||profile.name)};}
   const useRaw=data.summon||kind==='bonus',speed=useRaw||data.speed===0?data.speed??profile.moveSpeed??2.8:profile.moveSpeed??data.speed??2.8,interval=useRaw?data.interval??profile.attackInterval??1.5:profile.attackInterval??data.interval??1.5;
   const skills=data.summon?[]:Array.isArray(data.skills)?[...data.skills]:loadout.skills,skillLevels=Object.fromEntries(skills.map(key=>[key,data.skillLevels?.[key]||loadout.skillLevels[key]||loadout.rank]));
   const cd=data.cd??random(),size=data.size||clamp((species?.size||profile.size||1)*(boss?1.2:1),.55,2.1);

@@ -1,3 +1,5 @@
+import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
+import {voxelTagPortrait} from './tag-character-art.js';
 import {NORDIC_MONSTER_KINDS,nordicMonsterPortrait} from './nordic-monster-art.js';
 import {scarabPortrait} from './scarab-art.js';
 // Original voxel-animal previews. They describe the troop, not its Warcraft
@@ -28,6 +30,8 @@ export const ARMY_PORTRAIT_KINDS=Object.freeze([...new Set([...Object.keys(shape
 const cache=new Map();
 export function armyPortrait(kind){
  const scarab=scarabPortrait(kind);if(scarab)return scarab;
+ const ref=ragnarokMonsterSpec(kind);if(ref){const key='ragnarok:'+ref.key;if(!cache.has(key))cache.set(key,voxelTagPortrait([...ref.parts,...ref.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color]),...ref.wings.flatMap(w=>w.parts.map(p=>[p[0]+w.pivot[0],p[1]+w.pivot[1],p[2]+w.pivot[2],...p.slice(3)]))],'shared-creature-portrait'));return cache.get(key);}
+
  const nordic=nordicMonsterPortrait(kind);if(nordic)return nordic;
  if(cache.has(kind))return cache.get(kind);
  const shape=shapes[kind]||'<path d="M29 30h38v29H29zM35 20h10v10H35zm19 0h10v10H54z" fill="#9ab2aa"/><path d="M42 41h13v9H42z" fill="#d4d7b7"/>';

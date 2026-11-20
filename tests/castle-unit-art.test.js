@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {CASTLE_UNITS,CASTLE_BUILDINGS} from '../shared/castle-catalog.js';
 import {castleUnitVisual,castleUnitPortrait,castleUnitModelKey,castleUnitAnimation,castleBasicProjectile,buildCastleUnitModel} from '../src/castle-unit-art.js';
 
-test('every native Castle Fight troop has finite original voxel geometry and a matching safe portrait',()=>{
+test('every native Castle Fight troop has finite voxel geometry and a matching safe portrait',()=>{
  const before=JSON.stringify(CASTLE_UNITS),races=new Map(Object.values(CASTLE_BUILDINGS).filter(b=>b.unit).map(b=>[b.unit,b.race]));
  for(const [key,unit]of Object.entries(CASTLE_UNITS)){
   const visual=castleUnitVisual(key);assert.equal(visual.key,key);assert.equal(visual.name,unit.name.trim());assert.equal(visual.race,races.get(key));assert.ok(visual.parts.length>=8,key);

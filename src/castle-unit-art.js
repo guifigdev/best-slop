@@ -1,10 +1,17 @@
 import {CASTLE_UNITS,CASTLE_BUILDINGS} from '../shared/castle-catalog.js';
 import {buildMonster} from './monster-art.js';
+import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 
-// Original voxel silhouettes. Native names and gameplay data choose visual
-// families; no Warcraft models, textures or unit statistics are copied here.
+// Native names and gameplay data choose visual families. Compatible creatures
+// reuse the shared Ragnarok reconstructions; gameplay data remains native.
 const RACES=Object.freeze({human:{skin:0xd3b18b,cloth:0x547a9c,metal:0xa6b3b2,trim:0xd9c28c},elf:{skin:0xe1d4b2,cloth:0x538d79,metal:0xa3b4a2,trim:0xe3cc85},nightelf:{skin:0xb39dbd,cloth:0x626289,metal:0xa1adb4,trim:0xd4d1ac},orc:{skin:0x7f9d63,cloth:0x896649,metal:0x8d9991,trim:0xd8ba80},undead:{skin:0xa6b19d,cloth:0x555c78,metal:0x87949a,trim:0xc8cbb2},naga:{skin:0x76a9a3,cloth:0x4d8077,metal:0x91b4af,trim:0xd5c68d},north:{skin:0xbdcdd0,cloth:0x6b95b0,metal:0x9cb9c3,trim:0xe0d5b0},chaos:{skin:0xa77568,cloth:0x6d4c56,metal:0x6a666e,trim:0xe0af79},corrupted:{skin:0x8b86a2,cloth:0x565875,metal:0x7d8898,trim:0xb8cfa4},mech:{skin:0x8ea16f,cloth:0x667c70,metal:0x91a6a4,trim:0xddbb75}});
 const unitRace=new Map(Object.values(CASTLE_BUILDINGS).filter(b=>typeof b.unit==='string').map(b=>[b.unit,b.race]));
+const unitRanks=new Map();
+function buildingRank(building,seen=new Set()){
+ if(!building?.requiresBuilding||seen.has(building.key))return 0;
+ seen.add(building.key);return 1+buildingRank(CASTLE_BUILDINGS[building.requiresBuilding],seen);
+}
+for(const building of Object.values(CASTLE_BUILDINGS))if(building.unit)unitRanks.set(building.unit,Math.max(unitRanks.get(building.unit)||0,buildingRank(building)));
 const cache=new Map(),portraits=new Map();
 const resolve=value=>{const key=typeof value==='string'?value:value?.unitKey||value?.key||value?.sourceStats?.rawId;return typeof key==='string'&&Object.hasOwn(CASTLE_UNITS,key)?{key,unit:CASTLE_UNITS[key]}:null;};
 function familyFor(unit){const n=unit.name.toLowerCase();
@@ -20,9 +27,66 @@ function familyFor(unit){const n=unit.name.toLowerCase();
  if(/sorceress|wizard|warlock|necromancer|lich|shaman|priest|witch doctor|ice queen|druid/.test(n))return 'caster';
  if(/sniper|marksman|gunner/.test(n))return 'rifleman';if(/archer|ranger|amazon/.test(n))return 'archer';return 'warrior';
 }
+function referenceFor(family,name){
+ if(family==='golem'&&!/flesh|^infernal$/.test(name))return /ice|frost/.test(name)?'icetitan':'golem';
+ if(family==='treant')return /annihilator|ancient|elder/.test(name)?'elderwillow':'willow';
+ if(family==='spirit')return 'whisper';
+ if(family==='zombie')return 'mummy';
+ if(/ancient wandigoo|wandigoo/.test(name))return 'icetitan';
+ if(/hrimthrusa/.test(name))return 'siroma';
+ if(/skeleton.*archer|archer.*skeleton/.test(name))return 'archerskeleton';
+ if(/crypt fiend|beetle|scarab|insect/.test(name))return 'thiefbug';
+ return null;
+}
+const nativeProjectile=(family,name,unit)=>family==='aircraft'||family==='rifleman'?'bullet':/flamegunner|red dragon|infernal machine|infernal tank/.test(name)?'fire':family==='tank'||family==='artillery'?'siege':/frost wyrm|azure drake|ice queen|ice troll/.test(name)?'frost':/winged serpent|hydra/.test(name)?'poison':['caster','spirit'].includes(family)||['magic','spells'].includes(unit.attackType)?'arcane':'arrow';
+function rankedSculpture(source,reference,rank,palette,name){
+ if(!rank)return source;
+ const added=[],add=(...p)=>added.push(Object.freeze(p));
+ // Upgrade ornaments are actual additional geometry on the shared sculpture.
+ // Never scale the unit/collider or repaint a predecessor in place.
+ if(reference==='mummy'){
+  // Suffocated zombies gain face bindings, shackles and a corroded collar.
+  for(const side of [-1,1]){add(side*.31,1.34,.18,.10,.68,.12,0x755b45);add(side*.48,.95,.09,.27,.17,.32,0x59645c);add(side*.48,.95,.267,.12,.10,.035,0xb29c76);}
+  add(0,1.73,.08,.63,.16,.56,0x665e50);add(0,1.75,.38,.29,.11,.08,0xb49b73);add(0,1.95,.36,.53,.13,.11,0x826c55);
+  if(rank>=2){
+   // The final Plague Bearer grows diseased shoulders and torn outer wrappings.
+   for(const side of [-1,1]){add(side*.44,1.60,.03,.45,.24,.48,0x8e9a69);add(side*.56,1.74,.13,.20,.20,.20,0xb1be79);add(side*.46,1.55,.32,.19,.16,.16,0x5b6c44);add(side*.24,.59,.20,.28,.42,.23,0x78805b);}
+   add(-.16,1.34,.36,.20,.23,.13,0xc3ca8a);add(.19,1.18,.37,.18,.20,.15,0x93a764);add(0,2.44,.02,.66,.14,.58,0xa3ac79);
+  }
+ }else if(reference==='golem'){
+  // Adamant plates enlarge shoulders, cover the stone fists and frame the core.
+  for(const side of [-1,1]){add(side*.70,2.29,-.05,.82,.20,.78,palette.metal);add(side*.78,2.43,-.09,.48,.13,.51,0xd0d9ce);add(side*1.02,.94,.59,.59,.30,.16,0x5b7073);add(side*1.02,.96,.69,.29,.12,.07,palette.trim);}
+  add(0,1.53,.57,.76,.58,.16,0x637b7b);add(0,1.55,.68,.21,.38,.07,0xd3caaa);add(0,1.55,.73,.12,.17,.045,0x92d4cc);add(0,2.78,.12,.91,.14,.77,palette.metal);
+ }else if(reference==='willow'||reference==='elderwillow'){
+  // Higher corrupted ancients develop spreading roots and fungal branch fans.
+  const bark=reference==='elderwillow'?0x9b5548:0x7d6658;
+  for(const side of [-1,1]){
+   for(let i=0;i<4;i++)add(side*(.66+i*.13),1.59+i*.16,-.09,.17,.29,.19,bark);
+   add(side*1.05,2.17,-.10,.45,.11,.40,0x9985ad);add(side*1.11,2.27,-.12,.26,.12,.28,0xc4b2d1);
+   add(side*.78,.18,-.37,.52,.18,.33,bark);add(side*.97,.13,-.48,.31,.13,.23,0x5a4e40);
+  }
+  if(rank>=2){for(const side of [-1,1]){add(side*.28,2.84,-.10,.19,.44,.22,0xb7a2c9);add(side*.36,3.08,-.12,.24,.11,.23,0xd6bfdc);}add(0,1.07,.58,.20,.45,.12,0xd9c6b4);}
+ }else if(reference==='whisper'){
+  // The upgraded apparition has a three-point rune crown and shoulder shards.
+  const dark=/void/.test(name)?0x62567e:0x6c8179,glow=/void/.test(name)?0xc2a8e0:0xb9ddbd;
+  for(const side of [-1,1]){add(side*.50,1.60,-.02,.24,.24,.31,dark);add(side*.63,1.78,-.06,.14,.29,.18,glow);add(side*.31,source.height+.02,-.04,.14,.28,.19,dark);add(side*.31,source.height+.17,-.04,.10,.10,.13,glow);}
+  add(0,source.height+.02,-.04,.69,.12,.49,dark);add(0,source.height+.21,-.04,.17,.36,.22,glow);add(0,1.31,.58,.13,.28,.06,glow);
+ }else if(reference==='icetitan'){
+  // Ancient frost beasts grow a crystalline crown and long shoulder crystals.
+  for(const side of [-1,1]){add(side*.86,2.71,-.16,.34,.54,.40,0xa0bddc);add(side*1.02,3.00,-.18,.21,.34,.25,0xd9e9ee);add(side*.37,3.04,-.03,.19,.55,.23,0xc3d9e9);add(side*.42,3.34,-.05,.14,.15,.18,0xf0f6f0);add(side*.76,1.26,.58,.27,.30,.15,0xdbebed);}
+  add(0,2.88,.05,.72,.16,.70,0xa5bfdd);
+ }
+ const parts=Object.freeze([...source.parts,...added]),height=Math.max(source.height,...added.map(p=>p[1]+p[4]/2));
+ return Object.freeze({...source,parts,height});
+}
 export function castleUnitModelKey(unit){return unit?.castleUnit?`castle:${resolve(unit)?.key||unit.unitKey||unit.key||unit.kind}`:unit?.castleBuilderKey?`builder:${unit.castleBuilderKey}`:unit?.hero||unit?.kind;}
 export function castleUnitVisual(value){
  const found=resolve(value);if(!found)return null;if(cache.has(found.key))return cache.get(found.key);const {key,unit}=found,race=unitRace.get(key)||'human',palette=RACES[race]||RACES.human,name=unit.name.toLowerCase(),family=familyFor(unit),parts=[],legs=[],wings=[],rotors=[],advanced=/royal|elder|master|lord|ancient|mighty|champion|veteran|adamant|heavy|sergeant|avatar|annihilat|queen|king|defender|crusader/.test(name);
+ const reference=referenceFor(family,name),sculpture=reference?ragnarokMonsterSpec(reference):null;
+ if(sculpture){
+  const visualRank=unitRanks.get(key)||0,model=rankedSculpture(sculpture,reference,visualRank,palette,name),visual=Object.freeze({...model,key,name:unit.name.trim(),race,family,palette,rotors:Object.freeze([]),ragnarokVisual:reference,visualRank,projectileKind:nativeProjectile(family,name,unit),vehicle:false,weapon:family==='archer'?'bow':null,muzzle:palette.trim});
+  cache.set(key,visual);return visual;
+ }
  const b=(x,y,z,w,h,d,color)=>parts.push([x,y,z,w,h,d,color]),leg=(x,z,color=palette.metal,w=.3,h=.5,y=.25,d=.36)=>legs.push({x,y,z,w,h,d,color}),eye=(x,y,z,color=0x293f3d)=>b(x,y,z,.11,.12,.055,color);
  const p=palette,ivory=0xe4dcc4,dark=0x344743;let motion='walk';
  function humanoid({skin=p.skin,robe=false,helmet=false}={}){const armor=!['goblin','murloc','zombie','demon','beastman','vampire','archer'].includes(family);b(0,1,0,.78,.85,.5,robe?p.cloth:['murloc','demon','beastman'].includes(family)?skin:armor?p.metal:p.cloth);b(0,1.7,.02,.56,.54,.5,skin);b(0,1.42,.04,.22,.15,.25,skin);for(const side of [-1,1]){b(side*.53,1.03,.02,.28,.68,.32,robe?p.cloth:skin);eye(side*.15,1.77,.29);}b(0,.7,0,.87,.15,.6,p.trim);if(robe){b(0,.54,0,.92,.28,.64,p.cloth);b(0,.34,0,1.03,.22,.7,p.cloth);leg(-.2,0,p.cloth,.22,.26,.13,.3);leg(.2,0,p.cloth,.22,.26,.13,.3);}else{leg(-.23,.02,armor?p.metal:p.cloth);leg(.23,.02,armor?p.metal:p.cloth);}if(helmet){b(0,1.97,.02,.64,.2,.58,p.metal);for(const side of [-1,1])b(side*.26,1.73,.02,.1,.44,.57,p.metal);b(0,2.12,-.04,.2,.2,.4,p.trim);}if(['elf','nightelf'].includes(race))for(const side of [-1,1])b(side*.36,1.82,-.01,.3,.12,.17,skin);if(['orc','north'].includes(race))for(const side of [-1,1])b(side*.17,1.49,.32,.12,.3,.12,ivory);if(race==='undead'){b(0,1.59,.29,.2,.12,.04,dark);for(const side of [-1,1])b(side*.12,1.49,.27,.06,.13,.05,ivory);}if(['chaos','corrupted'].includes(race))for(const side of [-1,1]){b(side*.3,2.05,0,.16,.38,.18,ivory);b(side*.36,2.26,0,.12,.16,.14,ivory);}}
@@ -109,7 +173,7 @@ export function castleUnitVisual(value){
  if(key==='n01B'){b(0,1.32,0,.84,.83,1.12,0x595d79);for(const side of [-1,1])b(side*.28,2.25,.57,.16,.65,.19,0xaba1cb);}
  if(key==='e00J'){b(0,1.1,-.4,1.05,1.34,.22,0x789765);for(const side of [-1,1]){b(side*.37,2.31,0,.16,.58,.18,0xc7b391);b(side*.53,2.55,0,.45,.13,.16,0xc7b391);}}
  if(key==='e004'){for(const side of [-1,1])b(side*.49,1.49,0,.42,.24,.64,p.metal);b(0,2.12,.03,.3,.48,.31,0x9c6c7c);b(0,1.16,-.49,.62,.87,.28,p.metal);}
- const projectileKind=family==='aircraft'||family==='rifleman'?'bullet':/flamegunner|red dragon|infernal machine|infernal tank/.test(name)?'fire':family==='tank'||family==='artillery'?'siege':/frost wyrm|azure drake|ice queen|ice troll/.test(name)?'frost':/winged serpent|hydra/.test(name)?'poison':['caster','spirit'].includes(family)||['magic','spells'].includes(unit.attackType)?'arcane':'arrow';
+ const projectileKind=nativeProjectile(family,name,unit);
  const height=Math.max(1.5,...parts.map(part=>part[1]+part[4]/2),...rotors.map(r=>r.pivot[1]+.2)),visual={key,name:unit.name.trim(),race,family,palette,parts,legs,wings,rotors,projectileKind,motion,vehicle:motion==='vehicle',height,weapon:family==='archer'?'bow':family==='rifleman'?/sniper|marksman/.test(name)?'sniper-rifle':'rifle':null,eyeLine:height*.68,fur:palette.skin,muzzle:palette.trim};cache.set(key,visual);return visual;
 }
 export function castleBasicProjectile(event,unit){if(!unit?.castleUnit||!event?.basicAttack||!event.castle||event.skill||event.projectileKind==='siege')return null;return castleUnitVisual(unit)?.projectileKind||null;}
