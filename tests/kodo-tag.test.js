@@ -28,7 +28,7 @@ test('ownership and native worker capabilities are enforced without charging fai
 });
 
 test('Kodos pass a diagonal Big Wall to pursue the Runner instead of treating a nearby depot as a target',()=>{
- const {g,p,q}=setup();quiet(g);const b=build(g,p,'hC08');p.x=q.x=-20;p.z=-20;q.z=-18;const mob=kodo(g,'oC06',b.x+Math.cos(Math.PI/8)*5,b.z+Math.sin(Math.PI/8)*5),start={x:mob.x,z:mob.z};until(g,()=>p.kodoTagCaptured||q.kodoTagCaptured,35);assert.ok(mob.attackAt>0);assert.ok(Math.hypot(mob.x-start.x,mob.z-start.z)>2);assert.equal(b.hp,b.maxHp,'a depot beside an open route is never attacked');assert.ok([p.id,q.id].includes(mob.kodoTagHuntTarget));
+ const {g,p,q}=setup();quiet(g);const b=build(g,p,'hC08');p.x=q.x=-20;p.z=-20;q.z=-18;const mob=kodo(g,'oC06',b.x+Math.cos(Math.PI/8)*5,b.z+Math.sin(Math.PI/8)*5),start={x:mob.x,z:mob.z};mob.kodoTagSightRadius=100;until(g,()=>p.kodoTagCaptured||q.kodoTagCaptured,35);assert.ok(mob.attackAt>0);assert.ok(Math.hypot(mob.x-start.x,mob.z-start.z)>2);assert.equal(b.hp,b.maxHp,'a depot beside an open route is never attacked');assert.ok([p.id,q.id].includes(mob.kodoTagHuntTarget));
 });
 
 test('towers deal their native damage and killing a super Kodo spawns two babies and a timed replacement',()=>{
@@ -49,5 +49,5 @@ test('release, escalation, victory and snapshots use native times and exclude in
 
 test('four runners and navigating Kodos run for sixty seconds with Runner pursuit instead of automatic depot attacks',()=>{
  const g=new Game(16,{mode:'kodotag'});assert.equal(g.addPlayer('p','runner','Human'),true);g.addBots(3);assert.equal(g.initKodoTag(),true);tick(g,60);
- const kodos=g.units.filter(u=>u.kodoTagKodo);assert.equal(kodos.length,2);near(g.kodoTag.elapsed,60);assert.ok(kodos.every(u=>g.units.some(p=>p.id===u.kodoTagHuntTarget&&p.kodoTagCharacter)));assert.ok(kodos.some(u=>Math.hypot(u.x-MAP.jail.x,u.z-MAP.jail.z)>3));assert.ok(g.units.every(u=>Number.isFinite(u.x)&&Number.isFinite(u.z)));for(const u of kodos){if(u.kodoTagBreachTarget!=null)assert.ok(g.kodoTag.buildings.some(b=>b.id===u.kodoTagBreachTarget));else assert.equal(u.target,u.kodoTagHuntTarget);}
+ const kodos=g.units.filter(u=>u.kodoTagKodo);assert.equal(kodos.length,2);near(g.kodoTag.elapsed,60);assert.ok(kodos.every(u=>u.kodoTagHuntState==='patrolling'||g.units.some(p=>p.id===u.kodoTagHuntTarget&&p.kodoTagCharacter)));assert.ok(kodos.some(u=>Math.hypot(u.x-MAP.jail.x,u.z-MAP.jail.z)>3));assert.ok(g.units.every(u=>Number.isFinite(u.x)&&Number.isFinite(u.z)));for(const u of kodos){if(u.kodoTagBreachTarget!=null)assert.ok(g.kodoTag.buildings.some(b=>b.id===u.kodoTagBreachTarget));else if(u.kodoTagHuntState==='chasing')assert.equal(u.target,u.kodoTagHuntTarget);else assert.equal(u.target,null);}
 });

@@ -99,7 +99,7 @@ export function buildingModelSpec(key,definition){
  case 'igloo':
   for(let i=0;i<5;i++)add(0,.4+i*.25,-.07,.86-i*.12,.27,.76-i*.09,'ivory','igloo-layer');add(0,.54,.32,.35,.5,.31,'stone','igloo-entrance');add(0,.47,.483,.2,.35,.025,'dark','entrance');break;
  case 'mushroom':
-  add(0,.86,0,.3,1.1,.3,'ivory','stem');for(let i=0;i<3;i++)add(0,1.44+i*.15,0,.87-i*.2,.17,.81-i*.17,'accent','mushroom-cap');for(const s of [-1,1])add(s*.23,1.71,.12,.12,.09,.14,'glow','cap-speckle');break;
+  add(0,.86,0,.25,1.1,.25,'ivory','stem');add(0,1.36,0,.73,.13,.68,'dark','frost-gills');for(let i=0;i<4;i++)add(0,1.48+i*.13,0,.88-i*.17,.15,.82-i*.15,i%2?'glow':'stone','mushroom-cap');for(const s of [-1,1]){add(s*.23,1.69,.12,.12,.09,.14,'ivory','cap-speckle');add(s*.31,1.26,0,.055,.29,.075,'glow','icicle');add(s*.32,.55,-.24,.09,.5,.1,'ivory','small-stem');add(s*.32,.83,-.24,.28,.16,.27,'glow','small-cap');}add(.07,1.99,-.04,.12,.19,.12,'ivory','frost-spore');break;
  case 'livingtree':
   add(0,1.1,0,.35,1.65,.4,'wood','trunk');for(const s of [-1,1]){add(s*.27,.5,.18,.4,.3,.3,'wood','root');add(s*.32,1.7,0,.4,.25,.29,'wood','branch');add(s*.34,2.1,0,.3,.7+rank*.2,.4,'accent','crown');}add(0,2.45+rise,0,.6,.55+rank*.2,.6,'accent','canopy');add(0,1.55,.21,.23,.18,.03,'glow','tree-face');if(/annihilation/.test(name))for(const s of [-1,1])pillar(s*.35,-.22,3.2,.12,'dark');if(/nether|shadow/.test(name))add(0,2.98+rise,0,.18,.45+rank*.2,.2,'glow','tree-spire');break;
  case 'totem':
@@ -133,6 +133,28 @@ export function buildingModelSpec(key,definition){
  default:
   add(0,.49,0,.76,.28,.7,'stone','altar');for(const s of [-1,1])pillar(s*.29,-.2,1.5+rise+rank*.25,.13);add(0,1.15+rise,.05,.3,.6,.3,'glow','relic');add(0,1.65+rise,.05,.44,.12,.42,'gold','relic-crown');if(/justice|heroic|destruction/.test(name)){pillar(0,-.3,2.6+rank*.15,.16);add(0,3.08+rank*.15,-.3,.3,.23,.25,'accent','relic-spire');}if(/gjallarhorn/.test(name))add(0,2.1,.1,.65,.25,.23,'ivory','great-horn');
  }
+ // Functional details belong to the model itself, so recruitment portraits and
+ // world buildings show the same readable support silhouette.
+ const raw=b.rawId||key.split('_')[1];
+ if(raw==='h010'){add(-.22,2.24,.1,.17,.2,.23,'gold','horn-mouth');add(.2,2.12,.1,.22,.1,.15,'gold','horn-neck');add(.34,2.27,.1,.15,.27,.18,'ivory','horn-bell');}
+ else if(raw==='h05G'){for(const side of [-1,1]){add(side*.17,1.67,.25,.1,.42,.12,'gold','heroic-figure');add(side*.17,1.98,.25,.13,.16,.13,'ivory','heroic-head');}}
+ else if(raw==='h00N'||raw==='h00M'){for(const side of [-1,1]){add(side*.3,.48,.29,.24,.18,.2,'water','wave-crest');add(side*.38,.67,.29,.11,.3,.14,'glow','wave-tip');}}
+ else if(raw==='h00I'){add(0,2.44,0,.14,.19,.14,'glow','conversion-focus');}
+ else if(raw==='h05I'){for(let i=0;i<3;i++)add(-.3+i*.21,.39,.32,.18,.17+i*.07,.19,'dark','ruined-masonry');}
+ else if(['h01M','h01W','h01X'].includes(raw)){add(0,2.37+rise,0,.2,.28,.2,'dark','void-core');for(const side of [-1,1])add(side*.22,2.37+rise,0,.12,.41,.16,'fire','void-conductor');}
+ else if(raw==='h01F'){for(const side of [-1,1])add(side*.24,.38,.13,.11,.08,.42,'fire','magma-channel');}
+ else if(raw==='h01E'){for(const side of [-1,1])add(side*.4,1.08,.19,.11,1.4,.14,'dark','destruction-spike');}
+ else if(raw==='h059'){add(0,2.82,.13,.7,.08,.09,'gold','justice-beam');for(const side of [-1,1]){add(side*.28,2.56,.13,.03,.48,.03,'iron','scales-chain');add(side*.28,2.31,.13,.23,.08,.23,'gold','scales-pan');}}
+ else if(raw==='h00Z'){add(0,2.76,.15,.12,.65,.12,'glow','restoration-sigil');add(0,2.8,.15,.42,.12,.12,'glow','restoration-sigil');}
+ else if(raw==='h01Q'){for(const side of [-1,1])add(side*.27,1.1,.34,.16,.8,.12,'glow','decay-vent');}
+ else if(raw==='h02N'){add(.19,2.6,.05,.3,.25,.26,'accent','serpent-head');for(const side of [-1,1])add(.19+side*.09,2.41,.17,.04,.18,.04,'ivory','serpent-fang');}
+ else if(['h048','h03L'].includes(raw)){for(const side of [-1,1])add(side*.34,1.09,.22,.12,.74,.13,'glow','ice-reservoir');}
+ else if(raw==='h03O'){add(0,3.16,0,.24,.5,.24,'glow','world-freezer-core');for(const side of [-1,1]){add(side*.25,3.16,0,.24,.1,.1,'ivory','frost-ray');add(0,3.16,side*.25,.1,.1,.24,'ivory','frost-ray');}}
+ else if(raw==='h04T'){add(0,2.2,.12,.63,.31,.21,'ivory','eye-shell');add(0,2.2,.24,.28,.24,.05,'glow','eye-iris');add(0,2.2,.275,.07,.24,.03,'dark','eye-pupil');}
+ else if(raw==='h04R'){for(const side of [-1,1])for(let i=0;i<3;i++)add(side*(.33-i*.07),.45+i*.31,.27,.16,.38,.18,i%2?'accent':'wood','tentacle');}
+ else if(raw==='h07H'){for(const side of [-1,1])add(side*.3,1.7,.17,.23,.2,.24,'accent','protective-leaves');}
+ else if(raw==='h07I'){add(0,3.48,0,.13,.49,.13,'glow','star-ray');add(0,3.48,0,.45,.13,.13,'glow','star-ray');add(0,3.48,0,.13,.13,.42,'glow','star-ray');}
+ else if(['h06J','h05R'].includes(raw)){const c=raw==='h05R'?'fire':'glow';for(const side of [-1,1]){add(side*.23,2.64,.16,.13,.35,.12,c,'shield-arc');add(side*.12,2.86,.16,.17,.12,.12,c,'shield-arc');}add(0,2.29,.16,.13,.19,.12,c,'shield-point');}
  // Family siblings gain a visible structural wing, not just a different icon.
  if(index>0&&race!=='mech'&&family!=='treasury'){const side=index%2?1:-1,height=.55+index*.21;add(side*.36,.3+height/2,-.27,.22,height,.24,'stone','expansion-wing');add(side*.36,.35+height,-.27,.29,.13,.3,'accent','expansion-roof');}
  const w=b.footprint?.w||3,d=b.footprint?.d||3,scaled=boxes.map(box=>{const bw=box.w*w,bd=box.d*d;return Object.freeze({...box,x:Math.max(-w/2+bw/2,Math.min(w/2-bw/2,box.x*w)),z:Math.max(-d/2+bd/2,Math.min(d/2-bd/2,box.z*d)),w:bw,d:bd});});

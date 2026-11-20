@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {SKILLS,skillAt} from '../shared/catalog.js';
-import {MONSTERS,MONSTER_PROFILES,monsterLoadout} from '../shared/monsters.js';
+import {MONSTERS,MONSTER_PROFILES,MONSTER_SKILL_THEMES,monsterLoadout} from '../shared/monsters.js';
 
 function setup(keys=[],rank=3){const g=new Game(9,{mode:'tower'});g.addPlayer('p','knight');g.phase='wave';g.wave=25;const p=g.player('p');p.x=0;p.z=2.5;p.hp=p.maxHp=100000;const skills=Array.isArray(keys)?keys:[keys],u=g.spawnEnemy('lion',0,0,{hp:10000,damage:100,skills,skillLevels:Object.fromEntries(skills.map(key=>[key,rank])),speed:0,accuracy:1,critChance:0,variantRoll:.5});u.hp=u.maxHp*.5;u.mana=10000;u.nextMonsterDecision=0;g.random=()=>.05;return{g,p,u};}
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
@@ -13,7 +13,7 @@ test('species profiles vary movement, interval, accuracy, evasion and critical s
 
 test('special species use their own move/attack profiles as well as elemental metadata',()=>{const g=new Game();g.phase='wave';for(const kind of ['lion','rhino','griffin','dragon','harpy','valkyrie']){const u=g.spawnEnemy(kind,0,0,{hp:500,damage:10,variantRoll:.5,skills:[],speed:3.1,interval:1.4}),profile=MONSTERS[kind];assert.equal(u.speed,profile.moveSpeed);assert.equal(u.interval,profile.attackInterval);assert.equal(u.evasion,profile.evasion);assert.equal(u.critChance,profile.critChance);assert.equal(u.accuracy,profile.accuracy);}});
 
-test('all catalog techniques are eligible in seeded special loadouts and ordinary enemies never acquire one accidentally',()=>{const found=new Set();for(let i=0;i<1000;i++){const loadout=monsterLoadout('lion',35,null,()=>i/1000);for(const key of loadout.skills)found.add(key);}assert.deepEqual(found,new Set(Object.keys(SKILLS)));for(const kind of ['frog','hare','goblin','tortoise'])assert.equal(monsterLoadout(kind,50,null,()=>.2).skills.length,0);});
+test('special species always carry their signature and boss variation remains inside their thematic pool',()=>{const found=new Set();for(const kind of Object.keys(MONSTER_SKILL_THEMES))for(let i=0;i<200;i++){const loadout=monsterLoadout(kind,60,'boss',()=>i/200);if(MONSTERS[kind])assert.equal(loadout.skills[0],MONSTERS[kind].skill);for(const key of loadout.skills){assert.ok(MONSTER_SKILL_THEMES[kind].includes(key),kind+' cannot acquire '+key);found.add(key);}}assert.deepEqual(found,new Set(Object.keys(SKILLS)));for(const kind of ['frog','hare','goblin','tortoise'])assert.equal(monsterLoadout(kind,50,null,()=>.2).skills.length,0);});
 
 test('identical trial variants generate identical monster builds and stats in separate cells',()=>{const g=new Game();g.phase='wave';g.wave=33;const data={hp:500,damage:40,variantRoll:.173,boss:'boss'},a=g.spawnEnemy('champion',-7,0,data),b=g.spawnEnemy('champion',7,0,data);for(const key of ['kind','level','rarity','monsterRank','skills','skillLevels','monsterBase','size'])assert.deepEqual(a[key],b[key]);});
 

@@ -1,0 +1,227 @@
+// Executable support definitions audited against Castle Fight v1.14b.
+// Spatial values use the same native /256 conversion as castle-weapon-data.js.
+// Importing this module never mutates the catalog; castle-catalog applies the
+// patches before computing visual profiles. Source notes distinguish adaptation.
+export const CASTLE_SUPPORT_REFERENCE=Object.freeze({
+ version:'Castle Fight v1.14b',files:['war3map.w3u','war3map.w3a','Scripts/war3map.j','base-UnitBalance.slk','base-UnitWeapons.slk','base-AbilityData.slk'],
+ spatialConversion:'native/256; combat uses castleCombatRange spatial adapter except worldSpace overrides',
+ sourceHashes:{map:'ea93d427d8171babdbb4b58a0db3352c9d27195597a9a5581bf8ff528d7e682d',units:'398b86bd67e3306f505c82a970c4e0e8e0dc7caa53d3298062c35b68aa7e4a3f',abilities:'5bf5683e9776bc91c3c85617d7ce4bbaf960dfeeb7e4e15715e4fbfd6f8f5db8',script:'06fb90f4eab3e7302d9ab0890d7b798299fd98d37dcc7e8430a88e43fd93806a'},
+ chillingMushroom:{rawId:'h047',ability:'A06P',handler:'SPELL_FrozenMushroom',executedAbility:'A0AK',damageField:'Htb1',damage:300,tooltipDamage:200,note:'The executed A0AK damage field overrides the stale building tooltip.'}
+});
+const all={range:1000,global:true,targetsAir:true,targetsGround:true};
+const source=(rawId,abilities,confirmed,adapted=[])=>({version:CASTLE_SUPPORT_REFERENCE.version,rawId,abilityIds:abilities,files:['war3map.w3u','war3map.w3a','Scripts/war3map.j'],confirmed,adapted});
+const entry=(rawId,abilities,description,effect,confirmed=[],adapted=[])=>({playable:true,description,castleEffect:{...all,...effect,description},supportReference:source(rawId,abilities,confirmed,adapted)});
+
+export const CASTLE_SUPPORT_BUILDINGS={
+ human_h05G:entry('h05G',['A06M'],'Ao treinar uma tropa aliada, tem 24% de chance de criar uma cópia para o dono deste santuário. Não duplica tropas lendárias.',{type:'duplicate',chance:.24,excludeLegendary:true},['W3U tooltip:24%','JASS training hook']),
+ human_h010:entry('h010',['A01K','A016'],'A cada 7s, concede +66% de velocidade de ataque aos aliados próximos por 60s. O mesmo efeito não acumula.',{type:'haste',interval:7,radius:500/256,duration:60,attackSpeed:.66,moveSpeed:0},['SPELL_Gjallarhorn radius500','A016 Blo1=.66','Ablo Dur1=60','A01K amcs=7']),
+ human_h001:entry('h001',['A02K'],'Bombardeia a base inimiga a cada 12s. Cada granada causa 300–400 de dano de cerco e atinge uma área de 1,25m.',{type:'artillery',interval:12,damage:350,damageMin:300,damageMax:400,radius:320/256,scatterRadius:320/256,attackType:'siege',targetsAir:false,targetsGround:true,targetStructures:true},['W3U ua1b299+1d101=300..400','ua1c12','tooltip splash320'],['Seeded circular inaccuracy replaces the native attack-ground order.']),
+ naga_h00N:entry('h00N',['A00J','A00P'],'A cada 15s, lança uma onda em direção a um inimigo. Causa 270 de dano de caos a todas as tropas terrestres no trajeto.',{type:'wave',interval:15,damage:270,width:200/256,attackType:'chaos',targetsAir:false,targetsGround:true},['W3U tooltip damage270/cooldown15','A00P area200'],['A server line sweep replaces the native moving wave missile.']),
+ naga_h00M:entry('h00M',['A00O'],'A cada 18s, toma o controle de uma tropa inimiga e a coloca a serviço do dono desta construção.',{type:'convert',interval:18},['A00O amcs18','SPELL_OracleOfSirens']),
+ naga_h00I:entry('h00I',['A00M','A00B'],'A cada 7s, causa 40 de dano mágico em uma área e reduz em 50% o movimento e a velocidade de ataque das tropas terrestres atingidas por 10s.',{type:'earthquake',interval:7,damage:40,radius:375/256,duration:10,moveSpeed:-.5,attackSpeed:-.5,targetsAir:false,attackType:'spells'},['A00B Htc1=40/aare375/adur10','inherited AHtc slow=.5','A00M amcs7']),
+ chaos_h05I:entry('h05I',['A06R'],'A cada 10s, aplica um presente caótico a um inimigo: morte, 500 de dano, mutação aliada, transformação, atordoamento, fortalecimento ou nenhum efeito.',{type:'chaos',interval:10,damage:500,stunDamage:200,duration:6,healthBonus:400,damageBonus:25,hexDuration:45,outcomes:8},['SPELL_MagicTowerRuin seven effects plus no-op','A06R amcs10','A06T Ilif400','A06U Iatt25']),
+ chaos_h01M:entry('h01M',['A01W'],'A cada 50s, apaga todas as tropas inimigas de uma família sorteada, incluindo suas evoluções.',{type:'erase',interval:50,family:true},['W3U cooldown50-12.5 per upgrade','SPELL_Erasor point-value family matching']),
+ chaos_h01W:entry('h01W',['A01W'],'A cada 37,5s, apaga todas as tropas inimigas de uma família sorteada, incluindo suas evoluções.',{type:'erase',interval:37.5,family:true},['W3U cooldown50-12.5 per upgrade','W3U mana regeneration2.66']),
+ chaos_h01X:entry('h01X',['A01W'],'A cada 25s, apaga todas as tropas inimigas de uma família sorteada, incluindo suas evoluções.',{type:'erase',interval:25,family:true},['W3U cooldown50-12.5 per upgrade','W3U mana regeneration4']),
+ chaos_h01F:entry('h01F',['A01J','A01I'],'A cada 12s, provoca uma erupção de 100 de dano mágico por segundo durante 2,75s. Atinge até seis alvos; estruturas recebem 40% do dano.',{type:'eruption',interval:12,damage:100,damagePerSecond:100,duration:2.75,radius:325/256,maxTargets:6,buildingMultiplier:.4,attackType:'spells',targetsAir:false,targetStructures:true},['A01I Hfs1=25/Hfs2=.25/aare325/Hfs5=.4','W3U duration2.75/max6','A01J amcs12']),
+ chaos_h01E:entry('h01E',['A01E'],'A cada 35s, destrói uma construção inimiga sorteada, sem conceder recompensa. Não pode destruir construções lendárias nem o castelo principal.',{type:'destroyBuilding',interval:35,excludeLegendary:true,excludeCastle:true,noBounty:true},['SPELL_ShrineOfDestruction excludes A06V legendary','A01E cooldown35']),
+ elf_h059:entry('h059',['A06A'],'Tropas aliadas mortas têm 20% de chance de ressuscitar após 2s. Até dois santuários contribuem para esta chance.',{type:'resurrection',chance:.2,delay:2,maxStacks:2},['W3U revival20%/delay2/stackonce']),
+ elf_h00Z:entry('h00Z',['A017','A018'],'A cada 10s, transforma uma tropa inimiga em ovelha por 45s, impedindo seus ataques e habilidades.',{type:'hex',interval:10,duration:45},['A018 adur45','A017 amcs10','SPELL_CityOfMagic']),
+ undead_h01Q:entry('h01Q',['A01T'],'Causa 8 de dano mágico por segundo a todas as tropas inimigas orgânicas. Não acumula com outra Cidade da Decadência.',{type:'decay',damage:8,damagePerSecond:8,interval:1,radius:20000/256,excludeMechanical:true,family:'decay',attackType:'spells'},['A01T Eim1=8/aare20000','target organic','W3U nonstack']),
+ undead_h01P:entry('h01P',['A01Q'],'A cada 12s, consome um cadáver e reanima um guerreiro, arqueiro ou mago esqueleto. Há 10% de chance de surgir um herói esquelético.',{type:'raiseDead',interval:12,requiresCorpse:true,generalChance:.1},['JASS Jf normal sr0..2/general sr3 chance10','A01Q amcs12']),
+ undead_h056:entry('h056',['A05U'],'A cada 15s, consome um cadáver e reanima um esqueleto, podendo criar uma versão maior. Há 10% de chance de surgir um general esquelético.',{type:'raiseDead',interval:15,requiresCorpse:true,generalChance:.1,greater:true},['JASS Kf sr1..6/general sr7 chance10','A05U amcs15']),
+ orc_h02R:entry('h02R',['A039','A03A','A03B','A03D','A08L'],'A cada 8s, abençoa um aliado com +20 de dano, +20% de velocidade de ataque, +3 de armadura e +200 de vida. Também recebe crítico, evasão ou dano extra contra estruturas.',{type:'bless',interval:8,flatDamage:20,attackSpeed:.2,armor:3,healthBonus:200,permanent:true,critChance:.25,critMultiplier:2,evasion:.3,demolish:1.5},['W3U blessing stats','A03A Iatt20/A03D Ilif200/A08L Idef3','SPELL_CeremonialTotem random three traits']),
+ orc_h02N:entry('h02N',['A02Z','A030'],'A cada 12s, envenena uma área por 20s: reduz 5 de armadura, 20% do movimento e da velocidade de ataque. O alvo principal sofre 10 de dano por segundo; os demais, 5.',{type:'poison',interval:12,duration:20,radius:425/256,damage:10,damagePerSecond:10,secondaryDamage:5,armor:-5,moveSpeed:-.2,attackSpeed:-.2,attackType:'spells'},['A030 Nab1/Nab2=-.2/Nab3=5/Nab4=10/Nab5=5/aare425/adur20','A02Z amcs12']),
+ north_h047:entry('h047',['A06P','A0AK'],'A cada 8s, congela uma tropa aérea inimiga: causa 300 de dano mágico e atordoa por 5s. Só atinge unidades voadoras.',{type:'stun',interval:8,damage:300,duration:5,targetsAir:true,targetsGround:false,targetCount:1,singleTarget:true,attackType:'spells'},['SPELL_FrozenMushroom calls kv=A0AK','A0AK Htb1=300','inherited AHtb Dur1=5','A06P amcs8'],['Building tooltip says200; executed ability damage300 takes precedence.']),
+ north_h048:entry('h048',['A04J'],'A cada 12s, lança gelo contra uma construção inimiga: causa 50 de dano de caos e interrompe sua produção e seus efeitos por 10s.',{type:'frostTower',interval:12,damage:50,duration:10,radius:0,targetStructures:true,attackType:'chaos'},['W3U Frost Bolt50/freeze10','A04J amcs12']),
+ north_h03L:entry('h03L',['A04L'],'A cada 15s, causa 100 de dano de caos a uma construção inimiga e congela tropas e estruturas próximas por 12s.',{type:'frostTower',interval:15,damage:100,duration:12,radius:250/256,targetStructures:true,attackType:'chaos'},['W3U Greater Frost Bolt100/radius250/freeze12','A04L amcs15']),
+ north_h03O:entry('h03O',['A04I','A080','A081','A082','A083','A04H'],'A cada 35s, envia três orbes de gelo pelo campo. Eles causam dano mágico, reduzem em 40% movimento e ataques próximos e periodicamente congelam inimigos.',{type:'frostOrbs',interval:35,count:3,damage:20,damagePerSecond:20/.33,attackInterval:.33,radius:700/256,chillRadius:750/256,moveSpeed:-.4,attackSpeed:-.4,speed:250/256,duration:60,controlInterval:2.04,airDamage:125,airStun:8,groundStun:.5,rootDuration:15,rootDamagePerSecond:15,attackType:'spells'},['SPELL_WorldFreezer count3','vF timer.04/movement10','A080 Apxf inherited damage20/cool.33','A081 Oae1/Oae2=-.4','A082 stun8/damage125','A04H root15/DPS15'],['Moving orb lifetime capped at60s; map boundary removes it earlier.']),
+ corrupted_h04T:entry('h04T',['A04R','A04S'],'A cada 50s, reduz em 12 a armadura de todas as tropas inimigas por 20s. O mesmo efeito não acumula.',{type:'weaken',interval:50,duration:20,armor:-12,family:'corruption'},['A04S Had1=-12','ZA dummy lifetime20','W3U cooldown50']),
+ corrupted_h04R:entry('h04R',['A04U'],'A cada 12s, invoca seis tentáculos em torno de um inimigo terrestre. Eles atacam por 9s e não se deslocam.',{type:'tentacles',interval:12,count:6,radius:64/256,duration:9,targetsAir:false,targetsGround:true},['SPELL_ForgottenOne count6/radius64/timedlife9','n01C native weapon/profile']),
+ nightelf_h07H:entry('h07H',['A08E'],'A cada 7s, protege permanentemente um aliado: reduz em 55% o dano mágico e concede 40% de chance de bloquear 40 de dano de ataques.',{type:'protection',interval:7,permanent:true,reduction:.55,blockChance:.4,blockDamage:40},['W3U Resistance of the Wilderness','A08E amcs7']),
+ nightelf_h08P:entry('h08P',['A08B','A08A'],'A cada 20s, prepara uma bênção para aliados sob ataque. Na área atingida, restaura 175 de vida e 50 de mana e concede +6 de armadura por 6s.',{type:'restore',interval:20,heal:175,mana:50,armor:6,duration:6,radius:250/256},['A08A Ihp2=175/Imp2=50/Idef6/aare250/adur6','SPELL_SilverGlade arms next attacked troop','A08B amcs20']),
+ nightelf_h07I:entry('h07I',['A07U','A07T'],'A cada 30s, faz chover estrelas sobre inimigos durante 9s, causando 50 de dano mágico por segundo. Estruturas recebem 40% do dano.',{type:'starfall',interval:30,damage:50,damagePerSecond:50,duration:9,radius:1000/256,buildingMultiplier:.4,targetStructures:true,attackType:'spells'},['A07T Esf1=100/Esf2=2/Esf3=.4/adur9.01','inherited area1000','A07U amcs30']),
+ mech_h09T:entry('h09T',['A09A'],'Energiza construções próximas: +2 de armadura e +25% de dano de torres. Tropas recém-treinadas recebem +100 de vida, +2 de armadura e +20% de dano.',{type:'power',radius:3,worldSpace:true,armor:2,towerDamageBonus:.25,trainedHp:100,trainedArmor:2,trainedDamageBonus:.2,manaRegen:.25,dispel:true},['W3U Power Buildings buffs/radius180'],['Radius adapted from180/256 to3m so adjacent role-sized voxel buildings can receive power. Native mana regeneration represented by special-effect cadence.']),
+ mech_h06J:entry('h06J',['A09N'],'A cada 7s, protege um aliado com +2 de armadura. O escudo bloqueia a próxima habilidade negativa de uma construção inimiga e depois desaparece.',{type:'shield',interval:7,armor:2,charges:1,permanent:true},['A09N amcs7','W3U Energy Shield one charge/armor2']),
+ mech_h05R:entry('h05R',['A09O'],'A cada 7s, protege um aliado com +4 de armadura. Bloqueia duas habilidades negativas de construções inimigas e restaura 100 de vida na primeira ativação.',{type:'shield',interval:7,armor:4,charges:2,heal:100,permanent:true},['A09O amcs7','W3U Greater Energy Shield two charges/armor4/heal100'])
+};
+
+// Explicit map overrides take precedence over inherited SLK fields.
+export const CASTLE_SUPPORT_SUMMONS={
+ "u002": {
+  "key": "u002",
+  "rawId": "u002",
+  "kind": "hedgehog",
+  "name": "Skeleton Warrior",
+  "hp": 275,
+  "damage": 26.5,
+  "armor": 5,
+  "armorType": "light",
+  "attackType": "normal",
+  "speed": 1.0546875,
+  "range": 0.55,
+  "interval": 1.350000023841858,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true
+ },
+ "n00D": {
+  "key": "n00D",
+  "rawId": "n00D",
+  "kind": "hedgehog",
+  "name": "Skeleton Archer",
+  "hp": 250,
+  "damage": 26.0,
+  "armor": 3,
+  "armorType": "light",
+  "attackType": "pierce",
+  "speed": 1.0546875,
+  "range": 1.3671875,
+  "interval": 1.350000023841858,
+  "flying": false,
+  "targetsAir": true,
+  "targetsGround": true
+ },
+ "u00A": {
+  "key": "u00A",
+  "rawId": "u00A",
+  "kind": "frog",
+  "name": "Skeletal Mage",
+  "hp": 240,
+  "damage": 26.5,
+  "armor": 2,
+  "armorType": "light",
+  "attackType": "magic",
+  "speed": 1.0546875,
+  "range": 1.5625,
+  "interval": 1.350000023841858,
+  "flying": false,
+  "targetsAir": true,
+  "targetsGround": true
+ },
+ "n00C": {
+  "key": "n00C",
+  "rawId": "n00C",
+  "kind": "frog",
+  "name": "Skeletal Hero",
+  "hp": 375.0,
+  "damage": 31.5,
+  "armor": 7,
+  "armorType": "light",
+  "attackType": "chaos",
+  "speed": 1.0546875,
+  "range": 0.55,
+  "interval": 0.8500000238418579,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true
+ },
+ "u00B": {
+  "key": "u00B",
+  "rawId": "u00B",
+  "kind": "hedgehog",
+  "name": "Greater Skeleton Warrior",
+  "hp": 550,
+  "damage": 45.5,
+  "armor": 6,
+  "armorType": "light",
+  "attackType": "normal",
+  "speed": 1.0546875,
+  "range": 0.55,
+  "interval": 1.25,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true
+ },
+ "n01L": {
+  "key": "n01L",
+  "rawId": "n01L",
+  "kind": "hedgehog",
+  "name": "Greater Skeleton Archer",
+  "hp": 475,
+  "damage": 51.0,
+  "armor": 4,
+  "armorType": "light",
+  "attackType": "pierce",
+  "speed": 1.0546875,
+  "range": 1.3671875,
+  "interval": 1.2000000476837158,
+  "flying": false,
+  "targetsAir": true,
+  "targetsGround": true
+ },
+ "u003": {
+  "key": "u003",
+  "rawId": "u003",
+  "kind": "frog",
+  "name": "Greater Skeletal Mage",
+  "hp": 450,
+  "damage": 50.5,
+  "armor": 3,
+  "armorType": "light",
+  "attackType": "magic",
+  "speed": 1.0546875,
+  "range": 1.5625,
+  "interval": 1.2000000476837158,
+  "flying": false,
+  "targetsAir": true,
+  "targetsGround": true
+ },
+ "n01M": {
+  "key": "n01M",
+  "rawId": "n01M",
+  "kind": "frog",
+  "name": "Skeletal General",
+  "hp": 750,
+  "damage": 50.5,
+  "armor": 8,
+  "armorType": "light",
+  "attackType": "hero",
+  "speed": 1.0546875,
+  "range": 0.55,
+  "interval": 0.699999988079071,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true
+ },
+ "n01C": {
+  "key": "n01C",
+  "rawId": "n01C",
+  "kind": "frog",
+  "name": "Raised Tentacle",
+  "hp": 225,
+  "damage": 21.0,
+  "armor": 0.0,
+  "armorType": "unarmored",
+  "attackType": "hero",
+  "speed": 0.0,
+  "range": 0.55,
+  "interval": 1.0,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true,
+  "duration": 9
+ },
+ "n01S": {
+  "key": "n01S",
+  "rawId": "n01S",
+  "kind": "frog",
+  "name": "Mutation",
+  "hp": 600,
+  "damage": 50.0,
+  "armor": 4,
+  "armorType": "medium",
+  "attackType": "chaos",
+  "speed": 1.0546875,
+  "range": 0.55,
+  "interval": 1.35,
+  "flying": false,
+  "targetsAir": false,
+  "targetsGround": true
+ }
+};
+const supportSummons=CASTLE_SUPPORT_SUMMONS;
+Object.assign(CASTLE_SUPPORT_BUILDINGS.undead_h01P.castleEffect,{summons:['u002','n00D','u00A'].map(k=>supportSummons[k]),general:supportSummons.n00C});
+Object.assign(CASTLE_SUPPORT_BUILDINGS.undead_h056.castleEffect,{summons:['n00D','u00A','n00C','u00B','n01L','u003'].map(k=>supportSummons[k]),general:supportSummons.n01M});
+CASTLE_SUPPORT_BUILDINGS.corrupted_h04R.castleEffect.summon=supportSummons.n01C;
+CASTLE_SUPPORT_BUILDINGS.chaos_h05I.castleEffect.summon=supportSummons.n01S;

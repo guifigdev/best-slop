@@ -64,6 +64,34 @@ const SPECIAL_PROFILES={
 };
 for(const [key,profile]of Object.entries(SPECIAL_PROFILES))Object.assign(MONSTERS[key],profile,{preferredDropSkill:MONSTERS[key].skill});
 
+// A creature's anatomy and element constrain every generated skill. Bosses
+// gain variety within that identity; hero builds and acquired loot stay free.
+export const MONSTER_SKILL_THEMES=Object.freeze(Object.fromEntries(Object.entries({
+ lion:['battlecry','critical','rage','doubleattack','violentforce','dash','endurance','packaura','fenrirfang','weakeninghowl','freyjascat'],
+ rhino:['hornrush','stonehide','stomp','bash','devotion','cleave','forcepush','shockwave','thorsjudgment'],
+ griffin:['stormdive','chain','bolt','hurricane','endurance','evasion','odinsravens'],
+ chimera:['venomcloud','poison','drain','vampiric','helguard','scarabs','weakeninghowl','manabreak'],
+ dragon:['flamebreath','warlockfire','fireball','firesteps','auraflame','violentforce','critical','rage','cleave'],
+ sphinx:['stonehide','bolt','shield','runicbarrier','spiritward','gravity','blink','swap','heal','brilliance','lifeaura','devotion','freyjasgrace'],
+ valkyrie:['stormdive','chain','bolt','odinsravens','thorsjudgment','gungnir','devotion','brilliance','heal','avatar'],
+ harpy:['warlockfrost','hurricane','forcepush','froststeps','multishot','bounce','evasion'],
+ phoenix:['warlockfire','fireball','flamebreath','auraflame','firesteps','heal','freyjasgrace','lifeaura'],
+ frostwyrm:['warlockfrost','frostnova','blizzard','icewall','icepulse','helsfrost','froststeps','manabreak'],
+ basilisk:['venomcloud','poison','scarabs','weakeninghowl','drain','hook','thorns','spiritward'],
+ goblin:['helguard','manabreak','drain','runicbarrier','spiritward','shield','critical'],
+ duck:['hurricane','forcepush','multishot','bounce','endurance','evasion'],
+ frog:['poison','venomcloud','hook','dash','evasion','doubleattack'],
+ hare:['dash','evasion','endurance','doubleattack','critical','froststeps'],
+ brute:['hornrush','stomp','stonehide','cleave','bash','rage','violentforce'],
+ ram:['hornrush','bash','stomp','endurance','thorsgoats','critical'],
+ bat:['drain','vampiric','weakeninghowl','evasion','critical','doubleattack'],
+ tortoise:['stonehide','thorns','devotion','shield','runicbarrier','bash','lifeaura'],
+ hedgehog:['thorns','bounce','critical','evasion','poison','doubleattack'],
+ champion:['stomp','stonehide','cleave','bash','avatar','violentforce','rage','devotion'],
+ wolf:['fenrirfang','summon','packaura','weakeninghowl','critical','endurance','doubleattack'],
+ bonus:['dash','evasion','endurance','critical','doubleattack']
+}).map(([kind,skills])=>[kind,Object.freeze(skills)])));
+
 // A boss can mix roles, but cannot fill every slot with stuns or self-sustain.
 const CONTROL_SKILLS=new Set(['bolt','stomp','bash','stormdive','hornrush','forcepush','hook','gravity','warlockfire']);
 const SUSTAIN_SKILLS=new Set(['heal','vampiric','drain','shield','avatar']);
@@ -75,16 +103,13 @@ export function monsterLoadout(kind,level=1,boss=false,random){
  const isBoss=boss===true||boss==='boss'||boss==='miniboss',rarity=isBoss?(boss==='miniboss'?'miniboss':'boss'):species?'special':'normal',skills=[];
  const count=isBoss?Math.min(5,1+Math.floor(actualLevel/15)):species?1:0;
  if(!count)return{level:actualLevel,rank,rarity,skills,skillLevels:{}};
- const roll=()=>unitRoll(typeof random==='function'?random():.5),all=LOOT_SKILLS,primary=species?.skill;
+ const roll=()=>unitRoll(typeof random==='function'?random():.5),theme=MONSTER_SKILL_THEMES[kind]||MONSTER_SKILL_THEMES.champion,all=theme.filter(key=>LOOT_SKILLS.includes(key)),primary=species?.skill;
  let controls=0,sustain=0;
  for(let i=0;i<count;i++){
   let pool=all.filter(key=>!skills.includes(key)&&(!controls||!CONTROL_SKILLS.has(key))&&(!sustain||!SUSTAIN_SKILLS.has(key)));
   if(!pool.length)break;
   let r=roll(),key;
-  if(i===0&&primary&&pool.includes(primary)){
-   if(r<.65)key=primary;
-   else{pool=pool.filter(candidate=>candidate!==primary);r=(r-.65)/.35;}
-  }
+  if(i===0&&primary&&pool.includes(primary))key=primary;
   if(!key)key=pool[Math.min(pool.length-1,Math.floor(r*pool.length))];
   skills.push(key);if(CONTROL_SKILLS.has(key))controls++;if(SUSTAIN_SKILLS.has(key))sustain++;
  }

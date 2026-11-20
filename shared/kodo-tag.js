@@ -11,7 +11,10 @@ const fx=(g,type,u,extra={})=>g.fx(type,u.x,u.z,{source:u.id,kodoTag:true,...ext
 function nav(g){const k=g.kodoTag;if(k.navigation.resourceRevision!==k.navigationRevision){k.navigation.obstacles=[...k.obstacles,...k.mines.filter(m=>m.alive),...k.trees.filter(t=>t.alive)];k.navigation.resourceRevision=k.navigationRevision;}Object.assign(k.navigation,{map:k.map,buildings:k.buildings,navigationRevision:k.navigationRevision,elapsed:k.elapsed,units:g.units});return k.navigation;}
 const inMap=(g,p)=>finite(p)&&p.x>=g.kodoTag.map.minX+.2&&p.x<=g.kodoTag.map.maxX-.2&&p.z>=g.kodoTag.map.minZ+.2&&p.z<=g.kodoTag.map.maxZ-.2;
 function controlled(g,hero,c){const id=c.workerId??c.unitId;if(id==null||id===hero.id)return hero;return Number.isInteger(id)?g.units.find(u=>u.id===id&&u.owner===hero.owner&&u.kodoTagUnit&&live(u)):null;}
-const buildApproaches=new WeakMap(),huntPlans=new WeakMap();
+const buildApproaches=new WeakMap(),huntPlans=new WeakMap(),huntMemories=new WeakMap(),patrolPlans=new WeakMap(),huntSightContexts=new WeakMap();
+// Sight is the inherited owar day-sight fixture, not a certified 1.04 map
+// override. Memory/patrol timing are explicit browser gameplay adaptations.
+export const KODO_HUNT_RULES=Object.freeze({sightRadius:1400/128,memorySeconds:6,patrolSeconds:5,replanSeconds:.9});
 function pauseWork(u){const queue=[...(u.kodoTagBuildQueue||[])];if(u.kodoTagAction?.type==='build'&&!queue.includes(u.kodoTagAction.target))queue.unshift(u.kodoTagAction.target);reset(u);u.kodoTagBuildQueue=queue;u.kodoTagBuildPaused=queue.length>0;buildApproaches.delete(u);}
 function queueBuild(g,u,b){
  if(u.kodoTagAction?.type==='build'&&g.kodoTag.buildings.some(t=>t.id===u.kodoTagAction.target&&t.alive&&t.workRemaining>0)){
@@ -38,8 +41,8 @@ function approach(g,u,target,reach,surfaceReach=null){
  return within(u);
 }
 function addUnit(g,raw,owner,near){
- const data=UNITS[raw];if(!data)return null;const context=nav(g),radius=data.role==='kodo'?Math.max(data.collisionRadius||0,(data.size||1)*.82):data.collisionRadius||.25,pos=castleSpawnPoint(context,near,radius,{maxDistance:4,ignoreUnits:false});if(!pos)return null;
- const bodyRadius=data.role==='kodo'?Math.max(data.collisionRadius||0,(data.size||1)*.82):data.collisionRadius;const u={...data,collisionRadius:bodyRadius,id:g.id(),unitKey:raw,owner,team:data.role==='kodo'?2:1,...pos,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,kind:data.modelKey,cd:0,stun:0,moving:false,facing:0,order:'auto',inventory:[],cooldowns:{},kodoTagUnit:true,kodoTagWorker:data.role==='worker',kodoTagKodo:data.role==='kodo',kodoTagSoldier:data.role==='soldier',carrying:null};g.units.push(u);return u;
+ const data=UNITS[raw];if(!data)return null;const context=nav(g),radius=data.collisionRadius||.25,pos=castleSpawnPoint(context,near,radius,{maxDistance:4,ignoreUnits:false});if(!pos)return null;
+ const u={...data,id:g.id(),unitKey:raw,owner,team:data.role==='kodo'?2:1,...pos,maxHp:data.hp,hp:data.hp,maxMana:data.mana,mana:data.mana,alive:true,kind:data.modelKey,cd:0,stun:0,moving:false,facing:0,order:'auto',inventory:[],cooldowns:{},kodoTagUnit:true,kodoTagWorker:data.role==='worker',kodoTagKodo:data.role==='kodo',kodoTagSoldier:data.role==='soldier',carrying:null};g.units.push(u);return u;
 }
 function destroyBuilding(g,b,reason,attacker=null){
  if(!b?.alive)return false;b.alive=false;b.died=g.time;g.kodoTag.navigationRevision++;
@@ -58,7 +61,7 @@ function kill(g,u,attacker){
 }
 function hurt(g,target,amount,source){if(!live(target))return;const n=Math.min(target.hp,Math.max(0,amount)/(1+.06*Math.max(0,target.armor||0)));target.hp-=n;target.hitAt=g.time;if(n)fx(g,'damage',target,{target:target.id,amount:Math.round(n)});if(target.hp<=0)kill(g,target,source);}
 function attack(g,u,target,move=true){
- const strikingDistance=Math.max(u.range||.7,(u.collisionRadius||.25)+.1),reach=strikingDistance+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25),inReach=target.w&&target.d?Math.hypot(Math.max(0,Math.abs(u.x-target.x)-target.w/2),Math.max(0,Math.abs(u.z-target.z)-target.d/2))<=strikingDistance:dist(u,target)<=reach;
+ const strikingDistance=Math.max(u.range||.7,(u.collisionRadius||.25)+(u.kodoTagKodo?.03:.1)),reach=strikingDistance+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25),inReach=target.w&&target.d?Math.hypot(Math.max(0,Math.abs(u.x-target.x)-target.w/2),Math.max(0,Math.abs(u.z-target.z)-target.d/2))<=strikingDistance:dist(u,target)<=reach;
  if(!inReach){if(move)approach(g,u,target,reach,target.w&&target.d?strikingDistance:null);return;}
  u.kodoTagBlocked=false;if(u.cd>0||u.stun>0)return;u.attackAt=g.time;u.facing=Math.atan2(target.x-u.x,target.z-u.z);u.cd=u.interval||2;fx(g,u.range>=3?'arrow':'slash',u,{target:target.id,tx:target.x,tz:target.z,basicAttack:true,projectileKind:u.unitKey==='hC12'?'arrow':u.unitKey==='eC17'?'siege':u.kodoTagStructure?'arcane':null});hurt(g,target,u.damage,u);
  if(u.key==='oC20'){target.kodoSlowUntil=g.kodoTag.elapsed+5;target.kodoSlowFactor=.5;target.kodoPoison={until:g.kodoTag.elapsed+5,next:g.kodoTag.elapsed+1,damage:4,owner:u.owner};}
@@ -73,25 +76,46 @@ function runnerRoute(context,u,target,radius){
  for(let i=0;i<16;i++){const angle=i*Math.PI/8,point={x:target.x+Math.cos(angle)*reach,z:target.z+Math.sin(angle)*reach};if(castlePassable(context,point,radius)&&castleSegmentClear(context,point,target,0)){const route=castleRoutePath(context,u,point,radius);if(route)return route;}}
  return null;
 }
+function patrol(g,u,context,radius){
+ const k=g.kodoTag;u.target=null;u.kodoTagHuntTarget=null;u.kodoTagBreachTarget=null;u.kodoTagHuntState='patrolling';let plan=patrolPlans.get(u);
+ if(!plan||plan.revision!==k.navigationRevision||k.elapsed>=plan.until||dist(u,plan.goal)<.4){
+  const serial=(plan?.serial||0)+1;let goal=null;
+  // Sweep map sectors, rather than repeatedly turning in a small circle.
+  // These are terrain-only waypoints; no hidden Runner position is sampled.
+  for(let i=0;i<25;i++){const index=(u.id*7+serial-1+i)%25,row=Math.floor(index/5),col=row%2?4-index%5:index%5,point={x:k.map.minX+(col+.5)*(k.map.maxX-k.map.minX)/5,z:k.map.minZ+(row+.5)*(k.map.maxZ-k.map.minZ)/5};if(dist(u,point)>.6&&castlePassable(context,point,radius)&&castleRouteAvailable(context,u,point,radius)){goal=point;break;}}
+  if(!goal)for(let i=0;i<16;i++){const angle=u.id*2.399963+serial*.2+i*Math.PI/8,point={x:u.x+Math.sin(angle)*8,z:u.z+Math.cos(angle)*8};if(castlePassable(context,point,radius)&&castleRouteAvailable(context,u,point,radius)){goal=point;break;}}
+  plan={goal:goal||{x:u.x,z:u.z},serial,revision:k.navigationRevision,until:k.elapsed+Math.max(KODO_HUNT_RULES.patrolSeconds,goal?dist(u,goal)/Math.max(.1,u.speed)*2+3:0)};patrolPlans.set(u,plan);
+ }
+ moveCastleUnit(context,u,plan.goal,k.step);
+}
 function huntRunner(g,u){
- const k=g.kodoTag,runners=players(g).filter(live),context=nav(g),radius=castleNavigationRadius(u);if(!runners.length)return;
- let plan=huntPlans.get(u);const old=runners.find(p=>p.id===plan?.targetId);
- if(!plan||!old||plan.revision!==k.navigationRevision||k.elapsed>=plan.until||dist(old,plan.targetPoint)>2){
-  const sorted=runners.sort((a,b)=>dist(u,a)-dist(u,b));let target=sorted[0],path=null;
+ const k=g.kodoTag,runners=players(g).filter(live),context=nav(g),radius=castleNavigationRadius(u),sight=u.kodoTagSightRadius??KODO_HUNT_RULES.sightRadius;
+ let opaque=huntSightContexts.get(k);if(!opaque){opaque={};huntSightContexts.set(k,opaque);}Object.assign(opaque,context,{buildings:k.buildings.filter(b=>ready(b)&&b.blocksSight!==false)});
+ const visible=runners.filter(p=>dist(u,p)<=sight&&castleSegmentClear(opaque,u,p,0)).sort((a,b)=>dist(u,a)-dist(u,b));
+ let memory=huntMemories.get(u),target=visible.find(p=>p.id===memory?.targetId)||visible[0];
+ if(target){memory={targetId:target.id,targetPoint:{x:target.x,z:target.z},collisionRadius:target.collisionRadius,until:k.elapsed+(u.kodoTagMemorySeconds??KODO_HUNT_RULES.memorySeconds)};huntMemories.set(u,memory);}
+ else if(memory&&(k.elapsed>=memory.until||!runners.some(p=>p.id===memory.targetId))){huntMemories.delete(u);memory=null;}
+ if(!memory){huntPlans.delete(u);patrol(g,u,context,radius);return;}
+ // Once sight is broken, every path query uses the frozen last seen point.
+ // Hidden player motion must never refresh a goal, breach or attack target.
+ const known=target||{...memory.targetPoint,id:memory.targetId,collisionRadius:memory.collisionRadius};
+ let plan=huntPlans.get(u);
+ if(!plan||plan.visible!==!!target||plan.targetId!==memory.targetId||plan.revision!==k.navigationRevision||k.elapsed>=plan.until||dist(known,plan.targetPoint)>2){
+  let path=runnerRoute(context,u,known,radius);
   // Prefer a reachable Runner even if another is closer behind sealed walls.
-  for(const candidate of sorted){const route=runnerRoute(context,u,candidate,radius);if(route){target=candidate;path=route;break;}}
+  if(target&&!path)for(const candidate of visible){const route=runnerRoute(context,u,candidate,radius);if(route){target=candidate;memory={targetId:target.id,targetPoint:{x:target.x,z:target.z},collisionRadius:target.collisionRadius,until:k.elapsed+(u.kodoTagMemorySeconds??KODO_HUNT_RULES.memorySeconds)};huntMemories.set(u,memory);path=route;break;}}
   let blocker=null;
   if(!path){
    // Only the absence of a complete walking route permits demolition. Mines,
    // cliffs and trees stay solid in the alternative route; buildings alone
    // are removed to discover the first real obstruction along that route.
-   const terrain={...context,buildings:[],navigationRevision:k.navigationRevision},route=castleRoutePath(terrain,u,target,radius);blocker=castleFirstRouteBlocker(route,k.buildings.filter(b=>b.alive),radius);
+   const terrain={...context,buildings:[],navigationRevision:k.navigationRevision},route=castleRoutePath(terrain,u,memory.targetPoint,radius);blocker=castleFirstRouteBlocker(route,k.buildings.filter(b=>b.alive),radius);
   }
-  plan={targetId:target.id,targetPoint:{x:target.x,z:target.z},blockerId:blocker?.id,reachable:!!path,revision:k.navigationRevision,until:k.elapsed+.9};huntPlans.set(u,plan);
+  plan={visible:!!target,targetId:memory.targetId,targetPoint:{...memory.targetPoint},goal:path?.at(-1)||memory.targetPoint,blockerId:blocker?.id,reachable:!!path,revision:k.navigationRevision,until:k.elapsed+KODO_HUNT_RULES.replanSeconds};huntPlans.set(u,plan);
  }
- const target=runners.find(p=>p.id===plan.targetId);if(!target)return;u.kodoTagHuntTarget=target.id;
- const blocker=plan.blockerId&&k.buildings.find(b=>b.id===plan.blockerId&&b.alive);u.kodoTagBreachTarget=blocker?.id??null;u.target=(blocker||target).id;
- if(plan.reachable||blocker)attack(g,u,blocker||target);else{u.kodoTagBlocked=true;u.moving=false;}
+ u.kodoTagHuntTarget=memory.targetId;u.kodoTagHuntState=target?'chasing':'searching';
+ const blocker=plan.blockerId&&k.buildings.find(b=>b.id===plan.blockerId&&b.alive);u.kodoTagBreachTarget=blocker?.id??null;u.target=blocker?.id||target?.id||null;
+ if(blocker)attack(g,u,blocker);else if(target&&plan.reachable)attack(g,u,target);else if(plan.reachable){moveCastleUnit(context,u,plan.goal,k.step);if(dist(u,plan.goal)<.4){huntMemories.delete(u);huntPlans.delete(u);u.kodoTagHuntTarget=null;u.kodoTagHuntState='patrolling';}}else{u.kodoTagBlocked=true;u.moving=false;}
 }
 
 function gather(g,u,dt){

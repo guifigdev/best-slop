@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {combatStatuses,negativeTint} from '../src/combat-status.js';
+test('spider web control is silk, while genuine simultaneous cold remains cold',()=>{
+ const web={abilitySlowUntil:15,webbedUntil:15};assert.deepEqual(combatStatuses(web,10).map(s=>s.key),['web']);assert.equal(negativeTint(web,10).key,'web');
+ assert.deepEqual(combatStatuses({...web,frostUntil:14},10).map(s=>s.key),['frost','web']);assert.equal(negativeTint({...web,frostUntil:14},10),null);
+});
 
 test('one active negative category gives a stable hue target',()=>{
  for(const [unit,key]of [[{dots:{burn:{until:12}}},'fire'],[{frostUntil:12},'frost'],[{dots:{poison:{until:12}}},'poison'],[{stun:.5},'stun']]){const tint=negativeTint(unit,10);assert.equal(tint.key,key);assert.ok(Number.isInteger(tint.color));assert.ok(tint.color>=0&&tint.color<=0xffffff);}

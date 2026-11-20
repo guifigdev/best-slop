@@ -17,15 +17,15 @@ function queue(g,u,skill,target){
  const d=g.dungeon,dx=target.x-u.x,dz=target.z-u.z,length=Math.hypot(dx,dz)||1,dir={x:dx/length,z:dz/length},windup=u.dungeonBoss?2:u.dungeonElite?1.75:skill==='burrow'?1.7:1.5;
  const line=['charge','swoop','volley'].includes(skill),warning={id:g.id(),source:u.id,room:u.dungeonRoom,skill,shape:line?'line':'circle',x:line?(u.x+target.x)/2:target.x,z:line?(u.z+target.z)/2:target.z,dx:dir.x,dz:dir.z,radius:['slam','brood'].includes(skill)?4.5:skill==='burrow'?3.8:skill==='web'?3.2:2.8,width:skill==='volley'?2:3,length:Math.min(22,length+3),element:['fireball'].includes(skill)?'fire':skill==='venom'?'poison':skill==='slime'?'ice':'physical',damage:u.damage*(u.dungeonBoss?5.2:u.dungeonElite?4.6:3.6),start:g.time,fireAt:g.time+windup,wave:g.wave,from:{x:u.x,z:u.z},targetPoint:{x:target.x,z:target.z}};
  d.telegraphs.push(warning);u.dungeonCasting=warning.id;u.cd=Math.max(u.cd,windup+.4);u.order='stop';u.destination=null;if(skill==='burrow'){u.dungeonBurrowed=true;u.noCollision=true;u.dungeonBurrowUntil=warning.fireAt;}
- g.fx('bossDanger',warning.x,warning.z,{...warning,warningId:warning.id,duration:windup,dungeon:true});return warning;
+ const {id:warningId,...visual}=warning;g.fx('bossDanger',warning.x,warning.z,{...visual,warningId,duration:windup,dungeon:true});return warning;
 }
 function hitWarning(g,w,source,hooks){
  source.dungeonBurrowed=false;source.noCollision=false;source.dungeonCasting=null;source.order='auto';
- for(const target of g.units.filter(t=>t.alive&&g.dungeonCanTarget(source,t)&&insideBossPattern(t,w))){if(!unitSegmentClear(g,{collisionRadius:.1},w.skill==='burrow'?w:w.from,target))continue;g.hit(target,w.damage,source,w.element!=='physical',false,false,false,w.element==='physical'?null:w.element);if(['web','slime'].includes(w.skill)){target.abilitySlowUntil=Math.max(target.abilitySlowUntil||0,g.time+3);target.abilitySlowAmount=.48;}if(w.skill==='venom')g.applyDot(target,'poison',Math.max(2,w.damage*.13),4,source);}
+ for(const target of g.units.filter(t=>t.alive&&g.dungeonCanTarget(source,t)&&insideBossPattern(t,w))){if(!unitSegmentClear(g,{collisionRadius:.1},w.skill==='burrow'?w:w.from,target))continue;g.hit(target,w.damage,source,w.element!=='physical',false,false,false,w.element==='physical'?null:w.element);if(['web','slime'].includes(w.skill)){target.abilitySlowUntil=Math.max(target.abilitySlowUntil||0,g.time+3);target.abilitySlowAmount=.48;if(w.skill==='web')target.webbedUntil=g.time+3;}if(w.skill==='venom')g.applyDot(target,'poison',Math.max(2,w.damage*.13),4,source);}
  if(w.skill==='burrow'){const point=hooks.free(w.targetPoint,source.collisionRadius);if(point)Object.assign(source,point);}
  if(['charge','swoop'].includes(w.skill))moveUnit(g,source,w.targetPoint);
  if(w.skill==='brood')for(let i=0;i<3;i++)hooks.extra(source.dungeonRoom,'spider',{x:source.x+(i-1)*2,z:source.z+2});
- g.fx('bossImpact',w.x,w.z,{...w,duration:.7,dungeon:true});
+ const {id:warningId,...visual}=w;g.fx('bossImpact',w.x,w.z,{...visual,warningId,duration:['web','slime'].includes(w.skill)?3:.7,dungeon:true});
 }
 export function tickDungeonEncounters(g,dt,hooks){
  const d=g.dungeon;d.telegraphs||=[];d.hazardCycles||={};

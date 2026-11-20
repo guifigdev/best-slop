@@ -9,7 +9,7 @@ export const BLOODY_REFERENCE=Object.freeze({
  verified:'Native W3E terrain, WPM pathability, doodad positions, eight private color plots and eight battlefield fronts extracted from the map.',
  adaptation:'Original elemental voxel art. Four square outer duels connect to a central arena by corridors, following the requested tournament flow. Expanded gardens, obstacles, realm armies, economy and seven-round rules are browser adaptations; five-versus-five adds two preparation gardens.'
 });
-export const BLOODY_RULES=Object.freeze({rounds:7,preparationTime:45,battleTime:180,resultTime:8,startingGold:420,roundGold:180,catchupGold:60,startingBlood:0,maxRank:3,killBloodCap:120,unitScale:1.55});
+export const BLOODY_RULES=Object.freeze({rounds:7,preparationTime:45,battleTime:240,resultTime:8,startingGold:420,roundGold:180,catchupGold:60,startingBlood:0,maxRank:3,killBloodCap:120,unitScale:1.55});
 export const BLOODY_MAP=BLOODY_BATTLEFIELD.map;
 const unit=(key,name,source,count,cost,food,category,description,extra={})=>Object.freeze({key,name,source,count,cost,food,category,description,...extra});
 export const BLOODY_REALMS=Object.freeze({

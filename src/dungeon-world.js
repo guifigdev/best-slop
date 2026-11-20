@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {rockAssembly} from './voxel-scenery-art.js';
+import {dungeonPropParts,dungeonRockParts,dungeonWallParts} from './dungeon-prop-art.js';
 import {DUNGEON_BIOMES as BIOMES} from '../shared/dungeon-catalog.js';
 import {dungeonFloorHeight} from '../shared/dungeon-design.js';
 
@@ -25,7 +25,7 @@ export function createDungeonWorld({scene}){
  const cube=new T.BoxGeometry(1,1,1),material=new T.MeshLambertMaterial(),glow=new T.MeshBasicMaterial({transparent:true,opacity:.85,depthWrite:false,toneMapped:false}),cutaway=new T.MeshLambertMaterial({transparent:true,opacity:.16,depthWrite:false}),batches=new Map(),dummy=new T.Object3D(),color=new T.Color(),other=new T.Color();
  const lights=Array.from({length:5},(_,i)=>{const light=new T.PointLight(i===0?0xffd6a7:0xffc478,i===0?40:65,i===0?20:24,1.5);light.castShadow=i===0;light.shadow.mapSize.set(512,512);light.shadow.bias=-.001;light.shadow.normalBias=.04;light.visible=false;root.add(light);return light;});
  let key=null,current=null,currentMap=null,disposed=false,pose=-1,oldSky=null,oldFog=null,appliedSky=null,visibleRooms=new Set(),corridorLanterns=[];
- function batch(name,capacity,mat=material,geometry=cube){let mesh=batches.get(name);if(mesh&&mesh.instanceMatrix.count>=capacity)return mesh;if(mesh){mesh.removeFromParent();mesh.dispose();}mesh=new T.InstancedMesh(geometry,mat,Math.max(1,capacity));mesh.count=0;mesh.castShadow=mat===material;mesh.receiveShadow=mat===material;mesh.frustumCulled=false;mesh.name='dungeon-'+name;root.add(mesh);batches.set(name,mesh);return mesh;}
+ function batch(name,capacity,mat=material,geometry=cube){let mesh=batches.get(name);if(mesh&&mesh.instanceMatrix.count>=capacity)return mesh;if(mesh){mesh.removeFromParent();mesh.dispose();}mesh=new T.InstancedMesh(geometry,mat,Math.max(1,capacity));mesh.count=0;mesh.castShadow=mat===material&&name!=='floor';mesh.receiveShadow=mat===material;mesh.frustumCulled=false;mesh.name='dungeon-'+name;root.add(mesh);batches.set(name,mesh);return mesh;}
  function put(mesh,index,x,y,z,w,h,d,value,ry=0,rx=0,rz=0){if(index>=mesh.instanceMatrix.count)throw new Error('Dungeon art batch capacity exceeded: '+mesh.name);dummy.position.set(x,y,z);dummy.scale.set(w,h,d);dummy.rotation.set(rx,ry,rz);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);mesh.setColorAt(index,color.set(value));}
  function done(mesh,count){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
  const roomVisible=room=>room==null||visibleRooms.has(room);
@@ -33,19 +33,18 @@ export function createDungeonWorld({scene}){
  function terrain(map,clash,focus,camera,objects){
   const fx=focus?.x||0,fz=focus?.z||0,dx=(camera?.position.x??fx+10)-fx,dz=(camera?.position.z??fz+20)-fz,angle=Math.round(Math.atan2(dx,dz)*4/Math.PI),broken=(map.props||[]).filter(p=>p.broken||p.alive===false).map(p=>p.id).join(),next=[clash?'clash':map.seed,map.floor,map.width,map.height,[...visibleRooms].join(','),Math.round(fx/8),Math.round(fz/8),angle,broken].join(':');
   if(next===key)return;key=next;pose=-1;
-  const size=map.tileSize||1.5,floor=batch('floor',(map.width||1)*(map.height||1)+2),walls=batch('walls',(map.walls?.length||0)*20+64),front=batch('cutaway',(map.walls?.length||0)*20+1,cutaway),detail=batch('formations',(map.walls?.length||0)*4+(map.props?.length||0)*24+(map.decor?.length||0)*24+(map.rooms?.length||0)*50+corridorLanterns.length*8+64),flora=batch('flora',(map.rooms?.length||0)*42+corridorLanterns.length*3+32);let n=0,k=0,f=0,j=0,v=0;
+  const size=map.tileSize||1.5,floor=batch('floor',(map.width||1)*(map.height||1)+2),walls=batch('walls',(map.walls?.length||0)*64+64),front=batch('cutaway',(map.walls?.length||0)*64+1,cutaway),detail=batch('formations',(map.walls?.length||0)*4+(map.props?.length||0)*160+(map.decor?.length||0)*160+(map.rooms?.length||0)*50+corridorLanterns.length*8+64),flora=batch('flora',(map.rooms?.length||0)*42+corridorLanterns.length*3+32);let n=0,k=0,f=0,j=0,v=0;
   const write=(mesh,...args)=>{if(mesh===walls)put(mesh,k++,...args);else put(mesh,f++,...args);};
   if(clash){put(floor,n++,0,-.1,0,58,.4,58,fallback().floor);for(let i=0;i<28;i++){const a=i/28*Math.PI*2;put(walls,k++,Math.sin(a)*28,4.5,Math.cos(a)*28,2.2,9,2.2,fallback().wall);}}
   else{
    for(let gz=0;gz<map.height;gz++)for(let gx=0;gx<map.width;gx++){
     const tile=map.tiles[gz*map.width+gx],x=(gx-(map.width-1)/2)*size,z=(gz-(map.height-1)/2)*size,blend=dungeonBiomeAt(map,x,z),a=blend.biome,b=blend.other,field=tile===2?'path':tile?'floor':'wall',h=dungeonGroundHeight(map,x,z),shade=.91+hash(gx,gz)*.16;
-    color.setHex(a[field]);other.setHex(b[field]);color.lerp(other,blend.mix).multiplyScalar(shade);if(blend.room&&!roomVisible(blend.room.id))color.multiplyScalar(.1);const tint=color.getHex();put(floor,n++,x,h-.25,z,size+.015,.5,size+.015,tint);
+    color.setHex(a[field]);other.setHex(b[field]);color.lerp(other,blend.mix).multiplyScalar(shade);if(blend.room&&!roomVisible(blend.room.id))color.multiplyScalar(.1);const tint=color.getHex();put(floor,n++,x,h-.25,z,size+.002,.5,size+.002,tint);
    }
    const directionLength=Math.hypot(dx,dz)||1,interactive=new Set(objects.map(o=>o.propId).filter(Boolean));
    for(const wall of map.walls||[]){
-    const local=dungeonBiomeAt(map,wall.x,wall.z),a=local.biome,ground=dungeonGroundHeight(map,wall.x,wall.z),seed=hash(wall.gx??wall.x,wall.gz??wall.z),height=8+seed*4,near=((wall.x-fx)*dx+(wall.z-fz)*dz)/directionLength>2&&Math.hypot(wall.x-fx,wall.z-fz)<32,mesh=near?front:walls,stone=roomVisible(local.room?.id)?a.wall:0x172126;
-    if(a===BIOMES.crypt){for(let level=0;level<4;level++)write(mesh,wall.x,ground+height*(level+.5)/4,wall.z,size*.98,height/4-.05,size*.98,stone);write(mesh,wall.x,ground+height+.2,wall.z,size*1.1,.4,size*1.1,a.trim);}
-    else for(const part of rockAssembly({id:'wall-'+wall.x+':'+wall.z,x:wall.x,y:ground,z:wall.z,w:size,d:size,h:height,biome:local.room?.biome||map.biome,wall:true}))write(mesh,...part);
+    const local=dungeonBiomeAt(map,wall.x,wall.z),a=local.biome,ground=dungeonGroundHeight(map,wall.x,wall.z),seed=hash(wall.gx??wall.x,wall.gz??wall.z),height=8+seed*4,near=((wall.x-fx)*dx+(wall.z-fz)*dz)/directionLength>2&&Math.hypot(wall.x-fx,wall.z-fz)<32,mesh=near?front:walls,stone=roomVisible(local.room?.id)?a.wall:0x172126;if(!roomVisible(local.room?.id)&&Math.hypot(wall.x-fx,wall.z-fz)>28)continue;
+    for(const part of dungeonWallParts({id:'wall-'+wall.x+':'+wall.z,w:size,d:size,h:height,biome:local.room?.biome||map.biome}))write(mesh,wall.x+part[0],ground+part[1],wall.z+part[2],...part.slice(3));
     // Stalactites stay on the wall lip, never above the traversable centre.
     if(seed>.65){for(let i=0;i<3;i++)write(mesh,wall.x,ground+height-.5-i*.55,wall.z,size*(.55-i*.13),.65,size*(.55-i*.13),a.trim);}
     if(seed>.87){put(detail,j++,wall.x,ground+.4,wall.z,size*.75,.8,size*.65,a.trim,seed);put(detail,j++,wall.x,ground+1,wall.z,size*.36,.6,size*.34,a.wall,seed);}
@@ -53,9 +52,7 @@ export function createDungeonWorld({scene}){
    for(const prop of [...(map.props||[]),...(map.decor||[])]){
     if(prop.broken||prop.alive===false||interactive.has(prop.id)||!roomVisible(prop.room))continue;const a=biome(map,prop.x,prop.z),h=dungeonGroundHeight(map,prop.x,prop.z),w=prop.w||1,d=prop.d||1,height=prop.h||2;
     if(/tree|root/.test(prop.type)){put(detail,j++,prop.x,h+height*.45,prop.z,w*.4,height*.9,d*.4,0x635947);for(const s of [-1,1])put(detail,j++,prop.x+s*w*.3,h+height*.7,prop.z,w*.65,.3,d*.5,0x75865e);}
-    else if(/pillar|column|arch/.test(prop.type)){put(detail,j++,prop.x,h+.2,prop.z,w,.4,d,a.trim);put(detail,j++,prop.x,h+height/2,prop.z,w*.68,height,d*.68,a.wall);put(detail,j++,prop.x,h+height,prop.z,w,.35,d,a.trim);}
-    else if(/crystal|ice/.test(prop.type)){for(let i=0;i<3;i++)put(detail,j++,prop.x+(i-1)*w*.22,h+height*(.4+i%2*.15),prop.z+(i%2)*d*.15,w*.3,height*(.8+i%2*.3),d*.4,i%2?a.glow:a.trim,i*.2);}
-    else for(const part of rockAssembly({id:prop.id||'stone-'+prop.x+':'+prop.z,x:prop.x,y:h,z:prop.z,w,d,h:height,biome:map.rooms?.find(r=>r.id===prop.room)?.biome||map.biome}))put(detail,j++,...part);
+    else for(const part of dungeonPropParts(/pillar|column|arch/.test(prop.type)?'pillar':/crystal|ice/.test(prop.type)?'crystal':['supplies','shelf','bedroll','urn','crate','barrel'].includes(prop.type)?prop.type:'rock',{id:prop.id,w,d,h:height,biome:map.rooms?.find(r=>r.id===prop.room)?.biome||map.biome}))put(detail,j++,prop.x+part[0],h+part[1],prop.z+part[2],...part.slice(3));
    }
    for(const room of map.rooms||[]){if(!roomVisible(room.id))continue;const a=BIOMES[room.biome||map.biome]||fallback();for(let side=0;side<4;side++){
     const sign=side%2?1:-1,x=room.x+(side<2?sign*(room.w/2-1.3):sign*room.w*.22),z=room.z+(side>=2?sign*(room.d/2-1.3):sign*room.d*.22),h=dungeonGroundHeight(map,x,z);
@@ -71,7 +68,7 @@ export function createDungeonWorld({scene}){
  }
  function dynamic(map,time,objects,doors,hazards){
   const frame=Math.floor(time*8);if(frame===pose)return;pose=frame;
-  const props=batch('objects',objects.length*40+doors.length*30+32),runes=batch('runes',objects.length*24+32,glow),danger=batch('hazards',hazards.length*65+16),ambient=batch('critters',(map.rooms?.length||0)*24+32),ranges=batch('rest-ranges',objects.length+1,rangeMaterial,rangeGeometry);let n=0,k=0,hc=0,ac=0,rc=0;
+  const props=batch('objects',objects.length*220+doors.length*30+32),runes=batch('runes',objects.length*24+32,glow),danger=batch('hazards',hazards.length*65+16),ambient=batch('critters',(map.rooms?.length||0)*24+32),ranges=batch('rest-ranges',objects.length+1,rangeMaterial,rangeGeometry);let n=0,k=0,hc=0,ac=0,rc=0;
   for(const door of doors){if(!door.locked||!roomVisible(door.room))continue;const a=biome(map,door.x,door.z),y=dungeonGroundHeight(map,door.x,door.z),vertical=door.w<door.d,span=vertical?door.d:door.w,count=Math.min(24,Math.max(3,Math.ceil(span/.65)));for(let i=0;i<count;i++){const f=(i/(count-1)-.5)*span;put(props,n++,door.x+(vertical?0:f),y+2.7,door.z+(vertical?f:0),vertical?.22:.16,5.4,vertical?.16:.22,0x4b4547);}put(props,n++,door.x,y+5.55,door.z,door.w,.35,door.d,a.trim);for(const height of [1.1,4])put(props,n++,door.x,y+height,door.z,vertical?.26:door.w,.16,vertical?door.d:.26,0xa48c61);}
   for(const o of objects){if(o.broken||o.alive===false||!roomVisible(o.room))continue;const x=o.x,z=o.z,y=dungeonGroundHeight(map,x,z),a=biome(map,x,z),p=(dx,dy,dz,w,h,d,c)=>put(props,n++,x+dx,y+dy,z+dz,w,h,d,c),r=(dx,dy,dz,w,h,d,c)=>put(runes,k++,x+dx,y+dy,z+dz,w,h,d,c);
    if(o.type==='campfire'){
@@ -81,10 +78,8 @@ export function createDungeonWorld({scene}){
    }else if(o.type==='eggNest'||o.propType==='eggNest'||o.variant==='nest'){
     for(let i=0;i<10;i++){const angle=i/10*Math.PI*2;p(Math.sin(angle)*.95,.22,Math.cos(angle)*.75,.42,.3,.35,0x6d5d59);}for(let i=0;i<5;i++){const dx=(i%3-1)*.49,dz=(Math.floor(i/3)-.5)*.55;p(dx,.62,dz,.43,.82,.48,i%2?0xbcb5a2:0x9eaa8c);p(dx,.99,dz,.28,.2,.3,0xd7cfb6);r(dx,.7,dz+.25,.05,.38,.03,0xb4d9a0);}
    }else if(o.type==='breakable'||o.type==='prop'){
-    if(o.propType==='urn'){for(let i=0;i<6;i++){const widths=[.4,.66,.83,.8,.53,.42],yy=.12+i*.18;p(0,yy,0,widths[i],.2,widths[i]*.88,i===5?0xc6ad86:0x987b62);}p(0,1.14,0,.26,.025,.23,0x302b29);for(const side of [-1,1])p(side*.43,.73,0,.13,.36,.18,0xb69c7c);}
-    else if(o.propType==='barrel'){for(let i=0;i<8;i++){const angle=i*Math.PI/4;p(Math.sin(angle)*.31,.57,Math.cos(angle)*.31,.28,1.08,.28,i%2?0x86694e:0x9c7d59);}for(const yy of [.19,.89]){p(0,yy,0,.87,.1,.84,0x687b7c);}for(let i=-1;i<=1;i++)p(i*.2,1.13,0,.18,.06,.66,0xb09670);p(.12,1.18,.12,.12,.06,.12,0x423830);}
-    else if(['rock','stalagmite','rubble'].includes(o.propType)){for(const part of rockAssembly({id:o.id,x,y,z,w:o.w||1.6,d:o.d||1.5,h:o.h||2.2,biome:map.rooms?.find(r=>r.id===o.room)?.biome||map.biome}))put(props,n++,...part);}
-    else{p(0,.52,0,1.02,1,1.02,0x604a36);for(let i=-1;i<=1;i++){p(i*.31,.54,.53,.28,.83,.05,0x94764f);p(.53,.54,i*.31,.05,.83,.28,0xa98a60);}for(const side of [-1,1]){p(side*.43,.53,.56,.12,1.08,.09,0xb69a71);p(0,.53,side*.56,1.08,.12,.09,0xb69a71);}p(0,1.06,0,1.08,.09,1.08,0xb69a71);}
+    const original=map.props?.find(p=>p.id===o.propId),type=o.propType||original?.type||'crate';
+    for(const part of dungeonPropParts(type,{id:o.id,w:original?.w||o.w||1.25,d:original?.d||o.d||1.25,h:original?.h||o.h||1.6,biome:map.rooms?.find(r=>r.id===o.room)?.biome||map.biome}))put(props,n++,x+part[0],y+part[1],z+part[2],...part.slice(3));
 
    }else if(o.type==='key'){p(0,.43,0,.64,.15,.64,0x514c3d);r(0,.79,.08,.11,.65,.12,0xf0d18b);r(0,1.13,.08,.39,.12,.12,0xf0d18b);r(.12,.58,.08,.25,.1,.12,0xf0d18b);}
    else if(o.type==='merchant'){p(0,.48,0,2.3,.85,1.4,0x7d6651);p(0,1.2,-.4,.8,.6,.65,0x59696e);p(0,1.7,-.32,.58,.48,.52,0xb3ad91);p(0,1.97,-.35,.76,.18,.68,0x73638b);p(0,2.7,-.5,3.1,.25,2.1,0x89779d);for(const s of [-1,1]){p(s*1.35,1.4,-.5,.13,2.8,.13,0x80664d);p(s*.61,1.04,.44,.43,.24,.42,s<0?0xc9b07c:0xb4a1c7);}}

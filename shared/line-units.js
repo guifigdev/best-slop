@@ -17,7 +17,7 @@ export const LINE_UNITS={
  runedryad:unit('Basilisco dos bosques','basilisk','Clã da Lua','Dryad','nightelf','dryad',200,9,220,20,2,3.2,1.5,6,{size:.95,skills:['poison'],role:'Guarda do bosque · projéteis envenenados'}),
  aurorachimera:unit('Quimera da aurora','chimera','Clã da Lua','Chimaera','nightelf','chimaera',600,25,820,40,4,2.4,1.9,6,{size:1.5,flying:true,altitude:1.7,skills:['venomcloud'],lifeDamage:4,role:'Voador de cerco · nuvem venenosa'}),
  mistwolf:unit('Lobo da névoa','wolf','Clã da Névoa','Ghoul','undead','ghoul',40,3,115,10,0,3.3,.95,1.3,{size:.85,skills:['vampiric'],role:'Atacante rápido · recupera vida ao morder'}),
- cryptbasilisk:unit('Basilisco das runas','basilisk','Clã da Névoa','Crypt Fiend','undead','cryptfiend',120,6,255,20,2,2.4,1.75,6,{size:1.05,skills:['warlockfrost'],role:'Atirador das criptas · orbe de lentidão'}),
+ cryptbasilisk:unit('Basilisco das runas','basilisk','Clã da Névoa','Crypt Fiend','undead','cryptfiend',120,6,255,20,2,2.4,1.75,6,{size:1.05,skills:['poison'],element:'poison',role:'Atirador das criptas · dardos envenenados'}),
  mosscolossus:unit('Tartaruga dos túmulos','tortoise','Clã da Névoa','Abomination','undead','abomination',320,14,600,25,3,2.2,1.85,1.7,{size:1.5,skills:['thorns'],lifeDamage:2,role:'Tanque de espinhos · devolve golpes corpo a corpo'}),
  winterwyrm:unit('Serpente da longa noite','frostwyrm','Clã da Névoa','Frost Wyrm','undead','frostwyrm',750,30,1150,48,6,2.1,2,6,{size:1.65,flying:true,altitude:1.8,element:'ice',skills:['warlockfrost'],lifeDamage:5,role:'Voador de elite · gelo e dano alto ao portal'})
 };

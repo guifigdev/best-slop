@@ -1,3 +1,4 @@
+import {CASTLE_SUPPORT_BUILDINGS} from './castle-support-data.js';
 import {CASTLE_WEAPON_DATA} from './castle-weapon-data.js';
 import {castleBuildingProfile} from './castle-building-profile.js';
 // Factual object/registration data read from the pinned v1.14b map.
@@ -14,6 +15,12 @@ export const CASTLE_MARKETPLACE_ITEMS=Object.freeze(["repair_rune", "bassline", 
 export const CASTLE_ATTACK_TYPES=Object.freeze(Object.keys(CASTLE_DAMAGE_MATRIX));
 export const CASTLE_ARMOR_TYPES=Object.freeze(Object.keys(CASTLE_DAMAGE_MATRIX.normal));
 export function castleDamageMultiplier(attackType,armorType){return typeof attackType==='string'&&typeof armorType==='string'&&Object.hasOwn(CASTLE_DAMAGE_MATRIX,attackType)&&Object.hasOwn(CASTLE_DAMAGE_MATRIX[attackType],armorType)?CASTLE_DAMAGE_MATRIX[attackType][armorType]:1;}
+
+// Complete the native non-producing menu entries with executable effects.
+// Keep original costs, upgrade graph and extraction provenance intact.
+for(const [key,definition]of Object.entries(CASTLE_SUPPORT_BUILDINGS)){const b=CASTLE_BUILDINGS[key];if(!b)throw new Error('Unknown Castle support building: '+key);Object.assign(b,definition);}
+
+for(const b of Object.values(CASTLE_BUILDINGS))if(b.playable&&b.castleEffect&&/não implementado/i.test(b.description||''))b.description=({income:'Tesouraria: aumenta a renda com os investimentos da sua equipe.',heal:'Restaura continuamente a vida de aliados e construções próximas.',tower:'Defende a área com ataques automáticos.',damage:'Causa dano mágico a inimigos no seu alcance.',kill:'Elimina um inimigo válido a cada ciclo.',stun:'Atordoa inimigos no seu alcance.'})[b.castleEffect.type]||b.castleEffect.description;
 
 // Requested voxel footprints are independent of native combat/economy values.
 for(const building of Object.values(CASTLE_BUILDINGS)){const unit=typeof building.unit==='string'?CASTLE_UNITS[building.unit]:building.unit;building.visualProfile=castleBuildingProfile(building,unit);building.footprint={...building.visualProfile.footprint};building.provenance.adapted=building.provenance.adapted.filter(note=>note!=='footprint simplified to 2x2');building.provenance.adapted.push('role-based voxel footprint and building decoration are adapted');}

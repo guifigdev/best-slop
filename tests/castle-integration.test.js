@@ -13,8 +13,8 @@ test('Castle Fight is a third game and binds the reference race to the animal an
 test('Castle snapshot exposes automatic troops to the shared renderer without isolating the two teams',()=>{
  const g=new Game(992,{mode:'castlefight'});g.addPlayer('me');g.addBots(3);g.initCastleFight();for(let i=0;i<2400;i++)g.tick(1/30);const s=g.snapshot();assert.equal(s.castleFight.map.lanes.length,2);assert.ok(s.castleFight.buildings.some(b=>b.owner==='bot-0'));assert.ok(s.units.some(u=>u.castleUnit));assert.equal(s.units.filter(u=>u.hero).length,4);assert.ok(s.obstacles.some(o=>o.type==='scenery'));assert.equal(sceneState(s,'me').origin.x,0);assert.equal(sceneState(s,'bot-0').state.units.length,s.units.length);assert.ok(s.units.filter(u=>u.hero).every(u=>u.hp===u.maxHp&&u.skills.length===0));
 });
-test('building cards expose attack/armor counters and refuse unsupported reference structures',()=>{
- const entries=Object.entries(CASTLE_BUILDINGS),[key,b]=entries.find(([,b])=>b.unit&&b.race==='human'),html=castleBuildingCard(key,b,10000);assert.match(html,/data-cf-build=/);assert.match(html,/HP /);assert.match(html,/ATQ /);assert.match(castleCounters({attackType:'normal'}),/média/);const unsupported=entries.find(([,b])=>b.playable===false);if(unsupported)assert.match(castleBuildingCard(...unsupported,10000),/disabled/);assert.equal(Object.keys(CASTLE_RACES).length,10);
+test('building cards expose attack/armor counters and every advertised structure has a working implementation',()=>{
+ const entries=Object.entries(CASTLE_BUILDINGS),[key,b]=entries.find(([,b])=>b.unit&&b.race==='human'),html=castleBuildingCard(key,b,10000);assert.match(html,/data-cf-build=/);assert.match(html,/HP /);assert.match(html,/ATQ /);assert.match(castleCounters({attackType:'normal'}),/média/);assert.equal(entries.some(([,b])=>b.playable===false),false);assert.equal(Object.keys(CASTLE_RACES).length,10);
 });
 test('expanded Castle terrain preserves source provenance, flattens green bases and clears spawn lanes',()=>{
  const g=new Game(993,{mode:'castlefight'});g.addPlayer('a');g.addPlayer('b');g.initCastleFight();const s=g.snapshot(),map=s.voxelMap,cf=s.castleFight;

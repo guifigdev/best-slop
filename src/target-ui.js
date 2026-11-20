@@ -40,7 +40,8 @@ export function targetMarkup(unit,time=0){
  const state=[];
  if((unit.stun||0)>0)state.push({label:`Atordoado · ${decimal(unit.stun)}s`,key:'stun'});
  if(Math.max(unit.dots?.burn?.until||0,unit.dots?.lava?.until||0,unit.solarUntil||0)>time)state.push({label:'Queimando',key:'fire'});
- if(Math.max(unit.frostUntil||0,unit.dots?.frost?.until||0,unit.abilitySlowUntil||0)>time)state.push({label:'Frost · lento',key:'ice'});
+ if(Math.max(unit.frostUntil||0,unit.dots?.frost?.until||0,(unit.webbedUntil||0)>time?0:unit.abilitySlowUntil||0)>time)state.push({label:'Frost · lento',key:'ice'});
+ if((unit.webbedUntil||0)>time)state.push({label:'Teia · lento',key:'web'});
  if((unit.dots?.poison?.until||0)>time)state.push({label:'Envenenado',key:'poison'});
  if((unit.rageUntil||0)>time)state.push({label:'Fúria',key:'rage'});
  if((unit.avatar||0)>time)state.push({label:'Juramento de Tyr · imune a magia',key:'shield'});

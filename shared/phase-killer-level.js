@@ -1,7 +1,12 @@
 import {PHASE_KILLER_MAP as MAP} from './phase-killer-catalog.js';
-export const PHASE_LEVEL_REVISION=4;
+export const PHASE_LEVEL_REVISION=5;
 export const PHASE_TOWN=Object.freeze({plaza:{x:82,z:-19,radius:8.5},fountain:{id:'town-plaza-fountain',x:82,z:-19,w:3.2,d:3.2},church:{id:'town-corner-church',x:128,z:8,w:12,d:8}});
-export const PHASE_CEMETERY=Object.freeze({id:'southern-churchyard',x:103,z:7,w:16,d:8,gate:{x:111,z:7},cross:{id:'church-front-cross',x:118.4,z:5.2,w:.65,d:.65}});
+export const PHASE_CEMETERY=Object.freeze({id:'southern-churchyard',x:73.2,z:4.55,w:16,d:8,gate:{x:81.2,z:4.55},cross:{id:'church-front-cross',x:118.4,z:5.2,w:.65,d:.65}});
+// The foreground cottages and churchyard exchange plots; the church stays put.
+export const PHASE_TOWN_HOUSE_RELOCATIONS=Object.freeze({
+ 'town-house-7-3':Object.freeze({x:98,z:6.725}),
+ 'town-house-7-4':Object.freeze({x:108,z:7.275}),
+});
 export const PHASE_CAMPFIRES=Object.freeze([{id:'camp-foothill',x:8,z:-44,dimension:'normal',radius:3},{id:'camp-woodland',x:-15,z:-5,dimension:'normal',radius:3},{id:'camp-highland',x:-49,z:-45,dimension:'normal',radius:3}].map(Object.freeze));
 export function phaseKillerLocalZ(z){const layer=Math.max(0,Math.min(2,Math.round((z+31)/MAP.layerOffset)));return z-layer*MAP.layerOffset;}
 export function phaseKillerHeightAt(x,z){

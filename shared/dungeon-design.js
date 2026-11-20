@@ -5,7 +5,11 @@ export function decorateDungeonMap(map,random){
  const keys=Object.keys(DUNGEON_BIOMES),base=Math.floor((map.floor-1)/3)%keys.length,order=[0,1,2,5,4,3,6,7,8],props=[],hazards=[];
  for(const room of map.rooms){
   room.biome=keys[(base+Math.floor(order.indexOf(room.id)/3))%keys.length];room.ceilingHeight=9.5+(room.id%3)*1.2;room.height=dungeonFloorHeight(map,room.x,room.z);
-  if(room.id===0){const positions=[[-.30,-.28],[-.25,-.20],[.30,.28],[.24,.22],[-.30,.28],[-.24,.20],[.30,-.28],[.26,-.20]];for(const [i,[x,z]]of positions.entries())props.push({id:'entrance-prop-'+i,room:0,type:['crate','urn','barrel'][i%3],x:room.x+x*room.w,z:room.z+z*room.d,w:1.25,d:1.25,h:1.35,solid:true,breakable:true,hp:40+map.floor*5,alive:true});continue;}
+  if(room.id===0){const positions=[[-.30,-.28],[-.25,-.20],[.30,.28],[.24,.22],[-.30,.28],[-.24,.20],[.30,-.28],[.26,-.20]];for(const [i,[x,z]]of positions.entries())props.push({id:'entrance-prop-'+i,room:0,type:['crate','urn','barrel'][i%3],x:room.x+x*room.w,z:room.z+z*room.d,w:1.25,d:1.25,h:1.35,solid:true,breakable:true,hp:40+map.floor*5,alive:true});
+   // Four small lived-in camps: a working surface, a folded bed, storage and
+   // a substantial stone shoulder. Keep the centre and doorway axes open.
+   for(const sx of [-1,1])for(const sz of [-1,1])for(const [type,px,pz,w,d,h]of [['supplies',.35,.35,2.8,1.5,1.35],['bedroll',.27,.40,2.4,1.3,.6],['shelf',.42,.28,2.4,.9,3.1],['rock',.41,.18,3.8,3.1,3.7]]){const prop={id:'entrance-set-'+sx+'-'+sz+'-'+type,room:0,type,x:room.x+sx*room.w*px,z:room.z+sz*room.d*pz,w,d,h,solid:true,breakable:false,alive:true};props.push(prop);map.obstacles.push({...prop,type:'dungeon-prop',dungeonProp:true});}
+   continue;}
   for(let i=0;i<5;i++){
    const type=i===0&&room.id===1?'barrel':i===4&&['forest','cavern'].includes(room.biome)?'eggNest':['crate','urn','barrel','stalagmite','crystal'][(i+room.id)%5],breakable=['crate','barrel','urn','eggNest'].includes(type),side=i%2?-1:1;
    const prop={id:`dungeon-prop-${room.id}-${i}`,room:room.id,type,x:room.x+side*room.w*(.19+(i%2)*.1),z:room.z+((i%3)-1)*room.d*.26,w:type==='eggNest'?1.8:type==='stalagmite'?1.1:1.25,d:type==='eggNest'?1.8:1.25,h:type==='stalagmite'?3.8:type==='crystal'?2.7:1.35,solid:true,breakable,hp:40+map.floor*5,alive:true};

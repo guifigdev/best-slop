@@ -93,7 +93,7 @@ test('opposing armies fight inside their outer square before any centre advance'
 test('duel survivors use the corridor and wait at the centre instead of marching into another unfinished duel',()=>{
  const{g}=setup({count:8});for(const p of g.heroes())cmd(g,p,'Buy',{unitKey:'shieldwall'});ready(g);for(const u of g.units.filter(u=>u.bloodyUnit)){if(u.owner==='p1'){u.alive=false;u.hp=0;}else if(u.btDuel!==0){u.speed=0;u.damage=0;}}
  const winners=g.units.filter(u=>u.bloodyUnit&&u.owner==='p0'),start=winners.map(u=>({x:u.x,z:u.z}));advance(g,.1);assert.ok(winners.every(u=>u.btBattleStage==='advance'));assert.equal(g.bloodyTournament.duels[0].winner,1);advance(g,5);assert.ok(winners.some((u,i)=>u.x>start[i].x));
- for(let i=0;i<500&&winners.some(u=>u.btBattleStage!=='center');i++)advance(g,.1);assert.ok(winners.every(u=>u.btBattleStage==='center'));assert.ok(winners.every(u=>Math.hypot(u.x,u.z)<9));const positions=winners.map(u=>({x:u.x,z:u.z}));advance(g,5);for(const[i,u]of winners.entries())assert.ok(Math.hypot(u.x-positions[i].x,u.z-positions[i].z)<1,'central survivors wait while remote duels continue');
+ for(let i=0;i<1100&&winners.some(u=>u.btBattleStage!=='center');i++)advance(g,.1);assert.ok(winners.every(u=>u.btBattleStage==='center'));assert.ok(winners.every(u=>Math.hypot(u.x,u.z)<9));const positions=winners.map(u=>({x:u.x,z:u.z}));advance(g,5);for(const[i,u]of winners.entries())assert.ok(Math.hypot(u.x-positions[i].x,u.z-positions[i].z)<1,'central survivors wait while remote duels continue');
 });
 
 test('splash attacks never damage allies, including deliberately forged friendly targets',()=>{

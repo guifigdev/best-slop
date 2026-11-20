@@ -1,12 +1,12 @@
 import {CASTLE_BUILDINGS,CASTLE_UNITS} from './castle-catalog.js';
 import {castleBuildPlacement} from './castle-map.js';
-const effects=new Set(['tower','income','heal','damage','kill','stun']);
+import {castleSupportEffectSupported} from './castle-support.js';
 const deny=(code,reason,definition=null)=>({allowed:false,code,reason,definition,point:null});
 export function castleBuildAvailability(state,hero,key){
  const cf=state?.castleFight,p=cf?.players?.[hero?.owner],definition=typeof key==='string'&&Object.hasOwn(CASTLE_BUILDINGS,key)?CASTLE_BUILDINGS[key]:null;
  if(!cf||state.phase!=='wave'||cf.finished||!hero?.alive||!hero.castleBuilder||!p)return deny('phase','Comece a partida para construir.',definition);
  if(!definition)return deny('building','Construção desconhecida.');
- if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!effects.has(definition.castleEffect?.type))return deny('unsupported','Indisponível nesta versão.',definition);
+ if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!castleSupportEffectSupported(definition.castleEffect))return deny('unsupported','Esta construção está com dados inválidos.',definition);
  if(definition.race!==p.race)return deny('race','Esta construção pertence a outra raça.',definition);
  if(definition.requiresBuilding)return deny('upgrade','Selecione a construção anterior para evoluí-la.',definition);
  const owned=cf.buildings.filter(b=>b.alive&&b.owner===hero.owner);
@@ -32,7 +32,7 @@ export function castleUpgradeAvailability(state,hero,building,key){
  if(current.owner!==hero.owner)return deny('owner','Somente o dono pode evoluir esta construção.',definition);
  if(!definition)return deny('building','Melhoria desconhecida.');
  if(!CASTLE_BUILDINGS[current.key]?.upgradesTo?.includes(key))return deny('path','Esta melhoria não pertence à construção selecionada.',definition);
- if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!effects.has(definition.castleEffect?.type))return deny('unsupported','Esta evolução está registrada no mapa original, mas ainda não está disponível nesta versão.',definition);
+ if(definition.playable===false||!(typeof definition.unit==='string'?CASTLE_UNITS[definition.unit]:definition.unit)&&!castleSupportEffectSupported(definition.castleEffect))return deny('unsupported','Esta evolução está com dados inválidos.',definition);
  if(definition.race!==p.race)return deny('race','Esta melhoria pertence a outra raça.',definition);
  if(current.pendingUpgrade)return deny('pending','A construção já está sendo evoluída.',definition);
  if(!current.economyReady||current.workRemaining>0||current.readyAt===null||cf.elapsed<current.readyAt)return deny('construction','Conclua a construção antes de evoluí-la.',definition);

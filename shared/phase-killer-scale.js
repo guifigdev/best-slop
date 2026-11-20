@@ -1,6 +1,7 @@
 import {PHASE_KILLER_MAP as MAP} from './phase-killer-catalog.js';
 import {phaseKillerWorldObstacles,phaseKillerForestObstacles,PHASE_LEVEL_REVISION} from './phase-killer-world.js';
-import {invalidatePhaseKillerNavigation} from './phase-killer-navigation.js';
+import {invalidatePhaseKillerNavigation,phaseKillerNavigation} from './phase-killer-navigation.js';
+import {castleNavigationRadius,castlePassable,castleSpawnPoint} from './castle-navigation.js';
 const realms=['normal','aether','omni'];
 const pointChildren=['destination','position','point','goal','origin','from','to','start','end','targetPoint','lastKnown','cell','route','routes','path','paths','points','waypoints','center','centre','anchor','location','pkPending','pkBotGoal','pkEscapeGoal','pkTargetPoint','pkGoal','pkRoute','pkWaypoints','pkLastPosition','pkAiGoal','pkAiDestination'];
 const coordinatePairs=[['x','z'],['tx','tz'],['tX','tZ'],['ex','ez'],['startX','startZ'],['endX','endZ']];
@@ -12,7 +13,15 @@ function upgradeLayout(game){
  const changed=fresh.length!==old.size||fresh.some(b=>{const prior=old.get(b.id);return!prior||['x','z','w','d','phaseProp'].some(k=>prior[k]!==b[k]);});
  state.levelRevision=PHASE_LEVEL_REVISION;if(!changed)return false;
  state.buildings=fresh.map(b=>{const prior=old.get(b.id);for(const key of ['hp','maxHp','damagedAt'])if(prior&&Object.hasOwn(prior,key))b[key]=prior[key];if(destroyed.has(b.id)||isDestroyed(prior)){b.alive=false;b.destroyed=true;destroyed.add(b.id);}return b;});
- state.destroyedSceneryIds=[...destroyed];state.sceneryRevision=(state.sceneryRevision||0)+1;game.obstacleRevision=(game.obstacleRevision||0)+1;invalidatePhaseKillerNavigation(game);return true;
+ state.destroyedSceneryIds=[...destroyed];state.sceneryRevision=(state.sceneryRevision||0)+1;game.obstacleRevision=(game.obstacleRevision||0)+1;invalidatePhaseKillerNavigation(game);
+ // Moving a plot must not bury existing loot or a visitor inside its new walls.
+ // Valid positions remain exact; this is a one-time layout migration only.
+ for(const object of [...(game.units||[]).filter(u=>u.alive&&u.pkDimension),...(state.loot||[])]){
+  const dimension=object.pkDimension||object.dimension||'normal',nav=phaseKillerNavigation(game,dimension),radius=object.pkDimension?castleNavigationRadius(object):.3;
+  if(object.flying||castlePassable(nav,object,radius))continue;
+  const point=castleSpawnPoint(nav,object,radius,{maxDistance:12});if(point)Object.assign(object,point);
+ }
+ return true;
 }
 
 // Coordinate-only migration: never traverse inventories, native ability data or
