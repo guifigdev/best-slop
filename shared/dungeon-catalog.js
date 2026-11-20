@@ -1,3 +1,4 @@
+import {expandedDungeonSpecies,expansionForBiome} from './ragnarok-expansion.js';
 import {monsterReferenceName} from './monster-visual-references.js';
 export const DUNGEON_RULES=Object.freeze({partyMax:4,teamsMax:4,cellSize:1.5,width:133,bounds:99.75,roomStride:44,corridorRadius:2,roomWaveSize:24,maxActiveEnemies:128,equipmentDropChance:.08,fragmentDropChance:.05,goldDropChance:.25,interactionRange:2.6,reviveRange:2.8,reviveSeconds:3,exitGatherRange:5,exitVoteSeconds:45,intermissionSeconds:7,clashSeconds:150});
 export const DUNGEON_BIOMES=Object.freeze({
@@ -8,6 +9,7 @@ export const DUNGEON_BIOMES=Object.freeze({
  forge:{name:'Fornalha de Muspelheim',floor:0x9e795b,path:0xb5966f,wall:0x635550,trim:0xd0ad7b,glow:0xf1bd72,sky:0x745a50,expandedEnemies:['firemage','elderwillow','scorpion','stonebeast','scarab'],enemies:['firemage','scarab','snake','stonebeast'],boss:'stonebeast'},
  void:{name:'Fendas de Ginnungagap',floor:0x8f819f,path:0xa995a7,wall:0x554d68,trim:0xc9b6cd,glow:0xe0c0ee,sky:0x5c526a,expandedEnemies:['worm','whisper','firemage','slime','golem'],enemies:['worm','firemage','cavebat','slime'],boss:'worm'}
 });
+for(const [biome,spec] of Object.entries(DUNGEON_BIOMES))spec.expandedEnemies=[...spec.expandedEnemies,...expansionForBiome(biome)];
 export const DUNGEON_RARITIES=Object.freeze({common:{name:'Comum',color:'#c5cfb4'},rare:{name:'Raro',color:'#9cced9'},epic:{name:'Épico',color:'#c4a0da'},legendary:{name:'Lendário',color:'#edc26c'}});
 export const DUNGEON_OBJECT_NAMES=Object.freeze({portal:'Escadaria para o próximo andar',chest:'Cofre dos viajantes',merchant:'Mercador oculto',shrine:'Santuário de Eir',equipment:'Equipamento',fragment:'Fragmento de técnica',gold:'Bolsa de ouro',corpse:'Companheiro caído',key:'Chave do cofre',prop:'Objeto quebrável'});
 
@@ -35,7 +37,7 @@ const baseSpecies={
 // New visual species inherit an existing role's combat budget. The first
 // teaching chamber retains its original roster; later rooms use these variants.
 const variant=(parent,key,extra={})=>Object.freeze({...baseSpecies[parent],name:monsterReferenceName(key,key),...extra});
-export const DUNGEON_SPECIES=Object.freeze({...baseSpecies,
+export const DUNGEON_SPECIES=Object.freeze({...baseSpecies,...expandedDungeonSpecies(baseSpecies),
  spore:variant('snake','spore',{element:'poison',size:.95}),
  mandragora:variant('archer','mandragora',{element:'poison',projectile:'poison',speed:0}),
  willow:variant('guardian','willow'),elderwillow:variant('firemage','elderwillow'),

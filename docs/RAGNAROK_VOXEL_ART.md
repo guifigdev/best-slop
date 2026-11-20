@@ -68,3 +68,30 @@ com os dados de combate definidos por cada modo.
 As reconstruções ficam em módulos de arte de caverna, elementos, floresta,
 cavernas e cripta/gelo. Elas descrevem geometria e animação; nomes, atributos,
 habilidades e regras de aparição permanecem separados dessa geometria.
+
+
+## Expansão de 80 criaturas e MVPs
+
+A biblioteca atual tem **101 esculturas**: os 21 modelos anteriores, mais
+64 criaturas comuns e 16 chefes MVP. Cada referência tem ID, nome de origem
+separado do nome adaptado, biomas e função de combate. O inventário completo
+está em [BESTIARY_101.md](BESTIARY_101.md).
+
+As novas criaturas entram gradualmente nas ondas de Custom Hero e nos
+biomas de Dungeon e Frenesi. MVPs ficam fora das hordas comuns: são
+selecionados para os desafios de chefe do Custom Hero, a sala final de cada
+andar da Dungeon e o templo central de Frenesi. A seleção respeita o bioma.
+Na Dungeon, a primeira sala conserva seu elenco didático.
+
+Cada MVP possui quatro padrões temáticos. Círculos, cones, linhas e anéis
+usam a mesma descrição para colisão, aviso e efeito visual. Avisos duram
+pelo menos 1,8 segundo; o centro dos anéis continua seguro. A morte ou
+interrupção cancela o ataque pendente. Abaixo de metade da vida, MVPs do
+Custom Hero e Dungeon reduzem moderadamente o intervalo entre avisos.
+Os atributos, frequência de hordas e limites de inimigos continuam locais;
+não importamos os milhões de HP ou dano do jogo de referência.
+
+Ifrit usa colunas e sopros de fogo; Hati e Cavaleiro da Nevasca usam gelo;
+Randgrís anuncia relâmpagos; Morrok usa áreas sombrias; Freeoni utiliza
+ondas físicas. Os efeitos compartilham três lotes de renderização de
+capacidade fixa e não aplicam dano no cliente.

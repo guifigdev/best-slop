@@ -1,3 +1,4 @@
+import {mvpWarning,mvpDefinition} from './ragnarok-expansion.js';
 import {monsterVisualReference,monsterReferenceName} from './monster-visual-references.js';
 import {DUNGEON_SPECIES as SPECIES} from './dungeon-catalog.js';
 import {insideBossPattern} from './boss-patterns.js';
@@ -9,7 +10,7 @@ export function spawnDungeonSpecies(g,room,key,point,{boss=false,extra=false}={}
  const s=SPECIES[key]||SPECIES.rat,floor=g.dungeon.floor,party=1+Math.max(0,(g.dungeon.partySize||1)-1)*.2;
  const hp=Math.round((boss?(3500+floor*260)*(1+(floor-1)*.015)*Math.max(1,s.hp/3):(230+floor*12)*(1+floor*.015)*s.hp)*party),damage=(boss?48+floor*3:22+floor*1.6)*s.damage;
  const visual=monsterVisualReference(key,room.biome||g.dungeon.biome);
- const u=g.spawnEnemy('dungeon-'+key,point.x,point.z,{name:monsterReferenceName(visual,s.name),ragnarokVisual:visual,dungeonBiome:room.biome||g.dungeon.biome,dungeonEnemy:true,dungeonSpecies:key,dungeonBehavior:s.behavior,dungeonProjectile:s.projectile||null,dungeonRoom:room.id,dungeonFloor:floor,dungeonExtra:extra,team:100,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),range:s.range||1.25,size:s.size*(boss?1.45:1),collisionRadius:s.radius*(boss?1.25:1),flying:!!s.flying,altitude:s.flying?2.3:0,element:s.element||null,skills:[],boss:false,level:floor,acquireRange:60,cd:1.2+(g.units.length%5)*.23});
+ const u=g.spawnEnemy('dungeon-'+key,point.x,point.z,{name:monsterReferenceName(visual,s.name),ragnarokVisual:visual,dungeonBiome:room.biome||g.dungeon.biome,dungeonEnemy:true,dungeonSpecies:key,...(s.ragnarokMvp?{ragnarokMvp:s.ragnarokMvp}:{}),dungeonBehavior:s.behavior,dungeonProjectile:s.projectile||null,dungeonRoom:room.id,dungeonFloor:floor,dungeonExtra:extra,team:100,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),range:s.range||1.25,size:s.size*(boss?1.45:1),collisionRadius:s.radius*(boss?1.25:1),flying:!!s.flying,altitude:s.flying?2.3:0,element:s.element||null,skills:[],boss:false,level:floor,acquireRange:60,cd:1.2+(g.units.length%5)*.23});
  u.monsterBase=Object.freeze({...u.monsterBase,hp,damage,armor:(s.armor||0)+Math.floor(floor/5),speed:s.speed,interval:s.interval,accuracy:.94,evasion:0,critChance:0,critMultiplier:1.5,magicPower:1});g.refresh(u);u.hp=u.maxHp;u.dungeonBoss=boss;u.dungeonElite=boss||s.hp>=2;u.dungeonAbilityAt=g.time+3.5+(u.id%7)*.7;u.order='auto';return u;
 }
 export function dungeonHazardPhase(h,time){if(h.type==='ice'||h.type==='pit')return{phase:'active',active:true};const phase=((time+(h.offset||0))%h.period+h.period)%h.period;return phase<h.telegraphSeconds?{phase:'warning',active:false}:phase<h.telegraphSeconds+1.35?{phase:'active',active:true}:{phase:'safe',active:false};}
@@ -18,8 +19,9 @@ export function dungeonIceAt(g,u){return !u.flying&&!!g.dungeon?.map?.hazards?.s
 function queue(g,u,skill,target){
  const d=g.dungeon,dx=target.x-u.x,dz=target.z-u.z,length=Math.hypot(dx,dz)||1,dir={x:dx/length,z:dz/length},windup=u.dungeonBoss?2:u.dungeonElite?1.75:skill==='burrow'?1.7:1.5;
  const line=['charge','swoop','volley'].includes(skill),warning={id:g.id(),source:u.id,room:u.dungeonRoom,skill,shape:line?'line':'circle',x:line?(u.x+target.x)/2:target.x,z:line?(u.z+target.z)/2:target.z,dx:dir.x,dz:dir.z,radius:['slam','brood'].includes(skill)?4.5:skill==='burrow'?3.8:skill==='web'?3.2:2.8,width:skill==='volley'?2:3,length:Math.min(22,length+3),element:u.element||(['fireball'].includes(skill)?'fire':skill==='venom'?'poison':skill==='slime'?'ice':'physical'),damage:u.damage*(u.dungeonBoss?5.2:u.dungeonElite?4.6:3.6),start:g.time,fireAt:g.time+windup,wave:g.wave,from:{x:u.x,z:u.z},targetPoint:{x:target.x,z:target.z}};
- d.telegraphs.push(warning);u.dungeonCasting=warning.id;u.cd=Math.max(u.cd,windup+.4);u.order='stop';u.destination=null;if(skill==='burrow'){u.dungeonBurrowed=true;u.noCollision=true;u.dungeonBurrowUntil=warning.fireAt;}
- const {id:warningId,...visual}=warning;g.fx('bossDanger',warning.x,warning.z,{...visual,warningId,duration:windup,dungeon:true});return warning;
+ const themed=u.dungeonBoss&&mvpWarning(u,target,Math.max(0,(u.dungeonPatternIndex||1)-1),g.time,u.damage*2.8);if(themed)Object.assign(warning,themed);
+ d.telegraphs.push(warning);u.dungeonCasting=warning.id;u.cd=Math.max(u.cd,warning.fireAt-g.time+.4);u.order='stop';u.destination=null;if(warning.skill==='burrow'){u.dungeonBurrowed=true;u.noCollision=true;u.dungeonBurrowUntil=warning.fireAt;}
+ const {id:warningId,...visual}=warning;g.fx('bossDanger',warning.x,warning.z,{...visual,warningId,duration:warning.fireAt-g.time,dungeon:true});return warning;
 }
 function hitWarning(g,w,source,hooks){
  source.dungeonBurrowed=false;source.noCollision=false;source.dungeonCasting=null;source.order='auto';
@@ -37,7 +39,7 @@ export function tickDungeonEncounters(g,dt,hooks){
   if(['volley','fireball'].includes(u.dungeonBehavior)&&distance(u,target)<5){const dx=u.x-target.x,dz=u.z-target.z,n=Math.hypot(dx,dz)||1;const room=d.map.rooms[u.dungeonRoom];u.destination={x:Math.max(room.x-room.w/2+2,Math.min(room.x+room.w/2-2,u.x+dx/n*3)),z:Math.max(room.z-room.d/2+2,Math.min(room.z+room.d/2-2,u.z+dz/n*3))};u.order='move';}else if(u.order==='move'){u.order='auto';u.destination=null;}
   if(g.time<u.dungeonAbilityAt||!unitSegmentClear(g,u,u,target))continue;
   const tellLimit=(d.partySize||1)>1?2:1;if(d.telegraphs.filter(w=>w.room===u.dungeonRoom).length>=tellLimit||g.time<(d.nextTellAt||0))continue;
-  u.dungeonAbilityAt=g.time+(u.dungeonBoss?7:u.dungeonElite?9:11)+(u.id%3)*.7;
+  u.dungeonAbilityAt=g.time+(u.dungeonBoss?(mvpDefinition(u.ragnarokMvp)&&u.hp<u.maxHp*.5?6.5:8):u.dungeonElite?9:11)+(u.id%3)*.7;
   if(u.dungeonBehavior==='skitter'){u.destination={x:target.x+(u.id%2?2:-2),z:target.z};u.order='attackMove';continue;}
   if(u.dungeonBehavior==='shell'){u.shield=Math.max(u.shield||0,u.maxHp*.18);u.shieldUntil=g.time+2.5;g.fx('shield',u.x,u.z,{source:u.id,duration:2.5});continue;}
   const skill=u.dungeonBehavior==='burrow'&&((u.dungeonPatternIndex||0)%2===1)?'charge':u.dungeonBehavior;u.dungeonPatternIndex=(u.dungeonPatternIndex||0)+1;queue(g,u,skill,target);d.nextTellAt=g.time+(d.floor===1&&!u.dungeonElite&&!u.dungeonBoss?2.5:1.8);

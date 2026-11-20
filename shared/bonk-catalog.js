@@ -1,3 +1,4 @@
+import {expansionForBiome} from './ragnarok-expansion.js';
 // Original Nordic survivor content. Mechanics take inspiration from automatic
 // attack roguelikes; local balance and maps share the voxel bestiary.
 export const BONK_REFERENCE='https://store.steampowered.com/app/3405340/Megabonk/';
@@ -40,9 +41,9 @@ export const BONK_RELICS=Object.freeze({
  ironacorn:relic('ironacorn','Bolota de ferro','devotion','+2 de armadura por cópia.','common')
 });
 export const BONK_STAGES=Object.freeze({
- grove:{key:'grove',name:'Bosque dos colossos',biome:'forest',description:'Ruínas entre raízes gigantes, pontes de pedra e clareiras elevadas.',floor:0x628747,path:0xa99e71,wall:0x69735d,accent:0xb5d689,enemySpecies:['rat','spider','scarab','slime','stonebeast','spore','mandragora','willow','andre'],guardian:'stonebeast',boss:'guardian'},
- forge:{key:'forge',name:'Caldeira dos titãs',biome:'forge',description:'Anéis de basalto, canais de lava, forjas antigas e rampas largas.',floor:0x6e4637,path:0xa57653,wall:0x493b39,accent:0xffbb68,enemySpecies:['firemage','scarab','worm','stonebeast','elderwillow','scorpion','golem'],guardian:'firemage',boss:'worm'},
- glacier:{key:'glacier',name:'Jardins de Niflheim',biome:'frost',description:'Lagos congelados, pilares de cristal e santuários na neve.',floor:0xa9c8cc,path:0x809da9,wall:0x668795,accent:0xd8f5ed,enemySpecies:['snake','slime','cavebat','archer','guardian','siroma','gazeti','whisper'],guardian:'guardian',boss:'stonebeast'}
+ grove:{key:'grove',name:'Bosque dos colossos',biome:'forest',description:'Ruínas entre raízes gigantes, pontes de pedra e clareiras elevadas.',floor:0x628747,path:0xa99e71,wall:0x69735d,accent:0xb5d689,enemySpecies:['rat','spider','scarab','slime','stonebeast','spore','mandragora','willow','andre',...expansionForBiome('forest')],guardian:'stonebeast',boss:'guardian'},
+ forge:{key:'forge',name:'Caldeira dos titãs',biome:'forge',description:'Anéis de basalto, canais de lava, forjas antigas e rampas largas.',floor:0x6e4637,path:0xa57653,wall:0x493b39,accent:0xffbb68,enemySpecies:['firemage','scarab','worm','stonebeast','elderwillow','scorpion','golem',...expansionForBiome('forge')],guardian:'firemage',boss:'worm'},
+ glacier:{key:'glacier',name:'Jardins de Niflheim',biome:'frost',description:'Lagos congelados, pilares de cristal e santuários na neve.',floor:0xa9c8cc,path:0x809da9,wall:0x668795,accent:0xd8f5ed,enemySpecies:['snake','slime','cavebat','archer','guardian','siroma','gazeti','whisper',...expansionForBiome('frost')],guardian:'guardian',boss:'stonebeast'}
 });
 export const BONK_BUILD_EXAMPLES=Object.freeze([
  {name:'Tempestade de agulhas',weapons:['frost','thorns','storm','orbit'],tomes:['amount','haste','crit','magnet'],relics:['frozenheart','thundercoin','silvermirror']},

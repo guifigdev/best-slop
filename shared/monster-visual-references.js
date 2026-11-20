@@ -1,3 +1,4 @@
+import {RAGNAROK_EXPANSION} from './ragnarok-expansion.js';
 // Direct visual references requested by the project owner. Combat values remain
 // the game's own values; these keys describe a voxel reconstruction of the art.
 export const RAGNAROK_VOXEL_REFERENCES=Object.freeze(Object.fromEntries([
@@ -11,6 +12,7 @@ export const RAGNAROK_VOXEL_REFERENCES=Object.freeze(Object.fromEntries([
  ['hode',1127,'Hode','Verme das Dunas'],['golem',1040,'Golem','Golem de Basalto'],
  ['mummy',1041,'Mummy','Múmia Errante'],['whisper',1179,'Whisper','Sussurro do Véu'],
  ['siroma',1776,'Siroma','Siro Glacial'],['gazeti',1778,'Gazeti','Olho Glacial'],
+...RAGNAROK_EXPANSION.map(m=>[m.key,m.id,m.sourceName,m.name]),
 ].map(([key,id,sourceName,name])=>[key,Object.freeze({key,id,sourceName,name,url:`https://www.divine-pride.net/database/monster/${id}`,sprite:`https://static.divine-pride.net/images/mobs/png/${id}.png`})])));
 const common=Object.freeze({cavebat:'familiar',scarab:'thiefbug',rat:'tarou',archer:'archerskeleton',firemage:'kasa',slime:'poring'});
 export function monsterVisualReference(species,biome){

@@ -242,7 +242,7 @@ export class Game {
   else data={...data,damage:data.damage*(profile.attackMultiplier||1)};
   // Common wave roles retain their combat values while sharing the new art.
   // Explicit scenario units and summons keep their own visual/name metadata.
-  if(!data.summon&&!data.hero&&!data.lineCreep&&!data.castleUnit&&!data.dungeonEnemy&&!data.bonkEnemy){const visual=data.ragnarokVisual||species?.ragnarokVisual||CUSTOM_HERO_COMMON_VISUALS[kind];if(visual)data={...data,ragnarokVisual:visual,name:monsterReferenceName(visual,data.name||profile.name)};}
+  if(!data.summon&&!data.hero&&!data.lineCreep&&!data.castleUnit&&!data.dungeonEnemy&&!data.bonkEnemy){const visual=data.ragnarokVisual||species?.ragnarokVisual||CUSTOM_HERO_COMMON_VISUALS[kind];if(visual)data={...data,ragnarokVisual:visual,...(species?.ragnarokMvp?{ragnarokMvp:species.ragnarokMvp}:{}),name:monsterReferenceName(visual,data.name||profile.name)};}
   const useRaw=data.summon||kind==='bonus',speed=useRaw||data.speed===0?data.speed??profile.moveSpeed??2.8:profile.moveSpeed??data.speed??2.8,interval=useRaw?data.interval??profile.attackInterval??1.5:profile.attackInterval??data.interval??1.5;
   const skills=data.summon?[]:Array.isArray(data.skills)?[...data.skills]:loadout.skills,skillLevels=Object.fromEntries(skills.map(key=>[key,data.skillLevels?.[key]||loadout.skillLevels[key]||loadout.rank]));
   const cd=data.cd??random(),size=data.size||clamp((species?.size||profile.size||1)*(boss?1.2:1),.55,2.1);

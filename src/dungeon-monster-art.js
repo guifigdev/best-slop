@@ -1,8 +1,9 @@
+import {RAGNAROK_EXPANSION} from '../shared/ragnarok-expansion.js';
 import {ragnarokMonsterKey,ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 // Cave fauna includes direct Ragnarok sprite reconstructions. Merge static parts and animate only the
 // returned limbs/wings through its existing eight-frame clips.
 const cache=new Map();
-export const DUNGEON_VISUAL_SPECIES=Object.freeze(['cavebat','scarab','spider','snake','worm','slime','rat','broodmother','stonebeast','guardian','mimic','archer','firemage','spore','mandragora','willow','elderwillow','scorpion','andre','hode','golem','mummy','whisper','siroma','gazeti']);
+export const DUNGEON_VISUAL_SPECIES=Object.freeze(['cavebat','scarab','spider','snake','worm','slime','rat','broodmother','stonebeast','guardian','mimic','archer','firemage','spore','mandragora','willow','elderwillow','scorpion','andre','hode','golem','mummy','whisper','siroma','gazeti',...RAGNAROK_EXPANSION.map(m=>m.key)]);
 const aliases={cave_bat:'cavebat',cavespider:'spider',cave_spider:'spider',cave_scarab:'scarab',cave_rat:'rat',cave_snake:'snake',cave_worm:'worm',spittingworm:'worm',brood_matron:'broodmother',stoneguardian:'guardian',stone_beast:'stonebeast',cave_slime:'slime'};
 function resolve(value){const raw=typeof value==='string'?value:!value?.hero?value?.dungeonSpecies:null,key=aliases[raw]||raw;return DUNGEON_VISUAL_SPECIES.includes(key)?key:null;}
 export function dungeonMonsterModelKey(unit){const key=resolve(unit);return key?'dungeon:'+key+(ragnarokMonsterKey(unit)?':'+ragnarokMonsterKey(unit):''):null;}

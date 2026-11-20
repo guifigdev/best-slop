@@ -1,3 +1,4 @@
+import {EXPANDED_CUSTOM_HERO_BESTIARY,EXPANDED_SKILL_THEMES} from './ragnarok-expansion.js';
 import {LOOT_SKILLS} from './loot-skills.js';
 import {SKILLS} from './catalog.js';
 import {CUSTOM_HERO_BESTIARY,CUSTOM_HERO_SKILL_THEMES} from './customhero-bestiary.js';
@@ -64,7 +65,7 @@ const SPECIAL_PROFILES={
  basilisk:{moveSpeed:2.8,attackInterval:1.8,accuracy:.9,evasion:.03,critChance:.04,critMultiplier:1.7}
 };
 for(const [key,profile]of Object.entries(SPECIAL_PROFILES))Object.assign(MONSTERS[key],profile,{preferredDropSkill:MONSTERS[key].skill});
-Object.assign(MONSTERS,CUSTOM_HERO_BESTIARY);
+Object.assign(MONSTERS,CUSTOM_HERO_BESTIARY,EXPANDED_CUSTOM_HERO_BESTIARY);
 
 // A creature's anatomy and element constrain every generated skill. Bosses
 // gain variety within that identity; hero builds and acquired loot stay free.
@@ -92,7 +93,7 @@ export const MONSTER_SKILL_THEMES=Object.freeze(Object.fromEntries(Object.entrie
  champion:['stomp','stonehide','cleave','bash','avatar','violentforce','rage','devotion'],
  wolf:['fenrirfang','summon','packaura','weakeninghowl','critical','endurance','doubleattack'],
  bonus:['dash','evasion','endurance','critical','doubleattack'],
- ...CUSTOM_HERO_SKILL_THEMES
+ ...CUSTOM_HERO_SKILL_THEMES,...EXPANDED_SKILL_THEMES
 }).map(([kind,skills])=>[kind,Object.freeze(skills)])));
 
 // A boss can mix roles, but cannot fill every slot with stuns or self-sustain.
@@ -120,9 +121,9 @@ export function monsterLoadout(kind,level=1,boss=false,random){
 }
 
 export function monsterKind(base,wave,roll,boss=false){
- const available=Object.keys(MONSTERS).filter(key=>wave>=MONSTERS[key].unlockWave),r=Math.max(0,Math.min(.999999,Number.isFinite(roll)?roll:0));
+ const available=Object.keys(MONSTERS).filter(key=>wave>=MONSTERS[key].unlockWave&&(boss||!MONSTERS[key].bossOnly)),r=Math.max(0,Math.min(.999999,Number.isFinite(roll)?roll:0));
  if(!available.length)return base;
- if(boss){const mythic=available.filter(key=>MONSTERS[key].mythic),pool=mythic.length?mythic:available;return pool[Math.floor(r*pool.length)];}
+ if(boss){const mvps=available.filter(key=>MONSTERS[key].bossOnly);if(mvps.length)return mvps[Math.floor(r*mvps.length)];const mythic=available.filter(key=>MONSTERS[key].mythic),pool=mythic.length?mythic:available;return pool[Math.floor(r*pool.length)];}
  // Retain the existing fauna as the pool grows instead of replacing every wave.
  return r<.45?available[Math.min(available.length-1,Math.floor(r/.45*available.length))]:base;
 }
