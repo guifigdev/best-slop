@@ -61,3 +61,11 @@ The killer bot now treats two nearby combatants as a crowd. It withdraws before 
 Shift keeps the same participant id, owner, position and health fraction. It emits a dedicated `phaseTransform` event containing the prior and next public appearance, facing and 1.1-second visual duration. Other viewers receive that silhouette event only when the transforming participant is visible to them; it does not disclose a hidden role or a distant hidden transformation. Environmental Shade/Spirit/etc. actors are explicitly marked as creatures in public packets and do not use the killer's Beast appearance. Ambient spawns also reject locations within fourteen metres of living players in that dimension.
 
 Navigation now uses the forest/rock footprints and village structures from the Phase world module. Per-game, per-dimension navigation objects are cached so the dense forest does not rebuild its collision index for every unit query. Body separation uses the shared solid-aware resolver, including recovery of embedded legacy positions. All caches stay outside multiplayer snapshots.
+
+## Scale and architecture adaptation — 20 November2026
+
+Each realm now spans212×90m, with128m between dimensional layers. The original numeric source and native coordinate reference are retained separately; world positions are scaled2×, while actor dimensions, movement, spell ranges and combat values are preserved. Houses use matching physical footprints of approximately5.4×3.6m, doors1.8×3.65m and one-floor heights4.8–5.6m. The citizen mesh measures approximately2.215m tall×1.35m wide. Fountains, barrels, trees and lanterns retain individual object scales instead of receiving the global positional multiplier.
+
+Four nearby point lights, one256px shadow map and instanced ground light pools provide local night illumination without creating a shadow light for every post. Stone/timber facades, rooflines, tree silhouettes and native fountain/ruin footprints now have distinct original voxel art.
+
+Legacy rooms are migrated once through `migratePhaseKillerScale` during D1/SQLite hydration. Position fields and navigation goals are converted, regenerated village footprints preserve destroyed IDs, and health, inventory, ranges, radii and timers remain intact. The serialized `phaseWorldScale` marker prevents repeated conversion in lobby polls.

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {phaseKillerUnitSkills,PHASE_KILLER_IMPLEMENTED_FAMILIES} from '../shared/phase-killer.js';
-import {PHASE_KILLER_ITEMS as I,PHASE_KILLER_SKILLS as S,PHASE_KILLER_RECIPES as R,PHASE_KILLER_WORLD_RECIPES as W,PHASE_KILLER_BLOOD_FORGE as FORGE,PHASE_KILLER_DISGUISES as D,PHASE_KILLER_ACTORS as A} from '../shared/phase-killer-catalog.js';
+import {PHASE_KILLER_ITEMS as I,PHASE_KILLER_SKILLS as S,PHASE_KILLER_RECIPES as R,PHASE_KILLER_WORLD_RECIPES as W,PHASE_KILLER_BLOOD_FORGE as FORGE,PHASE_KILLER_DISGUISES as D,PHASE_KILLER_ACTORS as A,PHASE_KILLER_MAP as MAP} from '../shared/phase-killer-catalog.js';
+import {phaseKillerWorldPoint} from '../shared/phase-killer-world.js';
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const cast=(g,u,skill,extra={})=>g.command(u.owner,{type:'pkCast',skill,...extra});
 function setup(){const g=new Game(17,{mode:'phasekiller'});for(let i=0;i<6;i++)g.addPlayer('p'+i,'townsperson','Pessoa '+i);g.initPhaseKiller();g.phaseKiller.assignAt=0;g.tick(.01);const killer=g.units.find(u=>u.pkRole==='killer'),u=g.units.find(u=>u.pkRole==='townsfolk'),target=g.units.find(t=>t!==u&&t!==killer);Object.assign(u,{x:15,z:-7});Object.assign(target,{x:16,z:-7});return{g,u,target,killer};}
@@ -37,10 +38,10 @@ test('Invoke is civilian-accessible, spends blood rather than souls, and uses na
  u.cooldowns.A067=0;u.inventory=[{key:'I03S',charges:0}];u.pkBlood=10;assert.equal(cast(g,u,'A067'),true);assert.equal(u.pkOrbRevealUntil,g.time+5);assert.equal(u.pkBlood,0);
 });
 
-test('two-item stone recipes and global Omniworld portal consume the correct pair only in its original region',()=>{
+test('two-item stone recipes and global Omniworld portal consume the correct pair only in the scaled source region',()=>{
  const{g,u,target}=setup();u.inventory=[{key:'I01T',charges:0},{key:'I01T',charges:0}];assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),true);assert.equal(u.inventory[0].key,'I01U');give(u,'I01U');assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),true);assert.equal(u.inventory[0].key,'I01S');assert.equal(R.length,63);
- u.inventory=[{key:'I01C',charges:0},{key:'I01R',charges:0}];assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),false);assert.equal(u.inventory.length,2);const r=W[0].region;Object.assign(u,{pkDimension:'aether',x:(r.minX+r.maxX)/2,z:(r.minZ+r.maxZ)/2});assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),true);assert.equal(u.inventory.length,0);assert.equal(g.phaseKiller.gatewayOpen,true);
- Object.assign(target,{pkDimension:'aether',x:33,z:31});assert.equal(g.command(target.owner,{type:'pkGateway'}),true);assert.equal(target.pkDimension,'omni');assert.equal(g.snapshotFor(target.owner).phaseKiller.gatewayOpen,true);
+ u.inventory=[{key:'I01C',charges:0},{key:'I01R',charges:0}];assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),false);assert.equal(u.inventory.length,2);const r=W[0].region;Object.assign(u,{pkDimension:'aether',...phaseKillerWorldPoint({x:(r.minX+r.maxX)/2,z:(r.minZ+r.maxZ)/2})});assert.equal(g.command(u.owner,{type:'pkCombine',from:0,to:1}),true);assert.equal(u.inventory.length,0);assert.equal(g.phaseKiller.gatewayOpen,true);
+ Object.assign(target,{pkDimension:'aether',...MAP.gateway});assert.equal(g.command(target.owner,{type:'pkGateway'}),true);assert.equal(target.pkDimension,'omni');assert.equal(g.snapshotFor(target.owner).phaseKiller.gatewayOpen,true);
 });
 
 test('cooldown snapshots expose remaining seconds while keeping canonical deadlines unchanged',()=>{
@@ -67,7 +68,14 @@ test('every active catalog family has an explicit mechanic rather than a generic
 test('phase cube reveals clues without transporting, spheres transport self and target, and ghosts have native profiles',()=>{
  const{g,u,target}=setup();give(u,itemFor('A01S')||'I00T');u.skills.push('A01S','A01T','A01U');u.mana=1000;const z=u.z;
  assert.equal(cast(g,u,'A01S'),true);assert.equal(u.pkDimension,'normal');assert.equal(u.z,z);assert.ok(u.pkPhaseRevealUntil>g.time);
- assert.equal(cast(g,u,'A01T'),true);assert.equal(u.pkDimension,'aether');close(u.z,z+64);assert.ok(u.pkPauseUntil>g.time);g.tick(1.6);Object.assign(target,{pkDimension:'aether',x:u.x+1,z:u.z});assert.equal(cast(g,u,'A01U',{target:target.id}),true);assert.equal(target.pkDimension,'normal');
+ assert.equal(cast(g,u,'A01T'),true);assert.equal(u.pkDimension,'aether');close(u.z,z+MAP.layerOffset);assert.ok(u.pkPauseUntil>g.time);g.tick(1.6);Object.assign(target,{pkDimension:'aether',x:u.x+1,z:u.z});assert.equal(cast(g,u,'A01U',{target:target.id}),true);assert.equal(target.pkDimension,'normal');
+});
+
+test('map enlargement does not multiply character speed, skill radius or viewer sight distance',()=>{
+ const{g,u,target}=setup(),speed=u.speed,range=S.A01T.range;Object.assign(u,MAP.spawn);Object.assign(target,{x:u.x+23,z:u.z,pkDimension:'normal',pkInvisibleUntil:0,pkDisguise:null,inventory:[]});
+ assert.equal(g.phaseKiller.worldScale,2);assert.equal(g.snapshotFor(u.owner).phaseKiller.visibilityRadius,22);assert.ok(!g.snapshotFor(u.owner).units.some(t=>t.id===target.id));
+ target.x=u.x+21;assert.ok(g.snapshotFor(u.owner).units.some(t=>t.id===target.id));assert.equal(u.speed,speed);assert.equal(S.A01T.range,range);
+ const destination={x:u.x+4,z:u.z};assert.equal(g.command(u.owner,{type:'pkMove',...destination}),true);const start=u.x;g.tick(.1);assert.ok(u.x-start<=speed*.1+.001,'travel distance remains character speed times elapsed time');
 });
 
 test('Invoke Aether creates an entry rift and delayed native-scale nova waves instead of generic instant damage',()=>{
@@ -82,7 +90,7 @@ test('bombs have a real fuse and can be attacked while hidden traps stay out of 
 });
 
 test('storage preserves charges, enforces proximity and three slots, and rejects protected native items',()=>{
- const{g,u}=setup();u.skills.push('A05D');assert.equal(cast(g,u,'A05D',{x:u.x+.7,z:u.z}),true);const cube=g.phaseKiller.fields.find(f=>f.family==='storageCube');give(u,'I01N');give(u,'I039');assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),true);assert.equal(cube.inventory[0].charges,2);assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),false);assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),true);assert.equal(u.inventory.at(-1).key,'I01N');u.x+=10;assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),false);
+ const{g,u}=setup();Object.assign(u,MAP.spawn);u.skills.push('A05D');assert.equal(cast(g,u,'A05D',{x:u.x+.7,z:u.z}),true);const cube=g.phaseKiller.fields.find(f=>f.family==='storageCube');give(u,'I01N');give(u,'I039');assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),true);assert.equal(cube.inventory[0].charges,2);assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),false);assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),true);assert.equal(u.inventory.at(-1).key,'I01N');u.x+=10;assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),false);
 });
 
 test('lobby and live collision positions are distinct and cannot push a character through a house',()=>{
@@ -115,8 +123,8 @@ test('the two Impeders apply their native disruption fields without an invented 
  const{g,u,target}=setup();u.skills.push('A02Q');u.mana=1000;const hp=target.hp;assert.equal(cast(g,u,'A02Q',{target:target.id}),true);assert.equal(target.hp,hp);assert.equal(target.pkDisruption.prevents,8);close(target.pkDisruption.missChance,.15);target.skills.push('A00E');assert.equal(cast(g,target,'A00E'),false);assert.match(g.commandFailureReason,/silêncio/);
 });
 
-test('native ambient creatures spawn in Aether during exploration and Unphased starts in its original Omniworld position with repaired boss loot',()=>{
- const g=new Game(8,{mode:'phasekiller'});for(let i=0;i<6;i++)g.addPlayer('a'+i,'townsperson');g.random=()=>0;g.initPhaseKiller();g.tick(.01);assert.equal(g.phaseKiller.stage,'gathering');const boss=g.units.find(u=>u.pkBoss),shade=g.units.find(u=>u.pkCreature&&!u.pkBoss);assert.equal(boss.pkAppearance,'h01U');assert.equal(boss.hp,750);assert.ok(Math.hypot(boss.x+3686.5/128,boss.z-15911.4/128)<.1,'first movement remains near native placement');assert.equal(shade.pkDimension,'aether');assert.equal(shade.pkAppearance,'h01N');close(shade.maxHp,A.h01N.hp);close(shade.damage,A.h01N.damage);assert.ok(g.phaseKiller.nextAmbientAt>=20&&g.phaseKiller.nextAmbientAt<=35.1);
+test('native ambient creatures spawn in Aether during exploration and Unphased starts at its scaled source Omniworld position with repaired boss loot',()=>{
+ const g=new Game(8,{mode:'phasekiller'});for(let i=0;i<6;i++)g.addPlayer('a'+i,'townsperson');g.random=()=>0;g.initPhaseKiller();g.tick(.01);assert.equal(g.phaseKiller.stage,'gathering');const boss=g.units.find(u=>u.pkBoss),shade=g.units.find(u=>u.pkCreature&&!u.pkBoss);assert.equal(boss.pkAppearance,'h01U');assert.equal(boss.hp,750);assert.ok(Math.hypot(boss.x+3686.5/128*MAP.worldScale,boss.z-15911.4/128*MAP.worldScale)<.1,'first movement remains near the scaled native placement');assert.equal(shade.pkDimension,'aether');assert.equal(shade.pkAppearance,'h01N');close(shade.maxHp,A.h01N.hp);close(shade.damage,A.h01N.damage);assert.ok(g.phaseKiller.nextAmbientAt>=20&&g.phaseKiller.nextAmbientAt<=35.1);
  g.tick(19);assert.equal(g.units.filter(u=>u.pkCreature&&!u.pkBoss).length,1);g.tick(1.1);assert.equal(g.units.filter(u=>u.pkCreature&&!u.pkBoss).length,2);
  const hero=g.player('a0');boss.hp=1;Object.assign(hero,{pkDimension:'omni',x:boss.x+.1,z:boss.z,cd:0});const before=g.phaseKiller.loot.length;assert.equal(g.command(hero.owner,{type:'pkAttack',target:boss.id}),true);g.tick(.01);assert.equal(boss.alive,false);assert.equal(g.phaseKiller.loot.length-before,14);assert.ok(g.phaseKiller.loot.slice(-14).every(e=>e.dimension==='omni'&&I[e.key]));
 });

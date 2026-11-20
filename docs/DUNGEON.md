@@ -4,7 +4,11 @@ Dungeon e Bloody Tournament são jogos separados. O confronto de heróis ao fina
 
 Modo original que usa os heróis e o combate do Custom Hero, com andares procedurais conectados em vez de provas isoladas no coliseu. Salas fechadas, corredores largos e pátios abertos formam cada andar. A geometria usa uma semente separada do RNG de combate: a mesma semente e andar produzem o mesmo mapa em todas as réplicas.
 
-## Configuração da sala
+## Entrada e configuração da sala
+
+O menu oferece somente Solo (sem bots) e Sala cooperativa (até quatro jogadores). O host escolhe a capacidade de 1–4 e a meta sem fim/50 antes de iniciar; convidados apenas leem essas opções. `roomSettings` exige host e não permite reduzir capacidade abaixo do grupo conectado. A preparação não avança o relógio. As opções de múltiplas equipes abaixo são compatibilidade da API antiga, sem cards adicionais no menu.
+
+### Contrato da simulação
 
 - `mode: "dungeon"` / `game: "dungeon"`.
 - `dungeonPartySize`: 1–4, padrão 4.
@@ -20,7 +24,7 @@ O servidor valida distância, equipe, estoque, capacidade da mochila e fase. IDs
 
 | Comando | Campos | Efeito |
 | --- | --- | --- |
-| `dgReady` | — | Marca o jogador pronto; inicia quando todos humanos estão prontos. |
+| `dgReady` | — | No solo, inicia a expedição. Online, o início depende do host; convidados não iniciam pelo HUD. |
 | `dgInteract` | `object` | Aproxima e abre um cofre, recebe uma bênção ou examina uma estrutura. |
 | `dgPickup` | `object`, `slot?` | Aproxima e recolhe equipamento, ouro ou técnica. `slot` indica a técnica substituída quando os sete espaços estão ocupados. |
 | `dgBuy` | `object`, `offer` | Compra uma oferta real de um mercador próximo. |
@@ -41,3 +45,11 @@ O modo não altera as estatísticas iniciais dos heróis nem depende de imagens 
 ## Validação
 
 Os testes verificam conexão de todas as salas, geração determinística, spawns livres, escala de inimigos, combate entre equipes, tabelas de equipamento, autoridade e repetição de coleta, estoque de mercador, fragmentos, encantamentos, resgate interrompível, saque PvP, votação de saída, transição de andares, final de cinquenta andares, derrota, linha de visão, IA e integração com os comandos e snapshots reais de `Game`. O renderizador é testado sem GPU com limites dos buffers de instâncias e liberação de recursos.
+
+## Escala, salas e exploração
+
+O andar tem 85×85 células de 1,5m:127,5m de lado. As nove salas medem25,5–31,5m e os corredores têm7,5m. Heróis conservam seus modelos; paredes3,5–3,94m ultrapassam a altura humana, baús têm1,05×0,76m e bancas1,8×1,2m. A preparação e o combate usam o mesmo mapa/obstáculos desde a entrada.
+
+A entrada em sala hostil reúne os aliados dentro dela e sela todas as portas com colisão real. Reforços pendentes contam como combate; cofres e portas só liberam após limpar todas as ondas. Até24 inimigos por sala e128 ativos por andar têm criação gradual; quantidade e vida consideram integrantes reais, não lugares vazios da sala. O plano por sala cresce até96 inimigos com a profundidade. Equipamento comum de monstro passa a8% e fragmento a5%, preservando a distribuição de raridade e as garantias dos chefes.
+
+`snapshotFor(owner)` entrega apenas unidades e objetos vistos pela equipe. Salas desconhecidas são pretas; salas visitadas permanecem escurecidas. Uma textura de exploração em coordenadas mundiais afeta terreno, cenário e atores, com lanternas locais e uma sombra local de orçamento fixo. A descida tem aparência explícita de escadaria ou caverna. O minimapa marca a região efetivamente coberta pela câmera; clicar nele só move a câmera.

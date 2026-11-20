@@ -10,7 +10,7 @@ O vídeo indicado é [Warcraft 3 Star Wars Blood Tournament #233, de Sarkosiis](
 
 O mapa usa o terreno e as regiões numéricas extraídas: oito jardins privados sobre a água, entradas cardeais e campo central com areia, lava, vegetação e gelo. Modelos, texturas, personagens, áudio e scripts de Star Wars/Warcraft não são importados como assets executáveis. A arte voxel permanece própria. Fontes, hashes e limites estão em [BLOODY_NATIVE_REFERENCE.md](BLOODY_NATIVE_REFERENCE.md).
 
-A preparação permanece nos jardins privados; ao iniciar a rodada, a formação é projetada nas entradas do campo central. Os comandantes ficam protegidos nas bases. A navegação usa o caminhamento nativo, incluindo água e penhascos bloqueados. As superfícies caminháveis são niveladas para o renderer atual; o relevo visual não representa reprodução física exata das alturas nativas.
+A preparação permanece nos jardins privados; ao iniciar a rodada, a formação é projetada nas entradas do campo central. Os comandantes ficam protegidos nas bases. A navegação usa o caminhamento nativo, incluindo água e penhascos bloqueados. Terreno e jardins usam escala2×, mantendo o tamanho das tropas. Uma colina central de6,5m usa a mesma função de altura para terreno, atores e cursor; esse relevo suave é adaptação própria das alturas nativas.
 
 O individual comporta oito participantes como a referência. A opção cinco contra cinco é uma adaptação, com dois jardins extras e compartilhamento das entradas nativas. Preços, catálogo, graduações, suprimentos, renda de recuperação, duração das rodadas e pontuação ainda são regras deste projeto; não são anunciados como valores extraídos do vídeo. Perfis e máscaras de ataque usam o catálogo já existente, sem comprovar igualdade estatística com Blood Tournament.
 
@@ -39,7 +39,7 @@ O modo não exige R2, compras de loja ou credenciais Steam para um treino local.
 
 - `shared/bloody-tournament-catalog.js`: contratos, regras e perfis graduados.
 - `shared/bloody-tournament.js`: economia, formações, IA, progressão e classificação.
-- `src/bloody-tournament-world.js`: arena, áreas e marcadores instanciados.
+- `src/bloody-tournament-world.js`: terreno, áreas, modelos reais de formação e prévias de posicionamento instanciadas.
 - `src/bloody-tournament-ui.js`: contratos, exército, melhorias, posicionamento e placar.
 - `tests/bloody-tournament.test.js`: validações transacionais, combate real, equipes, reconstituição de grupos, empate, retratos e geometria.
 

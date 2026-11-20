@@ -33,3 +33,9 @@ O download de referência e seus arquivos descompactados ficam em `outputs/blood
 | `pathing` | Bytes WPM em hexadecimal, passo de 0,25 metro; bit `2` significa terreno não caminhável |
 
 Conversão: `x = nativeX / 128`, `z = -nativeY / 128`. As linhas das grades avançam no sentido de `nativeY`, portanto diminuem `z`. O índice do vértice é `floor((48-z)/step)*width + floor((x+48)/step)`. As alturas nativas não devem ser usadas como altura física sem adaptar também os atores e a navegação. Renderizar uma superfície nivelada preservando as cores e contornos é uma adaptação explícita, não equivalência de relevo.
+
+## Adaptação de escala e relevo
+
+A revisão de20/11/2026 usa escala2× nas posições do terreno, jardins, frentes e navegação, preservando o tamanho das tropas. O campo completo vai até248×192m; jardins20–23,5×10–14m comportam os corpos completos da formação. Humanos medem aproximadamente2,03–2,40m, árvores~6m, vulcões5,8m e colina central6,5m. O relevo físico/visual agora usa a mesma função suave `bloodyHeightAt`, inclusive para ancorar unidades e o raio do mouse. Isso é adaptação explícita, não reprodução das alturas originais.
+
+Formações mostram os modelos reais de todos os soldados. O usuário escolhe um grupo e confirma a compra no terreno; Shift repete. A posição é validada antes de cobrar. A grade automática3×4 deixa margem para que pernas/asas não ultrapassem o jardim. Barras e hover distinguem seu exército dos aliados; tropas de outro comandante nunca são apresentadas como novas compras suas.

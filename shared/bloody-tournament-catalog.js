@@ -7,7 +7,7 @@ export const BLOODY_REFERENCE=Object.freeze({
  terrainSource:BLOODY_BATTLEFIELD.source.source,
  title:'Star Wars Blood Tournament 6.4d',
  verified:'Native W3E terrain, WPM pathability, doodad positions, eight private color plots and eight battlefield fronts extracted from the map.',
- adaptation:'Original Nordic voxel art. Browser economy, army catalog and seven-round rules remain adaptations; eight-player free-for-all uses the native plots, five-versus-five adds two isolated preparation gardens.'
+ adaptation:'Original Nordic voxel art. Native terrain, gardens and formations are enlarged twofold with a smooth central summit. Browser economy, army catalog and seven-round rules remain adaptations; five-versus-five adds two isolated preparation gardens.'
 });
 export const BLOODY_RULES=Object.freeze({rounds:7,preparationTime:45,battleTime:100,resultTime:8,startingGold:420,roundGold:180,catchupGold:60,startingBlood:0,maxFood:30,maxWarbands:12,maxRank:3,killBloodCap:120,unitScale:1.55});
 export const BLOODY_MAP=BLOODY_BATTLEFIELD.map;

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {KodoTagMethods,kodoBuildCheck} from '../shared/kodo-tag.js';
-import {KODO_TAG_REFERENCE as REF,KODO_TAG_RULES as R,KODO_TAG_BUILDINGS as B,KODO_TAG_UNITS as U,KODO_TAG_MAP as MAP,KODO_TAG_ITEMS as I} from '../shared/kodo-tag-catalog.js';
+import {KODO_TAG_REFERENCE as REF,KODO_TAG_RULES as R,KODO_TAG_BUILDINGS as B,KODO_TAG_UNITS as U,KODO_TAG_MAP as MAP,KODO_TAG_MINES as MINES,KODO_TAG_ITEMS as I} from '../shared/kodo-tag-catalog.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 function setup(){const g=new Game(16,{mode:'kodotag'});Object.assign(g,KodoTagMethods);assert.equal(g.addPlayer('p','runner','Runner P'),true);assert.equal(g.addPlayer('q','runner','Runner Q'),true);assert.equal(g.initKodoTag(),true);return{g,p:g.player('p'),q:g.player('q')};}
 function quiet(g){g.kodoTag.released=true;g.kodoTag.escalationIndex=R.escalation.length;g.kodoTag.obstacles=[];g.kodoTag.mines=[];g.kodoTag.navigationRevision++;}
@@ -12,7 +12,7 @@ function build(g,p,key,x=10,z=8){p.gold=p.lumber=10000;p.x=8;p.z=8;assert.equal(
 function kodo(g,key='oC06',x=15,z=8){const d=U[key],u={...d,id:g.id(),unitKey:key,owner:'kodos',team:2,x,z,maxHp:d.hp,hp:d.hp,maxMana:0,mana:0,alive:true,kind:'kodo',kodoTagUnit:true,kodoTagKodo:true,cd:0,stun:0,order:'auto',inventory:[]};g.units.push(u);return u;}
 
 test('classic v1.6 hash, native build menu, costs, fragile runners and separate worker identities are pinned',()=>{
- assert.equal(REF.author,'TinyTauren');assert.equal(REF.sha256,'8b3ed66313ae54d46002b8c059340f80248097f916196d37082892c9d3020635');assert.equal(REF.bytes,56595);assert.equal(Object.keys(B).length,8);assert.deepEqual(Object.keys(I),[]);assert.equal(U.uC13.hp,1);assert.equal(U.uC13.speed,300/128);assert.equal(B.hC08.cost,0);assert.equal(B.hC08.buildTime,1);assert.deepEqual(B.hC08.train,['hC19']);assert.equal(U.hC19.cost,300);assert.equal(U.hC19.buildTime,20);assert.equal(U.hC19.canBuild,false);assert.equal(U.oC06.hp,10000);near(U.oC06.damage,6);assert.equal(U.oC22.hp,20000);assert.equal(MAP.obstacles.length,18);assert.equal(MAP.minZ,-28);assert.equal(R.duration,1500);
+ assert.equal(REF.author,'TinyTauren');assert.equal(REF.sha256,'8b3ed66313ae54d46002b8c059340f80248097f916196d37082892c9d3020635');assert.equal(REF.bytes,56595);assert.equal(Object.keys(B).length,8);assert.deepEqual(Object.keys(I),[]);assert.equal(U.uC13.hp,1);assert.equal(U.uC13.speed,300/128);assert.equal(B.hC08.cost,0);assert.equal(B.hC08.buildTime,1);assert.deepEqual(B.hC08.train,['hC19']);assert.equal(U.hC19.cost,300);assert.equal(U.hC19.buildTime,20);assert.equal(U.hC19.canBuild,false);assert.equal(U.oC06.hp,10000);near(U.oC06.damage,6);assert.equal(U.oC22.hp,20000);assert.ok(MAP.obstacles.length>18);assert.equal(MAP.minZ,-80);assert.equal(MAP.linearScale,3);assert.equal(R.duration,1500);
 });
 
 test('a Runner walks to the construction before working and produces a separate peasant only after the native queue time',()=>{
@@ -44,7 +44,7 @@ test('the native runner population supply reserves queued archer and tower food 
 });
 
 test('release, escalation, victory and snapshots use native times and exclude internal pathfinding caches',()=>{
- const {g}=setup();g.player('p').x=g.player('q').x=-20;g.player('p').z=-20;g.player('q').z=-18;tick(g,14.95);assert.equal(g.units.some(u=>u.kodoTagKodo),false);tick(g,.1);assert.equal(g.units.filter(u=>u.kodoTagKodo).length,2);const s=JSON.parse(JSON.stringify(g.snapshotKodoTag()));assert.equal(s.navigation,undefined);assert.equal(s.step,undefined);assert.equal(s.mines.length,16);assert.equal(s.obstacles.length,18);assert.equal(s.players.p.character,'runner');for(const u of g.units.filter(u=>u.kodoTagKodo))u.alive=false;g.kodoTag.elapsed=1499.95;g.kodoTag.escalationIndex=R.escalation.length;tick(g,.1);assert.equal(g.phase,'victory');assert.deepEqual(g.winningOwners,['p','q']);
+ const {g}=setup();g.player('p').x=g.player('q').x=-20;g.player('p').z=-20;g.player('q').z=-18;tick(g,14.95);assert.equal(g.units.some(u=>u.kodoTagKodo),false);tick(g,.1);assert.equal(g.units.filter(u=>u.kodoTagKodo).length,2);const s=JSON.parse(JSON.stringify(g.snapshotKodoTag()));assert.equal(s.navigation,undefined);assert.equal(s.step,undefined);assert.equal(s.mines.length,MINES.length);assert.equal(s.obstacles.length,MAP.obstacles.length);assert.equal(s.players.p.character,'runner');for(const u of g.units.filter(u=>u.kodoTagKodo))u.alive=false;g.kodoTag.elapsed=1499.95;g.kodoTag.escalationIndex=R.escalation.length;tick(g,.1);assert.equal(g.phase,'victory');assert.deepEqual(g.winningOwners,['p','q']);
 });
 
 test('four runners survive a real sixty-second simulation with navigating Kodos attacking and destroying their Big Walls',()=>{

@@ -20,7 +20,7 @@ export class RoomStore{
  load({maxAgeMs=1800000,now=Date.now()}={}){const result=[];for(const row of this.db.prepare('SELECT * FROM game_rooms').all()){
   if(row.version!==VERSION||now-row.updated_at>maxAgeMs)continue;
   try{const saved=decode(row.state),game=new Game(saved.game.worldSeed,saved.game.options);for(const [key,value]of Object.entries(saved.game))if(!['__proto__','prototype','constructor'].includes(key)&&typeof game[key]!=='function')game[key]=value;
-   result.push([row.code,{game,messages:saved.messages||[],host:saved.host,started:!!saved.started,lastActivity:saved.lastActivity||row.updated_at,clients:new Map(),members:new Map(saved.members.map(m=>[m.id,{...m,disconnectedAt:m.disconnectedAt??row.updated_at}])),paused:true,restored:true}]);
+   game.migratePhaseKillerScale?.();result.push([row.code,{game,messages:saved.messages||[],host:saved.host,started:!!saved.started,lastActivity:saved.lastActivity||row.updated_at,clients:new Map(),members:new Map(saved.members.map(m=>[m.id,{...m,disconnectedAt:m.disconnectedAt??row.updated_at}])),paused:true,restored:true}]);
   }catch{/* An incompatible checkpoint is retained for manual recovery. */}
  }return result;}
  delete(code){this.db.prepare('DELETE FROM game_rooms WHERE code=?').run(code);}

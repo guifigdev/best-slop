@@ -8,7 +8,7 @@ const reject=(g,reason)=>{g.commandFailureReason=reason;return false;};
 function usedFood(g,owner){return g.units.filter(u=>u.owner===owner&&u.kodoTagUnit&&u.alive).reduce((n,u)=>n+(u.food||0),0)+g.kodoTag.buildings.filter(b=>b.owner===owner&&b.alive).reduce((n,b)=>n+(b.food||0)+(b.productionQueue||[]).reduce((a,key)=>a+(UNITS[key]?.food||0),0),0);}
 const reset=u=>{u.destination=null;u.kodoTagAction=null;u.kodoTagBuildQueue=[];u.order='stop';u.moving=false;u.working=false;u.gathering=false;};
 const fx=(g,type,u,extra={})=>g.fx(type,u.x,u.z,{source:u.id,kodoTag:true,...extra});
-function nav(g){const k=g.kodoTag;Object.assign(k.navigation,{map:k.map,buildings:k.buildings,obstacles:[...k.obstacles,...k.mines.filter(m=>m.alive)],navigationRevision:k.navigationRevision,elapsed:k.elapsed,units:g.units});return k.navigation;}
+function nav(g){const k=g.kodoTag;if(k.navigation.resourceRevision!==k.navigationRevision){k.navigation.obstacles=[...k.obstacles,...k.mines.filter(m=>m.alive),...k.trees.filter(t=>t.alive)];k.navigation.resourceRevision=k.navigationRevision;}Object.assign(k.navigation,{map:k.map,buildings:k.buildings,navigationRevision:k.navigationRevision,elapsed:k.elapsed,units:g.units});return k.navigation;}
 const inMap=(g,p)=>finite(p)&&p.x>=g.kodoTag.map.minX+.2&&p.x<=g.kodoTag.map.maxX-.2&&p.z>=g.kodoTag.map.minZ+.2&&p.z<=g.kodoTag.map.maxZ-.2;
 function controlled(g,hero,c){const id=c.workerId??c.unitId;if(id==null||id===hero.id)return hero;return Number.isInteger(id)?g.units.find(u=>u.id===id&&u.owner===hero.owner&&u.kodoTagUnit&&live(u)):null;}
 function queueBuild(g,u,b){
@@ -45,8 +45,8 @@ function kill(g,u,attacker){
 }
 function hurt(g,target,amount,source){if(!live(target))return;const n=Math.min(target.hp,Math.max(0,amount)/(1+.06*Math.max(0,target.armor||0)));target.hp-=n;target.hitAt=g.time;if(n)fx(g,'damage',target,{target:target.id,amount:Math.round(n)});if(target.hp<=0)kill(g,target,source);}
 function attack(g,u,target,move=true){
- const reach=Math.max(u.range||.7,(u.collisionRadius||.25)+.1)+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25);
- if(dist(u,target)>reach){if(move)approach(g,u,target,reach);return;}
+ const strikingDistance=Math.max(u.range||.7,(u.collisionRadius||.25)+.1),reach=strikingDistance+(target.w?Math.max(target.w,target.d)/2:target.collisionRadius||.25),inReach=target.w&&target.d?Math.hypot(Math.max(0,Math.abs(u.x-target.x)-target.w/2),Math.max(0,Math.abs(u.z-target.z)-target.d/2))<=strikingDistance:dist(u,target)<=reach;
+ if(!inReach){if(move)approach(g,u,target,reach);return;}
  u.kodoTagBlocked=false;if(u.cd>0||u.stun>0)return;u.attackAt=g.time;u.facing=Math.atan2(target.x-u.x,target.z-u.z);u.cd=u.interval||2;fx(g,u.range>=3?'arrow':'slash',u,{target:target.id,tx:target.x,tz:target.z,basicAttack:true,projectileKind:u.unitKey==='hC12'?'arrow':u.unitKey==='eC17'?'siege':u.kodoTagStructure?'arcane':null});hurt(g,target,u.damage,u);
  if(u.key==='oC20'){target.kodoSlowUntil=g.kodoTag.elapsed+5;target.kodoSlowFactor=.5;target.kodoPoison={until:g.kodoTag.elapsed+5,next:g.kodoTag.elapsed+1,damage:4,owner:u.owner};}
  if(u.key==='oC21'&&g.random()<.15){target.stun=2;hurt(g,target,25,u);fx(g,'stun',target);}
@@ -75,9 +75,9 @@ export function kodoBuildCheck(game,unit,key,where){
  const k=game?.kodoTag,d=own(BUILDINGS,key)?BUILDINGS[key]:null,hero=game?.player?.(unit?.owner)||game?.units?.find(u=>u.kodoTagCharacter&&u.owner===unit?.owner);
  if(!active(game)||!live(unit)||!unit.canBuild)return{allowed:false,reason:'Somente seu Runner ativo constrói. Camponeses apenas coletam recursos.'};
  if(!d)return{allowed:false,reason:'Construção desconhecida.'};if(hero&&usedFood(game,hero.owner)+(d.food||0)>(hero.foodCap??10))return{allowed:false,reason:'Alimento insuficiente: seu Runner sustenta 10 de população.'};if(!hero||hero.gold<d.cost||hero.lumber<d.lumberCost)return{allowed:false,reason:'Ouro ou madeira insuficientes.'};
- const p={x:Math.round((where?.x??NaN)*2)/2,z:Math.round((where?.z??NaN)*2)/2};if(!inMap(game,p)||p.x-d.w/2<k.map.minX||p.x+d.w/2>k.map.maxX||p.z-d.d/2<k.map.minZ||p.z+d.d/2>k.map.maxZ)return{allowed:false,reason:'Escolha uma área dentro do mapa.'};
+ const p={x:Math.round((where?.x??NaN)*4)/4,z:Math.round((where?.z??NaN)*4)/4};if(!inMap(game,p)||p.x-d.w/2<k.map.minX||p.x+d.w/2>k.map.maxX||p.z-d.d/2<k.map.minZ||p.z+d.d/2>k.map.maxZ)return{allowed:false,reason:'Escolha uma área dentro do mapa.'};
  if(dist(p,k.map.jail)<3)return{allowed:false,reason:'Deixe a prisão central livre para os resgates.'};
- if([...k.buildings,...k.obstacles,...k.mines].some(o=>o.alive!==false&&Math.abs(p.x-o.x)<(d.w+o.w)/2+.05&&Math.abs(p.z-o.z)<(d.d+o.d)/2+.05))return{allowed:false,reason:'Terreno ocupado por uma construção, mina ou rochedo.'};
+ if([...k.buildings,...k.obstacles,...k.mines,...k.trees].some(o=>o.alive!==false&&Math.abs(p.x-o.x)<(d.w+o.w)/2-.000001&&Math.abs(p.z-o.z)<(d.d+o.d)/2-.000001))return{allowed:false,reason:'Terreno ocupado por uma construção, mina ou rochedo.'};
  return{allowed:true,reason:'Área livre para construir.',point:p,definition:d};
 }
 

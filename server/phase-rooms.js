@@ -5,7 +5,7 @@ import {Game} from '../shared/simulation.js';
 export const PHASE_ROOM_LIMITS=Object.freeze({players:12,rooms:128,ttlMs:2*60*60*1000,maxCatchup:.75,step:.05,retries:8,bodyBytes:8192,pollsPerSecond:8,commandsPerSecond:30,documentBytes:1500000});
 const ROOM=/^[A-Z0-9]{4,10}$/,TOKEN=/^[a-f0-9-]{36}$/i,REQUEST_ID=/^[A-Za-z0-9_-]{8,64}$/;
 const TYPES=new Set(['pkReady','ready','pkChat','pkName','pkDisguise','pkForm','pkStop','pkMove','pkAttack','pkCast','pkPickup','pkDrop','pkCombine','pkGateway','pkStore','pkTake']);
-const KEYS=['worldSeed','seed','time','units','effects','players','phase','wave','timer','serial','message','phaseKiller','pkLobbyMessages','winningOwners','options'];
+const KEYS=['phaseWorldScale','worldSeed','seed','time','units','effects','players','phase','wave','timer','serial','message','phaseKiller','pkLobbyMessages','winningOwners','options'];
 class PhaseError extends Error{constructor(status,code,message){super(message);this.status=status;this.code=code;}}
 const fail=(status,code,message)=>{throw new PhaseError(status,code,message);};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
@@ -29,7 +29,7 @@ function tick(game,data,now){
  if(game.phase==='preparation'||!data.members.length)return;
  let remaining=elapsed;while(remaining>.000001){const dt=Math.min(PHASE_ROOM_LIMITS.step,remaining);game.tick(dt);remaining-=dt;}
 }
-function hydrate(data,createGame){const saved=data.game;if(!saved||saved.options?.mode!=='phasekiller')fail(503,'invalid_state','A sala precisa ser recriada.');const game=createGame(saved.worldSeed||1);for(const key of KEYS)if(Object.hasOwn(saved,key))game[key]=saved[key];return game;}
+function hydrate(data,createGame){const saved=data.game;if(!saved||saved.options?.mode!=='phasekiller')fail(503,'invalid_state','A sala precisa ser recriada.');const game=createGame(saved.worldSeed||1);for(const key of KEYS)if(Object.hasOwn(saved,key))game[key]=saved[key];game.migratePhaseKillerScale?.();return game;}
 function validateCommand(command){if(!command||Array.isArray(command)||typeof command!=='object'||!TYPES.has(command.type))fail(400,'invalid_command','Comando desconhecido.');if(command.type==='pkChat'&&(typeof command.text!=='string'||command.text.trim().length<1||command.text.length>240))fail(400,'invalid_chat','Escreva uma mensagem de até 240 caracteres.');return command;}
 
 export function createPhaseHandler({createGame=seed=>new Game(seed,{mode:'phasekiller',phaseTraining:false}),clock=()=>Date.now(),cryptoProvider=globalThis.crypto,allowedOrigins=[]}={}){

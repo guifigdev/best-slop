@@ -6,6 +6,7 @@ import {BLOODY_UNITS as C,BLOODY_RULES as R,BLOODY_MAP,bloodyUnitAt,bloodyRoster
 import {CASTLE_UNITS} from '../shared/castle-catalog.js';
 import {castleWeaponFor} from '../shared/castle-weapons.js';
 import {bloodyUnitPortrait,createBloodyTournamentWorld} from '../src/bloody-tournament-world.js';
+import {castleUnitVisual} from '../src/castle-unit-art.js';
 import {bloodyRankingMarkup,createBloodyTournamentUI} from '../src/bloody-tournament-ui.js';
 import * as T from 'three';
 
@@ -49,9 +50,31 @@ test('equal empty battle does not fabricate a sole winner and timed scoring is b
 });
 
 test('round snapshots and score UI expose actual armies and names safely without issuing commands',()=>{
- const{g,p}=setup();p.name='<script>bad()</script>';cmd(g,p,'Buy',{unitKey:'healer'});const s={...g.snapshot(),options:g.options,bloodyTournament:g.snapshotBloodyTournament()};const html=bloodyRankingMarkup(s,p.owner);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);const sent=[],ui=createBloodyTournamentUI({send:c=>(sent.push(c),true),getState:()=>s,getOwner:()=>p.owner});ui.point({point:{x:p.x,z:p.z},bloodyEntry:p.btRoster[0].id,bloodyOwner:p.owner,button:0});ui.point({point:{x:25,z:-19},button:0});assert.deepEqual(sent.at(-1),{type:'btPlace',entryId:p.btRoster[0].id,x:25,z:-19});ui.shortcut('legacySkill','ready');assert.equal(sent.at(-1).type,'btReady');
+ const{g,p}=setup();p.name='<script>bad()</script>';cmd(g,p,'Buy',{unitKey:'healer'});const s={...g.snapshot(),options:g.options,bloodyTournament:g.snapshotBloodyTournament()};const html=bloodyRankingMarkup(s,p.owner);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);const sent=[],ui=createBloodyTournamentUI({send:c=>(sent.push(c),true),getState:()=>s,getOwner:()=>p.owner});ui.point({point:{x:p.x,z:p.z},bloodyEntry:p.btRoster[0].id,bloodyOwner:p.owner,button:0});ui.point({point:{x:25,z:-19},button:2});assert.deepEqual(sent.at(-1),{type:'btPlace',entryId:p.btRoster[0].id,x:25,z:-19});ui.shortcut('legacySkill','ready');assert.equal(sent.at(-1).type,'btReady');
 });
 
 test('instanced tournament arena is safe before initialization, finite and independently selectable',()=>{
- const scene=new T.Scene(),world=createBloodyTournamentWorld({scene}),{g,p}=setup();cmd(g,p,'Buy',{unitKey:'hydra'});try{world.update({options:{mode:'bloody'},bloodyTournament:null},0,p.owner);world.update({options:{mode:'bloody'},bloodyTournament:g.snapshotBloodyTournament()},1,p.owner);assert.equal(world.root.visible,true);for(const mesh of world.root.children){assert.ok(mesh.count<=mesh.instanceMatrix.count);assert.ok(mesh.geometry.attributes.position.count>0);}const e=p.btRoster[0];assert.deepEqual(world.pick(e),{bloodyEntry:e.id,bloodyOwner:p.owner});world.update({options:{mode:'tower'}},2);assert.equal(world.root.visible,false);}finally{world.dispose();}assert.equal(scene.children.length,0);
+ const scene=new T.Scene(),world=createBloodyTournamentWorld({scene}),{g,p}=setup();cmd(g,p,'Buy',{unitKey:'hydra'});try{world.update({options:{mode:'bloody'},bloodyTournament:null},0,p.owner);world.update({options:{mode:'bloody'},bloodyTournament:g.snapshotBloodyTournament()},1,p.owner);assert.equal(world.root.visible,true);for(const mesh of world.root.children){if(mesh.isInstancedMesh)assert.ok(mesh.count<=mesh.instanceMatrix.count);assert.ok(mesh.geometry.attributes.position.count>0);}const e=p.btRoster[0];assert.deepEqual(world.pick(e),{bloodyEntry:e.id,bloodyOwner:p.owner});world.update({options:{mode:'tower'}},2);assert.equal(world.root.visible,false);}finally{world.dispose();}assert.equal(scene.children.length,0);
+});
+
+test('recruitment at a terrain point validates before charging and battle spawns exactly the two purchased types for their owner',()=>{
+ const {g,p,q}=setup();const original=p.gold;
+ assert.equal(cmd(g,p,'Buy',{unitKey:'aircraft',x:0,z:0}),false);assert.equal(p.gold,original);assert.equal(p.btRoster.length,0);
+ cmd(g,p,'Buy',{unitKey:'shieldwall'});const first=p.btRoster[0];
+ const gold=p.gold;assert.equal(cmd(g,p,'Buy',{unitKey:'aircraft',x:first.x,z:first.z}),false);assert.equal(p.gold,gold);
+ cmd(g,p,'Buy',{unitKey:'hunters'});const last=p.btRoster.at(-1),saved={x:last.x,z:last.z};cmd(g,p,'Sell',{entryId:last.id});
+ assert.equal(cmd(g,p,'Buy',{unitKey:'hunters',...saved}),true);assert.deepEqual({x:p.btRoster.at(-1).x,z:p.btRoster.at(-1).z},saved);
+ cmd(g,q,'Buy',{unitKey:'aircraft'});ready(g);
+ const ours=g.units.filter(u=>u.bloodyUnit&&u.owner===p.owner);
+ assert.deepEqual(new Set(ours.map(u=>u.btKey)),new Set(['shieldwall','hunters']));assert.equal(ours.length,6);assert.ok(ours.every(u=>!u.flying));
+ assert.ok(ours.every(u=>u.unitKey===C[u.btKey].source&&u.kind===C[u.btKey].source),'battle models use precisely the source shown by roster portraits and placement previews');
+ const theirs=g.units.filter(u=>u.bloodyUnit&&u.owner===q.owner);assert.ok(theirs.every(u=>u.btKey==='aircraft'&&u.flying));
+});
+
+test('automatic full-supply garden formation fits the actual width of three human models per group',()=>{
+ const {g,p}=setup();p.gold=100000;for(let i=0;i<10;i++)assert.ok(cmd(g,p,'Buy',{unitKey:'shieldwall'}));
+ const area=g.snapshotBloodyTournament().formations.find(f=>f.owner===p.owner),visual=castleUnitVisual(C.shieldwall.source),left=Math.min(...visual.parts.map(part=>part[0]-part[3]/2)),right=Math.max(...visual.parts.map(part=>part[0]+part[3]/2));
+ assert.ok(visual.height>2&&visual.height<2.5,'humans keep their readable human scale');
+ for(const entry of p.btRoster){assert.ok(entry.x-1.8+left>=area.minX,'entire left soldier stays inside the garden');assert.ok(entry.x+1.8+right<=area.maxX,'entire right soldier stays inside the garden');}
+ assert.ok(area.maxX-area.minX>8*(right-left),'garden has room for ranks rather than dwarfing every soldier into a marker');
 });
