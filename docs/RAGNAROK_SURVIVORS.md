@@ -2,12 +2,14 @@
 
 O seletor Ragnarok oferece duas atividades com os mesmos personagens:
 
-- **Aventura:** rota de 12 regiões conectadas de Midgard, de Prontera e Payon a Morroc, Rachel, Juno, gelo, Thor, Geffen, Glast Heim e o santuário da Valquíria. Cada MVP abre uma passagem física; atravesse andando para carregar a próxima região. A promoção das primeiras três regiões leva à quarta classe. Veja [rota e referências](RAGNAROK_WORLD_ROUTE.md).
+- **Aventura:** grafo de 12 regiões conectadas de Midgard. O braço verde liga Prontera, Payon, Geffen e Glast Heim ao Vulcão de Thor; dali, escolha o deserto de Morroc/Rachel ou Juno e as terras de gelo ao norte. Cada MVP abre passagens físicas; atravesse andando para carregar a região e retorne por caminhos já visitados. A promoção das primeiras três regiões leva à quarta classe. Veja [rota e referências](RAGNAROK_WORLD_ROUTE.md).
 - **Torre sem Fim:** 100 andares com a composição Classic do script `F_Tower_Monster` do rAthena. Entre com um personagem criado na Aventura. A Torre mantém sua classe desenvolvida e concede experiência, pontos de atributo, equipamentos e oportunidades de cartas. Os encontros entram em lotes limitados; não há geração infinita de criaturas nessa atividade.
 
 São 12 linhagens principais e 42 aparências de classe. O ataque característico pertence à classe: trocar uma espada por um cajado altera os atributos do equipamento, preservando a identidade do ataque. Mercenários e suas evoluções podem usar duas armas de uma mão. A promoção para Mercenário entrega a segunda adaga.
 
 Segure o botão esquerdo e arraste pelo cenário para girar a câmera ao redor do personagem. WASD/setas e joystick seguem a orientação da câmera. No celular, arrastar pelo cenário gira a visão; dois dedos giram e ajustam o zoom, mantendo o personagem como centro. Cliques/toques curtos continuam interagindo com objetos.
+
+**Testar como GM** inicia um personagem local de nível 150, atributos 99, quarta classe, habilidades no máximo, invencibilidade e dano de um golpe. **GM / Mapa** oferece viagem direta, controles de horário, inspeção de sol/lua e teste de fogo. **Salvar GM** e **Retomar GM** conservam linhagem, região e horário neste dispositivo, separados de personagens, cartas, conquistas e checkpoints normais.
 
 ## Atributos e habilidades
 
@@ -37,7 +39,7 @@ O bestiário integrado contém 387 referências visuais: os 101 modelos anterior
 
 O índice espacial preserva os resultados de alcance e a ordem dos alvos. No benchmark reproduzível de 280 criaturas e 220 projéteis, as consultas passaram de aproximadamente 783 ms para 54 ms. O cache de corpos evita reconstruir centenas de cubos por criatura repetida: no teste de 280 spawns/12 espécies, aproximadamente 911 ms passaram para 80 ms. São medições de CPU desses cenários, não uma promessa de FPS em qualquer aparelho.
 
-As esculturas são geradas somente quando utilizadas e seus corpos consolidados ficam em cache. O terreno usa lotes de instâncias; as oito regiões foram verificadas sem exceder a capacidade desses lotes. A coleção de cartas só cria seus artigos quando o jogador abre a seção.
+As esculturas são geradas somente quando utilizadas e seus corpos consolidados ficam em cache. O terreno usa lotes de instâncias; as regiões e suas passagens orientadas foram verificadas sem exceder a capacidade desses lotes. A coleção de cartas só cria seus artigos quando o jogador abre a seção.
 
 Os arquivos publicados têm nomes versionados e cache imutável. Cloudflare Static Assets/CDN ou R2 com domínio e cache podem reduzir download e latência; streaming não elimina o custo de simulação e desenho durante a batalha. O projeto conserva `VITE_ASSET_BASE_URL` e os exemplos em `deploy/` para distribuição externa de arquivos. A publicação atual usa a hospedagem Sites e sua vinculação D1; não configura uma conta pessoal Cloudflare adicional.
 

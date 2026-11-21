@@ -15,3 +15,16 @@ O shader dos personagens amostra uma iluminação de ambiente analítica por ref
 Os chefes da rota têm padrões próprios que podem atravessar grande parte da visão: terremoto anular de Freeoni, corredores de gelo de Hatii, erupção e meteoros de Ifrit, julgamento da Valquíria, entre outros. Todos conservam saídas seguras, aviso de pelo menos 2,1 segundos e dano limitado por multiplicador. Marcações acompanham o terreno e deixam vazios os espaços seguros. Esquiva, equipamentos e atributos continuam relevantes.
 
 Referências técnicas: [InstancedMesh](https://threejs.org/docs/pages/InstancedMesh.html), [Frustum](https://threejs.org/docs/pages/Frustum.html), [atualização de volumes](https://threejs.org/manual/pages/how-to-update-things.html), [custo dos materiais físicos](https://threejs.org/docs/pages/MeshPhysicalMaterial.html). A opção analítica evita os passes adicionais de transmissão e de godrays por pós-processamento.
+
+
+A geografia atual prevê uma, duas ou três passagens orientadas por região, com paredes laterais, grades e antecipações de terreno na direção de cada vizinho. Abrir uma grade atualiza as instâncias dela sem reconstruir o terreno. As vias e a arena central permanecem livres de obstáculos.
+
+O céu usa um azul superior mais definido e discos de sol/lua maiores. A órbita permite baixar mais o olhar para expor o horizonte; a névoa permanece entre 85 e 245 unidades sobre o terreno, enquanto o céu analítico não recebe a neblina de superfície. O comando de inspeção do GM aponta para o astro acima do horizonte, sem alterar a câmera durante uma partida normal.
+
+Fogueiras e queimaduras usam `createVoxelFire`. Projéteis de fogo empregam núcleo volumétrico e três línguas afuniladas na mesma paleta, animados a 8 Hz. Mantêm quatro instâncias por projétil e o limite compartilhado de mil instâncias para 250 projéteis; não criam luzes individuais ou novas chamadas de desenho.
+
+## Revisão dos rastros de espada e adaga
+
+O ataque básico do Espadachim/Cavaleiro e Bash usam um rastro vertical discreto, de cima para baixo, em aproximadamente 0,54–0,60 s. O braço direito e a espada são separados da geometria estática e reutilizam um rig de ombro, sem girar o ator horizontalmente nem criar objetos por golpe. O rastro vertical permanece legível durante a órbita da câmera. Gatunos usam duas faixas pequenas de luz cinza, com brilho suave e duração aproximada de 0,48–0,50 s. Os demais efeitos preservam suas variantes anteriores.
+
+As duas variantes adicionais ocupam linhas dos mesmos oito atlas/lotes: até 1,875 MiB de texturas, oito chamadas de desenho e 64 eventos ativos. O alcance e o dano da simulação permanecem iguais.

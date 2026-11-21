@@ -6,10 +6,15 @@ const own=(o,k)=>typeof k==='string'&&Object.hasOwn(o,k),num=(v,min,max)=>Number
 const attrs=['str','agi','vit','int','dex','luk'];
 const ranked=(value,catalog,max,limit)=>{if(!value||Array.isArray(value)||typeof value!=='object')return null;const entries=Object.entries(value);if(entries.length>limit||entries.some(([k,v])=>!own(catalog,k)||!Number.isInteger(v)||v<1||v>max))return null;return Object.fromEntries(entries);};
 export function validateRoCheckpoint(value){
- const connected=value?.routeVersion===1;
- if(!value||value.version!==1||value.routeVersion!==undefined&&value.routeVersion!==0&&value.routeVersion!==1||!own(RO_LINEAGES,value.lineage)||!['adventure','tower'].includes(value.activity)||connected&&value.activity!=='adventure'||!num(value.seed,0,4294967295)||!Number.isInteger(value.floor)||!num(value.floor,1,value.activity==='tower'?100:connected?RO_WORLD_ROUTE.length:4))return null;
+ const graph=value?.routeVersion===2,connected=value?.routeVersion===1||graph;
+ if(!value||value.version!==1||value.routeVersion!==undefined&&value.routeVersion!==0&&value.routeVersion!==1&&value.routeVersion!==2||!own(RO_LINEAGES,value.lineage)||!['adventure','tower'].includes(value.activity)||connected&&value.activity!=='adventure'||!num(value.seed,0,4294967295)||!Number.isInteger(value.floor)||!num(value.floor,1,value.activity==='tower'?100:connected?RO_WORLD_ROUTE.length:4))return null;
  let cleared,route={},stageKey;
- if(connected){
+ if(graph){
+  const region=roRouteStage(value.routeIndex),validKeys=keys=>Array.isArray(keys)&&keys.length<=RO_WORLD_ROUTE.length&&new Set(keys).size===keys.length&&keys.every(key=>typeof key==='string'&&roRouteStage(key));
+  if(!Number.isInteger(value.routeIndex)||!region||typeof value.routeBossDefeated!=='boolean'||!num(value.totalElapsed,0,1e9)||value.floor!==region.index+1||value.stageKey!==region.scene||!validKeys(value.clearedStages)||!validKeys(value.visitedStages))return null;
+  const visited=new Set(value.visitedStages);if(!visited.has(region.key)||value.clearedStages.some(key=>!visited.has(key))||value.routeBossDefeated!==value.clearedStages.includes(region.key))return null;
+  cleared=[...value.clearedStages];stageKey=region.scene;route={routeVersion:2,routeIndex:region.index,routeBossDefeated:value.routeBossDefeated,visitedStages:[...value.visitedStages],totalElapsed:value.totalElapsed};
+ }else if(connected){
   const region=roRouteStage(value.routeIndex);if(!Number.isInteger(value.routeIndex)||!region||typeof value.routeBossDefeated!=='boolean'||!num(value.totalElapsed,0,1e9)||value.floor!==region.index+1||value.stageKey!==region.scene||!Array.isArray(value.clearedStages))return null;
   const prefix=RO_WORLD_ROUTE.slice(0,region.index+Number(value.routeBossDefeated)).map(r=>r.key);if(value.clearedStages.length!==prefix.length||prefix.some((key,i)=>value.clearedStages[i]!==key))return null;
   cleared=[...prefix];stageKey=region.scene;route={routeVersion:1,routeIndex:region.index,routeBossDefeated:value.routeBossDefeated,totalElapsed:value.totalElapsed};
@@ -27,10 +32,11 @@ export function validateRoCheckpoint(value){
  return {version:1,lineage:value.lineage,activity:value.activity,seed:Math.floor(value.seed),floor:value.floor,stageKey,clearedStages:cleared,...route,hero:{level:u.level,bonkPendingLevels:u.bonkPendingLevels||0,mana:num(u.mana,0,1e6)?u.mana:50+u.attributes.int*8,xp:u.xp,gold:u.gold,roTier:u.roTier,attributePoints:Math.floor(u.attributePoints),attributes:Object.fromEntries(attrs.map(k=>[k,u.attributes[k]])),hp:u.hp,bonkBuild:{weapons,tomes,relics},roInventory:inventory,roEquipment:equipment,roUnclaimed:pending}};
 }
 export function createRoCheckpoint(game){
+ if(game?.options?.bonkDebug===true)return null;
  const u=game?.units?.find(u=>u.bonkHero),b=game?.bonk;if(!u||!b)return null;
  // Checkpoints resume at the floor entrance. Enemy positions and transient
  // missiles are intentionally not persisted; character development is.
- if(b.routeVersion===1&&b.activity==='adventure')return validateRoCheckpoint({version:1,lineage:u.roLineage,activity:'adventure',seed:game.worldSeed>>>0,floor:b.routeIndex+1,stageKey:b.map.stageKey,clearedStages:b.clearedStages,routeVersion:1,routeIndex:b.routeIndex,routeBossDefeated:b.routeBossDefeated,totalElapsed:b.totalElapsed??0,hero:u});
+ if((b.routeVersion===1||b.routeVersion===2)&&b.activity==='adventure')return validateRoCheckpoint({version:1,lineage:u.roLineage,activity:'adventure',seed:game.worldSeed>>>0,floor:b.routeIndex+1,stageKey:b.map.stageKey,clearedStages:b.clearedStages,routeVersion:b.routeVersion,routeIndex:b.routeIndex,routeBossDefeated:b.routeBossDefeated,...(b.routeVersion===2?{visitedStages:b.visitedStages}:{}),totalElapsed:b.totalElapsed??0,hero:u});
  const activity=b.activity||'adventure',limit=activity==='tower'?100:4,cleared=b.clearedStages.slice(0,limit-1),floor=cleared.length+1,next=b.stage==='cleared'&&activity==='adventure'?Object.keys(BONK_STAGES).find(k=>!cleared.includes(k)):b.map.stageKey;
  return validateRoCheckpoint({version:1,lineage:u.roLineage,activity,seed:game.worldSeed>>>0,floor,stageKey:next||b.map.stageKey,clearedStages:cleared,hero:u});
 }

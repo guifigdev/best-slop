@@ -39,3 +39,46 @@ export function roRouteGate(value=0,open=false){
  const region=roRouteStage(value),next=roRouteNext(value);if(!region||!next)return null;
  return freeze({id:'route-exit-'+region.key,type:'routeGate',...region.exit,w:18,d:4,h:8,width:18,depth:4,open:!!open,locked:!open,nextKey:next.key,nextName:next.name,name:'Passagem para '+next.name,mvp:region.mvp});
 }
+
+// Macro placement is an interpretation of the supplied Dominion Grounds
+// diorama: arid land to one side, woodland to the other, volcano at their nexus.
+// Negative Z is our chosen north for the additional ice branch; it is not an
+// assertion that the reference's camera angle establishes an official compass.
+export const RO_WORLD_GEOGRAPHY=freeze({
+ 'thor-volcano':{x:0,z:0},
+ 'glast-heim':{x:1,z:1},geffen:{x:2,z:1},'payon-cave':{x:3,z:2},'payon-forest':{x:3,z:3},prontera:{x:4,z:4},
+ morroc:{x:-1,z:0},'morroc-pyramid':{x:-2,z:-1},rachel:{x:-3,z:-1},
+ juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3}
+});
+export const RO_WORLD_LINKS=freeze([
+ {a:'prontera',b:'payon-forest'},
+ {a:'payon-forest',b:'payon-cave'},
+ {a:'payon-cave',b:'geffen'},
+ {a:'geffen',b:'glast-heim'},
+ {a:'glast-heim',b:'thor-volcano'},
+ {a:'thor-volcano',b:'morroc'},
+ {a:'morroc',b:'morroc-pyramid'},
+ {a:'morroc-pyramid',b:'rachel'},
+ {a:'thor-volcano',b:'juno'},
+ {a:'juno',b:'ice-cavern'},
+ {a:'ice-cavern',b:'valhalla'}
+]);
+const emptyNeighbors=freeze([]),neighbors=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>[region.key,RO_WORLD_LINKS.flatMap(link=>link.a===region.key?[link.b]:link.b===region.key?[link.a]:[])])));
+export function roWorldNeighbors(value=0){const region=roRouteStage(value);return region?neighbors[region.key]:emptyNeighbors;}
+function worldGate(region,next){
+ const from=RO_WORLD_GEOGRAPHY[region.key],to=RO_WORLD_GEOGRAPHY[next.key],dx=to.x-from.x,dz=to.z-from.z,axis=Math.abs(dx)>=Math.abs(dz)?'x':'z',direction=axis==='x'?{x:Math.sign(dx),z:0}:{x:0,z:Math.sign(dz)};
+ return {id:'world-gate-'+region.key+'-'+next.key,type:'routeGate',x:direction.x*101,z:direction.z*101,direction,axis,w:axis==='x'?4:18,d:axis==='x'?18:4,h:8,width:18,depth:4,nextKey:next.key,nextName:next.name,nextScene:next.scene,nextEntry:{x:-direction.x*90||0,z:-direction.z*90||0},name:'Passagem para '+next.name,mvp:region.mvp};
+}
+const worldRegions=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>{
+ const gates=neighbors[region.key].map(key=>worldGate(region,RO_WORLD_ROUTE_BY_KEY[key]));
+ return [region.key,{...region,graph:true,position:RO_WORLD_GEOGRAPHY[region.key],bossArena:{x:0,z:0,radius:28},neighborKeys:neighbors[region.key],gates,spokes:gates.map(gate=>({from:{x:0,z:0},to:{x:gate.x,z:gate.z},width:18,direction:gate.direction,nextKey:gate.nextKey}))}];
+})));
+export function roWorldRegion(value=0){const region=roRouteStage(value);return region?worldRegions[region.key]:null;}
+export function roWorldGates(value=0,clearedKeys=[],visitedKeys=[]){
+ const region=roWorldRegion(value);if(!region)return emptyNeighbors;
+ const cleared=new Set(clearedKeys||[]),visited=new Set(visitedKeys||[]),localCleared=cleared.has(region.key),finalReady=RO_WORLD_ROUTE.every(r=>r.key==='valhalla'||cleared.has(r.key));
+ return freeze(region.gates.map(gate=>{
+  const lockedBy=gate.nextKey==='valhalla'&&!finalReady?'final':visited.has(gate.nextKey)||localCleared?null:'mvp';
+  return {...gate,open:lockedBy===null,locked:lockedBy!==null,lockedBy,nextRoute:worldRegions[gate.nextKey]};
+ }));
+}

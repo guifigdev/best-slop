@@ -69,8 +69,9 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
  function setLineage(key){if(!own(RO_LINEAGES,key))return;if(lineage!==key)selectionTouched=true;if(selectedCharacter()&&selectedCharacter().lineage!==key){selectedId=uuid();characterName='';resume=false;}lineage=key;render();}
  async function recover(value){if(!/^ro_[a-f0-9]{64}$/.test(value)){toast('Confira o código de recuperação completo.');return false;}const version=++epoch;status='loading';render();try{const data=await api('account',{auth:value});if(version!==epoch)return false;token=value;account=normalizeRoAccount(data.account);selectedId=account.progress.selectedCharacter||uuid();const c=selectedCharacter();if(c){lineage=c.lineage;characterName=c.name;}running=null;recoveryVisible=false;presetDirty=false;status='cloud';notice='';notify();toast('Conta recuperada.');return true;}catch(error){if(version===epoch){status='local';notice=error.message;notify();toast(error.message);}return false;}}
  function localCommand(game,command){const hero=game?.units?.find(u=>u.bonkHero);return game?.command&&hero?.owner!=null?game.command(hero.owner,command):send(command);}
- function startRun(run){if(run.starting||run.id||running!==run||run.epoch!==epoch||status!=='cloud')return;run.starting=true;return serial(async()=>{try{if(running!==run||epoch!==run.epoch)return;const data=await api('run',{method:'POST',body:{activity:run.activity}});if(running===run&&epoch===run.epoch){run.id=data.runId;accept(data.account);}}catch(error){if(running===run){status='local';notice=error.message;nextReconnectAt=Date.now()+15000;notify();}}finally{run.starting=false;}});}
+ function startRun(run){if(run.game?.options?.bonkDebug===true||run.starting||run.id||running!==run||run.epoch!==epoch||status!=='cloud')return;run.starting=true;return serial(async()=>{try{if(run.game?.options?.bonkDebug===true||running!==run||epoch!==run.epoch)return;const data=await api('run',{method:'POST',body:{activity:run.activity}});if(running===run&&epoch===run.epoch){run.id=data.runId;accept(data.account);}}catch(error){if(running===run){status='local';notice=error.message;nextReconnectAt=Date.now()+15000;notify();}}finally{run.starting=false;}});}
  function prepareGame(game){
+  if(game?.options?.bonkDebug===true){running=null;return false;}
   const hero=game?.units?.find(u=>u.bonkHero);if(!hero)return false;const chosen=selection();
   if(chosen.checkpoint&&chosen.character.lineage===hero.roLineage)localCommand(game,{type:'bkRestore',checkpoint:chosen.checkpoint,activity,freshActivity:!chosen.resume||chosen.checkpoint.activity!==activity});
   else if(chosen.character){selectedId=uuid();characterName='';}
@@ -80,22 +81,24 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   return true;
  }
  function save(game=getGame()){
+  if(game?.options?.bonkDebug===true)return Promise.resolve(false);
   if(!game?.bonk||!running||running.game!==game||running.epoch!==epoch)return Promise.resolve(false);
   const checkpoint=createRoCheckpoint(game);if(!checkpoint)return Promise.resolve(false);const run=running,next=saveRoCharacter(account.progress,{id:run.characterId,name:run.name,lineage:run.lineage,checkpoint,updatedAt:Date.now()});if(!next){toast('Sua conta já tem 12 personagens.');return Promise.resolve(false);}
   account.progress=next;selectedId=run.characterId;lastSaveAt=Date.now();pendingSave=false;stored();render();
   if(status!=='cloud')return Promise.resolve(true);const version=epoch,payload=clone(next);
-  return serial(async()=>{if(version!==epoch)return false;try{const data=await api('progress',{method:'POST',body:{checkpoint:payload}});if(version!==epoch)return false;accept(data.account);return true;}catch(error){if(version===epoch){notice=error.message;status='local';notify();}return false;}});
+  return serial(async()=>{if(game.options?.bonkDebug===true||version!==epoch)return false;try{const data=await api('progress',{method:'POST',body:{checkpoint:payload}});if(version!==epoch)return false;accept(data.account);return true;}catch(error){if(version===epoch){notice=error.message;status='local';notify();}return false;}});
  }
  function update(game=getGame()){
+  if(game?.options?.bonkDebug===true)return;
   const time=Date.now();if(status==='local'&&time>=nextReconnectAt){nextReconnectAt=time+15000;ready=null;void loadReady();}
   if(!running||running.game!==game||!game?.bonk)return;const hero=game.units.find(u=>u.bonkHero),floor=`${game.bonk.activity}:${game.bonk.clearedStages.length}:${game.bonk.stage}`;
-  const route=game.bonk.routeVersion===1?`${game.bonk.routeIndex}:${Number(game.bonk.routeBossDefeated)}`:'';const routeChanged=!!route&&route!==lastRoute;lastRoute=route;
+  const route=game.bonk.routeVersion>=1?`${game.bonk.routeIndex}:${Number(game.bonk.routeBossDefeated)}`:'';const routeChanged=!!route&&route!==lastRoute;lastRoute=route;
   if(hero&&(floor!==lastFloor||hero.level!==lastLevel||routeChanged)){pendingSave=true;lastFloor=floor;lastLevel=hero.level;}
   if(routeChanged||time-lastSaveAt>=15000)void save(game);
   if(status==='cloud'&&!running.id)void startRun(running);
   if(status!=='cloud'||!running.id||rewardBusy||time-lastRewardAt<(running.activity==='tower'?250:1000))return;const kills=(game.bonk.rewardKills||[]).slice(0,40).map(k=>({id:String(k.id),visual:k.visual,boss:!!k.boss}));if(!kills.length)return;
   const run=running,version=epoch;rewardBusy=true;lastRewardAt=time;
-  void serial(async()=>{if(running!==run||version!==epoch)return;try{const data=await api('rewards',{method:'POST',body:{runId:run.id,kills}});if(running!==run||version!==epoch)return;
+  void serial(async()=>{if(game.options?.bonkDebug===true||running!==run||version!==epoch)return;try{const data=await api('rewards',{method:'POST',body:{runId:run.id,kills}});if(running!==run||version!==epoch)return;
     const acknowledged=Array.isArray(data.acknowledgedIds)?data.acknowledgedIds:[];if(acknowledged.length)localCommand(game,{type:'bkAcknowledgeRewards',ids:acknowledged.slice(0,40)});else lastRewardAt=Date.now()+4000;
     accept(data.account);for(const key of data.newCards||[])if(own(RO_CARDS,key))toast(`Carta conquistada: ${RO_CARDS[key].name}. Permanente na sua conta!`);
    }catch(error){if(version===epoch){notice=error.message;lastRewardAt=Date.now()+4000;if(error.status===409)run.id=null;render();}}finally{rewardBusy=false;}}).finally(()=>{rewardBusy=false;});

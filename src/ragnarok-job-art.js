@@ -13,7 +13,7 @@ const JOBS={
 export const RAGNAROK_JOB_KINDS=Object.freeze(Object.keys(JOBS));
 const cache=new Map(),portraits=new Map(),P=.052,SKIN=0xe4b798,SHADOW=0xb27c68,WHITE=0xf4e7ce,INK=0x342e39,STEEL=0x9aa8b2,GOLD=0xd7b477;
 const tint=(c,t)=>[16,8,0].reduce((n,s)=>n|(Math.min(255,Math.round((c>>s&255)*t))<<s),0);
-const freeze=s=>{for(const a of s.parts)Object.freeze(a);for(const a of s.legs)Object.freeze(a);Object.freeze(s.parts);Object.freeze(s.legs);Object.freeze(s.wings);Object.freeze(s.features);return Object.freeze(s);};
+const freeze=s=>{for(const a of s.parts)Object.freeze(a);for(const a of s.legs)Object.freeze(a);if(s.weaponRig){s.weaponRig.parts.forEach(Object.freeze);Object.freeze(s.weaponRig.parts);Object.freeze(s.weaponRig.indices);Object.freeze(s.weaponRig.pivot);Object.freeze(s.weaponRig);}Object.freeze(s.parts);Object.freeze(s.legs);Object.freeze(s.wings);Object.freeze(s.features);return Object.freeze(s);};
 export function ragnarokJobSpec(value){
  const key=typeof value==='string'?value:value?.bonkJob;if(!Object.hasOwn(JOBS,key))return null;if(cache.has(key))return cache.get(key);
  const [family,rank,weapon,cloth,trim,hair,style]=JOBS[key],parts=[],legs=[],features=['face','layered-hair',weapon],b=(x,y,z,w,h,d,c)=>parts.push([x*P,y*P,z*P,w*P,h*P,d*P,c]);
@@ -57,6 +57,7 @@ export function ragnarokJobSpec(value){
  if(family===4){for(let side of [-1,1]){b(side*2.3,15.5,4.2,2,2,.5,tint(cloth,.7));b(side*2.3,16.5,4.5,2,.4,.3,trim);for(let i=0;i<3;i++)b(side*4.8,11+i,3.3,.5,.5,.5,GOLD);}emblem(0,19,4.3,key==='biolo'?'leaf':'diamond');}
  if(family===5){for(let side of [-1,1]){for(let i=0;i<5;i++){b(side*(3.3-i*.4),21-i,4,.55,.55,.5,trim);b(side*5.8,20-i*.5,3.3,2,.35,.4,INK);}}emblem(0,14.5,4.5,'rune');}
  // Native weapon silhouettes and fine grips/filigree, held consistently in right hand.
+ const weaponStart=parts.length;
  const grip=(x=8,y=14,len=8)=>{b(x,y,1.7,1.2,len,1.4,0x674735);for(let i=0;i<3;i++)b(x,y-2+i*1.5,1.7,1.5,.45,1.6,trim);};
  if(['sword','greatsword','dagger'].includes(weapon)){let len=weapon==='greatsword'?23:weapon==='dagger'?10:17;grip();b(8,20+len/2,1.7,weapon==='greatsword'?3:2,len,1.1,STEEL);b(8,20+len,1.7,1,2,1,WHITE);b(8.9,20+len/2,2.3,.45,len-1,.3,WHITE);b(8,19,1.7,7,.9,2,GOLD);gem(8,19,2.8);}
  if(['rod','staff','crossstaff','spear'].includes(weapon)){grip(8,16,27);if(weapon==='spear'){for(let i=0;i<6;i++)b(8,31+i,1.7,4-i*.55,1.1,1.3,STEEL);b(8,30,1.7,5,1,2,GOLD);}else if(weapon==='crossstaff'){b(8,33,1.7,1.5,10,1.5,GOLD);b(8,34,1.7,7,1.3,1.5,GOLD);gem(8,34,2.5,0x85bfc7);}else{for(let i=0;i<10;i++){let a=i/10*Math.PI*2;b(8+Math.cos(a)*3,32+Math.sin(a)*3,1.7,1.4,1.5,1.8,trim);}gem(8,32,2.5,rank===4?0x91e2df:0xb098cb);}}
@@ -69,8 +70,10 @@ export function ragnarokJobSpec(value){
  if(weapon==='fists'){for(let s of [-1,1]){b(s*7,13,3,4,4,3,trim);for(let i=0;i<4;i++)b(s*7+(i-1.5)*.9,13.5,4.8,.8,2,.9,rank===4?GOLD:WHITE);}}
  if(weapon==='flask'){b(8,17,3.4,5,6,4,0x71a196);b(8,21,3.4,2,3,2,0xaacbb4);b(8,22.5,3.4,2.4,1,2.4,0x785844);b(8,16,5.6,3,2,.5,0x9edf91);b(6.5,18.5,5.6,.6,2,.4,WHITE);}
  if(weapon==='cannon'){b(9,17,3,6,6,10,0x4b5d65);for(let i=0;i<4;i++){b(6.2+i*1.8,17,8.3,1.3,4,1.2,trim);}b(9,17,9,3,3,1,INK);b(9,21,3,3,2,3,GOLD);}
+ const weaponEnd=parts.length;
  if(rank===4){features.push('fourth-job-regalia');for(let s of [-1,1]){for(let i=0;i<4;i++){b(s*(3+i*.7),23-i*.4,3,1,1.2,1,GOLD);}gem(s*3.7,12,4.5,0x8ec5cd);}for(let y=14;y<21;y+=1.3)b(0,y,4.5,.65,.7,.5,GOLD);}
- const height=Math.max(...parts.map(p=>p[1]+p[4]/2));const result=freeze({key,theme:'ragnarok-job',parts,legs,wings:[],fur:SKIN,muzzle:SKIN,height,eyeLine:27.8*P,motion:weapon==='bow'?'ranged':weapon==='staff'?'caster':'humanoid',features});cache.set(key,result);return result;
+ const pivot=[6.5*P,20.5*P,0],indices=['sword','greatsword'].includes(weapon)?parts.map((p,i)=>i>=weaponStart&&i<weaponEnd||p[0]>5*P&&p[1]>10*P&&p[1]<22*P&&p[2]>-.1?i:-1).filter(i=>i>=0):[],weaponRig=indices.length?{kind:'overhead-sword',pivot,indices,parts:indices.map(i=>{const p=parts[i];return[p[0]-pivot[0],p[1]-pivot[1],p[2]-pivot[2],...p.slice(3)];})}:null;
+ const height=Math.max(...parts.map(p=>p[1]+p[4]/2));const result=freeze({key,theme:'ragnarok-job',parts,legs,wings:[],weaponRig,fur:SKIN,muzzle:SKIN,height,eyeLine:27.8*P,motion:weapon==='bow'?'ranged':weapon==='staff'?'caster':'humanoid',features});cache.set(key,result);return result;
 }
-export function buildRagnarokJobModel(unit,body,voxel){if(!unit?.bonkHero)return null;const spec=ragnarokJobSpec(unit);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
+export function buildRagnarokJobModel(unit,body,voxel,{rigged=false}={}){if(!unit?.bonkHero)return null;const spec=ragnarokJobSpec(unit);if(!spec)return null;const excluded=rigged&&spec.weaponRig?new Set(spec.weaponRig.indices):null;for(const [index,p]of spec.parts.entries())if(!excluded?.has(index))voxel(body,...p);return spec;}
 export function ragnarokJobPortrait(value){const spec=ragnarokJobSpec(value);if(!spec)return '';if(!portraits.has(spec.key))portraits.set(spec.key,voxelTagPortrait([...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],'ragnarok-job-portrait'));return portraits.get(spec.key);}
