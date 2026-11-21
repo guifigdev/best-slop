@@ -2,7 +2,7 @@
 
 O seletor Ragnarok oferece duas atividades com os mesmos personagens:
 
-- **Aventura:** mapas abertos de 230 × 230 unidades. Complete quatro regiões escolhendo destinos entre Campos de Prontera, Payon, Glast Heim, Vulcão de Thor, Caverna de Gelo e Geffen. A conclusão das primeiras três regiões promove o personagem até a quarta classe.
+- **Aventura:** mapas abertos de 230 × 230 unidades. Complete quatro regiões escolhendo destinos entre Campos de Prontera, Payon, Glast Heim, Vulcão de Thor, Caverna de Gelo, Geffen, Dunas de Morroc e Grutas de Izlude. A conclusão das primeiras três regiões promove o personagem até a quarta classe.
 - **Torre sem Fim:** 100 andares com a composição Classic do script `F_Tower_Monster` do rAthena. Entre com um personagem criado na Aventura. A Torre mantém sua classe desenvolvida e concede experiência, pontos de atributo, equipamentos e oportunidades de cartas. Os encontros entram em lotes limitados; não há geração infinita de criaturas nessa atividade.
 
 São 12 linhagens principais e 42 aparências de classe. O ataque característico pertence à classe: trocar uma espada por um cajado altera os atributos do equipamento, preservando a identidade do ataque. Mercenários e suas evoluções podem usar duas armas de uma mão. A promoção para Mercenário entrega a segunda adaga.
@@ -35,7 +35,7 @@ O bestiário integrado contém 387 referências visuais: os 101 modelos anterior
 
 O índice espacial preserva os resultados de alcance e a ordem dos alvos. No benchmark reproduzível de 280 criaturas e 220 projéteis, as consultas passaram de aproximadamente 783 ms para 54 ms. O cache de corpos evita reconstruir centenas de cubos por criatura repetida: no teste de 280 spawns/12 espécies, aproximadamente 911 ms passaram para 80 ms. São medições de CPU desses cenários, não uma promessa de FPS em qualquer aparelho.
 
-As esculturas são geradas somente quando utilizadas e seus corpos consolidados ficam em cache. O terreno usa lotes de instâncias; as seis regiões foram verificadas sem exceder a capacidade desses lotes. A coleção de cartas só cria seus artigos quando o jogador abre a seção.
+As esculturas são geradas somente quando utilizadas e seus corpos consolidados ficam em cache. O terreno usa lotes de instâncias; as oito regiões foram verificadas sem exceder a capacidade desses lotes. A coleção de cartas só cria seus artigos quando o jogador abre a seção.
 
 Os arquivos publicados têm nomes versionados e cache imutável. Cloudflare Static Assets/CDN ou R2 com domínio e cache podem reduzir download e latência; streaming não elimina o custo de simulação e desenho durante a batalha. O projeto conserva `VITE_ASSET_BASE_URL` e os exemplos em `deploy/` para distribuição externa de arquivos. A publicação atual usa a hospedagem Sites e sua vinculação D1; não configura uma conta pessoal Cloudflare adicional.
 

@@ -6,21 +6,23 @@ export function bonkHeightAt(map,x,z){
  const phase=(map?.seed||1)%97*.07,key=map?.stageKey||'grove';let h=1.1+Math.sin(x*.025+phase)*.65+Math.cos(z*.031-phase)*.55;
  if(key==='grove')h+=4.4*(1-smooth((Math.hypot(x+58,z-24)-13)/22))+2.7*(1-smooth((Math.hypot(x-56,z+55)-15)/24));
  else if(key==='forge')h+=5.1*(1-smooth((Math.hypot(x,z)-20)/45))+1.6*Math.sin(x*.048)*Math.sin(z*.03);
+ else if(key==='sands')h+=3.1*(1-smooth((Math.hypot(x+50,z-20)-15)/30))+1.25*Math.sin(x*.035+Math.sin(z*.03));
+ else if(key==='coast')h+=2.3*(1-smooth((Math.hypot(x-45,z+48)-17)/30))+.5*Math.sin(x*.03+z*.05);
  else if(key==='payon')h+=2.4*(1-smooth((Math.hypot(x+60,z+28)-17)/31))+1.1*Math.sin(x*.05)*Math.cos(z*.035);
  else if(key==='crypt')h+=2.8*(1-smooth((Math.hypot(x-55,z+46)-20)/30))+.65*Math.sin(x*.04+z*.025);
  else if(key==='geffen')h+=3.2*(1-smooth((Math.hypot(x+48,z+55)-18)/38))+1.2*(1-smooth((Math.hypot(x-54,z-50)-20)/28));
  else h+=3.7*(1-smooth((Math.hypot(x-62,z-24)-16)/25))+3.4*(1-smooth((Math.hypot(x+52,z+54)-15)/26));
  return Math.max(.05,h);
 }
-export function generateBonkLevel(seed=1,stageKey='grove'){
+export function generateBonkLevel(seed=1,stageKey='grove',habitat=null){
  if(!BONK_STAGES[stageKey])stageKey='grove';const theme=BONK_STAGES[stageKey],half=115,landmarks=[{id:'north-rune',x:0,z:-76,name:'Santuário do norte'},{id:'east-rune',x:72,z:38,name:'Santuário da aurora'},{id:'west-rune',x:-72,z:38,name:'Santuário das raízes'}],spawn={x:0,z:23},obstacles=[],decorations=[],objects=[],routes=[{x:0,z:0},...landmarks,spawn];
- const regionalModels={grove:['prontera-fountain','prontera-house','prontera-gate','prontera-house'],payon:['payon-gate','payon-pavilion','payon-cavemouth','payon-lanterns'],crypt:['ruined-chapel','tomb-garden','gothic-gate','tomb-garden'],forge:['magma-furnace','lava-arch','basalt-throne','magma-furnace'],glacier:['ice-crown','ice-spires','ice-cavemouth','ice-spires'],geffen:['mage-tower','arcane-library','runic-gate','crystal-orbit']};
+ const regionalModels={sands:['sand-pyramid','sand-gate','desert-well','sand-pyramid'],coast:['coastal-wreck','coastal-arch','coral-garden','coastal-wreck'],grove:['prontera-fountain','prontera-house','prontera-gate','prontera-house'],payon:['payon-gate','payon-pavilion','payon-cavemouth','payon-lanterns'],crypt:['ruined-chapel','tomb-garden','gothic-gate','tomb-garden'],forge:['magma-furnace','lava-arch','basalt-throne','magma-furnace'],glacier:['ice-crown','ice-spires','ice-cavemouth','ice-spires'],geffen:['mage-tower','arcane-library','runic-gate','crystal-orbit']};
  const scenicSites=[[-48,-62],[46,-60],[-83,-17],[83,-17]].map(([x,z],i)=>({x,z,model:regionalModels[stageKey][i],w:11,d:10}));
  const clear=p=>scenicSites.some(o=>Math.abs(p.x-o.x)<o.w/2+4&&Math.abs(p.z-o.z)<o.d/2+4)||routes.some(r=>distance(p,r)<15)||landmarks.some(r=>{const l=Math.hypot(r.x,r.z),along=(p.x*r.x+p.z*r.z)/l,side=Math.abs(p.x*r.z-p.z*r.x)/l;return along>0&&along<l&&side<6;});
  for(let i=0;i<470;i++){
-  const x=(hash(seed+i*4.13)-.5)*220,z=(hash(seed+i*8.71)-.5)*220;if(clear({x,z}))continue;
-  const solid=i%3!==0,type=stageKey==='grove'?(i%4?'tree':'boulder'):stageKey==='forge'?(i%3?'basalt':'vent'):stageKey==='glacier'?(i%3?'crystal':'snowbank'):stageKey==='payon'?(i%5?'boulder':'stalagmite'):stageKey==='crypt'?(i%4?'weathered-rock':'grave-marker'):(i%3?'arcane-crystal':'runic-obelisk'),scale=.7+hash(i+seed)*1.7,w=type==='tree'?.75*scale:1.1+scale*1.1,d=type==='tree'?.75*scale:1+scale;
-  const o={id:'bonk-prop-'+i,x,z,w,d,h:type==='tree'?4.5+scale*2:1.4+scale*2.1,type,scale,solid};decorations.push(o);if(solid)obstacles.push({...o,alive:true});
+  const x=(hash(seed+i*4.13)-.5)*220,z=(hash(seed+i*8.71)-.5)*220;if(clear({x,z})||habitat==='meadow'&&i%2===0)continue;
+  const solid=i%3!==0,type=stageKey==='sands'?(i%4?'sandstone':'cactus'):stageKey==='coast'?(i%5===0?'palm':i%3?'coastal-rock':'coral'):stageKey==='grove'?(i%4?'tree':'boulder'):stageKey==='forge'?(i%3?'basalt':'vent'):stageKey==='glacier'?(i%3?'crystal':'snowbank'):stageKey==='payon'?(i%5?'boulder':'stalagmite'):stageKey==='crypt'?(i%4?'weathered-rock':'grave-marker'):(i%3?'arcane-crystal':'runic-obelisk'),scale=.7+hash(i+seed)*1.7,w=['tree','cactus','palm'].includes(type)?.75*scale:1.1+scale*1.1,d=['tree','cactus','palm'].includes(type)?.75*scale:1+scale;
+  const o={id:'bonk-prop-'+i,x,z,w,d,h:['tree','palm'].includes(type)?4.5+scale*2:1.4+scale*2.1,type,scale,solid};decorations.push(o);if(solid)obstacles.push({...o,alive:true});
  }
  // Four monumental ruins frame avenues rather than filling the play space.
  for(const [cx,cz]of [[-37,-37],[39,-35],[-39,64],[36,65]])for(let i=0;i<6;i++){const p={x:cx+(i%3-1)*4,z:cz+(Math.floor(i/3)-.5)*7};if(clear(p))continue;const o={id:'bonk-ruin-'+cx+'-'+cz+'-'+i,...p,w:1.8,d:1.8,h:4+(i%3),type:i%2?'pillar':'statue',solid:true};decorations.push(o);obstacles.push({...o,alive:true});}
@@ -39,7 +41,7 @@ export function generateBonkLevel(seed=1,stageKey='grove'){
  for(const [i,l]of landmarks.entries())objects.push({...l,type:'rune',index:i,used:false});
  for(const l of landmarks){for(const side of [-1,1])obstacles.push({id:l.id+'-pillar-'+side,x:l.x+side*5.5,z:l.z-2,w:2.1,d:2.1,h:4.6,alive:true,type:'landmark-pillar'});obstacles.push({id:l.id+'-colossus',x:l.x,z:l.z-8,w:2.65,d:2.65,h:6,alive:true,type:'landmark-statue'});}
  for(let i=0;i<4;i++){const angle=i*Math.PI/2+Math.PI/4;obstacles.push({id:'temple-pillar-'+i,x:Math.sin(angle)*11,z:Math.cos(angle)*11,w:3,d:3,h:5.7,alive:true,type:'temple-pillar'});}
- return{seed,stageKey,theme:theme.biome,minX:-half,maxX:half,minZ:-half,maxZ:half,width:230,depth:230,spawn,center:{x:0,z:0},landmarks,obstacles,decorations,objects,paths:landmarks.map(l=>({from:{x:0,z:0},to:{x:l.x,z:l.z},width:12})),scaleUnit:'metres',revision:1};
+ return{seed,stageKey,biome:theme.biome,habitat,theme:theme.biome,minX:-half,maxX:half,minZ:-half,maxZ:half,width:230,depth:230,spawn,center:{x:0,z:0},landmarks,obstacles,decorations,objects,paths:landmarks.map(l=>({from:{x:0,z:0},to:{x:l.x,z:l.z},width:12})),scaleUnit:'metres',revision:1};
 }
 const solidCache=new WeakMap();
 function nearbySolids(map,p,r){let cached=solidCache.get(map),hash=cached?.hash;if(!cached||cached.source!==map.obstacles||cached.length!==map.obstacles.length||cached.revision!==map.revision){hash=new Map();for(const o of map.obstacles){for(let x=Math.floor((o.x-o.w/2)/12);x<=Math.floor((o.x+o.w/2)/12);x++)for(let z=Math.floor((o.z-o.d/2)/12);z<=Math.floor((o.z+o.d/2)/12);z++){const key=x+','+z,list=hash.get(key)||[];list.push(o);hash.set(key,list);}}solidCache.set(map,{hash,source:map.obstacles,length:map.obstacles.length,revision:map.revision});}const out=new Set();for(let x=Math.floor((p.x-r)/12);x<=Math.floor((p.x+r)/12);x++)for(let z=Math.floor((p.z-r)/12);z<=Math.floor((p.z+r)/12);z++)for(const o of hash.get(x+','+z)||[])out.add(o);return out;}
