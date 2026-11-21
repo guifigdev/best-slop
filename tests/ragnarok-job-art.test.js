@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {RAGNAROK_JOB_KINDS,ragnarokJobSpec,buildRagnarokJobModel,ragnarokJobPortrait} from '../src/ragnarok-job-art.js';
+import {NORDIC_HERO_ART,nordicHeroSpec} from '../src/nordic-hero-art.js';
+const EXPECTED='swordsman knight runeknight dragonknight crusader royalguard imperialguard mage wizard warlock archmage sage sorcerer elementalmaster archer hunter ranger windhawk bard minstrel troubadour acolyte priest archbishop cardinal monk sura inquisitor merchant blacksmith mechanic meister alchemist genetic biolo thief assassin guillotinecross shadowcross rogue shadowchaser abysschaser'.split(' ');
+const allParts=s=>[...s.parts,...s.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])];
+test('42 playable job forms cover every requested branch exactly once',()=>{assert.deepEqual(RAGNAROK_JOB_KINDS,EXPECTED);assert.equal(new Set(RAGNAROK_JOB_KINDS).size,42);assert.ok(Object.isFrozen(RAGNAROK_JOB_KINDS));});
+for(const key of EXPECTED)test(`${key}: finite sculpted mesh, immutable cache, two-leg rig and portrait`,()=>{
+ const spec=ragnarokJobSpec(key);assert.equal(spec,ragnarokJobSpec({bonkJob:key}));assert.equal(spec.key,key);assert.equal(spec.theme,'ragnarok-job');assert.ok(Object.isFrozen(spec));assert.ok(Object.isFrozen(spec.features));assert.equal(spec.legs.length,2);assert.equal(spec.wings.length,0);assert.ok(allParts(spec).length>=250&&allParts(spec).length<=650);assert.ok(spec.height>1.5&&spec.height<3);assert.ok(spec.eyeLine>1&&spec.eyeLine<spec.height);assert.ok(spec.motion);
+ for(const p of allParts(spec)){assert.equal(p.length,7);assert.ok(p.every(Number.isFinite));assert.ok(p.slice(3,6).every(v=>v>0));assert.ok(Number.isInteger(p[6])&&p[6]>=0&&p[6]<=0xffffff);}
+ assert.ok(spec.parts.every(Object.isFrozen));assert.ok(spec.legs.every(Object.isFrozen));assert.throws(()=>spec.parts[0][0]=999,TypeError);const before=JSON.stringify(spec),emitted=[];assert.equal(buildRagnarokJobModel({bonkHero:true,bonkJob:key},{},(_body,...p)=>emitted.push(p)),spec);assert.deepEqual(emitted,spec.parts);assert.equal(JSON.stringify(spec),before);
+ const svg=ragnarokJobPortrait(key);assert.match(svg,/ragnarok-job-portrait/);assert.ok((svg.match(/<polygon /g)||[]).length===allParts(spec).length*3);assert.equal(svg,ragnarokJobPortrait({bonkJob:key}));assert.doesNotMatch(svg,/NaN|Infinity|undefined|<script|<image|href=/);assert.ok(spec.features.includes('face')&&spec.features.includes('layered-hair'));
+});
+test('class outfits are unique actual geometry, including when palette is ignored',()=>{const geometries=new Set(),portraits=new Set();for(const key of EXPECTED){const s=ragnarokJobSpec(key);geometries.add(JSON.stringify(allParts(s).map(p=>p.slice(0,6))));portraits.add(ragnarokJobPortrait(key));}assert.equal(geometries.size,42);assert.equal(portraits.size,42);});
+test('unknown or non-Frenesi units never get replaced by player class art',()=>{for(const bad of [null,undefined,'constructor','__proto__','missing',{}, {bonkJob:'__proto__'}]){assert.equal(ragnarokJobSpec(bad),null);assert.equal(ragnarokJobPortrait(bad),'');}for(const unit of [{hero:'knight'},{bonkJob:'knight'},{bonkHero:false,bonkJob:'mage'},{bonkHero:true,bonkJob:'constructor'}])assert.equal(buildRagnarokJobModel(unit,null,()=>assert.fail('must not render unrelated actor')),null);});
+test('gear, costumes and fourth-class regalia follow the original job roles',()=>{
+ for(const key of ['crusader','royalguard','imperialguard'])assert.ok(ragnarokJobSpec(key).features.includes('shield'));
+ for(const key of ['archer','hunter','ranger','windhawk'])assert.ok(ragnarokJobSpec(key).features.includes('bowstring'));
+ for(const key of ['bard','minstrel','troubadour'])assert.ok(ragnarokJobSpec(key).features.includes('lute'));
+ for(const key of ['monk','sura','inquisitor'])assert.ok(ragnarokJobSpec(key).features.includes('fists'));
+ for(const key of ['alchemist','genetic','biolo'])assert.ok(ragnarokJobSpec(key).features.includes('flask'));
+ for(const key of ['dragonknight','imperialguard','archmage','elementalmaster','windhawk','troubadour','cardinal','inquisitor','meister','biolo','shadowcross','abysschaser'])assert.ok(ragnarokJobSpec(key).features.includes('fourth-job-regalia'));
+});
+test('fine original Nordic heroes retain unique identity, bounded budget and cached rigs',()=>{const meshes=new Set();for(const key of Object.keys(NORDIC_HERO_ART)){const s=nordicHeroSpec(key);assert.equal(s,nordicHeroSpec(key));assert.ok(s.parts.length>150&&allParts(s).length<=650);assert.ok(s.parts.every(Object.isFrozen));assert.equal(s.legs.length,key==='fenrir'?4:2);assert.equal(s.motion,key==='fenrir'?'quadruped':'humanoid');assert.ok(s.parts.some(p=>p.slice(3,6).some(v=>v<.035)));meshes.add(JSON.stringify(s.parts));}assert.equal(meshes.size,7);});

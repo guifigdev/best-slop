@@ -1,3 +1,6 @@
+import {ragnarokTowerPackASpec} from './ragnarok-tower-art-a.js';
+import {ragnarokTowerPackBSpec} from './ragnarok-tower-art-b.js';
+import {ragnarokCentennialSpec} from './ragnarok-centennial-art.js';
 import {ragnarokNatureExpansionSpec} from './ragnarok-nature-expansion-art.js';
 import {ragnarokDarkExpansionSpec} from './ragnarok-dark-expansion-art.js';
 import {ragnarokMvpSpec} from './ragnarok-mvp-art.js';
@@ -12,6 +15,6 @@ export function ragnarokMonsterKey(value){
  if(typeof value==='string')return Object.hasOwn(RAGNAROK_VOXEL_REFERENCES,value)?value:monsterVisualReference(value);
  return Object.hasOwn(RAGNAROK_VOXEL_REFERENCES,value?.ragnarokVisual)?value.ragnarokVisual:monsterVisualReference(value?.dungeonSpecies||value?.kind,value?.dungeonBiome||value?.bonkBiome);
 }
-export function ragnarokMonsterSpec(value){const key=ragnarokMonsterKey(value);return key?(ragnarokCaveSpec(key)||ragnarokElementSpec(key)||ragnarokForestSpec(key)||ragnarokCavernSpec(key)||ragnarokCryptIceSpec(key)||ragnarokNatureExpansionSpec(key)||ragnarokDarkExpansionSpec(key)||ragnarokMvpSpec(key)):null;}
+export function ragnarokMonsterSpec(value){const key=ragnarokMonsterKey(value);return key?(ragnarokCaveSpec(key)||ragnarokElementSpec(key)||ragnarokForestSpec(key)||ragnarokCavernSpec(key)||ragnarokCryptIceSpec(key)||ragnarokNatureExpansionSpec(key)||ragnarokDarkExpansionSpec(key)||ragnarokCentennialSpec(key)||ragnarokTowerPackASpec(key)||ragnarokTowerPackBSpec(key)||ragnarokMvpSpec(key)):null;}
 
 export function ragnarokMonsterModelKey(unit){const key=!unit?.castleUnit&&ragnarokMonsterKey(unit);return key?'ragnarok:'+key:null;}

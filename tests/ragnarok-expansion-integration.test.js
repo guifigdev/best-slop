@@ -11,9 +11,9 @@ import {spawnDungeonSpecies,tickDungeonEncounters} from '../shared/dungeon-encou
 import {insideBossPattern} from '../shared/boss-patterns.js';
 import {createMonsterAbilityArt,MONSTER_ABILITY_ART_BUDGET as B} from '../src/monster-ability-art.js';
 
-test('eighty additions have real local profiles and biome pools; MVPs never leak into ordinary waves',()=>{
- assert.equal(RAGNAROK_EXPANSION.length,80);assert.equal(RAGNAROK_COMMON_EXPANSION.length,64);assert.equal(Object.keys(MVP_BY_KEY).length,16);assert.equal(Object.keys(RAGNAROK_VOXEL_REFERENCES).length,101);
- assert.equal(new Set(RAGNAROK_EXPANSION.map(m=>m.key)).size,80);
+test('expanded species have real local profiles and biome pools; MVPs never leak into ordinary waves',()=>{
+ assert.equal(RAGNAROK_EXPANSION.length,366);assert.equal(RAGNAROK_COMMON_EXPANSION.length,336);assert.equal(Object.keys(MVP_BY_KEY).length,30);assert.equal(Object.keys(RAGNAROK_VOXEL_REFERENCES).length,387);
+ assert.equal(new Set(RAGNAROK_EXPANSION.map(m=>m.key)).size,366);
  for(const m of RAGNAROK_EXPANSION){const profile=MONSTERS['ro_'+m.key];assert.ok(profile&&DUNGEON_SPECIES[m.key]);assert.ok(SKILLS[m.skill],m.key+': '+m.skill);assert.equal(profile.name,RAGNAROK_VOXEL_REFERENCES[m.key].name);assert.ok(profile.hpMultiplier<=1.45&&profile.damageMultiplier<=1);assert.equal(monsterLoadout('ro_'+m.key,40,'boss',()=>.5).skills[0],m.skill);}
  const normal=new Set(),boss=new Set();for(let i=0;i<2000;i++){normal.add(monsterKind('frog',50,i/2000));boss.add(monsterKind('champion',50,i/2000,true));}
  for(const m of RAGNAROK_COMMON_EXPANSION)assert.ok(normal.has('ro_'+m.key),m.key);

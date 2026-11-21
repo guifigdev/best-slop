@@ -25,7 +25,7 @@ test('weapons attack automatically, defeated hordes release physical XP and a re
 });
 
 test('four weapons and four tomes constrain slots while relic copies stack and change real statistics',()=>{
- const{g,u}=setup();u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,crit:8};const before=bonkStats(u);for(let i=0;i<16;i++){const o={id:'test-chest-'+i,type:'chest',x:u.x,z:u.z,cost:0,used:false};g.bonk.objects.push(o);g.random=()=>0;assert.ok(g.command('p',{type:'bkInteract',object:o.id}));}assert.equal(u.bonkBuild.relics.emberseed,16);assert.equal(Object.keys(u.bonkBuild.weapons).length,4);u.bonkBuild.relics.glassrune=3;u.bonkBuild.relics.silvermirror=2;const after=bonkStats(u);assert.ok(after.damage>before.damage);assert.ok(after.amount>before.amount);assert.ok(after.maxHp<before.maxHp);g.bonk.pickups.push({id:g.id(),x:u.x,z:u.z,type:'xp',value:100,age:0});step(g,.1);for(const c of g.bonk.offer.choices)assert.equal(c.kind,'heal','maxed slot choices never grant a fifth weapon/tome');
+ const{g,u}=setup();u.bonkBuild.weapons={basic:8,bash:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,crit:8};const before=bonkStats(u);for(let i=0;i<16;i++){const o={id:'test-chest-'+i,type:'chest',x:u.x,z:u.z,cost:0,used:false};g.bonk.objects.push(o);g.random=()=>0;assert.ok(g.command('p',{type:'bkInteract',object:o.id}));}assert.equal(u.bonkBuild.relics.emberseed,16);assert.equal(Object.keys(u.bonkBuild.weapons).length,2);u.bonkBuild.relics.glassrune=3;u.bonkBuild.relics.silvermirror=2;const after=bonkStats(u);assert.ok(after.damage>before.damage);assert.ok(after.amount>before.amount);assert.ok(after.maxHp<before.maxHp);g.bonk.pickups.push({id:g.id(),x:u.x,z:u.z,type:'xp',value:100,age:0});step(g,.1);for(const c of g.bonk.offer.choices)assert.equal(c.kind,'heal','maxed slot choices never grant a fifth weapon/tome');
 });
 
 test('physical chests, shrines and pots enforce distance, cost and one-time use; campfires heal by proximity',()=>{
@@ -43,10 +43,10 @@ test('world uses a bounded reusable detailed landscape with the exact shared hei
 });
 
 
-test('three defeated colossi finish the expedition without reusing portal or timer progression',()=>{
+test('four defeated MVPs finish the expedition without reusing portal or timer progression',()=>{
  const{g,u}=setup(253);u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,vitality:8};u.bonkBuild.relics={giantbone:20,glassrune:20};u.hp=bonkStats(u).maxHp;
- for(const key of ['grove','forge','glacier']){if(g.bonk.map.stageKey!==key){assert.ok(g.command('p',{type:'bkNext',stageKey:key}));choose(g);}for(const objective of g.bonk.objectives){Object.assign(u,{x:objective.x+2,z:objective.z});for(let i=0;i<500&&!objective.completed;i++){choose(g);step(g,.05);}assert.ok(objective.completed);}Object.assign(u,{x:3,z:0});for(let i=0;i<1500&&!['cleared','finished'].includes(g.bonk.stage);i++){choose(g);step(g,.05);}assert.ok(g.bonk.clearedStages.includes(key));}
- assert.equal(g.bonk.won,true);assert.equal(g.bonk.stage,'finished');assert.equal(g.phase,'victory');assert.deepEqual(g.winningOwners,['p']);assert.equal(g.bonk.clearedStages.length,3);
+ for(const key of ['grove','forge','glacier','crypt']){if(g.bonk.map.stageKey!==key){assert.ok(g.command('p',{type:'bkNext',stageKey:key}));choose(g);}for(const objective of g.bonk.objectives){Object.assign(u,{x:objective.x+2,z:objective.z});for(let i=0;i<500&&!objective.completed;i++){choose(g);step(g,.05);}assert.ok(objective.completed);}Object.assign(u,{x:3,z:0});for(let i=0;i<1500&&!['cleared','finished'].includes(g.bonk.stage);i++){choose(g);step(g,.05);}assert.ok(g.bonk.clearedStages.includes(key));}
+ assert.equal(g.bonk.won,true);assert.equal(g.bonk.stage,'finished');assert.equal(g.phase,'victory');assert.deepEqual(g.winningOwners,['p']);assert.equal(g.bonk.clearedStages.length,4);
 });
 
 test('long horde simulation keeps units, physical rewards, effects and projectiles inside technical budgets',()=>{

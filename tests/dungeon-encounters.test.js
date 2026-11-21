@@ -18,7 +18,7 @@ test('large rooms have high ceilings, continuous floor elevation and biome trans
 });
 
 test('expanded creatures retain distinct solo threats without borrowing generic animal profiles',()=>{
- const{g,room}=setup(),list=Object.keys(SPECIES).map((key,i)=>spawnDungeonSpecies(g,room,key,{x:room.x+(i%4)*3,z:room.z+Math.floor(i/4)*3}));assert.equal(list.length,104);
+ const{g,room}=setup(),list=Object.keys(SPECIES).map((key,i)=>spawnDungeonSpecies(g,room,key,{x:room.x+(i%4)*3,z:room.z+Math.floor(i/4)*3}));assert.equal(list.length,390);
  for(const u of list){assert.equal(u.kind,'dungeon-'+u.dungeonSpecies);assert.equal(u.boss,false);assert.deepEqual(u.skills,[]);assert.ok(Number.isFinite(u.speed)&&u.speed>=0);assert.ok(u.maxHp>0&&u.damage>0);}
  const worm=list.find(u=>u.dungeonSpecies==='worm'),rat=list.find(u=>u.dungeonSpecies==='rat'),archer=list.find(u=>u.dungeonSpecies==='archer');assert.ok(worm.maxHp>rat.maxHp*4);assert.ok(worm.damage>rat.damage);assert.ok(rat.speed>worm.speed);assert.equal(archer.dungeonProjectile,'arrow');assert.ok(archer.range>=12);assert.ok(list.find(u=>u.dungeonSpecies==='cavebat').flying);
 });

@@ -1,10 +1,11 @@
+import {RO_SKILLS} from './ragnarok-jobs.js';
 import {expansionForBiome} from './ragnarok-expansion.js';
 // Original Nordic survivor content. Mechanics take inspiration from automatic
 // attack roguelikes; local balance and maps share the voxel bestiary.
 export const BONK_REFERENCE='https://store.steampowered.com/app/3405340/Megabonk/';
 export const BONK_RULES=Object.freeze({weaponSlots:4,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
 const weapon=(key,name,skill,description,damage,cooldown,range,extra={})=>Object.freeze({key,name,skill,description,damage,cooldown,range,...extra});
-export const BONK_WEAPONS=Object.freeze({
+export const BONK_WEAPONS=Object.freeze({...RO_SKILLS,
  runeblade:weapon('runeblade','Lâmina das runas','cleave','Golpes largos à frente. Evoluções ampliam o arco e atravessam grupos.',22,.85,5,{kind:'slash',element:'physical'}),
  ember:weapon('ember','Coração da forja','fireball','Orbes de fogo explodem em área e deixam queimadura.',16,1.25,24,{kind:'projectile',element:'fire',radius:2.7,speed:16}),
  frost:weapon('frost','Agulhas de Niflheim','frostbolt','Fragmentos de gelo perfuram e desaceleram os inimigos.',17,1.1,25,{kind:'projectile',element:'ice',pierce:2,speed:21}),
@@ -41,9 +42,13 @@ export const BONK_RELICS=Object.freeze({
  ironacorn:relic('ironacorn','Bolota de ferro','devotion','+2 de armadura por cópia.','common')
 });
 export const BONK_STAGES=Object.freeze({
- grove:{key:'grove',name:'Bosque dos colossos',biome:'forest',description:'Ruínas entre raízes gigantes, pontes de pedra e clareiras elevadas.',floor:0x628747,path:0xa99e71,wall:0x69735d,accent:0xb5d689,enemySpecies:['rat','spider','scarab','slime','stonebeast','spore','mandragora','willow','andre',...expansionForBiome('forest')],guardian:'stonebeast',boss:'guardian'},
- forge:{key:'forge',name:'Caldeira dos titãs',biome:'forge',description:'Anéis de basalto, canais de lava, forjas antigas e rampas largas.',floor:0x6e4637,path:0xa57653,wall:0x493b39,accent:0xffbb68,enemySpecies:['firemage','scarab','worm','stonebeast','elderwillow','scorpion','golem',...expansionForBiome('forge')],guardian:'firemage',boss:'worm'},
- glacier:{key:'glacier',name:'Jardins de Niflheim',biome:'frost',description:'Lagos congelados, pilares de cristal e santuários na neve.',floor:0xa9c8cc,path:0x809da9,wall:0x668795,accent:0xd8f5ed,enemySpecies:['snake','slime','cavebat','archer','guardian','siroma','gazeti','whisper',...expansionForBiome('frost')],guardian:'guardian',boss:'stonebeast'}
+ payon:{key:'payon',name:'Cavernas de Payon',biome:'cavern',description:'Portais orientais, lanternas, túmulos e galerias de pedra.',floor:0x716b66,path:0x9d8a72,wall:0x665754,accent:0xf6bd84,enemySpecies:['spore','zombie','skeleton','andre',...expansionForBiome('cavern')],guardian:'stonebeast',boss:'guardian'},
+ crypt:{key:'crypt',name:'Glast Heim',biome:'crypt',description:'Arcos góticos, cemitérios e ruínas tomadas pelos mortos.',floor:0x585d61,path:0x898274,wall:0x41494e,accent:0xadbbd6,enemySpecies:['skeleton','archer','whisper',...expansionForBiome('crypt')],guardian:'guardian',boss:'guardian'},
+ geffen:{key:'geffen',name:'Torre de Geffen',biome:'void',description:'Obeliscos arcanos, cristais violetas e bibliotecas em ruínas.',floor:0x5f587b,path:0x9690ac,wall:0x45405c,accent:0xc3abfa,enemySpecies:['whisper','firemage',...expansionForBiome('void')],guardian:'firemage',boss:'guardian'},
+
+ grove:{key:'grove',name:'Campos de Prontera',biome:'forest',description:'Ruínas entre raízes gigantes, pontes de pedra e clareiras elevadas.',floor:0x628747,path:0xa99e71,wall:0x69735d,accent:0xb5d689,enemySpecies:['rat','spider','scarab','slime','stonebeast','spore','mandragora','willow','andre',...expansionForBiome('forest')],guardian:'stonebeast',boss:'guardian'},
+ forge:{key:'forge',name:'Vulcão de Thor',biome:'forge',description:'Anéis de basalto, canais de lava, forjas antigas e rampas largas.',floor:0x6e4637,path:0xa57653,wall:0x493b39,accent:0xffbb68,enemySpecies:['firemage','scarab','worm','stonebeast','elderwillow','scorpion','golem',...expansionForBiome('forge')],guardian:'firemage',boss:'worm'},
+ glacier:{key:'glacier',name:'Caverna de Gelo',biome:'frost',description:'Lagos congelados, pilares de cristal e santuários na neve.',floor:0xa9c8cc,path:0x809da9,wall:0x668795,accent:0xd8f5ed,enemySpecies:['snake','slime','cavebat','archer','guardian','siroma','gazeti','whisper',...expansionForBiome('frost')],guardian:'guardian',boss:'stonebeast'}
 });
 export const BONK_BUILD_EXAMPLES=Object.freeze([
  {name:'Tempestade de agulhas',weapons:['frost','thorns','storm','orbit'],tomes:['amount','haste','crit','magnet'],relics:['frozenheart','thundercoin','silvermirror']},

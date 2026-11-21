@@ -1,4 +1,5 @@
-import {FENRIR_ART,fenrirSpec,fenrirPortrait} from './fenrir-art.js';
+import {FENRIR_ART,fenrirSpec} from './fenrir-art.js';
+import {voxelTagPortrait} from './tag-character-art.js';
 // Independent visual skins for the six Custom Hero archetypes. All gameplay
 // identities remain the existing catalog keys; no attributes are defined here.
 export const NORDIC_HERO_ART=Object.freeze({
@@ -15,14 +16,19 @@ const GOLD=0xd9bb71,PALE=0xe9dfc2,EYE=0x293b3a,SKIN=0xd4b298,STEEL=0x9bafb1,DARK
 const valid=kind=>typeof kind==='string'&&Object.hasOwn(NORDIC_HERO_ART,kind);
 
 export function nordicHeroSpec(kind){
- if(kind==='fenrir')return fenrirSpec();
+ if(kind==='fenrir')return detailedFenrirSpec();
  if(!valid(kind))return null;if(specs.has(kind))return specs.get(kind);
  const parts=[],legs=[],b=(...p)=>parts.push(p),leg=(x,color=DARK,w=.29,h=.44,z=0)=>legs.push({x,y:h/2+.05,z,w,h,d:.4,color});
- const eye=(x,y=1.91,color=EYE)=>{b(x,y,.405,.115,.14,.055,color);b(x-.018,y+.025,.44,.025,.033,.015,PALE);};
+ const eye=(x,y=1.91,color=EYE)=>{b(x,y,.409,.135,.16,.055,0xeee6d5);b(x,y-.008,.444,.085,.126,.035,color);b(x,y-.017,.468,.038,.092,.02,0x26343b);b(x-.023,y+.032,.484,.029,.037,.016,PALE);b(x,y+.1,.405,.15,.024,.04,0x756253);};
  const clasp=(x,y,z,color=GOLD)=>{b(x,y,z,.19,.2,.07,color);b(x,y,z+.045,.07,.09,.035,PALE);};
- const body=(cloth,skin=SKIN)=>{b(0,.98,0,.81,.88,.56,cloth);b(0,1.8,.025,.73,.67,.66,skin);b(0,1.62,.37,.2,.16,.16,skin);b(0,.61,.02,.87,.17,.62,DARK);b(0,.64,.36,.24,.2,.08,GOLD);leg(-.24);leg(.24);};
- const arm=(side,cloth,skin=SKIN)=>{b(side*.56,1.04,.02,.28,.69,.33,cloth);b(side*.56,.74,.06,.29,.23,.35,skin);};
- const cape=(cloth,hem=cloth)=>{b(0,1.06,-.4,1.1,1.13,.19,cloth);b(0,.52,-.44,1.17,.3,.21,hem);b(0,1.56,-.3,1.03,.2,.4,cloth);};
+ const body=(cloth,skin=SKIN)=>{
+  for(let i=0;i<13;i++){const y=.62+i*.07,w=.73+(i<8?i*.008:(12-i)*.022);b(0,y,0,w,.076,.55,cloth);}
+  for(let i=0;i<11;i++){const edge=Math.abs(i-5)/5;b(0,1.5+i*.06,.025,.73-edge*edge*.19,.066,.65-edge*.045,skin);}
+  b(0,1.62,.37,.16,.13,.13,skin);b(0,.61,.02,.87,.13,.62,DARK);b(0,.64,.36,.2,.16,.065,GOLD);b(0,.64,.405,.095,.08,.025,PALE);leg(-.24);leg(.24);
+  for(let side of [-1,1]){b(side*.36,1.78,.36,.08,.032,.025,0xc59480);for(let y=.7;y<1.4;y+=.12)b(side*.34,y,.294,.027,.075,.024,0xa6ac9c);for(let y=.13;y<.43;y+=.09){b(side*.24-.06,y,.217,.033,.026,.028,GOLD);b(side*.24+.06,y,.217,.033,.026,.028,GOLD);}}
+ };
+ const arm=(side,cloth,skin=SKIN)=>{b(side*.55,1.25,.02,.27,.3,.34,cloth);b(side*.57,.99,.04,.245,.27,.31,cloth);b(side*.57,.87,.06,.27,.065,.34,GOLD);b(side*.56,.73,.08,.25,.22,.31,skin);for(let i=0;i<3;i++)b(side*.56+(i-1)*.061,.67,.246,.04,.09,.024,0xad8471);};
+ const cape=(cloth,hem=cloth)=>{for(let i=-6;i<=6;i++){const x=i*.086;b(x,1.01+Math.abs(i)*.004,-.42-Math.cos(i)*.02,.092,1.09-Math.abs(i)*.012,.12,i%3===0?hem:cloth);b(x,.49+Math.abs(i)*.006,-.43,.09,.16,.14,hem);}b(0,1.56,-.3,1.03,.15,.4,cloth);};
  let fur=SKIN,muzzle=SKIN;
  if(kind==='knight'){
   const red=0xa95443,hair=0xa75f3e,beard=0xc07745;body(0x627f8b);cape(red,0x7f3d39);arm(-1,STEEL);arm(1,STEEL);
@@ -66,14 +72,42 @@ export function nordicHeroSpec(kind){
   for(const side of [-1,1]){b(side*.43,2.28,.03,.2,.4,.25,GOLD);b(side*.56,2.56,.04,.18,.31,.22,GOLD);b(side*.5,2.79,.07,.17,.19,.19,0xf0d6a0);b(side*.37,2.91,.08,.25,.13,.17,0xf0d6a0);b(side*.25,3.01,.08,.12,.14,.15,0xf0d6a0);b(side*.67,.82,.44,.1,.8,.14,STEEL);b(side*.67,1.17,.44,.32,.08,.21,GOLD);b(side*.67,1.36,.44,.11,.29,.14,0x7f6949);}
   clasp(0,.87,.34);b(0,1.38,-.45,.31,.37,.12,GOLD);
  }
+ // Fine relief motifs and layered locks preserve each original Nordic identity.
+ const relief=(x,y,z,c=GOLD,shape='rune')=>{for(let iy=-3;iy<=3;iy++)for(let ix=-2;ix<=2;ix++){const on=shape==='diamond'?Math.abs(ix)+Math.abs(iy)===3:ix===-1||iy===0&&ix<2||iy===ix+1;if(on)b(x+ix*.026,y+iy*.026,z,.026,.026,.018,c);}};
+ for(let side of [-1,1]){for(let i=0;i<6;i++){b(side*(.19+i*.027),1.43-i*.012,.409,.029,.038,.024,GOLD);b(side*.32,.73+i*.063,.354,.023,.025,.024,GOLD);}relief(side*.25,1.12,.435,PALE,'diamond');}
+ if(kind==='knight'){
+  for(let side of [-1,1]){for(let i=0;i<7;i++){b(side*(.13+i*.034),1.44-(i%3)*.035,.555,.045,.14+(i%3)*.032,.05,i%2?0xa75f3e:0xc07745);b(side*.39,1.75+i*.048,.365,.04,.065,.04,0xb47549);}for(let i=0;i<4;i++)b(side*(.4+i*.055),1.57-i*.035,.28,.06,.035,.28,i%2?GOLD:STEEL);}
+  for(let x=-.34;x<=.34;x+=.065)for(let z=-.22;z<=.2;z+=.09)b(x,2.23-Math.abs(x)*.16,z,.067,.065,.09,(Math.round(x*100)+Math.round(z*100))%3?0xa75f3e:0xc2814d);relief(.77,1.67,.57,0xe6d299);for(let i=0;i<5;i++)b(.5+i*.13,1.87,.527,.045,.045,.022,DARK);
+ }else if(kind==='mage'){
+  for(let side of [-1,1]){for(let i=0;i<8;i++)b(side*(.31+(i%2)*.025),1.44+i*.078,.375,.052,.11,.04,side<0?0xe2d7bf:0x343a43);for(let i=0;i<6;i++)b(side*.41,.39+i*.14,.407,.034,.05,.025,side<0?0xc5b5b7:0x99b1aa);}for(let i=0;i<5;i++)b(.11+i*.042,1.71,.45,.023,.066,.016,PALE);relief(-.77,2.11,.28,0xb1cbbf);
+ }else if(kind==='ranger'){
+  for(let side of [-1,1])for(let i=0;i<10;i++){b(side*(.35+(i%2)*.04),1.5+i*.055,.1,.095,.1,.52,i%3===0?0xbbc8c0:0xe0e4d5);b(side*(.15+i%2*.035),1.32+i*.05,.435,.045,.067,.044,0xc5b788);}for(let i=0;i<9;i++)b(-.76,.57+i*.15,.82,.045,.034,.035,GOLD);relief(0,1.21,.43,0xecddae,'diamond');
+ }else if(kind==='turtle'){
+  for(let side of [-1,1])for(let i=0;i<6;i++){b(side*(.38+i*.034),1.62-i*.025,.31,.04,.026,.15,GOLD);b(side*.33,1.76+i*.05,.37,.04,.028,.026,0x7a624e);}for(let i=0;i<9;i++){b(-1.09,.65+i*.1,.68,.028,.032,.03,PALE);b(-1.09,.65+i*.1,0,.028,.032,.03,PALE);}relief(0,1.27,.445,0xe3d8b6);
+ }else if(kind==='owl'){
+  for(let side of [-1,1])for(let i=0;i<8;i++){b(side*(.12+i*.026),1.25+i*.048,.53,.038,.1,.04,i%2?0xa8b4b1:0xd5d4c3);b(side*.29,.44+i*.1,.43,.027,.039,.021,GOLD);}for(let i=0;i<5;i++){b(.81,1.68+i*.047,-.23,.045,.047,.2,i%2?0x46525d:0x6a757c);b(-.78,2.4+i*.07,.221,.028,.035,.022,GOLD);}relief(0,.9,.43,PALE,'diamond');
+ }else{
+  for(let side of [-1,1]){for(let i=0;i<7;i++){b(side*(.28+i*.017),1.61+i*.061,.347,.045,.085,.048,i%2?0x485048:0x303c38);b(side*.67,.55+i*.095,.519,.027,.033,.022,0xe2dbb9);}for(let i=0;i<5;i++)b(side*(.1+i*.055),2.19,.45,.035,.037,.022,0xe8d199);}relief(0,1.22,.455,0xe7c878);relief(0,.95,.4,0xa8c79a,'diamond');
+ }
+ // Hair and fur caps are carved into a rounded stepped shell instead of slabs.
+ const hairColors=kind==='knight'?[0xa75f3e,0xc07745]:kind==='mage'?[0xe2d7bf,0x323942]:kind==='ranger'?[0xdbe0d2,0xb5a579]:kind==='owl'?[0xc7c8bb]:kind==='raccoon'?[0x3e4240]:[0x866950];
+ for(let i=parts.length-1;i>=0;i--){const p=parts[i];if(!hairColors.includes(p[6])||p[3]<.4||p[5]<.5||p[1]<2)continue;parts.splice(i,1);const[x,y,z,w,h,d,c]=p;for(let ix=0;ix<9;ix++)for(let iz=0;iz<6;iz++){const nx=(ix-4)/4,nz=(iz-2.5)/2.5;if(nx*nx+nz*nz>1.7)continue;const drop=(Math.abs(nx)**2+Math.abs(nz)**2)*.035;parts.push([x-w/2+w*(ix+.5)/9,y-drop+((ix+iz)%3)*.009,z-d/2+d*(iz+.5)/6,w/9+.003,h,d/6+.003,c]);}}
  const height=Math.max(...parts.map(p=>p[1]+p[4]/2),...legs.map(p=>p.y+p.h/2));
- const result=Object.freeze({key:kind,theme:'nordic-hero',parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine:1.91});specs.set(kind,result);return result;
+ const result=Object.freeze({key:kind,theme:'nordic-hero',parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine:1.91,motion:'humanoid'});specs.set(kind,result);return result;
 }
 
+let detailedWolf=null;
+function detailedFenrirSpec(){
+ if(detailedWolf)return detailedWolf;const source=fenrirSpec(),parts=[],legs=source.legs.map(p=>Object.freeze({...p}));
+ // Replace the major rectangular masses with stepped, bevelled cross sections.
+ for(const p of source.parts){const[x,y,z,w,h,d,c]=p;if(w>.75&&h>.65&&d>.65){for(let i=0;i<9;i++){const edge=Math.abs(i-4)/4;parts.push([x,y-h/2+h*(i+.5)/9,z,w*(1-edge*edge*.18),h/9+.004,d*(1-edge*edge*.12),c]);}}else parts.push([...p]);}
+ const b=(...p)=>parts.push(p);for(let side of [-1,1]){for(let row=0;row<7;row++)for(let j=0;j<5;j++){const y=.98+row*.12,z=.05+j*.15;b(side*(.64+Math.sin(row+j)*.035),y,z,.095,.17,.13,(row+j)%3===0?0xa3b1b5:0x788995);}for(let i=0;i<8;i++){b(side*(.25+i*.03),2.12-i*.039,1.43,.047,.06,.04,i%2?0x839399:0xaebfc0);b(side*.69,1.22+i*.055,.99,.034,.025,.025,0xe2cc91);}for(let i=0;i<4;i++)b(side*(.18+i*.08),1.58,1.99,.044,.075,.036,0x334c57);for(let i=0;i<5;i++)b(side*.39,2.28+i*.07,.99,.055,.063,.025,i%2?0x6d8591:0xaabbbd);}
+ detailedWolf=Object.freeze({...source,key:'fenrir',theme:'nordic-hero',parts:Object.freeze(parts.map(Object.freeze)),legs:Object.freeze(legs),motion:'quadruped'});return detailedWolf;
+}
 export function buildNordicHeroModel(kind,body,voxel){const spec=nordicHeroSpec(kind);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
 const shade=(color,tint)=>'#'+[16,8,0].map(shift=>Math.round(((color>>shift)&255)*tint).toString(16).padStart(2,'0')).join('');
 export function nordicHeroPortrait(kind){
- if(kind==='fenrir')return fenrirPortrait();
+ if(kind==='fenrir'){const spec=nordicHeroSpec(kind);if(!portraits.has(kind))portraits.set(kind,voxelTagPortrait([...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],'nordic-hero-portrait'));return portraits.get(kind);}
  const spec=nordicHeroSpec(kind);if(!spec)return '';if(portraits.has(kind))return portraits.get(kind);
  const parts=[...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],polygons=[],project=([x,y,z])=>[x*.88-z*.72,-y+z*.38+x*.27];
  for(const[x,y,z,w,h,d,color]of parts){const a=x-w/2,b=x+w/2,l=y-h/2,t=y+h/2,n=z-d/2,f=z+d/2;for(const[corners,tint,depth]of [[[[a,t,n],[b,t,n],[b,t,f],[a,t,f]],1,x+z-.01],[[[b,l,n],[b,t,n],[b,t,f],[b,l,f]],.77,x+z+.02],[[[a,l,f],[a,t,f],[b,t,f],[b,l,f]],.9,x+z+.03]])polygons.push({points:corners.map(project),color:shade(color,tint),depth});}
