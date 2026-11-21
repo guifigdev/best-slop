@@ -1,0 +1,115 @@
+/* A single compact layout wins over scenario-specific minimum heights. */
+.mobile-panel-toggle,.mobile-menu-toggle,.mobile-hud-tools,.mobile-move-control{display:none}
+.start-scroll{display:contents}.start-scroll>p{color:#74816c;font-size:13px;line-height:1.7;max-width:85ch}
+@media(max-width:1024px){
+ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+ body #app,body.phasekiller #app,body.bloody #app,body.bonk-mode #app{height:100dvh;min-height:0;grid-template-rows:52px minmax(0,1fr);overflow:hidden}
+ body .layout,body.legacy-game .layout,body.phasekiller .layout,body.bloody .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-width:0;min-height:0;overflow:hidden}
+ body .world{min-width:0;min-height:0;height:100%;isolation:isolate}
+ body .footer{display:none}
+ .topbar{padding:0 10px;gap:10px;position:relative;z-index:30;min-width:0}
+ .brand{gap:7px;min-width:0}.brandmark,.brandmark svg{width:28px;height:28px}.brand strong{font-size:16px;letter-spacing:.5px}.brand small{font-size:8px;letter-spacing:1px;margin-top:4px}
+ .mobile-menu-toggle{display:block;min-height:44px;padding:0 12px;background:transparent;color:#ede8cd;border:1px solid #9cae8755;border-radius:7px;font-size:14px}
+ body .toplinks{display:none;position:absolute;right:8px;top:50px;width:min(280px,calc(100vw - 16px));max-height:calc(100dvh - 65px);overflow:auto;z-index:31;padding:10px;border:1px solid #81977b;border-radius:10px;background:#19382ff8;box-shadow:0 10px 35px #0006;gap:7px}
+ body.mobile-menu-open .toplinks{display:grid;grid-template-columns:1fr 1fr}
+ body .toplinks .secondary,body .toplinks .setup-open,body .toplinks #newgame{display:block!important;min-height:44px;padding:9px 6px;font-size:13px}
+ body .toplinks .tag,body .toplinks .status{display:none}
+ body .side,body.legacy-game .side,body.phasekiller .side,body.bloody .side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-rows:auto;gap:8px;padding:6px 8px max(8px,env(safe-area-inset-bottom));height:auto;min-height:0;max-height:none;overflow:hidden;border-left:0;border-top:1px solid #a8ba8b44;box-shadow:0 -4px 15px #091f2422;position:relative}
+ .mobile-panel-toggle{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;padding:7px 10px;color:#eee5c5;background:#274b3c;border:1px solid #879c7066;border-radius:7px;font-size:14px;text-align:left}
+ .mobile-wallet{color:#efc778;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mobile-panel-chevron{margin-left:auto;font-size:18px}
+ body:not(.mobile-panel-open) .side>:not(.mobile-panel-toggle):not(.side-footer){display:none!important}
+ body .side-footer{display:block!important;min-width:0;padding:0;border:0;background:transparent}
+ body .side-footer .primary{min-height:44px;padding:9px 7px;font-size:13px;line-height:1.25;box-shadow:none}
+ body:not(.mobile-panel-open) .side-footer{padding:0!important;height:auto;border:0}
+ body:not(.mobile-panel-open) .side-footer>:not(.primary){display:none!important}
+ body.mobile-panel-open .side,body.mobile-panel-open.phasekiller .side,body.mobile-panel-open.bloody .side,body.mobile-panel-open.legacy-game .side{display:flex;flex-direction:column;gap:0;height:min(46dvh,390px);min-height:0;max-height:46dvh;padding:6px 10px max(8px,env(safe-area-inset-bottom))}
+ .mobile-panel-open .mobile-panel-toggle{flex-shrink:0;min-height:40px;margin-bottom:5px;justify-content:start}.mobile-panel-open .mobile-panel-chevron{transform:rotate(180deg)}
+ .mobile-panel-open .side .side-top{display:block!important;padding:0 4px 5px}.mobile-panel-open .side .side-top>:not(.wallet){display:none}.mobile-panel-open .side .wallet{margin:0;display:flex;align-items:center;gap:8px}.mobile-panel-open .side .wallet strong{font-size:16px}.mobile-panel-open .side .wallet span{font-size:11px;margin:0}
+ .mobile-panel-open .side .tabs,.mobile-panel-open .side .pk-tabs{flex-shrink:0;display:flex;overflow-x:auto;gap:15px;padding:0 4px;min-height:44px}
+ .mobile-panel-open .side .tabs button,.mobile-panel-open .side .pk-tabs button{min-height:44px;flex-shrink:0;font-size:13px;padding:8px 3px;white-space:nowrap}
+ body .side .shop,body.phasekiller #shop,body.bloody #shop,body.legacy-game .shop{min-height:0;max-height:none;flex:1;overflow:auto;overscroll-behavior:contain;padding:8px 2px;scroll-padding:8px;touch-action:pan-y}
+ .mobile-panel-open .side-footer{flex-shrink:0;padding-top:6px}.mobile-panel-open .side-footer p{font-size:11px;margin:5px 0 0}.mobile-panel-open .side-footer .rivals{display:none}
+ .side .shop button:not(.skill-catalog-tile),.side .shop input,.side .shop select{min-height:44px}
+ .side .shop input,.side .shop select,.modal input,.modal select{font-size:16px}
+ body .worldhead{top:8px;left:8px;right:8px;gap:8px;z-index:2}
+ body .worldhead>div:first-child{padding:8px 10px!important;width:auto;max-width:calc(100% - 85px)!important;min-width:0}
+ body .worldhead .eyebrow{font-size:9px;line-height:1.3;letter-spacing:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:none}
+ body.mobile-ui .worldhead h1{font-size:17px;line-height:1.15;margin:4px 0 0;max-width:none}
+ body .worldhead .worldnote,body #climate{display:none!important}
+ body .wavepill{padding:8px;white-space:nowrap;font-size:9px;min-width:65px;text-align:center}.wavepill b{font-size:18px}.wavepill #wave-label{display:block}
+ body .worldbottom{left:8px;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;align-items:stretch;pointer-events:none}
+ body .worldbottom .hero-card{grid-column:auto;grid-row:auto;align-self:start;width:168px;max-width:48%;min-width:0;min-height:60px;padding:5px 7px;gap:6px;border-radius:8px;pointer-events:auto}
+ .worldbottom .mini-portrait,.worldbottom .mini-portrait svg{width:28px;height:34px;min-width:28px}.worldbottom .hero-vitals{min-width:0;flex:1}
+ .worldbottom .hero-card .identity{margin:0 0 2px;gap:3px}.worldbottom .hero-card .identity strong{font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.worldbottom .hero-card .identity small{font-size:8px;white-space:nowrap}
+ .worldbottom .resources{font-size:9px;line-height:12px}.worldbottom .resources>span:first-child{font-size:8px}.worldbottom .bar{height:4px;margin:2px 0}
+ body .worldbottom .skilldock{display:flex;align-items:end;gap:4px;width:100%;grid-column:auto;grid-row:auto;min-width:0}
+ .mobile-move-control{display:block;pointer-events:auto;flex:0 0 44px;width:44px;min-height:46px;padding:4px;background:#264b3eef;color:#f0e8c8;border:1px solid #adbd8b;border-radius:6px;font-size:11px}.legacy-game .mobile-move-control,.castlefight .mobile-move-control,.bloody .mobile-move-control,.bonk-mode .mobile-move-control{display:none}
+ body .worldbottom .abilities{flex:1;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;gap:4px;max-width:100%;padding:2px 0;scrollbar-width:none;pointer-events:auto;touch-action:pan-x}
+ body .worldbottom .ability,body.phasekiller #abilities .ability{width:44px;height:46px;min-width:44px;min-height:44px;flex:0 0 44px;border-radius:6px}
+ body .worldbottom .ability.empty{display:none}.worldbottom .ability em{font-size:8px}.worldbottom .ability small{font-size:8px}.worldbottom .order-status{display:none}
+ body:not(.mobile-inventory-open) .inventory-dock.inventory-panel{display:none!important;}
+ body .inventory-dock.inventory-panel{display:none;position:absolute;right:0;bottom:114px;width:min(240px,calc(100vw - 16px));padding:8px;grid-column:auto;grid-row:auto;z-index:12}
+ body.mobile-inventory-open .inventory-dock.inventory-panel{display:block!important;width:min(240px,calc(100vw - 16px));max-width:none}
+ body .inventory-dock .inventory{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.inventory-dock .inventory-slot{aspect-ratio:auto!important;min-height:48px;height:48px!important}.inventory-dock .inventory-heading{font-size:10px!important}.inventory-dock .inventory-heading small{font-size:9px!important}
+ .mobile-hud-tools{display:flex;position:absolute;bottom:68px;right:8px;gap:4px;z-index:11;max-width:50%;pointer-events:auto}
+ .mobile-hud-tools button{min-width:44px;min-height:44px;padding:5px 7px;background:#19382fed;color:#eee8c9;border:1px solid #b4c08a88;border-radius:7px;font-size:12px}.mobile-hud-tools button[aria-expanded=true]{background:#ddc485;color:#294a39}
+ body .camera-tools{display:none;top:70px;left:8px;right:8px;max-width:calc(100% - 16px);z-index:13;overflow:auto;flex-wrap:nowrap;gap:4px;padding:5px}
+ body.mobile-camera-open .camera-tools{display:flex}.camera-tools button,.camera-tools button:last-child{display:block!important;flex-shrink:0;min-width:44px;min-height:44px;height:44px;padding:5px 9px;font-size:13px}
+ body .exploration-minimap,body.phasekiller .exploration-minimap{display:none;left:auto;right:8px;bottom:122px;top:auto;width:128px;z-index:12}.exploration-minimap canvas{width:126px;height:100px}.exploration-minimap small{display:none}
+ body.mobile-map-open .exploration-minimap{display:block}
+ body .narrator-pill{left:8px;bottom:122px;padding:3px;width:44px;height:44px;min-height:44px;gap:0;z-index:10}.narrator-pill>span{display:none}.narrator-pill svg{width:36px;height:36px}
+ body .world .novel{left:8px;right:8px;bottom:120px;max-height:calc(100% - 134px);overflow:auto;padding:12px;gap:0;align-items:start;z-index:20}
+ .novel .novel-portrait{display:none}.novel h3{font-size:19px}.novel p{font-size:14px;line-height:1.5;min-height:0}.novel-actions{flex-wrap:wrap;gap:6px}.novel-actions small{font-size:10px;flex-basis:100%}.novel-actions button{min-height:44px;font-size:13px!important}
+ body .player-roster:not(.expanded){display:none!important}.player-roster.expanded{top:114px;right:8px;max-width:60%;max-height:40%;overflow:auto}
+ body .line-camera-nav,body .bt-map-nav,body.castlefight #cf-camera-nav{left:8px;right:8px;top:74px;max-width:calc(100% - 16px);overflow-x:auto;flex-wrap:nowrap;z-index:8}.line-camera-nav button,.bt-map-nav button,.castlefight #cf-camera-nav button{min-height:40px;white-space:nowrap;font-size:11px;padding:5px 8px}
+ body.mobile-camera-open .line-camera-nav,body.mobile-camera-open .bt-map-nav,body.mobile-camera-open #cf-camera-nav{visibility:hidden}
+ body .dg-ribbon,body.dungeon-run .dg-ribbon{top:76px;left:8px;max-width:calc(100% - 16px);gap:4px;flex-wrap:nowrap}.dg-ribbon>span{display:none}.dg-ribbon button{min-height:38px;font-size:11px}
+ body .hero-status-strip{left:8px;bottom:174px;top:auto;max-width:65%;gap:3px}
+ body .toast{top:78px;padding:8px 12px;font-size:13px;max-width:90%;z-index:20}
+ body .boss-alert{top:115px;max-width:90%;font-size:12px}
+ body.phasekiller .pk-overlay-chat{left:8px;bottom:172px;width:calc(100% - 16px);max-height:25%;z-index:9}.phasekiller #pk-chat-log{max-height:70px}.phasekiller .pk-overlay-chat:not(.is-open) #pk-chat-log{display:none}.phasekiller #pk-chat-toggle{min-height:44px}.phasekiller .pk-overlay-chat.is-open{max-height:50%;background:#152f2aeb;border-radius:8px;padding:8px}.phasekiller .pk-overlay-chat.is-open #pk-chat-log{max-height:120px}
+ body .dg-object-card{bottom:122px;right:8px;left:8px;width:auto;max-height:calc(100% - 142px);padding:12px}
+ .kodotag #mobile-inventory-toggle,.kodotag .hero-card .resources:has(#mptext),.kodotag .hero-card .bar.mana{display:none}
+ body.castlefight.mobile-ui .worldhead h1{padding-right:0}
+ .modal-backdrop>.modal:not(.start-modal){max-height:calc(100dvh - 16px);overflow:auto;width:min(100%,680px);padding:16px}.end-card{max-width:calc(100% - 16px);max-height:calc(100% - 24px);overflow:auto}
+ /* Fixed action area: choosing a game never pushes Start off a portrait screen. */
+ body .modal-backdrop{padding:8px;align-items:center;overflow:hidden;z-index:80}
+ body .start-modal{display:flex;flex-direction:column;width:100%;max-width:680px!important;height:min(96dvh,900px);max-height:calc(100dvh - 16px);padding:14px;overflow:hidden;border-radius:12px}
+ .start-modal .start-scroll{display:block;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 2px 12px;scroll-padding:12px;touch-action:pan-y}
+ .start-modal .start-scroll>h2{font-size:25px;line-height:1.15;margin:6px 0}.start-scroll>p{font-size:14px;line-height:1.5;margin:10px 0 16px}
+ .start-modal .modal-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;flex-shrink:0;align-items:end;padding:12px 0 0;border-top:1px solid #a2af8e88;background:#f4efdf}
+ .start-modal .modal-actions label{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}.start-modal .modal-actions input{width:55%;min-height:40px;padding:7px 10px;font-size:16px}
+ .start-modal .modal-actions button{width:100%;min-height:48px;font-size:14px;padding:10px 8px;line-height:1.25}
+ .start-modal .start-foot{display:none}.start-modal #error:empty{display:none}.start-modal #error{flex-shrink:0;font-size:12px;margin:7px 0 0;min-height:0}
+ #startmodal .game-picker{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.game-picker .game-choice{min-height:74px;padding:9px;min-width:0}.game-choice b{font-size:14px}.game-choice p{font-size:11px}.game-choice small{font-size:9px}
+ .start-modal .mode-options,.start-modal .format-choices{gap:7px}.start-modal .mode-options label.mode-choice-card{min-height:0;padding:11px}.start-modal .mode-choice-card>b{font-size:16px}.start-modal .mode-choice-card p{font-size:12px}.start-modal .mode-choice-card .mode-choice-points{font-size:11px}
+ .start-modal .heroes{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}.start-modal .hero-choice{padding:10px;min-height:100px}.start-modal .hero-choice b{font-size:17px;margin:6px 0}.start-modal .hero-choice small{font-size:10px;letter-spacing:0}.start-modal .hero-choice p{font-size:12px;min-height:0;line-height:1.5}.start-modal .animal-portrait{width:56px;height:56px}
+ body .setup-dialog,body .online-room-dialog{max-height:calc(100dvh - 16px);overflow:auto}
+ /* Frenesi uses its dedicated touch HUD rather than the shared sidebar. */
+ body.bonk-mode .layout{grid-template-rows:minmax(0,1fr)}body.bonk-mode .mobile-hud-tools{display:none}
+ body.bonk-mode .bonk-top button{min-height:44px;min-width:44px}
+ body.bonk-mode .bonk-top{top:8px;left:8px;right:8px}.bonk-top>div{max-width:64%}.bonk-top b{font-size:18px}.bonk-top span{font-size:11px}.bonk-top small{font-size:10px}
+ body.bonk-mode .bonk-goals{left:8px;top:85px;width:180px;padding:7px}.bonk-goals ol{display:none}.bonk-goals header>b{font-size:12px}.bonk-goals header>small{font-size:10px}.bonk-goals .bonk-navigation>b{font-size:11px}.bonk-goals .bonk-navigation>small{font-size:10px}
+ body.bonk-mode .bonk-touch{display:flex;bottom:max(8px,env(safe-area-inset-bottom));left:8px;right:8px}.bonk-joystick{width:86px;height:86px}.bonk-touch-actions button{width:48px;height:48px;min-height:48px}.bonk-touch-actions{gap:4px}
+ body.bonk-mode .bonk-vitals{bottom:105px;left:8px;width:148px;padding:6px}.bonk-vitals>b{font-size:15px}
+ body.bonk-mode .bonk-build{bottom:105px;right:8px;max-width:50%}.bonk-build-item{width:26px;height:26px}.bonk-build>button{min-height:40px;font-size:12px;padding:5px 8px}
+ body.bonk-mode .bonk-controls{left:auto;right:8px;bottom:156px}.bonk-controls>span{display:none}.bonk-controls button{min-height:40px;font-size:12px;padding:6px 10px}
+ .bonk-top kbd,.bonk-build kbd,.bonk-controls kbd{display:none}
+ .bonk-choice,.bonk-stage-card{max-height:calc(100% - 16px);width:calc(100% - 16px);padding:16px;overflow:auto}.bonk-stage-card .primary,.bonk-stage-card button{min-height:44px}
+}
+@media(max-width:1024px) and (max-height:500px){
+ body #app,body.phasekiller #app,body.bloody #app,body.bonk-mode #app{grid-template-rows:44px minmax(0,1fr)}
+ .brand small{display:none}.brandmark,.brandmark svg{height:24px;width:24px}.brand strong{font-size:14px}
+ body .side{padding-top:4px;padding-bottom:max(4px,env(safe-area-inset-bottom))}.mobile-panel-toggle,.side-footer .primary{min-height:44px!important}
+ body.mobile-ui .worldhead h1{font-size:14px}.worldhead .eyebrow{display:none}.worldhead .wavepill{padding:5px}.wavepill #wave-label{display:none}
+ body .worldbottom{flex-direction:row;flex-wrap:nowrap;align-items:end;gap:7px;right:175px}.worldbottom .hero-card{width:150px!important;max-width:150px!important;flex-shrink:0}.worldbottom .skilldock{min-width:0;flex:1;width:auto}.worldbottom .ability{height:44px!important}
+ .mobile-hud-tools{bottom:8px;max-width:170px}.narrator-pill{bottom:76px!important}.world .novel{bottom:75px!important;max-height:calc(100% - 90px)!important}
+ body.mobile-panel-open .side{height:52dvh;max-height:52dvh}
+ .start-modal .modal-actions{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding-top:8px}.start-modal .modal-actions label{grid-column:auto;min-width:0}.start-modal .modal-actions input{width:85px}.start-modal .modal-actions button{min-height:44px;width:auto}
+ body .start-modal{padding:10px}.start-modal .modal-actions label{font-size:11px}.start-modal .start-scroll>h2{font-size:22px}.start-scroll>p{display:none}
+ body.bonk-mode .bonk-top{right:8px;left:8px}.bonk-top small{display:none}.bonk-xp>b{display:none}.bonk-goals{display:block;top:48px!important;width:165px!important}.bonk-goals header,.bonk-goals .bonk-boss-goal{display:none}.bonk-goals .bonk-navigation{margin:0;padding:0}.bonk-top b{font-size:17px}
+ body.bonk-mode .bonk-vitals{bottom:8px;left:105px;width:140px}.bonk-vitals>b{font-size:13px}
+ body.bonk-mode .bonk-build{bottom:8px;right:170px;max-width:35%}.bonk-build-items{display:none}.bonk-build.expanded .bonk-build-items{display:flex}.bonk-build.expanded{bottom:60px!important}
+ body.bonk-mode .bonk-controls{bottom:63px;right:8px}.bonk-controls button{min-height:36px}.bonk-joystick{width:76px;height:76px}
+}
+@media(max-width:360px){.mobile-hud-tools button{padding:5px;font-size:11px}.worldbottom .hero-card{width:150px!important}.mobile-wallet{font-size:11px}.mobile-panel-toggle{gap:4px;padding:7px}.brand small{font-size:7px}}
