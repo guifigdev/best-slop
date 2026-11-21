@@ -45,7 +45,7 @@ export function saveRoCharacter(progress,{id,name,lineage,checkpoint,updatedAt=D
 export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getState=()=>null,toast=()=>{},onChange=()=>{},fetchImpl=globalThis.fetch?.bind(globalThis),storage}={}){
  if(storage===undefined){try{storage=globalThis.localStorage;}catch{storage=null;}}
  let cache={};try{cache=JSON.parse(storage?.getItem(RO_ACCOUNT_STORAGE_KEY)||'{}')||{};}catch{}
- let token=typeof cache.token==='string'&&/^ro_[a-f0-9]{64}$/.test(cache.token)?cache.token:null,account=normalizeRoAccount(cache.account),host=null,ready=null,status='loading',notice='',epoch=0,queue=Promise.resolve(),selectedId=account.progress.selectedCharacter||uuid(),lineage='dragonknight',characterName='',activity=cache.activity==='tower'?'tower':'adventure',resume=false,recoveryVisible=false,presetDirty=!!cache.presetDirty,selectionTouched=false,running=null,rewardBusy=false,lastRewardAt=0,lastSaveAt=0,lastFloor='',lastLevel=0,pendingSave=false,nextReconnectAt=0;
+ let token=typeof cache.token==='string'&&/^ro_[a-f0-9]{64}$/.test(cache.token)?cache.token:null,account=normalizeRoAccount(cache.account),host=null,ready=null,status='loading',notice='',epoch=0,queue=Promise.resolve(),selectedId=account.progress.selectedCharacter||uuid(),lineage='dragonknight',characterName='',activity=cache.activity==='tower'?'tower':'adventure',resume=false,recoveryVisible=false,presetDirty=!!cache.presetDirty,selectionTouched=false,running=null,rewardBusy=false,lastRewardAt=0,lastSaveAt=0,lastFloor='',lastRoute='',lastLevel=0,pendingSave=false,nextReconnectAt=0;
  const stored=()=>{try{storage?.setItem(RO_ACCOUNT_STORAGE_KEY,JSON.stringify({token,account,activity,presetDirty}));}catch{notice='Armazenamento local indisponível neste navegador.';}};
  const notify=()=>{stored();render();onChange(selection());};
  const selectedCharacter=()=>account.progress.characters.find(c=>c.id===selectedId)||null;
@@ -75,7 +75,7 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   if(chosen.checkpoint&&chosen.character.lineage===hero.roLineage)localCommand(game,{type:'bkRestore',checkpoint:chosen.checkpoint,activity,freshActivity:!chosen.resume||chosen.checkpoint.activity!==activity});
   else if(chosen.character){selectedId=uuid();characterName='';}
   localCommand(game,{type:'bkCards',cards:clone(preset().cards)});
-  const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastFloor='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
+  const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastFloor='';lastRoute='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
   void loadReady().then(()=>startRun(run));
   return true;
  }
@@ -89,8 +89,9 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
  function update(game=getGame()){
   const time=Date.now();if(status==='local'&&time>=nextReconnectAt){nextReconnectAt=time+15000;ready=null;void loadReady();}
   if(!running||running.game!==game||!game?.bonk)return;const hero=game.units.find(u=>u.bonkHero),floor=`${game.bonk.activity}:${game.bonk.clearedStages.length}:${game.bonk.stage}`;
-  if(hero&&(floor!==lastFloor||hero.level!==lastLevel)){pendingSave=true;lastFloor=floor;lastLevel=hero.level;}
-  if(time-lastSaveAt>=15000)void save(game);
+  const route=game.bonk.routeVersion===1?`${game.bonk.routeIndex}:${Number(game.bonk.routeBossDefeated)}`:'';const routeChanged=!!route&&route!==lastRoute;lastRoute=route;
+  if(hero&&(floor!==lastFloor||hero.level!==lastLevel||routeChanged)){pendingSave=true;lastFloor=floor;lastLevel=hero.level;}
+  if(routeChanged||time-lastSaveAt>=15000)void save(game);
   if(status==='cloud'&&!running.id)void startRun(running);
   if(status!=='cloud'||!running.id||rewardBusy||time-lastRewardAt<(running.activity==='tower'?250:1000))return;const kills=(game.bonk.rewardKills||[]).slice(0,40).map(k=>({id:String(k.id),visual:k.visual,boss:!!k.boss}));if(!kills.length)return;
   const run=running,version=epoch;rewardBusy=true;lastRewardAt=time;

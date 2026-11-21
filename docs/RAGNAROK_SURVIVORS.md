@@ -2,7 +2,7 @@
 
 O seletor Ragnarok oferece duas atividades com os mesmos personagens:
 
-- **Aventura:** mapas abertos de 230 × 230 unidades. Complete quatro regiões escolhendo destinos entre Campos de Prontera, Payon, Glast Heim, Vulcão de Thor, Caverna de Gelo, Geffen, Dunas de Morroc e Grutas de Izlude. A conclusão das primeiras três regiões promove o personagem até a quarta classe.
+- **Aventura:** rota de 12 regiões conectadas de Midgard, de Prontera e Payon a Morroc, Rachel, Juno, gelo, Thor, Geffen, Glast Heim e o santuário da Valquíria. Cada MVP abre uma passagem física; atravesse andando para carregar a próxima região. A promoção das primeiras três regiões leva à quarta classe. Veja [rota e referências](RAGNAROK_WORLD_ROUTE.md).
 - **Torre sem Fim:** 100 andares com a composição Classic do script `F_Tower_Monster` do rAthena. Entre com um personagem criado na Aventura. A Torre mantém sua classe desenvolvida e concede experiência, pontos de atributo, equipamentos e oportunidades de cartas. Os encontros entram em lotes limitados; não há geração infinita de criaturas nessa atividade.
 
 São 12 linhagens principais e 42 aparências de classe. O ataque característico pertence à classe: trocar uma espada por um cajado altera os atributos do equipamento, preservando a identidade do ataque. Mercenários e suas evoluções podem usar duas armas de uma mão. A promoção para Mercenário entrega a segunda adaga.
@@ -23,7 +23,7 @@ Cartas são conquistas permanentes. A chance local é de 0,01% por criatura e 0,
 
 Há 304 cartas e 126 equipamentos no catálogo desta versão. Equipamentos de MVP respeitam suas associações e probabilidades de drops na fonte consultada. A mochila comporta 48 peças. Espólios de conclusão que não couberem permanecem pendentes e podem ser recolhidos ou deixados pelo inventário; a passagem aguarda essa escolha.
 
-O botão **Salvar** registra o personagem e a entrada da etapa. Há salvamento automático a cada 15 segundos e ao retornar à seleção. Aventura e Torre conservam checkpoints separados, compartilhando o desenvolvimento mais recente do personagem. Ao retomar, o encontro começa novamente pela entrada; níveis, escolhas de habilidade pendentes, atributos, SP e equipamentos são preservados. Sem conexão, há uma cópia neste dispositivo e sincronização posterior; novas conquistas de cartas dependem do servidor.
+O botão **Salvar** registra o personagem e a entrada da etapa. Há salvamento automático a cada 15 segundos, ao abrir uma passagem, ao mudar de região e ao retornar à seleção. Aventura e Torre conservam checkpoints separados, compartilhando o desenvolvimento mais recente do personagem. Ao retomar, o encontro começa novamente pela entrada; um MVP já derrotado na região mantém sua passagem aberta e não concede recompensas novamente; níveis, escolhas de habilidade pendentes, atributos, SP e equipamentos são preservados. Sem conexão, há uma cópia neste dispositivo e sincronização posterior; novas conquistas de cartas dependem do servidor.
 
 O combate continua local. O servidor valida a conta, os presets, o formato dos saves e os sorteios, limita frequência e impede a repetição da mesma recompensa. Isso não equivale a uma simulação de combate autoritativa nem a um sistema completo contra adulteração do cliente.
 
