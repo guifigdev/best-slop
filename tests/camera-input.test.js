@@ -15,3 +15,18 @@ test('middle mouse rotates without a modifier and leaves the chosen left/touch d
  g.down(event(1,10,10,{pointerType:'mouse',button:1}));g.move(event(1,70,30,{pointerType:'mouse',button:1}));g.up(event(1,70,30,{pointerType:'mouse',button:1}));assert.ok(rotations>0);assert.equal(pans,0);assert.equal(taps,0);
  g.down(event(2,10,10,{pointerType:'mouse',button:0}));g.move(event(2,70,30,{pointerType:'mouse',button:0}));g.up(event(2,70,30,{pointerType:'mouse',button:0}));assert.ok(pans>0);assert.equal(mode,'pan');
 });
+
+test('character orbit replaces terrain dragging while keeping short taps available for interactions',()=>{
+ for(const pointerType of ['mouse','touch'])for(const preferred of ['pan','rotate']){
+  const rotations=[];let pans=0,taps=0,orbit=true;const g=createCameraGestures({getMode:()=>preferred,isCharacterOrbit:()=>orbit,onRotate:(x,y)=>rotations.push([x,y]),onPan:()=>pans++,onTap:()=>taps++});
+  g.down(event(1,100,100,{pointerType}));g.move(event(1,102,100,{pointerType}));g.up(event(1,102,100,{pointerType}));assert.equal(taps,1);
+  g.down(event(2,100,100,{pointerType}));g.move(event(2,160,125,{pointerType}));g.up(event(2,160,125,{pointerType}));assert.equal(pans,0);assert.equal(taps,1);assert.deepEqual(rotations[0],[60,25]);
+  // Leaving the survivor restores the existing RTS preference.
+  orbit=false;rotations.length=0;g.down(event(3,0,0,{pointerType}));g.move(event(3,40,10,{pointerType}));g.up(event(3,40,10,{pointerType}));assert.equal(pans>0,preferred==='pan');assert.equal(rotations.length>0,preferred==='rotate');
+ }
+});
+
+test('two-finger character orbit zooms and rotates without translating the pivot or clicking scenery',()=>{
+ let pans=0,taps=0;const rotations=[],zooms=[],g=createCameraGestures({isCharacterOrbit:()=>true,onPan:()=>pans++,onRotate:(x,y)=>rotations.push([x,y]),onZoom:k=>zooms.push(k),onTap:()=>taps++});
+ g.down(event(1,100,100));g.down(event(2,200,100));g.move(event(2,250,120));assert.deepEqual(rotations[0],[25,10]);assert.ok(zooms[0]<1);g.up(event(2,250,120));g.move(event(1,110,110));assert.deepEqual(rotations.at(-1),[10,10]);g.up(event(1,110,110));assert.equal(pans,0);assert.equal(taps,0);assert.equal(g.active,false);
+});

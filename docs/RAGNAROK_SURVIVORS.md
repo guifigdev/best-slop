@@ -7,6 +7,8 @@ O seletor Ragnarok oferece duas atividades com os mesmos personagens:
 
 São 12 linhagens principais e 42 aparências de classe. O ataque característico pertence à classe: trocar uma espada por um cajado altera os atributos do equipamento, preservando a identidade do ataque. Mercenários e suas evoluções podem usar duas armas de uma mão. A promoção para Mercenário entrega a segunda adaga.
 
+Segure o botão esquerdo e arraste pelo cenário para girar a câmera ao redor do personagem. WASD/setas e joystick seguem a orientação da câmera. No celular, arrastar pelo cenário gira a visão; dois dedos giram e ajustam o zoom, mantendo o personagem como centro. Cliques/toques curtos continuam interagindo com objetos.
+
 ## Atributos e habilidades
 
 STR, AGI, VIT, INT, DEX e LUK usam os mesmos custos crescentes e contribuições do Custom Hero, dentro do orçamento de combate do survivor. VIT aumenta vida e defesa; INT aumenta poder e defesa mágica e SP; AGI aumenta cadência e esquiva; DEX favorece ataques à distância e precisão; LUK aumenta crítico e esquiva perfeita. Habilidades consomem SP e o ataque característico é gratuito. Habilidades oferecidas pertencem à linhagem e respeitam a classe atual; uma nova habilidade pode substituir a habilidade mais antiga quando os quatro espaços estão ocupados.
