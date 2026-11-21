@@ -11,6 +11,12 @@ Segure o botão esquerdo e arraste pelo cenário para girar a câmera ao redor d
 
 **Testar como GM** inicia um personagem local de nível 150, atributos 99, quarta classe, habilidades no máximo, invencibilidade e dano de um golpe. **GM / Mapa** oferece viagem direta, controles de horário, inspeção de sol/lua e teste de fogo. **Salvar GM** e **Retomar GM** conservam linhagem, região e horário neste dispositivo, separados de personagens, cartas, conquistas e checkpoints normais.
 
+## Controles de combate e espólios
+
+A barra de quatro habilidades mostra nome, nível, SP, recarga e motivo de indisponibilidade. Clique/toque ou use **1–4** para conjurar; **AUTO ON/OFF** controla cada habilidade e a preferência acompanha o personagem salvo. AUTO é ligado por padrão. Recarga, SP e alcance valem igualmente para uso manual e automático. As teclas 1–3 continuam escolhendo melhorias quando o jogo abre uma oferta. Tomos e relíquias aparecem como passivos no inventário.
+
+Cada baú entrega um equipamento comum real do catálogo de Ragnarok e uma relíquia de build. O recibo mostra os nomes e permite abrir a mochila. Mochila cheia envia o equipamento aos espólios pendentes, sem perdê-lo. A atração de equipamentos no chão começa a pelo menos seis metros e a coleta ocorre a 1,8 metro; itens recém-descartados têm um segundo de proteção contra recolhimento. As chances raras de cartas continuam independentes.
+
 ## Atributos e habilidades
 
 STR, AGI, VIT, INT, DEX e LUK usam os mesmos custos crescentes e contribuições do Custom Hero, dentro do orçamento de combate do survivor. VIT aumenta vida e defesa; INT aumenta poder e defesa mágica e SP; AGI aumenta cadência e esquiva; DEX favorece ataques à distância e precisão; LUK aumenta crítico e esquiva perfeita. Habilidades consomem SP e o ataque característico é gratuito. Habilidades oferecidas pertencem à linhagem e respeitam a classe atual; uma nova habilidade pode substituir a habilidade mais antiga quando os quatro espaços estão ocupados.

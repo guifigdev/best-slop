@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {roGateContext,roGateContextMarkup,createRoRegionAnnouncement,roRegionAnnouncementMarkup} from '../src/ro-region-cues.js';
+import {roWorldAtlasMarkup,RO_VISUAL_PRESETS,createRoVisualPreference} from '../src/ro-world-atlas.js';
+
+const fixture=()=>({routeVersion:2,stage:'playing',elapsed:0,route:{key:'prontera',name:'Arredores de Prontera',mvp:'mistress'},encounter:{habitatName:'Floresta'},clearedStages:[],exitGates:[{id:'to-payon',x:-101,z:0,direction:{x:-1,z:0},mvp:'mistress',nextKey:'payon-forest',nextName:'Floresta de Payon',open:false,lockedBy:'mvp'}]});
+test('nearby gates identify destination, direction, distance and the actual blocking requirement without global HUD clutter',()=>{
+ const data=fixture();assert.equal(roGateContext(data,{x:0,z:0}),null);const context=roGateContext(data,{x:-80,z:0});assert.equal(context.nextName,'Floresta de Payon');assert.equal(context.directionName,'Oeste');assert.equal(context.distance,21);assert.match(context.requirement,/Mistris/);const html=roGateContextMarkup(context);assert.match(html,/Destino da passagem/);assert.match(html,/<h2>Floresta de Payon<\/h2>/);assert.match(html,/Oeste · 21 m/);assert.doesNotMatch(html,/<button|role="dialog"/);
+ data.exitGates[0].open=true;data.exitGates[0].nextName='<Mundo>';const opened=roGateContext(data,{x:-80,z:0});assert.match(opened.requirement,/Atravesse/);assert.match(roGateContextMarkup(opened),/&lt;Mundo&gt;/);assert.equal(roGateContext(data,{x:-80,z:0,roUnclaimed:[{}]}).state,'inventory');assert.equal(roGateContextMarkup(null),'');
+ data.exitGates[0].open=false;data.exitGates[0].lockedBy='final';data.clearedStages=['prontera','payon-forest'];assert.match(roGateContext(data,{x:-80,z:0}).requirement,/Faltam 9 selos/);
+});
+test('entry titles occur once per route key for 3.6 simulation seconds and freeze through pause or repeated snapshots',()=>{
+ const cue=createRoRegionAnnouncement(),data=fixture();data.stage='preparation';assert.equal(cue.update(data),null);data.stage='playing';const start=cue.update(data);assert.equal(start.key,'prontera');data.elapsed=.8;const first=cue.update(data);assert.equal(first.age,.8);assert.deepEqual(cue.update(structuredClone(data)),first);assert.deepEqual(cue.update(structuredClone(data)),first,'wall time cannot extend or restart the title');
+ const html=roRegionAnnouncementMarkup(first);assert.match(html,/role="status"/);assert.match(html,/Floresta/);assert.match(html,/Arredores de Prontera/);assert.doesNotMatch(html,/dialog|button/);data.elapsed=3.61;assert.equal(cue.update(data),null);data.elapsed=8;assert.equal(cue.update(data),null);
+ data.route={...data.route,key:'payon-forest',name:'Payon <novo>'};data.elapsed=0;assert.equal(cue.update(data).age,0);data.elapsed=.5;assert.match(roRegionAnnouncementMarkup(cue.update(data)),/Payon &lt;novo&gt;/);cue.reset();assert.equal(cue.update(data).age,0);
+});
+test('the GM visual selector preserves its local preset across atlas rerenders and resets once when leaving the run',()=>{
+ let state={options:{mode:'bonk',bonkDebug:true}};const calls=[],preferences=createRoVisualPreference({getState:()=>state,view:{setRoVisualOptions:options=>calls.push(options)}});assert.deepEqual(Object.keys(RO_VISUAL_PRESETS),['solar','clean','pixel','cinematic']);assert.equal(preferences.preset,'solar');assert.equal(preferences.choose('pixel'),'pixel');assert.deepEqual(calls,[{preset:'pixel'}]);
+ for(let i=0;i<3;i++){const html=roWorldAtlasMarkup(fixture(),{debug:true,visualPreset:preferences.preset});assert.match(html,/data-bk-debug-visual/);assert.match(html,/<option value="pixel" selected>Pixelado/);assert.match(html,/Luz solar padrão/);assert.match(html,/Nítido sem pós/);assert.match(html,/Cinema suave/);}assert.equal(calls.length,1);
+ assert.equal(preferences.choose('__proto__'),null);state={options:{mode:'bonk',bonkDebug:false}};assert.equal(preferences.choose('cinematic'),null);state={options:{mode:'campaign',bonkDebug:true}};assert.equal(preferences.choose('clean'),null);assert.equal(calls.length,1);preferences.reset();preferences.reset();assert.deepEqual(calls,[{preset:'pixel'},{preset:'solar'}]);assert.equal(preferences.preset,'solar');assert.doesNotMatch(roWorldAtlasMarkup(fixture()),/data-bk-debug-visual|Teste visual/);
+ const optional=createRoVisualPreference({getState:()=>({options:{mode:'bonk',bonkDebug:true}})});assert.equal(optional.choose('clean'),'clean');assert.doesNotThrow(()=>optional.reset());
+});

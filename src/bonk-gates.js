@@ -16,8 +16,9 @@ export function bonkGatePreview(gates,x,z){
 // Parts are world-positioned; Y remains a local height above the shared terrain.
 export function bonkGateParts(gate,p,{corridor=true}={}){
  const parts=[],f=bonkGateFrame(gate),width=gate.width||18,c=gate.open?0x97d9b1:0xd5ac72,add=(u,y,v,w,h,d,color=p.stone,a=0)=>{const q=f.point(u,v);parts.push([q.x,y,q.z,w,h,d,color,f.angle+a]);};
- if(corridor)for(const side of [-1,1])for(let j=0;j<8;j++)for(let tier=0;tier<5;tier++){const h=.7+j%3*.07;add(side*(width*.5+3+Math.sin(j*1.7+tier)*.12),.45+tier*1.1,-4+j*2.2,4.4-tier*.2,h+.5,2.3,j%3?p.stone:p.dark,j*.08);}
+ if(corridor)for(const side of [-1,1])for(let j=0;j<8;j++)for(let tier=0;tier<3+j%3;tier++){const h=.7+j%3*.07;add(side*(width*.5+3+Math.sin(j*1.7+tier)*.12),.45+tier*1.1,-4+j*2.2,4.4-tier*.2,h+.5,2.3,j%3?p.stone:p.dark,j*.08);}
  for(const side of [-1,1]){const u=side*(width*.5+1.4);add(u,.3,0,2.5,.6,3,p.dark);for(let j=0;j<7;j++)add(u,.85+j*.8,0,1.6,.75,2,j%3?p.stone:p.dark);add(u,6.3,0,2.3,.5,2.5);add(u,6.8,0,.7,.65,.7,c);}
+ for(let j=0;j<16;j++){const a=j*Math.PI/15,u=Math.cos(a)*width*.46,y=3.2+Math.sin(a)*4.35;add(u,y,0,width*.085,.55,1.1,j%4?p.stone:p.dark);if(j%3===0)add(u,y+.04,.6,.14,.21,.06,c);}
  add(0,.03,0,width,.08,4);if(!gate.open){for(let j=0;j<11;j++)add(-width*.46+j*width*.092,2.4,0,.18,4.8,.22,p.dark);for(const y of [1.2,3.2,4.8])add(0,y,0,width,.18,.22,p.dark);}else for(let j=0;j<7;j++)add((j-3)*1.4,.1,0,.7,.08,1.7,c);
  return parts;
 }

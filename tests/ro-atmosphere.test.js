@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import {RO_ATMOSPHERE_BUDGET as B,roDaylight,createRoActorLighting,createRoAtmosphere} from '../src/ro-atmosphere.js';
+import {createFoliageWindMaterial} from '../src/foliage-wind.js';
 
 const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freeze);Object.freeze(value);}return value;};
 const state=(elapsed=122.4,extra={})=>({options:{mode:'bonk'},time:elapsed,bonk:{totalElapsed:elapsed,warnings:[],...extra}});
@@ -41,4 +42,18 @@ test('actor coating preserves earlier shader hooks, renderer context and program
 
 test('sun direction and actor environment repeat after one complete day rather than drifting between cycles',()=>{
  const f=fixture();try{for(const time of [0,122.4,302.4,482.4,662.4]){update(f,state(time));const direction=f.actorLighting.uniforms.roSunDirection.value.clone(),sky=f.actorLighting.uniforms.roSky.value.clone();update(f,state(time+B.cycleSeconds));assert.ok(direction.distanceTo(f.actorLighting.uniforms.roSunDirection.value)<1e-12);assert.ok(sky.toArray().every((v,i)=>Math.abs(v-f.actorLighting.uniforms.roSky.value.toArray()[i])<1e-12));}}finally{f.atmosphere.dispose();}
+});
+
+test('the world sunlight coating preserves foliage wind and adds warm bounce without actor reflection or another screen pass',()=>{
+ const lighting=createRoActorLighting(),material=createFoliageWindMaterial({strength:.13}),wind=material.userData.foliageWind;
+ lighting.coatWorld(material);lighting.coatWorld(material);const shader={vertexShader:T.ShaderLib.lambert.vertexShader,fragmentShader:T.ShaderLib.lambert.fragmentShader,uniforms:{}};material.onBeforeCompile(shader);
+ assert.equal(shader.uniforms.uFoliageTime,wind.time);assert.equal(shader.uniforms.roSolarTint,lighting.uniforms.roSolarTint);assert.match(material.customProgramCacheKey(),/foliage-wind.*ro-world-sunlight/);
+ const vertex=expand(shader.vertexShader),fragment=expand(shader.fragmentShader);assert.match(vertex,/windPhase/);assert.match(fragment,/outgoingLight\*roSolarTint/);assert.doesNotMatch(fragment,/refract\(-roV|reflect\(-roV/);assert.ok(fragment.indexOf('vec3 outgoingLight')<fragment.indexOf('outgoingLight=outgoingLight*roSolarTint'));assert.equal((fragment.match(/uniform vec3 roSun;/g)||[]).length,1);material.dispose();
+});
+
+test('sunlit surfaces gain golden light and bounce while night stays neutral and the high sky remains blue',()=>{
+ const f=fixture();try{update(f,state(122.4));const u=f.actorLighting.uniforms,noon=f.sun.color.clone();assert.ok(noon.r>noon.g&&noon.g>noon.b);assert.ok(f.skyLight.groundColor.r>f.skyLight.groundColor.b);assert.ok(u.roSolarTint.value.r>u.roSolarTint.value.b);assert.ok(u.roSolarBounce.value>0);
+  const sky=f.atmosphere.root.children[0].material;assert.ok(sky.uniforms.topColor.value.b>sky.uniforms.topColor.value.r);assert.ok(f.scene.fog.far>200,'distance haze remains');
+  update(f,state(302.4));assert.ok(f.sun.color.g/noon.g<1,'setting sun is more amber');update(f,state(482.4));assert.deepEqual(u.roSolarTint.value.toArray(),[1,1,1]);assert.equal(u.roSolarBounce.value,0);
+ }finally{f.atmosphere.dispose();}
 });

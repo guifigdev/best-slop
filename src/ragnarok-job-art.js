@@ -1,4 +1,5 @@
 import {voxelTagPortrait} from './tag-character-art.js';
+import {roThiefJobSpec} from './ro-thief-job-art.js';
 
 // Costume silhouettes studied from the original kRO job sprites (ai4rei sprite atlas).
 // All portraits and in-world characters share these actual, cached voxel meshes.
@@ -15,7 +16,7 @@ const cache=new Map(),portraits=new Map(),P=.052,SKIN=0xe4b798,SHADOW=0xb27c68,W
 const tint=(c,t)=>[16,8,0].reduce((n,s)=>n|(Math.min(255,Math.round((c>>s&255)*t))<<s),0);
 const freeze=s=>{for(const a of s.parts)Object.freeze(a);for(const a of s.legs)Object.freeze(a);if(s.weaponRig){s.weaponRig.parts.forEach(Object.freeze);Object.freeze(s.weaponRig.parts);Object.freeze(s.weaponRig.indices);Object.freeze(s.weaponRig.pivot);Object.freeze(s.weaponRig);}Object.freeze(s.parts);Object.freeze(s.legs);Object.freeze(s.wings);Object.freeze(s.features);return Object.freeze(s);};
 export function ragnarokJobSpec(value){
- const key=typeof value==='string'?value:value?.bonkJob;if(!Object.hasOwn(JOBS,key))return null;if(cache.has(key))return cache.get(key);
+ const key=typeof value==='string'?value:value?.bonkJob;if(!Object.hasOwn(JOBS,key))return null;if(cache.has(key))return cache.get(key);if(key==='thief'||key==='assassin'){const spec=roThiefJobSpec(key);cache.set(key,spec);return spec;}
  const [family,rank,weapon,cloth,trim,hair,style]=JOBS[key],parts=[],legs=[],features=['face','layered-hair',weapon],b=(x,y,z,w,h,d,c)=>parts.push([x*P,y*P,z*P,w*P,h*P,d*P,c]);
  const band=(y,width=10,c=trim)=>{b(0,y,0,width,1,6,c);b(0,y,3.4,3,1.5,1,GOLD);};
  const gem=(x,y,z,c=0x65c7c3)=>{b(x,y,z,1.6,2,1.1,GOLD);b(x,y,z+.7,.8,1.2,.5,c);};
