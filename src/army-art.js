@@ -2,6 +2,8 @@ import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 import {voxelTagPortrait} from './tag-character-art.js';
 import {NORDIC_MONSTER_KINDS,nordicMonsterPortrait} from './nordic-monster-art.js';
 import {scarabPortrait} from './scarab-art.js';
+import {detailedMonsterSpec} from './monster-art.js';
+import {sculptureLegParts} from './animal-sculptures.js';
 // Original voxel-animal previews. They describe the troop, not its Warcraft
 // reference role. Pure SVG strings keep the barracks UI independent of Three.
 const eye=(x,y,color='#30483e')=>`<path d="M${x} ${y}h5v7h-5z" fill="${color}"/>`;
@@ -33,6 +35,7 @@ export function armyPortrait(kind){
  const ref=ragnarokMonsterSpec(kind);if(ref){const key='ragnarok:'+ref.key;if(!cache.has(key))cache.set(key,voxelTagPortrait([...ref.parts,...ref.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color]),...ref.wings.flatMap(w=>w.parts.map(p=>[p[0]+w.pivot[0],p[1]+w.pivot[1],p[2]+w.pivot[2],...p.slice(3)]))],'shared-creature-portrait'));return cache.get(key);}
 
  const nordic=nordicMonsterPortrait(kind);if(nordic)return nordic;
+ const detailed=detailedMonsterSpec(kind);if(detailed){const key='detailed:'+kind;if(!cache.has(key))cache.set(key,voxelTagPortrait([...detailed.parts,...sculptureLegParts(detailed),...detailed.wings.flatMap(w=>w.parts.map(p=>[p[0]+w.pivot[0],p[1]+w.pivot[1],p[2]+w.pivot[2],...p.slice(3)]))],'detailed-creature-portrait'));return cache.get(key);}
  if(cache.has(kind))return cache.get(kind);
  const shape=shapes[kind]||'<path d="M29 30h38v29H29zM35 20h10v10H35zm19 0h10v10H54z" fill="#9ab2aa"/><path d="M42 41h13v9H42z" fill="#d4d7b7"/>';
  const svg=`<svg viewBox="0 0 96 80" class="army-portrait" aria-hidden="true"><path d="m5 65 43-12 43 12-43 13z" fill="#b5c1a0" opacity=".34"/><path d="m12 65 36-8 36 8-36 8z" fill="#8da298" opacity=".22"/>${shape}</svg>`;

@@ -1,10 +1,11 @@
 import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 import {buildNordicMonster} from './nordic-monster-art.js';
 import {buildScarabModel} from './scarab-art.js';
+import {animalSculptureSpec,carvedAnimalLeg} from './animal-sculptures.js';
 // Original voxel silhouettes. These body parts are merged by the view into one
 // coloured mesh; the existing 8 Hz body clips supply locomotion. Wings are
 // returned as local voxel descriptors so the view can retain animated pivots.
-export function buildMonster(kind,body,voxel){
+function buildBaseMonster(kind,body,voxel){
  const scarab=buildScarabModel(kind,body,voxel);if(scarab)return scarab;
  const reference=ragnarokMonsterSpec(kind);if(reference){for(const part of reference.parts)voxel(body,...part);return reference;}
  const nordic=buildNordicMonster(kind,body,voxel);if(nordic)return nordic;
@@ -16,7 +17,7 @@ export function buildMonster(kind,body,voxel){
   b(0,.97,-1,.33,.32,.5,fur);for(const x of [-.48,.48])for(let i=0;i<3;i++)b(x,1.1,-.45+i*.4,.04,.16,.13,0x695d4b);
   return{fur,wings:[]};
  }
- if(!['lion','rhino','griffin','chimera','dragon','sphinx','valkyrie','harpy','phoenix','frostwyrm','basilisk'].includes(kind))return null;
+ if(!['lion','rhino','griffin','chimera','dragon','sphinx','valkyrie','phoenix','frostwyrm','basilisk'].includes(kind))return null;
  const box=(x,y,z,w,h,d,c)=>voxel(body,x,y,z,w,h,d,c);
  const wings=[];
  const wing=(side,worldParts,pivot=[side*.5,1.38,-.05])=>wings.push({side,pivot,parts:worldParts.map(([x,y,z,w,h,d,c])=>[x-pivot[0],y-pivot[1],z-pivot[2],w,h,d,c])});
@@ -110,4 +111,29 @@ export function buildMonster(kind,body,voxel){
   box(0,1.0,1.57,.055,.06,.35,0x996a7b);box(-.07,1.0,1.76,.055,.06,.13,0xb17a8c);box(.07,1.0,1.76,.055,.06,.13,0xb17a8c);box(0,.57,.24,.8,.16,1.43,0xc5d092);
  }
  return{fur,muzzle,wings};
+}
+
+const detailedCache=new Map(),mythical=['raven','griffin','chimera','dragon','sphinx','valkyrie','phoenix','frostwyrm','basilisk'];
+export function detailedMonsterSpec(kind){
+ const animal=animalSculptureSpec(kind);if(animal)return animal;
+ if(!mythical.includes(kind))return null;if(detailedCache.has(kind))return detailedCache.get(kind);
+ const original=[],base=buildBaseMonster(kind,{},(_body,...p)=>original.push(p)),parts=[];
+ // Carve the old body masses into stepped cross sections, keeping weapons,
+ // horns and each creature's original anatomy rather than adding random cubes.
+ for(const p of original){const[x,y,z,w,h,d,c]=p;if(w>.6&&h>.5&&d>.6){for(let row=0;row<8;row++)for(let col=0;col<7;col++){
+  const ny=(row-3.5)/4,nz=(col-3)/3.6,edge=Math.max(0,1-ny*ny*.38-nz*nz*.30);if(edge<.25)continue;
+  parts.push([x,y-h/2+(row+.5)*h/8,z-d/2+(col+.5)*d/7,w*Math.sqrt(edge),h/8+.003,d/7+.003,c]);
+ }}else parts.push(p);}
+ const scaled=['dragon','frostwyrm','basilisk','chimera'].includes(kind),colour=kind==='frostwyrm'?0xe0f2e9:scaled?0xb3be86:0xe3d5ae;
+ for(const side of [-1,1])for(let row=0;row<5;row++)for(let col=0;col<6;col++){
+  const x=side*(.51-Math.abs(row-2)*.018),y=.73+row*.115,z=-.72+col*.23;
+  parts.push([x,y,z,.055,scaled?.09:.15,scaled?.14:.08,(row+col)%3?base.fur:colour]);
+ }
+ const wings=(base.wings||[]).map(wing=>{const feathers=[...wing.parts];for(const p of wing.parts){const[x,y,z,w,h,d,c]=p;if(w<.35)continue;for(let i=0;i<4;i++)feathers.push([x+(i-1.5)*w/5,y-.06-i*.015,z+d*.27,.09,.07,d*.65,i%2?c:colour]);}return Object.freeze({...wing,parts:Object.freeze(feathers.map(Object.freeze)),pivot:Object.freeze(wing.pivot)});});
+ const legs=kind==='frostwyrm'?[]:[-1,1].flatMap(side=>(['raven','valkyrie','harpy','phoenix'].includes(kind)?[.15]:[-.48,.48]).map(z=>Object.freeze({x:side*.32,y:.30,z,w:.27,h:.5,d:.30,color:base.fur})));
+ const height=Math.max(...parts.map(p=>p[1]+p[4]/2)),spec=Object.freeze({...base,key:kind,theme:'detailed-original-creature',parts:Object.freeze(parts.map(Object.freeze)),legs:Object.freeze(legs.map(p=>carvedAnimalLeg(p,kind))),wings:Object.freeze(wings),height,eyeLine:Math.min(height-.15,1.8),motion:legs.length===2?'biped':'quadruped'});detailedCache.set(kind,spec);return spec;
+}
+export function buildMonster(kind,body,voxel){
+ const detailed=detailedMonsterSpec(kind);if(detailed){for(const part of detailed.parts)voxel(body,...part);return detailed;}
+ return buildBaseMonster(kind,body,voxel);
 }
