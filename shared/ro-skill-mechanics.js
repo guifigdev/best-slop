@@ -1,4 +1,5 @@
 import {RO_SKILLS} from './ragnarok-jobs.js';
+import {isRoMeteorSkill,RO_METEOR_TIMING} from './ro-meteor.js';
 
 // Effect budgets are per hero, independent of how many skills have been learned.
 // Long-lived attacks store their total damage budget, not damage for every tick.
@@ -102,8 +103,9 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
   if(b.roSkillZones.filter(z=>z.source===unit.id).length>=RO_SKILL_EFFECT_LIMITS.zones){const oldest=b.roSkillZones.findIndex(z=>z.source===unit.id);b.roSkillZones.splice(oldest,1);}
   const origin=m.follow?unit:m.centered?unit:target;
-  b.roSkillZones.push({id:game.id?.()||'zone-'+weapon.key,key:weapon.key,source:unit.id,x:origin.x,z:origin.z,follow:!!m.follow,radius,interval,at:time,until:time+duration,ticks,damage,weapon,level});
-  emit(api,weapon.skill||'abilityPulse',origin,{source:unit.id,radius,duration:Math.min(1.4,duration),skillKey:weapon.key});return true;
+  const meteor=isRoMeteorSkill(weapon.key),id=game.id?.()||'zone-'+weapon.key;
+  b.roSkillZones.push({id,key:weapon.key,source:unit.id,x:origin.x,z:origin.z,follow:!!m.follow,radius,interval,at:time+(meteor?RO_METEOR_TIMING.fall:0),until:time+duration+(meteor?RO_METEOR_TIMING.fall:0),ticks,damage,weapon,level});
+  emit(api,meteor?'roMeteorFall':weapon.skill||'abilityPulse',origin,{source:unit.id,radius,duration:meteor?RO_METEOR_TIMING.fall:Math.min(1.4,duration),skillKey:weapon.key,...(meteor?{showerId:id+':'+ticks,element:'fire'}:{})});return true;
  }
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
  const count=Math.min(clamp(m.summonCount||1,1,3),RO_SKILL_EFFECT_LIMITS.summons-b.roSkillSummons.filter(s=>s.source===unit.id).length);if(!count)return false;
@@ -173,7 +175,7 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  if(unit.roSkillShield?.until<=time)delete unit.roSkillShield;
  if(!unit.alive||b.stage!=='playing')return;
  b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
- for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:.4,skillKey:zone.key});}
+ for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;const meteor=isRoMeteorSkill(zone.key),showerId=zone.id+':'+zone.ticks;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,meteor?'roMeteorImpact':zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:meteor?.85:.4,skillKey:zone.key,...(meteor?{showerId,element:'fire'}:{})});if(meteor&&zone.ticks>0)emit(api,'roMeteorFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'fire'});}
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
  for(const summon of b.roSkillSummons.filter(s=>s.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.summons)){
   const target=nearby(game,unit,summon.range,api).filter(e=>clear(api,summon,e)).sort((a,c)=>distance(a,summon)-distance(c,summon))[0];

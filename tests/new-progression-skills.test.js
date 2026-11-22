@@ -37,7 +37,7 @@ test('eleven new classic Ragnarok techniques have five real ranks and support mu
 });
 
 test('meteor pulses damage foes and sanctuary heals only allies; effects end on phase change',()=>{
- const {g,u,a}=classic(['ro_meteor','ro_sanctuary']),e=g.spawnEnemy('wolf',3,0,{hp:3000,damage:0,speed:0});e.order='stop';const hp=e.hp;assert.equal(g.command('p',{type:'cast',slot:0,x:3,z:0}),true);g.tickClassicRoEffects();assert.ok(e.hp<hp);const damaged=e.hp;g.time+=.4;g.tickClassicRoEffects();assert.ok(e.hp<damaged);
+ const {g,u,a}=classic(['ro_meteor','ro_sanctuary']),e=g.spawnEnemy('wolf',3,0,{hp:3000,damage:0,speed:0});e.order='stop';const hp=e.hp;assert.equal(g.command('p',{type:'cast',slot:0,x:3,z:0}),true);g.tickClassicRoEffects();assert.equal(e.hp,hp,'stones must land before damage');assert.ok(g.effects.some(e=>e.type==='roMeteorFall'));g.time+=.91;g.tickClassicRoEffects();assert.ok(e.hp<hp);const damaged=e.hp;g.time+=.71;g.tickClassicRoEffects();assert.ok(e.hp<damaged);
  a.hp-=200;e.hp-=20;const allyHp=a.hp,enemyHp=e.hp;assert.equal(g.command('p',{type:'cast',slot:1,x:2,z:0}),true);g.tickClassicRoEffects();assert.ok(a.hp>allyHp);assert.equal(e.hp,enemyHp);g.phase='preparation';g.tickClassicRoEffects();assert.equal(g.roClassicEffects.length,0);
 });
 

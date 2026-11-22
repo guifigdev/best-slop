@@ -1,12 +1,13 @@
 import * as T from 'three';
 import {createVoxelFire,VOXEL_FIRE_BUDGET} from './voxel-fire.js';
 import {RO_SKILLS} from '../shared/ragnarok-jobs.js';
+import {isRoMeteorSkill} from '../shared/ro-meteor.js';
 
 export const RO_FIRE_IMPACT_BUDGET=Object.freeze({impacts:12,sites:16,sitesPerImpact:4,partsPerSite:VOXEL_FIRE_BUDGET.flames+VOXEL_FIRE_BUDGET.embers,instances:272,drawCalls:1,smoke:0,maxRadius:12,maxDuration:1.1});
 const B=RO_FIRE_IMPACT_BUDGET,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),element=e=>e?.element||RO_SKILLS[e?.skillKey]?.element,seed=value=>[...String(value)].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,17)*.001;
 export function roFireImpactHandles(event){
  if(event?.type==='fireball'&&!event.bonk&&event.impact!==true&&(event.phase==='launch'||event.phase==='travel'||event.projectile===true||Number.isFinite(event.tx)||Number.isFinite(event.tz)||event.from&&event.to))return false;
- return !!event&&(event.type==='fireball'&&(!event.element||event.element==='fire')||event.type==='abilityPulse'&&event.radius>=1.2&&element(event)==='fire');
+ return !!event&&(event.type==='roMeteorImpact'||event.type==='fireball'&&(!event.element||event.element==='fire')||event.type==='abilityPulse'&&event.radius>=1.2&&element(event)==='fire');
 }
 export function roFireImpacts(state,time=state?.time||0){
  if(!Number.isFinite(time))return[];const entries=[],effects=state?.effects||[];
@@ -14,7 +15,7 @@ export function roFireImpacts(state,time=state?.time||0){
   if(e.type==='abilityPulse'&&effects.some(other=>other.type==='fireball'&&Math.abs(other.time-e.time)<.1&&Math.hypot(other.x-e.x,other.z-e.z)<1))continue;
   entries.push({...e,key:'impact:'+e.id,time:e.time,duration,age,zone:false,radius:clamp(Number.isFinite(e.radius)?e.radius:2.5,.6,B.maxRadius)});
  }
- const elapsed=state?.bonk?.elapsed||0;for(const z of state?.bonk?.roSkillZones||[]){if((z.weapon?.element||RO_SKILLS[z.key]?.element)!=='fire'||z.until<=elapsed||![z.x,z.z].every(Number.isFinite))continue;entries.push({...z,key:'zone:'+z.id,time:time-1,duration:1,age:0,zone:true,radius:clamp(z.radius||3,.6,B.maxRadius)});}
+ const elapsed=state?.bonk?.elapsed||0;for(const z of state?.bonk?.roSkillZones||[]){if(isRoMeteorSkill(z.key)||(z.weapon?.element||RO_SKILLS[z.key]?.element)!=='fire'||z.until<=elapsed||![z.x,z.z].every(Number.isFinite))continue;entries.push({...z,key:'zone:'+z.id,time:time-1,duration:1,age:0,zone:true,radius:clamp(z.radius||3,.6,B.maxRadius)});}
  return entries.sort((a,b)=>Number(a.zone)-Number(b.zone)||b.time-a.time).slice(0,B.impacts);
 }
 export function createRoFireImpactArt({scene}){
