@@ -3,7 +3,7 @@
 export function createRoomSocket({url,payload,onJoined,onState,onParty,onError,onStatus,onClose,onChat,WebSocketClass=WebSocket,storage=localStorage,now=()=>Date.now(),retryLimitMs=120000}){
  let socket=null,closed=false,joined=false,awaitingJoin=false,retrying=false,timer=null,timeout=null,started=now(),attempt=0,disconnectedAt=null;
  const code=String(payload.room||'').toUpperCase(),key='custom-hero-room:'+url+':'+code;let saved=null;try{saved=JSON.parse(storage.getItem(key)||'null');}catch{}
- let staticKey=null,staticMap=null,staticObstacles=null;function hydrate(state){if(!state?.worldStaticKey)return state;if(state.worldStaticKey!==staticKey){staticKey=state.worldStaticKey;staticMap=state.dungeon?.map;staticObstacles=state.obstacles;}else{if(state.dungeon&&!Object.hasOwn(state.dungeon,'map'))state.dungeon={...state.dungeon,map:staticMap};if(!Object.hasOwn(state,'obstacles'))state.obstacles=staticObstacles;}return state;}
+ let staticKey=null,staticMap=null,staticObstacles=null;function hydrate(state){if(!state?.worldStaticKey)return state;if(state.worldStaticKey!==staticKey){staticKey=state.worldStaticKey;staticMap=state.dungeon?.map||state.bonk?.map;staticObstacles=state.obstacles;}else{if(state.bonk&&!Object.hasOwn(state.bonk,'map'))state.bonk={...state.bonk,map:staticMap};if(state.dungeon&&!Object.hasOwn(state.dungeon,'map'))state.dungeon={...state.dungeon,map:staticMap};if(!Object.hasOwn(state,'obstacles'))state.obstacles=staticObstacles;}return state;}
  const facade={room:code,id:null,readyState:0,onclose:null,send(raw){if(socket?.readyState!==1)return false;socket.send(typeof raw==='string'?raw:JSON.stringify(raw));return true;},close(){if(closed)return;closed=true;clearTimeout(timer);clearTimeout(timeout);facade.readyState=3;socket?.close();},leave(){storage.removeItem(key);if(socket?.readyState===1)socket.send(JSON.stringify({type:'leave'}));facade.close();return Promise.resolve();}};
  function connect(){if(closed)return;awaitingJoin=true;facade.readyState=0;onStatus?.(retrying?'Reconectando à sala…':'Conectando…');socket=new WebSocketClass(url);const current=socket;
   timeout=setTimeout(()=>{if(current.readyState!==1)current.close();},7000);
@@ -14,7 +14,7 @@ export function createRoomSocket({url,payload,onJoined,onState,onParty,onError,o
    else if(m.type==='party')onParty?.(m.party,m.id);
    else if(m.type==='roomChat')onChat?.(m.messages);
    else if(m.type==='maintenance')onStatus?.(m.message);
-   else if(m.type==='error'||m.type==='rejected'){onError?.(m.message);if(saved&&awaitingJoin&&m.type==='error'){storage.removeItem(key);saved=null;facade.close();onClose?.();}}
+   else if(m.type==='error'||m.type==='rejected'){onError?.(m.message);if(saved&&awaitingJoin&&m.type==='error'){storage.removeItem(key);saved=null;facade.close();onClose?.();}else if(awaitingJoin&&m.type==='error')facade.close();}
   };
   current.onerror=()=>onStatus?.('Conexão indisponível. Tentando retomar a sala…');
   current.onclose=event=>{if(current!==socket||closed)return;clearTimeout(timeout);facade.readyState=0;if(!retrying)disconnectedAt=now();if(saved&&![4001,4003,1008].includes(event.code)&&now()-disconnectedAt<retryLimitMs){retrying=true;timer=setTimeout(connect,Math.min(5000,500*2**Math.min(attempt++,4)));return;}facade.readyState=3;facade.onclose?.();onClose?.();};

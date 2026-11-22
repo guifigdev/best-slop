@@ -6,7 +6,7 @@ import path from 'node:path';
 const buildEnv={...loadEnv('production',process.cwd(),'VITE_'),...process.env};
 await viteBuild({base:buildEnv.VITE_ASSET_BASE_URL||'/',build:{outDir:'dist/client',emptyOutDir:true}});
 await mkdir('dist/client/guides',{recursive:true});
-for(const name of ['COMECE_AQUI_VPS.md','HOSPEDAGEM.md','CONFIGURACOES.md','MONETIZACAO.md','RELATORIO_EXECUTIVO.md'])try{await copyFile('docs/'+name,'dist/client/guides/'+name);}catch(error){if(error.code!=='ENOENT')throw error;}
+for(const name of ['COMECE_AQUI_VPS.md','SALAS_ONLINE.md','HOSPEDAGEM.md','CONFIGURACOES.md','MONETIZACAO.md','RELATORIO_EXECUTIVO.md'])try{await copyFile('docs/'+name,'dist/client/guides/'+name);}catch(error){if(error.code!=='ENOENT')throw error;}
 await mkdir('dist/client/assets/font-licenses',{recursive:true});
 for(const name of ['dm-sans-OFL.txt','outfit-OFL.txt','README.txt'])await copyFile('src/assets/fonts/'+name,'dist/client/assets/font-licenses/'+name);
 await mkdir('outputs',{recursive:true});

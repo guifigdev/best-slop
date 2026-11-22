@@ -70,12 +70,12 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
  async function recover(value){if(!/^ro_[a-f0-9]{64}$/.test(value)){toast('Confira o código de recuperação completo.');return false;}const version=++epoch;status='loading';render();try{const data=await api('account',{auth:value});if(version!==epoch)return false;token=value;account=normalizeRoAccount(data.account);selectedId=account.progress.selectedCharacter||uuid();const c=selectedCharacter();if(c){lineage=c.lineage;characterName=c.name;}running=null;recoveryVisible=false;presetDirty=false;status='cloud';notice='';notify();toast('Conta recuperada.');return true;}catch(error){if(version===epoch){status='local';notice=error.message;notify();toast(error.message);}return false;}}
  function localCommand(game,command){const hero=game?.units?.find(u=>u.bonkHero);return game?.command&&hero?.owner!=null?game.command(hero.owner,command):send(command);}
  function startRun(run){if(run.game?.options?.bonkDebug===true||run.starting||run.id||running!==run||run.epoch!==epoch||status!=='cloud')return;run.starting=true;return serial(async()=>{try{if(run.game?.options?.bonkDebug===true||running!==run||epoch!==run.epoch)return;const data=await api('run',{method:'POST',body:{activity:run.activity}});if(running===run&&epoch===run.epoch){run.id=data.runId;accept(data.account);}}catch(error){if(running===run){status='local';notice=error.message;nextReconnectAt=Date.now()+15000;notify();}}finally{run.starting=false;}});}
- function prepareGame(game){
+ function prepareGame(game,{online=false}={}){
   if(game?.options?.bonkDebug===true){running=null;return false;}
   const hero=game?.units?.find(u=>u.bonkHero);if(!hero)return false;const chosen=selection();
-  if(chosen.checkpoint&&chosen.character.lineage===hero.roLineage)localCommand(game,{type:'bkRestore',checkpoint:chosen.checkpoint,activity,freshActivity:!chosen.resume||chosen.checkpoint.activity!==activity});
-  else if(chosen.character){selectedId=uuid();characterName='';}
-  localCommand(game,{type:'bkCards',cards:clone(preset().cards)});
+  if(!online&&chosen.checkpoint&&chosen.character.lineage===hero.roLineage)localCommand(game,{type:'bkRestore',checkpoint:chosen.checkpoint,activity,freshActivity:!chosen.resume||chosen.checkpoint.activity!==activity});
+  else if(!online&&chosen.character){selectedId=uuid();characterName='';}
+  if(!online)localCommand(game,{type:'bkCards',cards:clone(preset().cards)});
   const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastFloor='';lastRoute='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
   void loadReady().then(()=>startRun(run));
   return true;
@@ -128,5 +128,5 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
  }
  function mount(container){if(!container)return;if(!host){host=document.createElement('section');host.className='ro-account';host.setAttribute('aria-label','Conta Ragnarok, personagens e cartas');host.addEventListener('click',click);host.addEventListener('change',change);host.addEventListener('input',input);host.addEventListener('toggle',event=>{if(event.target.dataset.uiKey==='ro-collection')render();},true);}container.append(host);render();void loadReady();}
  const cachedCharacter=selectedCharacter();if(cachedCharacter){lineage=cachedCharacter.lineage;characterName=cachedCharacter.name;}
- return{mount,render,selection,setLineage,prepareGame,save,update,loadReady,recover,account:()=>clone(account),status:()=>status,unmount(){host?.remove();}};
+ return{mount,render,selection,selectActivity(value){activity=value==='tower'?'tower':'adventure';resume=false;notify();},onlineSelection:lineage=>({token,lineage,characterId:selectedCharacter()?.id||null,activity,resume}),setLineage,prepareGame,save,update,loadReady,recover,account:()=>clone(account),status:()=>status,unmount(){host?.remove();}};
 }
