@@ -354,7 +354,7 @@ npx wrangler deploy --config deploy/wrangler.assets.toml
 
 Se pedir para escolher um subdomínio workers.dev, defina um disponível. Confira no arquivo a conta `a9cf0f539d37afe46de8c5d1aec58cdf`, binding `CLIENTS_BUCKET` e bucket `clients`.
 
-No fim, o comando mostra uma URL parecida com `https://best-slop-assets.SEUSUBDOMINIO.workers.dev`. **Copie a URL real retornada**; `SEUSUBDOMINIO` é apenas uma ilustração. Vamos chamá-la de **URL_DO_WORKER** abaixo. A raiz pode responder 404: o Worker serve somente `/games/assets/`, e os arquivos serão enviados pelo CI.
+O Worker desta conta já foi publicado em **https://best-slop-assets.custom-hero-voxel.workers.dev**. Esse é o endereço real usado nos próximos passos. A raiz pode responder 404: o Worker serve somente `/games/assets/`, e os arquivos serão enviados pelo CI.
 
 ### 7.3. Criar as credenciais R2 no navegador
 
@@ -375,7 +375,7 @@ No repositório → Settings → Secrets and variables → Actions, adicione:
 | Variables | `R2_ASSET_PREFIX` | `games` |
 | Variables | `VITE_ASSET_BASE_URL` | URL real do Worker seguida de `/games/` |
 
-O endpoint não leva `/clients`; bucket e pasta são separados. Exemplo de formato do último campo: `https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games/`. Use seu endereço real.
+O endpoint não leva `/clients`; bucket e pasta são separados. Valor do último campo nesta conta: `https://best-slop-assets.custom-hero-voxel.workers.dev/games/`. Use o endereço real indicado acima.
 
 ### 7.5. Ajustar o `.env` da VPS como game-deploy
 
@@ -392,11 +392,11 @@ cd /opt/custom-hero
 nano .env
 ```
 
-Configure estes dois valores, substituindo o exemplo pela URL real do Worker:
+Nesta instalação os dois valores reais são:
 
 ```dotenv
-VITE_ASSET_BASE_URL=https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games/
-R2_PUBLIC_URL=https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games
+VITE_ASSET_BASE_URL=https://best-slop-assets.custom-hero-voxel.workers.dev/games/
+R2_PUBLIC_URL=https://best-slop-assets.custom-hero-voxel.workers.dev/games
 ```
 
 O primeiro termina com `/`; o segundo não. Salve com Ctrl+O, Enter, Ctrl+X. Mantenha `REVERSE_PROXY_MODE=host` e `GAME_BIND_PORT=2567`.
