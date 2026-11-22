@@ -13,7 +13,7 @@ const mechanicKeys=new Set(['modifiers','status','duration','statusDuration','he
 test('every source skill has an executable combat role, coherent numeric profile and a primary source identity',()=>{
  assert.equal(Object.keys(RO_EXPANDED_SKILLS).length,681);
  const ids=new Set();
- for(const [key,s] of Object.entries(RO_SKILLS)){
+ for(const [key,s] of Object.entries(RO_SKILLS).filter(([,s])=>s.sourceId)){
   assert.equal(key,s.key);assert.ok(allowedKinds.has(s.kind),key);assert.ok(Number.isInteger(s.sourceId)&&s.sourceId>0,key);assert.ok(!ids.has(s.sourceId),key);ids.add(s.sourceId);
   assert.match(s.source,/rathena\/rathena/);assert.ok(s.sourceAegis&&s.sourceJobs.length&&s.sourceJob);assert.ok(s.name&&s.description.length>25,key);assert.ok(Number.isInteger(s.tier)&&s.tier>=0&&s.tier<=3,key);
   for(const field of ['damage','cooldown','range','manaCost'])assert.ok(Number.isFinite(s[field])&&s[field]>=0,`${key}.${field}`);
@@ -72,7 +72,7 @@ test('noncombat utility is explicitly excluded and never silently offered as a p
 test('every included active can execute through the real command dispatcher and every passive changes a real stat or proc',()=>{
  const g=new Game(381,{mode:'bonk',bonkLineage:'dragonknight'});g.addPlayer('p','knight');assert.ok(g.command('p',{type:'bkReady'}));const u=g.player('p');
  g.bonk.map.obstacles=[];g.bonk.map.walls=[];
- for(const s of Object.values(RO_SKILLS)){
+ for(const s of Object.values(RO_SKILLS).filter(s=>s.sourceId)){
   const lineage=Object.values(RO_LINEAGES).find(p=>p.skills.includes(s.key));u.roLineage=lineage.key;u.roTier=3;u.bonkJob=lineage.jobs[3];u.roSkillBuffs=[];u.roSkillShield=null;u.roSkillProcAt={};u.bonkBuild={weapons:{basic:1,[s.key]:1},tomes:{},relics:{}};u.bonkSkillSlots=['basic',s.key,null,null];u.bonkWeaponAt={};u.hp=100;u.maxHp=500;u.mana=5000;u.maxMana=5000;u.alive=true;u.x=0;u.z=0;g.bonk.elapsed=10;g.bonk.stage='playing';g.bonk.offer=null;g.bonk.roSkillZones=[];g.bonk.roSkillSummons=[];
   const enemy={id:999,name:'Alvo',bonkEnemy:true,alive:true,x:1,z:0,hp:1e7,maxHp:1e7,collisionRadius:.4,damage:0,armor:0,bonkNextAttack:100};g.units=[u,enemy];
   if(s.kind==='passive'){

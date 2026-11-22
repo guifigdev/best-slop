@@ -88,3 +88,37 @@ test('co-op projectiles credit their real owner, rewards reach both accounts, an
  const gate=g.bonk.exitGates.find(t=>t.open);b.x=gate.x+gate.direction.x*4;b.z=gate.z+gate.direction.z*4;g.tick(1/30);
  assert.equal(g.bonk.route.key,'payon-forest');assert.ok(Math.hypot(a.x-b.x,a.z-b.z)<5);assert.equal(a.roTier,1);assert.equal(b.roTier,1);
 });
+
+
+test('host fills every game with bots alongside a real guest, removes bots, and preserves capacity',async()=>{
+ const app=createGameServer({config:config()}),sockets=[];try{
+  await app.listen();
+  for(const [i,mode]of Object.keys(MODES).entries()){
+   const code='BOT'+i,hero=identities[mode]||'knight';
+   const a=await request(app,sockets,{type:'join',intent:'create',room:code,hero,options:{mode}});
+   const b=await request(app,sockets,{type:'join',intent:'join',room:code,hero});
+   const no=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'roomBots',fill:true}}));assert.match((await no).message,/host/);
+   const filled=next(a.ws,'state',m=>m.state.onlineRoom.players.some(p=>p.bot));a.ws.send(JSON.stringify({type:'command',command:{type:'roomBots',fill:true}}));const room=(await filled).state.onlineRoom;
+   assert.equal(room.players.length,room.capacity,mode);assert.equal(room.players.filter(p=>!p.bot).length,2);assert.ok(room.players.filter(p=>p.bot).every(p=>p.connected));
+   const removed=next(a.ws,'state',m=>m.state.onlineRoom.players.length===room.capacity-1);a.ws.send(JSON.stringify({type:'command',command:{type:'roomKick',playerId:room.players.find(p=>p.bot).id}}));await removed;
+   const refill=next(a.ws,'state',m=>m.state.onlineRoom.players.length===room.capacity);a.ws.send(JSON.stringify({type:'command',command:{type:'roomBots',count:1}}));await refill;
+   const seats=app.rooms.get(code).game.heroes().map(u=>u.seat);assert.equal(new Set(seats).size,seats.length);
+   const stored=app.store.load().find(([c])=>c===code)[1];assert.equal([...stored.members.values()].filter(m=>m.bot).length,room.capacity-2);
+  }
+ }finally{await close(app,sockets);}
+});
+
+test('online players confirm independent characters after entering, and only the host starts the selected Castle Fight',async()=>{
+ const app=createGameServer({config:config()}),sockets=[];try{
+  await app.listen();const a=await request(app,sockets,{type:'join',intent:'create',room:'CASTLEQA',hero:'knight',chooseHeroInRoom:true,options:{game:'castlefight',mode:'castlefight'}});
+  const b=await request(app,sockets,{type:'join',intent:'join',room:'CASTLEQA',hero:'knight',chooseHeroInRoom:true});
+  assert.equal(a.data.state.options.mode,'castlefight');
+  const waiting=next(a.ws,'error');a.ws.send(JSON.stringify({type:'command',command:{type:'roomStart'}}));assert.match((await waiting).message,/personagem/);
+  const changed=next(a.ws,'state',m=>m.state.onlineRoom.players.find(p=>p.id===a.data.id)?.heroChosen);a.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'mage'}}));await changed;
+  const second=next(b.ws,'state',m=>m.state.onlineRoom.players.every(p=>p.heroChosen));b.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'raccoon'}}));await second;
+  const g=app.rooms.get('CASTLEQA').game;assert.equal(g.player(a.data.id).castleBuilderKey,'mage');assert.equal(g.player(b.data.id).castleBuilderKey,'raccoon');assert.equal(g.heroes().length,2);
+  const no=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'ready'}}));assert.match((await no).message,/host/);
+  const begun=next(a.ws,'state',m=>m.state.onlineRoom.started);a.ws.send(JSON.stringify({type:'command',command:{type:'roomStart'}}));const state=(await begun).state;assert.equal(state.options.mode,'castlefight');
+  const locked=next(a.ws,'error');a.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'knight'}}));assert.match((await locked).message,/antes/);
+ }finally{await close(app,sockets);}
+});

@@ -49,7 +49,7 @@ export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
   if((unit.roSkillBuffs||[]).some(b=>b.key===weapon.key&&b.until>time))return{ready:false,reasonCode:'active',readyReason:'Efeito ativo'};
   return{ready:true,reasonCode:'ready',readyReason:'Pronta'};
  }
- if(kind==='summon'&&(game.bonk?.roSkillSummons||[]).some(s=>s.key===weapon.key&&s.until>time))return{ready:false,reasonCode:'active',readyReason:'Invocação ativa'};
+ if(kind==='summon'&&(game.bonk?.roSkillSummons||[]).some(s=>s.source===unit.id&&s.key===weapon.key&&s.until>time))return{ready:false,reasonCode:'active',readyReason:'Invocação ativa'};
  // Offensive utility still needs a nearby monster; heals and defensive buffs do not.
  if(['zone','summon','dash'].includes(kind)){
   const range=Math.max(3,finite(weapon.range,15)*(stats.area||1));
@@ -96,13 +96,13 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
  const interval=clamp(m.interval||.8,.35,4),ticks=clamp(Math.ceil(duration/interval),1,40),damage=scaledDamage(weapon,level)/ticks;
  if(kind==='zone'){
   b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
-  if(b.roSkillZones.length>=RO_SKILL_EFFECT_LIMITS.zones)b.roSkillZones.shift();
+  if(b.roSkillZones.filter(z=>z.source===unit.id).length>=RO_SKILL_EFFECT_LIMITS.zones){const oldest=b.roSkillZones.findIndex(z=>z.source===unit.id);b.roSkillZones.splice(oldest,1);}
   const origin=m.follow?unit:m.centered?unit:target;
   b.roSkillZones.push({id:game.id?.()||'zone-'+weapon.key,key:weapon.key,source:unit.id,x:origin.x,z:origin.z,follow:!!m.follow,radius,interval,at:time,until:time+duration,ticks,damage,weapon,level});
   emit(api,weapon.skill||'abilityPulse',origin,{source:unit.id,radius,duration:Math.min(1.4,duration),skillKey:weapon.key});return true;
  }
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
- const count=Math.min(clamp(m.summonCount||1,1,3),RO_SKILL_EFFECT_LIMITS.summons-b.roSkillSummons.length);if(!count)return false;
+ const count=Math.min(clamp(m.summonCount||1,1,3),RO_SKILL_EFFECT_LIMITS.summons-b.roSkillSummons.filter(s=>s.source===unit.id).length);if(!count)return false;
  for(let i=0;i<count;i++)b.roSkillSummons.push({id:game.id?.()||'summon-'+weapon.key+'-'+i,key:weapon.key,source:unit.id,x:unit.x+Math.cos(i*2.1)*2,z:unit.z+Math.sin(i*2.1)*2,range:clamp(weapon.range||18,4,32),radius:clamp(m.radius||2,1,8),interval,at:time,until:time+duration,damage:damage/count,weapon,level});
  emit(api,'summon',unit,{source:unit.id,radius:3,duration:.8,skillKey:weapon.key});return true;
 }
@@ -168,10 +168,10 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  unit.roSkillBuffs=(unit.roSkillBuffs||[]).filter(v=>v.until>time);
  if(unit.roSkillShield?.until<=time)delete unit.roSkillShield;
  if(!unit.alive||b.stage!=='playing')return;
- b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time&&z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones);
- for(const zone of b.roSkillZones){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:.4,skillKey:zone.key});}
- b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time&&s.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.summons);
- for(const summon of b.roSkillSummons){
+ b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
+ for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:.4,skillKey:zone.key});}
+ b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
+ for(const summon of b.roSkillSummons.filter(s=>s.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.summons)){
   const target=nearby(game,unit,summon.range,api).filter(e=>clear(api,summon,e)).sort((a,c)=>distance(a,summon)-distance(c,summon))[0];
   if(!target)continue;
   const d=distance(summon,target),travel=Math.min(Math.max(0,finite(dt))*(summon.weapon.mechanics?.ranged?3:9),Math.max(0,d-1.5));

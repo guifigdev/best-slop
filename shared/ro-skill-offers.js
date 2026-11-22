@@ -1,12 +1,12 @@
-import {RO_SKILLS,roLineage,roBasicAttack,roSkillTier} from './ragnarok-jobs.js';
+import {RO_SKILLS,roBasicAttack} from './ragnarok-jobs.js';
 import {BONK_TOMES,BONK_RULES} from './bonk-catalog.js';
 import {RO_LEARNED_SKILL_LIMIT,roActiveSkillKeys} from './ro-skill-loadout.js';
 
 export function roSkillOfferPool(unit){
- const build=unit.bonkBuild,entries=[],lineage=roLineage(unit.roLineage),active=roActiveSkillKeys(unit);
- for(const key of ['basic',...lineage.skills]){
+ const build=unit.bonkBuild,entries=[],active=roActiveSkillKeys(unit);
+ for(const key of ['basic',...Object.keys(RO_SKILLS)]){
   const definition=key==='basic'?roBasicAttack(unit):RO_SKILLS[key],level=build.weapons[key]||0;
-  if(!definition||(key==='basic'?0:roSkillTier(unit.roLineage,key))>(unit.roTier||0)||level>=BONK_RULES.maxWeaponLevel||!level&&Object.keys(build.weapons).length>=RO_LEARNED_SKILL_LIMIT)continue;
+  if(!definition||level>=BONK_RULES.maxWeaponLevel||!level&&Object.keys(build.weapons).length>=RO_LEARNED_SKILL_LIMIT)continue;
   const passive=definition.kind==='passive';
   entries.push({kind:'weapon',key,name:definition.name,description:definition.description+(passive?' Passiva: funciona sem ocupar a barra.':!level&&active.length>=4?' Fica aprendida; equipe no menu Habilidades.':''),skill:definition.skill,level:level+1,passive});
  }

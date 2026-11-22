@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import {createRoomSocket} from '../src/room-socket.js';
 class FakeSocket{static instances=[];constructor(url){this.url=url;this.readyState=0;this.sent=[];FakeSocket.instances.push(this);}send(value){this.sent.push(JSON.parse(value));}open(){this.readyState=1;this.onopen?.();}message(value){this.onmessage?.({data:JSON.stringify(value)});}close(code=1000){this.readyState=3;this.onclose?.({code});}}
 const storage=()=>{const values=new Map();return{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};};
+test('creating Castle Fight never resumes a saved Custom Hero session with the same room code',()=>{
+ FakeSocket.instances=[];const saved=storage();saved.setItem('custom-hero-room:ws://localhost/ws:BOSQUE',JSON.stringify({id:'old-thor',token:'old-capability'}));
+ const client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',intent:'create',room:'BOSQUE',options:{game:'castlefight',mode:'castlefight'}},storage:saved,WebSocketClass:FakeSocket});
+ try{const socket=FakeSocket.instances[0];socket.open();assert.equal(socket.sent[0].type,'join');assert.equal(socket.sent[0].intent,'create');assert.equal(socket.sent[0].options.mode,'castlefight');assert.equal(socket.sent[0].token,undefined);}finally{client.close();}
+});
+test('cached full skill libraries hydrate compact updates and replace when the build changes',()=>{
+ FakeSocket.instances=[];const states=[],client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',room:'T'},storage:storage(),WebSocketClass:FakeSocket,onState:s=>states.push(s)});
+ try{const socket=FakeSocket.instances[0];socket.open();assert.ok(socket.sent[0].features.includes('ro-skill-library-v1'));socket.message({type:'joined',id:'p',room:'T',state:{bonk:{skillCatalogKey:'a',skillCatalog:[{key:'heal'}],learnedSkills:[]}}});socket.message({type:'state',state:{bonk:{skillCatalogKey:'a',elapsed:1}}});assert.equal(states[0].bonk.skillCatalog[0].key,'heal');socket.message({type:'state',state:{bonk:{skillCatalogKey:'b',skillCatalog:[{key:'bash'}],learnedSkills:[{key:'bash'}]}}});socket.message({type:'state',state:{bonk:{skillCatalogKey:'b'}}});assert.equal(states[2].bonk.learnedSkills[0].key,'bash');}finally{client.close();}
+});
 test('room client negotiates static worlds, restores omitted maps and reconnects after a long active run',async()=>{
  FakeSocket.instances=[];let now=0;const states=[],joined=[];const client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',room:'TEST'},storage:storage(),WebSocketClass:FakeSocket,now:()=>now,onState:s=>states.push(s),onJoined:m=>joined.push(m)});
  try{const first=FakeSocket.instances[0];first.open();assert.ok(first.sent[0].features.includes('static-world-v1'));const map={tiles:[1,2]},obstacles=[{x:1}];first.message({type:'joined',id:'p',room:'TEST',resumeToken:'guest-capability',state:{worldStaticKey:'floor1',dungeon:{map},obstacles}});first.message({type:'state',state:{worldStaticKey:'floor1',dungeon:{floor:1}}});assert.deepEqual(states[0].dungeon.map,map);assert.deepEqual(states[0].obstacles,obstacles);
@@ -19,4 +28,11 @@ test('an expired resume after an active run closes the connection and clears the
   second.message({type:'error',message:'Sessão expirada. Entre em uma nova sala.'});
   assert.equal(client.readyState,3);assert.equal(closed,1);assert.equal(errors.length,1);assert.equal(saved.getItem('custom-hero-room:ws://localhost/ws:TEST'),undefined);
  }finally{client.close();}
+});
+
+
+test('joining as a new player in another tab never takes over the host stored for the same code',()=>{
+ FakeSocket.instances=[];const saved=storage();saved.setItem('custom-hero-room:ws://localhost/ws:FRIENDS',JSON.stringify({id:'host',token:'host-capability'}));
+ const client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',intent:'join',room:'FRIENDS',chooseHeroInRoom:true},storage:saved,WebSocketClass:FakeSocket});
+ try{const socket=FakeSocket.instances[0];socket.open();assert.equal(socket.sent[0].type,'join');assert.equal(socket.sent[0].chooseHeroInRoom,true);assert.equal(socket.sent[0].token,undefined);}finally{client.close();}
 });

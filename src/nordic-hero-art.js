@@ -1,3 +1,4 @@
+import {carveNordicSurfaces,nordicHeroRelief,fenrirFurRelief} from './nordic-hero-detail.js';
 import {FENRIR_ART,fenrirSpec} from './fenrir-art.js';
 import {voxelTagPortrait} from './tag-character-art.js';
 // Independent visual skins for the six Custom Hero archetypes. All gameplay
@@ -92,6 +93,7 @@ export function nordicHeroSpec(kind){
  // Hair and fur caps are carved into a rounded stepped shell instead of slabs.
  const hairColors=kind==='knight'?[0xa75f3e,0xc07745]:kind==='mage'?[0xe2d7bf,0x323942]:kind==='ranger'?[0xdbe0d2,0xb5a579]:kind==='owl'?[0xc7c8bb]:kind==='raccoon'?[0x3e4240]:[0x866950];
  for(let i=parts.length-1;i>=0;i--){const p=parts[i];if(!hairColors.includes(p[6])||p[3]<.4||p[5]<.5||p[1]<2)continue;parts.splice(i,1);const[x,y,z,w,h,d,c]=p;for(let ix=0;ix<9;ix++)for(let iz=0;iz<6;iz++){const nx=(ix-4)/4,nz=(iz-2.5)/2.5;if(nx*nx+nz*nz>1.7)continue;const drop=(Math.abs(nx)**2+Math.abs(nz)**2)*.035;parts.push([x-w/2+w*(ix+.5)/9,y-drop+((ix+iz)%3)*.009,z-d/2+d*(iz+.5)/6,w/9+.003,h,d/6+.003,c]);}}
+ const detailed=carveNordicSurfaces(parts);nordicHeroRelief(kind,detailed);parts.splice(0,parts.length,...detailed);
  const height=Math.max(...parts.map(p=>p[1]+p[4]/2),...legs.map(p=>p.y+p.h/2));
  const result=Object.freeze({key:kind,theme:'nordic-hero',parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine:1.91,motion:'humanoid'});specs.set(kind,result);return result;
 }
@@ -102,6 +104,7 @@ function detailedFenrirSpec(){
  // Replace the major rectangular masses with stepped, bevelled cross sections.
  for(const p of source.parts){const[x,y,z,w,h,d,c]=p;if(w>.75&&h>.65&&d>.65){for(let i=0;i<9;i++){const edge=Math.abs(i-4)/4;parts.push([x,y-h/2+h*(i+.5)/9,z,w*(1-edge*edge*.18),h/9+.004,d*(1-edge*edge*.12),c]);}}else parts.push([...p]);}
  const b=(...p)=>parts.push(p);for(let side of [-1,1]){for(let row=0;row<7;row++)for(let j=0;j<5;j++){const y=.98+row*.12,z=.05+j*.15;b(side*(.64+Math.sin(row+j)*.035),y,z,.095,.17,.13,(row+j)%3===0?0xa3b1b5:0x788995);}for(let i=0;i<8;i++){b(side*(.25+i*.03),2.12-i*.039,1.43,.047,.06,.04,i%2?0x839399:0xaebfc0);b(side*.69,1.22+i*.055,.99,.034,.025,.025,0xe2cc91);}for(let i=0;i<4;i++)b(side*(.18+i*.08),1.58,1.99,.044,.075,.036,0x334c57);for(let i=0;i<5;i++)b(side*.39,2.28+i*.07,.99,.055,.063,.025,i%2?0x6d8591:0xaabbbd);}
+ const detailed=carveNordicSurfaces(parts);fenrirFurRelief(detailed);parts.splice(0,parts.length,...detailed);
  detailedWolf=Object.freeze({...source,key:'fenrir',theme:'nordic-hero',parts:Object.freeze(parts.map(Object.freeze)),legs:Object.freeze(legs),motion:'quadruped'});return detailedWolf;
 }
 export function buildNordicHeroModel(kind,body,voxel){const spec=nordicHeroSpec(kind);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
