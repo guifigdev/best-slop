@@ -1,3 +1,4 @@
+import {pixelTerrainForArena} from './pixel-terrain.js';
 import {createColiseumFire} from './coliseum-fire.js';
 import {ARENA_BOUNDS,ARENA_TILE_HALF} from '../shared/arena-size.js';
 import * as T from 'three';
@@ -7,7 +8,7 @@ import {createHazardArt} from './hazard-art.js';
 import {createColiseumMoat} from './coliseum-moat.js';
 import {createColiseumWeather} from './coliseum-weather.js';
 const HOP=[0,.07,.22,.38,.22,.07,0,0],ARM=[0,.4,1.3,2.2,2.6,1.7,.8,.15];
-export function createColiseum(scene,tiles,environment,sun,base,material){
+export function createColiseum(scene,tiles,environment,sun,base,material,groundDetail=null){
  const originalEnvironmentMaterial=environment?.material,environmentMaterial=originalEnvironmentMaterial?.clone();if(environmentMaterial)environment.material=environmentMaterial;
  const fire=createColiseumFire();scene.add(fire.root);
  const architecture=createColiseumArchitecture({base,material}),boundary=createArenaBoundary({base}),hazards=createHazardArt({base,heightAt:()=>.2}),moat=createColiseumMoat({base}),audience=new T.Group();audience.name='coliseum-audience';scene.add(architecture.root,boundary.root,hazards.root,moat.root,audience);
@@ -28,7 +29,7 @@ export function createColiseum(scene,tiles,environment,sun,base,material){
  for(const [i,p]of seats.entries())for(const [key,mesh]of Object.entries(parts)){const hex=key==='body'?cloth[(i+p.row)%cloth.length]:key==='eyes'?0x273c33:key==='muzzle'?p.species===4?0xd6b064:0xddd0ad:fur[p.species];if(['ears','eyes','feet'].includes(key)){mesh.setColorAt(i*2,color.setHex(hex));mesh.setColorAt(i*2+1,color);}else mesh.setColorAt(i,color.setHex(hex));}
  const weather=createColiseumWeather({base});scene.add(weather.root);
  function visibility(){const visible=eligible&&!expanded;architecture.root.visible=boundary.root.visible=audience.visible=visible;moat.root.visible=visible;fire.root.visible=visible&&current==='volcano';hazards.setVisible(visible);weather.setVisible(visible);}
- function theme(key){if(current===key)return;current=key;const a=ARENAS[key];architecture.setTheme(key);boundary.setTheme(key);moat.setTheme(key);weather.setTheme(key);scene.background?.setHex?.(a.sky);scene.fog?.color?.setHex?.(a.sky);environment?.material?.color?.setHex?.(a.rim);sun?.color?.setHex?.(key==='volcano'?0xffb781:key==='glacier'?0xe4f3ff:key==='moon'?0xd4c4fa:0xffeccb);
+ function theme(key){if(current===key)return;current=key;groundDetail?.setSurface(pixelTerrainForArena(key));const a=ARENAS[key];architecture.setTheme(key);boundary.setTheme(key);moat.setTheme(key);weather.setTheme(key);scene.background?.setHex?.(a.sky);scene.fog?.color?.setHex?.(a.sky);environment?.material?.color?.setHex?.(a.rim);sun?.color?.setHex?.(key==='volcano'?0xffb781:key==='glacier'?0xe4f3ff:key==='moon'?0xd4c4fa:0xffeccb);
   let index=0;for(let x=-ARENA_TILE_HALF;x<ARENA_TILE_HALF;x++)for(let z=-ARENA_TILE_HALF;z<ARENA_TILE_HALF;z++){const px=x+.5,pz=z+.5,r=Math.hypot(px,pz),edge=arenaBoundaryRadius(px,pz),hex=Math.abs(r-edge)<.6||r>edge?a.rim:a.floor[(x*x+z*z)%a.floor.length];tiles.setColorAt(index++,color.setHex(hex));}if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
  }
  function update(state,now=0){if(disposed)return;const key=Object.hasOwn(ARENAS,state?.arena||preview)?state?.arena||preview:'forest';theme(key);eligible=!state?.field&&!['castlefight','linewars','treetag','warlock','kodotag','phasekiller','dungeon','bloody'].includes(state?.options?.mode);visibility();if(!eligible)return;const a=ARENAS[key],time=state?.time??now/1000;if(time<lastTime){seen.clear();cheerUntil=0;lastFrame=-1;}lastTime=time;
@@ -39,5 +40,5 @@ export function createColiseum(scene,tiles,environment,sun,base,material){
   if(moat.root.visible)moat.update(time);
   if(!expanded)weather.update(key,time,state?.zones||a.zones);visibility();
  }
- return{update,setExpanded(value){expanded=!!value;visibility();},setPreview(key){if(Object.hasOwn(ARENAS,key)){preview=key;if(eligible)theme(key);}},cheer(){cheerUntil=Math.max(cheerUntil,lastTime+2);},dispose(){if(disposed)return;disposed=true;architecture.dispose();boundary.dispose();hazards.dispose();moat.dispose();weather.dispose();fire.dispose();audience.removeFromParent();for(const mesh of Object.values(parts))mesh.dispose();crowdMaterial.dispose();if(environment?.material===environmentMaterial)environment.material=originalEnvironmentMaterial;environmentMaterial?.dispose();},architecture:architecture.root,boundary:boundary.root,hazards:hazards.root,moat:moat.root,weather:weather.root,fire:fire.root,audience};
+ return{update,setExpanded(value){expanded=!!value;visibility();},setPreview(key){if(Object.hasOwn(ARENAS,key)){preview=key;if(eligible)theme(key);}},cheer(){cheerUntil=Math.max(cheerUntil,lastTime+2);},dispose(){if(disposed)return;disposed=true;architecture.dispose();boundary.dispose();hazards.dispose();moat.dispose();weather.dispose();fire.dispose();audience.removeFromParent();for(const mesh of Object.values(parts))mesh.dispose();crowdMaterial.dispose();groundDetail?.dispose();if(environment?.material===environmentMaterial)environment.material=originalEnvironmentMaterial;environmentMaterial?.dispose();},architecture:architecture.root,boundary:boundary.root,hazards:hazards.root,moat:moat.root,weather:weather.root,fire:fire.root,audience};
 }

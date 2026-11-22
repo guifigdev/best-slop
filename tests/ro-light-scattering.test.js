@@ -45,3 +45,15 @@ test('render size selection remains finite and bounded across aspect ratios and 
 test('solar shafts use a stronger configurable budget without extra render passes and zero strength removes the halo',()=>{
  const f=fixture();try{render(f);assert.equal(f.effect.stats().intensity,.7);f.effect.render(f.state,0,{...f.options,intensity:1.25});assert.equal(f.effect.stats().intensity,1.25);assert.equal(f.effect.stats().extraDrawCalls,2);f.effect.render(f.state,0,{...f.options,intensity:0});assert.equal(f.effect.stats().intensity,0);assert.equal(draws(f).at(-1).material.uniforms.halo.value,0);f.effect.render(f.state,0,{...f.options,intensity:10});assert.equal(f.effect.stats().intensity,1.5);}finally{f.effect.dispose();}
 });
+
+
+test('every game uses the shared compositor and edge smoothing adds no extra render pass at night',()=>{
+ const f=fixture();try{
+ for(const mode of ['campaign','tower','best','war','linewars','castlefight','treetag','warlock','kodotag','phasekiller','bloody','dungeon','bonk']){
+  const state={options:{mode},bossWarnings:[{id:1}]},before=structuredClone(state);f.calls.length=0;
+  assert.equal(f.effect.render(state,0,{...f.options,preset:'smooth',day:0}),true);assert.deepEqual(state,before);
+  assert.equal(draws(f).length,2);const uniforms=draws(f).at(-1).material.uniforms;assert.equal(uniforms.smoothing.value,1);assert.equal(uniforms.scattering.value,0);assert.equal(uniforms.halo.value,0);assert.ok(uniforms.texelSize.value.x>0);assert.equal(f.effect.stats().extraDrawCalls,1);
+ }
+ f.calls.length=0;assert.equal(f.effect.render({options:{mode:'campaign'}},0,{...f.options,preset:'smooth'}),true);assert.equal(draws(f).length,3);assert.equal(f.effect.stats().extraDrawCalls,2);
+ }finally{f.effect.dispose();}
+});

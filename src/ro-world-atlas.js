@@ -3,13 +3,13 @@ import {escapeHTML as esc} from './competition-ui.js';
 
 const point=key=>{const p=RO_WORLD_GEOGRAPHY[key];return {x:420+p.x*94,y:365+p.z*82};};
 const names={prontera:'Prontera','payon-forest':'Payon','payon-cave':'Cavernas',geffen:'Geffen','glast-heim':'Glast Heim','thor-volcano':'Vulcão de Thor',morroc:'Morroc','morroc-pyramid':'Pirâmides',rachel:'Rachel',juno:'Juno','ice-cavern':'Caverna de Gelo',valhalla:'Valhalla'};
-export const RO_VISUAL_PRESETS=Object.freeze({solar:'Luz solar padr\u00e3o',clean:'N\u00edtido sem p\u00f3s',pixel:'Pixelado',cinematic:'Cinema suave'});
+export const RO_VISUAL_PRESETS=Object.freeze({solar:'Luz solar padr\u00e3o',clean:'N\u00edtido sem p\u00f3s',pixel:'Pixelado',cinematic:'Cinema suave',smooth:'Suavizar bordas'});
 export const RO_VISUAL_STORAGE_KEY='customhero.ro.visual.v1';
 export function applyRoGmVisualPreset(state,value,view={}){if(state?.options?.mode!=='bonk'||!Object.hasOwn(RO_VISUAL_PRESETS,value))return null;view.setRoVisualOptions?.({preset:value});return value;}
-export function createRoVisualPreference({getState,view={},storage}={}){
+export function createRoVisualPreference({getState,view={},storage,allModes=false}={}){
  let preset='solar',intensity=.7,applied=false;try{storage??=globalThis.localStorage;const saved=JSON.parse(storage?.getItem(RO_VISUAL_STORAGE_KEY)||'null');if(saved?.version===1){if(Object.hasOwn(RO_VISUAL_PRESETS,saved.preset))preset=saved.preset;if(Number.isFinite(saved.intensity)&&saved.intensity>=0&&saved.intensity<=1.5)intensity=saved.intensity;}}catch{}
  const persist=()=>{try{storage?.setItem(RO_VISUAL_STORAGE_KEY,JSON.stringify({version:1,preset,intensity}));}catch{}};
- return{get preset(){return preset;},get intensity(){return intensity;},apply(){if(applied||getState?.()?.options?.mode!=='bonk')return false;view.setRoVisualOptions?.({preset,intensity});applied=true;return true;},choose(value){const selected=applyRoGmVisualPreset(getState?.(),value,view);if(selected){preset=selected;persist();}return selected;},setIntensity(value){if(getState?.()?.options?.mode!=='bonk'||!Number.isFinite(value)||value<0||value>1.5)return false;intensity=Math.round(value*100)/100;view.setRoVisualOptions?.({intensity});persist();return true;},reset(){applied=false;}};
+ return{get preset(){return preset;},get intensity(){return intensity;},apply(){if(applied||!allModes&&getState?.()?.options?.mode!=='bonk')return false;view.setRoVisualOptions?.({preset,intensity});applied=true;return true;},choose(value){const selected=allModes&&Object.hasOwn(RO_VISUAL_PRESETS,value)?(view.setRoVisualOptions?.({preset:value}),value):applyRoGmVisualPreset(getState?.(),value,view);if(selected){preset=selected;persist();}return selected;},setIntensity(value){if(!allModes&&getState?.()?.options?.mode!=='bonk'||!Number.isFinite(value)||value<0||value>1.5)return false;intensity=Math.round(value*100)/100;view.setRoVisualOptions?.({intensity});persist();return true;},reset(){applied=false;}};
 }
 export function roWorldAtlasMarkup(data,{debug=false,visualPreset='solar'}={}){
  const selectedPreset=Object.hasOwn(RO_VISUAL_PRESETS,visualPreset)?visualPreset:'solar';
