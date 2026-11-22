@@ -18,12 +18,12 @@ export function installMobileHUD(doc=document,win=window,{onMove}={}){
  const refresh=()=>{const minimap=world.querySelector('.exploration-minimap');map.hidden=!minimap||minimap.hidden;const label='◆ '+(doc.getElementById('gold')?.textContent||'0'),wallet=panel.querySelector('.mobile-wallet');if(wallet.textContent!==label)wallet.textContent=label;};
  const sync=()=>{body.classList.toggle('mobile-ui',media.matches);for(const [el,cls]of controls)set(el,cls,false);refresh();};
  media.addEventListener('change',sync);sync();
- const observer=new MutationObserver(refresh);observer.observe(doc.getElementById('gold'),{childList:true,subtree:true,characterData:true});observer.observe(world,{childList:true});
+ const observer=new MutationObserver(refresh),gold=doc.getElementById('gold');if(gold)observer.observe(gold,{childList:true,subtree:true,characterData:true});observer.observe(world,{childList:true});
  doc.querySelector('.toplinks').addEventListener('click',e=>{if(e.target.closest('button'))set(menu,'mobile-menu-open',false);});
  doc.addEventListener('pointerdown',e=>{if(!topbar.contains(e.target))set(menu,'mobile-menu-open',false);});
  doc.addEventListener('keydown',e=>{if(e.key!=='Escape'||!media.matches)return;for(const [el,cls]of [...controls].reverse())if(body.classList.contains(cls)){set(el,cls,false);el.focus();break;}});
  doc.getElementById('newgame')?.addEventListener('click',sync);
- const startObserver=new MutationObserver(()=>{if(doc.getElementById('startmodal').classList.contains('hidden'))for(const [el,cls]of controls)set(el,cls,false);});startObserver.observe(doc.getElementById('startmodal'),{attributes:true,attributeFilter:['class']});
+ const startModal=doc.getElementById('startmodal'),startObserver=new MutationObserver(()=>{if(startModal?.classList.contains('hidden'))for(const [el,cls]of controls)set(el,cls,false);});if(startModal)startObserver.observe(startModal,{attributes:true,attributeFilter:['class']});
  // A menu-selected target must become visible when the sidebar is folded.
  doc.addEventListener('click',e=>{if(!media.matches)return;if(e.target.closest('[data-tab]'))set(panel,'mobile-panel-open',true);});
  return{refresh,close(){for(const [el,cls]of controls)set(el,cls,false);}};
