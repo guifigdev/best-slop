@@ -187,4 +187,4 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  }
 }
 
-export function resetRoSkillEffects(game,unit){unit.roSkillElapsed=0;unit.roSkillBuffs=[];unit.roPassiveProcAt={};delete unit.roSkillShield;if(game.bonk){game.bonk.roSkillZones=[];game.bonk.roSkillSummons=[];}}
+export function resetRoSkillEffects(game,unit){delete unit.roCasting;unit.roSkillElapsed=0;unit.roSkillBuffs=[];unit.roPassiveProcAt={};delete unit.roSkillShield;if(game.bonk){game.bonk.roSkillZones=[];game.bonk.roSkillSummons=[];}}

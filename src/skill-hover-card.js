@@ -1,7 +1,7 @@
 import {RO_SKILLS,roBasicAttack} from '../shared/ragnarok-jobs.js';
 import {skillFor} from '../shared/skill-quality.js';
 import {levelOf} from '../shared/catalog.js';
-import {roSkillManaCost,roSkillCooldown} from '../shared/ro-skill-controls.js';
+import {roSkillCastTime,roSkillManaCost,roSkillCooldown} from '../shared/ro-skill-controls.js';
 import {skillShopEntry} from './skill-shop-ui.js';
 import {icon} from './art.js';
 import {escapeHTML as esc} from './competition-ui.js';
@@ -24,7 +24,8 @@ export function equippedSkillDetails(state,unit,token){
   // These are the same level and haste multipliers used by the combat engine.
   const damage=level=>(skill.damage||0)*(1+(level-1)*.28),rows=[];
   if(skill.damage>0)rows.push({label:'Dano base',current:fmt('damage',damage(rank)),next:next?fmt('damage',damage(next)):null});
-  rows.push({label:'SP',current:fmt('mana',roSkillManaCost(skill)),next:next?fmt('mana',roSkillManaCost(skill)):null},{label:'Recarga',current:fmt('cooldown',roSkillCooldown(definition,rank,stats)),next:next?fmt('cooldown',roSkillCooldown(definition,next,stats)):null},{label:'Alcance',current:fmt('distance',(skill.range||0)*(stats.area||1)),next:next?fmt('distance',(skill.range||0)*(stats.area||1)):null});
+  rows.push({label:'Conjuração',current:fmt('cooldown',roSkillCastTime(definition,rank,stats).total),next:next?fmt('cooldown',roSkillCastTime(definition,next,stats).total):null});
+  rows.push({label:'SP',current:fmt('mana',roSkillManaCost(skill)),next:next?fmt('mana',roSkillManaCost(skill,next)):null},{label:'Recarga',current:fmt('cooldown',roSkillCooldown(definition,rank,stats)),next:next?fmt('cooldown',roSkillCooldown(definition,next,stats)):null},{label:'Alcance',current:fmt('distance',(skill.range||0)*(stats.area||1)),next:next?fmt('distance',(skill.range||0)*(stats.area||1)):null});
   for(const k of ['duration','radius','summonCount','healPercent'])if(Number.isFinite(skill.mechanics?.[k]))rows.push({label:k==='healPercent'?'Cura da vida máxima':labels[k]||k,current:k==='healPercent'?Math.round(skill.mechanics[k]*100)+'%':fmt(k,skill.mechanics[k]),next:null});
   const pending=!!b.offer,canUpgrade=pending&&rank<8,upgradeReason=rank>=8?'Nível máximo alcançado.':pending?'Usa a melhoria desta subida de nível.':'Ganhe um nível para receber uma melhoria.';
   return{key,name:skill.name,art:skill.skill||'cleave',description:skill.description,rank,max:8,kind:skill.kind==='passive'?'Passiva · sempre ativa':'Habilidade ativa',element:({physical:'Físico',fire:'Fogo',ice:'Gelo',wind:'Vento',holy:'Sagrado',poison:'Veneno',dark:'Sombrio',arcane:'Arcano'})[skill.element],rows,canUpgrade,upgradeReason,points:pending?1:0,auto:skill.auto!==false,passive:skill.kind==='passive'};

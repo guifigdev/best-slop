@@ -3,7 +3,7 @@ import {RO_SKILLS} from './ragnarok-jobs.js';
 // Original Nordic survivor content. Mechanics take inspiration from automatic
 // attack roguelikes; local balance and maps share the voxel bestiary.
 export const BONK_REFERENCE='https://store.steampowered.com/app/3405340/Megabonk/';
-export const BONK_RULES=Object.freeze({interactRange:8,weaponSlots:4,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
+export const BONK_RULES=Object.freeze({interactRange:8,weaponSlots:8,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
 const weapon=(key,name,skill,description,damage,cooldown,range,extra={})=>Object.freeze({key,name,skill,description,damage,cooldown,range,...extra});
 export const BONK_WEAPONS=Object.freeze({...RO_SKILLS,
  runeblade:weapon('runeblade','Lâmina das runas','cleave','Golpes largos à frente. Evoluções ampliam o arco e atravessam grupos.',22,.85,5,{kind:'slash',element:'physical'}),

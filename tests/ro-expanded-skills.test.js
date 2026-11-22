@@ -51,10 +51,10 @@ test('all twelve lineages expose the complete curated skills of their own 54 fir
  assert.ok(RO_LINEAGES.cardinal.skills.includes('hp_assumptio'));
 });
 
-test('both mage paths start with an identifiable exploding fireball while bolt alternatives remain in the learnable tree',()=>{
+test('both mage paths start with a clean, slower basic fireball while bolt alternatives remain in the learnable tree',()=>{
  for(const key of ['archmage','elementalmaster']){
   const p=RO_LINEAGES[key],basic=roBasicAttack({roLineage:key,roTier:0});
-  assert.equal(p.skills[0],'fireball');assert.equal(basic.element,'fire');assert.equal(basic.kind,'projectile');assert.equal(basic.radius,1.6);assert.equal(basic.skill,'fireball');assert.match(basic.name,/Bola de Fogo/);
+  assert.equal(p.skills[0],'fireball');assert.equal(basic.element,'fire');assert.equal(basic.kind,'projectile');assert.equal(basic.radius,undefined);assert.ok(basic.cooldown>=1.6&&basic.speed<=15);assert.equal(basic.skill,'fireball');assert.match(basic.name,/Bola de Fogo/);
   for(const alternative of ['firebolt','coldbolt'])assert.ok(p.skills.includes(alternative));
  }
  assert.equal(RO_SKILLS.fireball.sourceAegis,'MG_FIREBALL');assert.equal(RO_SKILLS.fireball.element,'fire');assert.ok(RO_SKILLS.fireball.mechanics.radius>=2);
@@ -73,12 +73,13 @@ test('every included active can execute through the real command dispatcher and 
  const g=new Game(381,{mode:'bonk',bonkLineage:'dragonknight'});g.addPlayer('p','knight');assert.ok(g.command('p',{type:'bkReady'}));const u=g.player('p');
  g.bonk.map.obstacles=[];g.bonk.map.walls=[];
  for(const s of Object.values(RO_SKILLS).filter(s=>s.sourceId)){
-  const lineage=Object.values(RO_LINEAGES).find(p=>p.skills.includes(s.key));u.roLineage=lineage.key;u.roTier=3;u.bonkJob=lineage.jobs[3];u.roSkillBuffs=[];u.roSkillShield=null;u.roSkillProcAt={};u.bonkBuild={weapons:{basic:1,[s.key]:1},tomes:{},relics:{}};u.bonkSkillSlots=['basic',s.key,null,null];u.bonkWeaponAt={};u.hp=100;u.maxHp=500;u.mana=5000;u.maxMana=5000;u.alive=true;u.x=0;u.z=0;g.bonk.elapsed=10;g.bonk.stage='playing';g.bonk.offer=null;g.bonk.roSkillZones=[];g.bonk.roSkillSummons=[];
+  const lineage=Object.values(RO_LINEAGES).find(p=>p.skills.includes(s.key));delete u.roCasting;u.level=150;u.attributes.int=99;u.roLineage=lineage.key;u.roTier=3;u.bonkJob=lineage.jobs[3];u.roSkillBuffs=[];u.roSkillShield=null;u.roSkillProcAt={};u.bonkBuild={weapons:{basic:1,[s.key]:1},tomes:{},relics:{}};u.bonkSkillSlots=['basic',s.key,null,null];u.bonkWeaponAt={};u.hp=100;u.maxHp=500;u.mana=5000;u.maxMana=5000;u.alive=true;u.x=0;u.z=0;g.bonk.elapsed=10;g.bonk.stage='playing';g.bonk.offer=null;g.bonk.roSkillZones=[];g.bonk.roSkillSummons=[];g.bonk.spawnAt=1e9;g.effects=[];u.bonkSkillAuto={basic:false,[s.key]:false};
   const enemy={id:999,name:'Alvo',bonkEnemy:true,alive:true,x:1,z:0,hp:1e7,maxHp:1e7,collisionRadius:.4,damage:0,armor:0,bonkNextAttack:100};g.units=[u,enemy];
   if(s.kind==='passive'){
    const stats=bonkStats(u);assert.ok(Object.values(stats).filter(v=>typeof v==='number').every(Number.isFinite),s.key);assert.ok(s.mechanics.proc||s.mechanics.status||Object.keys(s.mechanics.modifiers||{}).length,s.key);continue;
   }
   assert.equal(g.command('p',{type:'bkCast',key:s.key}),true,`${s.sourceAegis} (${s.kind}) failed: ${g.commandFailureReason}`);
+  if(u.roCasting){const finish=u.roCasting.finishAt;for(let i=0;i<310&&g.bonk.elapsed<finish+.1;i++)g.tick(.1);}
   assert.ok(u.bonkWeaponAt[s.key]>10,`${s.key} starts a real cooldown`);
   assert.ok(u.mana<5000||s.mechanics?.manaPercent,`${s.key} pays real SP`);
   assert.ok([u.x,u.z,u.hp,u.mana,enemy.hp].every(Number.isFinite),s.key);

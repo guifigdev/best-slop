@@ -40,7 +40,7 @@ export function generateBonkLevel(seed=1,stageKey='grove',habitat=null,route=nul
   regionalCount++;
  }
  const place=(type,i,extra={})=>{for(let attempt=0;attempt<80;attempt++){const p={x:(hash(seed+i*13.5+attempt*2)-.5)*196,z:(hash(seed+i*27.1+attempt*3)-.5)*196};if(obstacles.some(o=>Math.abs(p.x-o.x)<o.w/2+2.5&&Math.abs(p.z-o.z)<o.d/2+2.5)||objects.some(o=>distance(o,p)<12)||routes.some(r=>distance(p,r)<9))continue;objects.push({id:'bonk-'+type+'-'+i,type,...p,...extra,used:false});return;}};
- for(let i=0;i<26;i++)place('chest',i,{cost:25+i%4*8});for(let i=0;i<10;i++)place('shrine',i,{cost:40+i%3*15});for(let i=0;i<32;i++)place('pot',i,{hp:1});for(let i=0;i<3;i++)place('campfire',i,{fuel:35,radius:3.5});
+ for(let i=0;i<26;i++)place('chest',i,{cost:25+i%4*8});for(let i=0;i<10;i++)place('shrine',i,{cost:0});for(let i=0;i<32;i++)place('pot',i,{hp:1});for(let i=0;i<3;i++)place('campfire',i,{fuel:35,radius:3.5});
  for(const [i,l]of landmarks.entries())objects.push({...l,type:'rune',index:i,used:false});
  if(!route)for(const l of landmarks){for(const side of [-1,1])obstacles.push({id:l.id+'-pillar-'+side,x:l.x+side*5.5,z:l.z-2,w:2.1,d:2.1,h:4.6,alive:true,type:'landmark-pillar'});obstacles.push({id:l.id+'-colossus',x:l.x,z:l.z-8,w:2.65,d:2.65,h:6,alive:true,type:'landmark-statue'});}
  if(!route)for(let i=0;i<4;i++){const angle=i*Math.PI/2+Math.PI/4;obstacles.push({id:'temple-pillar-'+i,x:Math.sin(angle)*11,z:Math.cos(angle)*11,w:3,d:3,h:5.7,alive:true,type:'temple-pillar'});}

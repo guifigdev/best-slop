@@ -33,7 +33,7 @@ test('physical chests, shrines and pots enforce distance, cost and one-time use;
 });
 
 test('approaching three runes awakens distinct guardians and defeating them unlocks the central boss',()=>{
- const{g,u}=setup();u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,area:8};u.bonkBuild.relics={giantbone:12,glassrune:25};u.hp=bonkStats(u).maxHp;
+ const{g,u}=setup();u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,area:8};u.bonkBuild.relics={giantbone:12,glassrune:25};u.attributes.int=99;u.attributes.vit=99;u.attributes.dex=99;u.mana=5000;u.hp=bonkStats(u).maxHp;
  for(const o of g.bonk.objectives){Object.assign(u,{x:o.x+3,z:o.z});step(g,.1);assert.ok(o.started);const guard=g.units.find(e=>e.id===o.guardianId);assert.ok(o.completed||guard?.bonkGuardian!==undefined);for(let i=0;i<500&&!o.completed;i++){choose(g);step(g,.05);}assert.ok(o.completed,'real automatic weapons defeat the guard');}
  assert.equal(g.bonk.guardians,3);assert.equal(g.bonk.bossUnlocked,true);Object.assign(u,{x:3,z:0});step(g,.1);assert.equal(g.bonk.bossSpawned,true);for(let i=0;i<1000&&g.bonk.stage!=='cleared';i++){choose(g);step(g,.05);}assert.equal(g.bonk.stage,'cleared');const build=structuredClone(u.bonkBuild);assert.equal(g.command('p',{type:'bkNext',stageKey:'grove'}),false);assert.ok(g.command('p',{type:'bkNext',stageKey:'forge'}));assert.deepEqual(u.bonkBuild,build);assert.equal(g.bonk.map.stageKey,'forge');assert.equal(g.bonk.guardians,0);assert.equal(g.bonk.clearedStages.length,1);
 });
@@ -44,7 +44,7 @@ test('world uses a bounded reusable detailed landscape with the exact shared hei
 
 
 test('four defeated MVPs finish the expedition without reusing portal or timer progression',()=>{
- const{g,u}=setup(253);u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,vitality:8};u.bonkBuild.relics={giantbone:20,glassrune:20};u.hp=bonkStats(u).maxHp;
+ const{g,u}=setup(253);u.bonkBuild.weapons={runeblade:8,ember:8,frost:8,storm:8};u.bonkBuild.tomes={damage:8,haste:8,amount:8,vitality:8};u.bonkBuild.relics={giantbone:20,glassrune:20};u.attributes.int=99;u.attributes.vit=99;u.attributes.dex=99;u.mana=5000;u.hp=bonkStats(u).maxHp;
  for(const key of ['grove','forge','glacier','crypt']){if(g.bonk.map.stageKey!==key){assert.ok(g.command('p',{type:'bkNext',stageKey:key}));choose(g);}g.bonk.map.obstacles=[];for(const objective of g.bonk.objectives){Object.assign(u,{x:objective.x+2,z:objective.z});for(let i=0;i<500&&!objective.completed;i++){choose(g);step(g,.05);}assert.ok(objective.completed);}Object.assign(u,{x:3,z:0});for(let i=0;i<3600&&!['cleared','finished'].includes(g.bonk.stage);i++){u.hp=u.maxHp;choose(g);step(g,.05);}assert.ok(g.bonk.clearedStages.includes(key));}
  assert.equal(g.bonk.won,true);assert.equal(g.bonk.stage,'finished');assert.equal(g.phase,'victory');assert.deepEqual(g.winningOwners,['p']);assert.equal(g.bonk.clearedStages.length,4);
 });

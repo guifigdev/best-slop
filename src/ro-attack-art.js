@@ -86,10 +86,13 @@ export function roAttackFrames(value='blade'){
     }
    }
    else if(motion==='axeSlam'){
-    // A weighty vertical chop, followed by ground dust and broken chips.
-    const strike=clamp((p-.15)/.36,0,1),head=.86-strike*.72,tail=Math.min(.94,head+.34),curve=.10+Math.sin(z*3.2)*.14;
-    if(z>head&&z<tail&&Math.abs(sx-curve)<.025+.13*Math.sin((z-head)/(tail-head)*Math.PI))pixel=[245,239,200,Math.round(220*fade)];
-    if(p>.45){const q=clamp((p-.45)/.5,0,1),rr=Math.hypot(sx,(z-.13)*3),radius=.12+q*.72;if(Math.abs(rr-radius)<.035)merge([255,207,119,Math.round(210*(1-q))]);for(let j=0;j<9;j++){const a=j*2.4,xx=Math.sin(a)*radius,yy=.13+Math.abs(Math.cos(a))*.18*(1-q);if(Math.abs(sx-xx)<.035&&Math.abs(z-yy)<.02)merge([218,179,117,Math.round(240*(1-q))]);}}
+    // Only the axe afterimage: ground impact is a separate world-space event.
+    const strike=clamp((p-.16)/.29,0,1),head=.94-strike*.84,tail=Math.min(.97,head+.56),curve=.08+Math.sin(z*2.5)*.15;
+    if(z>head&&z<tail){const taper=Math.sin((z-head)/(tail-head)*Math.PI),d=Math.abs(sx-curve),width=.025+.20*taper;
+     if(d<width*.22)pixel=[246,253,255,Math.round(248*fade)];
+     else if(d<width*.55)pixel=[185,224,255,Math.round(225*fade)];
+     else if(d<width)pixel=[113,146,218,Math.round(175*fade)];
+    }
    }
    else if(motion==='daggerStreaks'){
     // Two independently timed curved cuts, with silver cores and mint edges.
@@ -130,7 +133,7 @@ const NATIVE_HEROES=new Set(['knight','mage','ranger','turtle','owl','raccoon','
 const nativeHero=u=>!!u&&NATIVE_HEROES.has(u.hero)&&!u.castleBuilderKey&&!u.treeTagCharacter&&!u.warlockCharacter&&!u.kodoTagCharacter;
 const SKILL_VISUAL_EVENTS=new Set(['heal','devotion','battlecry','frostnova','poison','fireball','abilityPulse','summon','bolt','sprint']);
 export function roAttackArtHandles(event,source){return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source)||event.bonk===true&&typeof event.skillKey==='string'&&!!RO_ATTACK_SKILLS[event.skillKey]&&SKILL_VISUAL_EVENTS.has(event.type));}
-const observes=(event,source)=>roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);
+const observes=(event,source)=>{if(event?.bonk&&source?.bonkHero&&(event.type==='roAttack'&&['projectile','pulse','orbit','zone'].includes(event.attackKind)||['fireball','frostnova','abilityPulse'].includes(event.type)))return false;return roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);};
 const facing=(e,source)=>{if(Number.isFinite(e.direction))return e.direction;const d=e.direction,dx=Array.isArray(d)?d[0]:d?.x??e.dx,dz=Array.isArray(d)?d[1]:d?.z??e.dz;if(Number.isFinite(dx)&&Number.isFinite(dz)&&Math.hypot(dx,dz)>.001)return Math.atan2(dx,dz);const x=Number.isFinite(e.x)?e.x:source?.x||0,z=Number.isFinite(e.z)?e.z:source?.z||0,tx=e.tx??e.targetPoint?.x,tz=e.tz??e.targetPoint?.z;return Number.isFinite(tx)&&Number.isFinite(tz)&&Math.hypot(tx-x,tz-z)>.001?Math.atan2(tx-x,tz-z):source?.facing||0;};
 export function roAttackPlacement(event,profile,age,heightAt=()=>0,source){
  const yaw=facing(event,source),x=profile.anchor==='target'&&Number.isFinite(event.tx)?event.tx:Number.isFinite(event.x)?event.x:source?.x,z=profile.anchor==='target'&&Number.isFinite(event.tz)?event.tz:Number.isFinite(event.z)?event.z:source?.z;

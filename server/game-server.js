@@ -1,3 +1,4 @@
+import {lobbyOptions} from '../shared/room-lobby.js';
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
@@ -25,7 +26,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
  const rooms=new Map(store.load({maxAgeMs:config.idleSeconds*1000,now:clock()})),peers=new Map(),ipBudgets=new Map();
  const phaseHandler=createPhaseHandler({allowedOrigins:[...config.allowedOrigins]});let draining=false,closed=false,frame=0,lastSave=0,drainTimer,tickWorstMs=0;
  function send(peer,data){if(peer?.ws.readyState===1&&peer.ws.bufferedAmount<512000)peer.ws.send(JSON.stringify(data));}
- function roomInfo(room,id){return{code:room.code,host:room.host,isHost:id===room.host,started:room.started,paused:room.paused,protected:!!room.passwordLock,options:{...room.game.options},capacity:capacity(room.game.options),resumeSeconds:config.resumeSeconds,messages:room.messages||[],players:[...room.members.values()].map(m=>({id:m.id,name:room.game.player(m.id)?.name||m.name,connected:room.clients.has(m.id)||!!m.bot,bot:!!m.bot,heroChosen:!!m.bot||m.heroChosen!==false,hero:room.game.player(m.id)?.hero,lineage:room.game.player(m.id)?.roLineage,host:m.id===room.host}))};}
+ function roomInfo(room,id){return{code:room.code,host:room.host,isHost:id===room.host,started:room.started,paused:room.paused,protected:!!room.passwordLock,options:{...room.game.options},arena:room.game.startingArena||room.game.arena,capacity:capacity(room.game.options),resumeSeconds:config.resumeSeconds,messages:room.messages||[],players:[...room.members.values()].map(m=>({id:m.id,name:room.game.player(m.id)?.name||m.name,connected:room.clients.has(m.id)||!!m.bot,bot:!!m.bot,heroChosen:!!m.bot||m.heroChosen!==false,hero:room.game.player(m.id)?.hero,lineage:room.game.player(m.id)?.roLineage,host:m.id===room.host}))};}
  function snapshot(room,id){const state={...room.game.snapshotFor(id),onlineRoom:roomInfo(room,id)},peer=room.clients.get(id);if(peer?.staticWorld&&state.dungeon){const key=room.code+':dg:'+state.dungeon.floor+':'+(state.dungeon.stage==='clash'?'clash':'floor')+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.dungeon={...state.dungeon};delete state.dungeon.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.staticWorld&&state.bonk){const key=room.code+':ro:'+room.game.worldSeed+':'+state.bonk.floor+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.bonk={...state.bonk};delete state.bonk.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.skillLibrary&&state.bonk){const u=room.game.player(id),key=JSON.stringify([u?.id,u?.bonkBuild?.weapons,u?.bonkSkillSlots]);state.bonk={...state.bonk,skillCatalogKey:key};if(peer.lastSkillCatalogKey===key){delete state.bonk.skillCatalog;delete state.bonk.learnedSkills;}else peer.lastSkillCatalogKey=key;}return state;}
  function startProblem(room){
   const players=room.game.heroes(),mode=room.game.options.mode;
@@ -41,6 +42,19 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
   if(peer.id!==room.host)throw Error('Somente o host pode iniciar a sala.');if(room.started)throw Error('A partida já começou.');const problem=startProblem(room);if(problem)throw Error(problem);
   if(room.game.options.mode==='bloody'&&room.game.heroes().some(u=>!u.bot&&!u.btRoster.length))throw Error('Cada comandante precisa recrutar pelo menos um grupo.');
   const readyType=room.game.options.mode==='dungeon'?'dgReady':room.game.options.mode==='bonk'?'bkReady':'ready';for(const u of room.game.heroes()){room.game.command(u.owner,{type:readyType});if(room.game.options.mode==='bonk')break;}room.started=true;room.game.timer=Math.min(3,room.game.timer);checkpoint(room);publishRoom(room);
+ }
+ function configureRoom(peer,room,settings){
+  if(!settings?.options)return configureDungeonRoom(peer,room,settings);
+  if(peer.id!==room.host)throw Error('Somente o host pode configurar a sala.');
+  if(room.started)throw Error('A partida já começou.');
+  const options=lobbyOptions(settings.options),humans=[...room.members.values()].filter(m=>!m.bot),bots=[...room.members.values()].filter(m=>m.bot);
+  if(humans.length>capacity(options))throw Error('Este jogo não comporta todos os jogadores da sala.');
+  const game=new Game(room.game.worldSeed||Date.now()>>>0,{...options,bonkDebug:false});if(options.mode==='bonk')game.bonkOnline=true;
+  const choices=roomCharacterChoices(options.mode);for(const member of humans){const old=room.game.player(member.id),choice=choices.find(c=>c.hero===old?.hero)||choices[0];if(!game.addPlayer(member.id,choice.hero,member.name))throw Error('Não foi possível preparar o novo jogo.');}
+  if(Object.hasOwn(ARENAS,settings.arena)&&!['bonk','dungeon','bloody','castlefight','treetag','kodotag','phasekiller','warlock'].includes(options.mode)){game.startingArena=settings.arena;game.setArena(settings.arena);}
+  room.game=game;for(const bot of bots)room.members.delete(bot.id);for(const member of humans)member.heroChosen=false;
+  addRoomBots(room,Math.min(bots.length,capacity(options)-humans.length));for(const client of room.clients.values()){client.lastStaticKey=null;client.lastSkillCatalogKey=null;}
+  checkpoint(room);publishRoom(room);
  }
  function configureDungeonRoom(peer,room,settings){
   if(peer.id!==room.host)throw Error('Somente o host pode configurar a sala.');
@@ -133,9 +147,9 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
      if(room.started||room.game.phase!=='preparation'||room.game.wave!==0)throw Error('Escolha o personagem antes de iniciar a partida.');
      if(peer.selectingHero)throw Error('Aguarde a escolha anterior.');
      const mode=room.game.options.mode,choice=roomCharacterChoices(mode).find(d=>d.key===c.hero);if(!choice)throw Error('Personagem inválido para este jogo.');
-     peer.selectingHero=true;
+     peer.selectingHero=true;const selectedGame=room.game;
      try{const profile=mode==='bonk'?await ragnarokRoomProfile(store,{...c.ragnarok,lineage:c.hero}):null;
-      if(peer.room!==room||room.started||ws.readyState!==1)throw Error('A sala mudou durante a escolha.');
+      if(peer.room!==room||room.game!==selectedGame||room.started||ws.readyState!==1)throw Error('A sala mudou durante a escolha.');
       const old=room.game.player(peer.id),oldUnits=room.game.units,oldId=room.game.players[peer.id];
       room.game.units=oldUnits.filter(u=>u.owner!==peer.id);delete room.game.players[peer.id];
       if(!room.game.addPlayer(peer.id,profile?RO_LINEAGES[profile.lineage].hero:choice.hero,choice.name,false,old?.squad,profile)){room.game.units=oldUnits;room.game.players[peer.id]=oldId;throw Error('Não foi possível trocar o personagem.');}
@@ -144,8 +158,8 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
      }finally{peer.selectingHero=false;}return;
     }
     if(c.type==='roomBots'){if(peer.id!==room.host)throw Error('Somente o host pode adicionar bots.');if(room.started)throw Error('Configure os bots antes de iniciar.');const free=capacity(room.game.options)-room.game.heroes().length;const count=c.fill===true?free:c.count;if(!Number.isInteger(count)||count<1||count>free)throw Error('Escolha uma quantidade que caiba na sala.');addRoomBots(room,count);checkpoint(room);publishRoom(room);return;}
-    if(c.type==='roomStart'){if(c.settings!==undefined)configureDungeonRoom(peer,room,c.settings);startRoom(peer,room);return;}
-    if(c.type==='roomSettings'){configureDungeonRoom(peer,room,c.settings);return;}
+    if(c.type==='roomStart'){if(c.settings!==undefined)configureRoom(peer,room,c.settings);startRoom(peer,room);return;}
+    if(c.type==='roomSettings'){configureRoom(peer,room,c.settings);return;}
     if(room.game.options.mode==='dungeon'&&!room.started&&['dgReady','ready'].includes(c.type)){if(peer.id!==room.host)throw Error('Aguarde o host iniciar a expedição.');startRoom(peer,room);return;}
     if(c.type==='roomKick'){if(peer.id!==room.host||room.started||c.playerId===peer.id)throw Error('O host só remove convidados antes da partida.');if(removeRoomBot(room,c.playerId)){checkpoint(room);publishRoom(room);return;}const target=room.clients.get(c.playerId);if(!target)throw Error('Jogador não encontrado.');target.explicitLeave=true;target.ws.close(4003,'Removido da sala pelo host');return;}
     if(c.type==='roomChat'){const text=String(c.text||'').trim();if(!text||text.length>240||peer.chatAt&&clock()-peer.chatAt<600)throw Error('Mensagem inválida ou enviada muito rápido.');peer.chatAt=clock();room.messages||=[];room.messages.push({id:randomUUID(),name:room.game.player(peer.id)?.name||'Jogador',text});room.messages=room.messages.slice(-40);for(const p of room.clients.values())send(p,{type:'roomChat',messages:room.messages});return;}
@@ -155,7 +169,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
   });
   ws.on('close',()=>{if(peers.get(peer.id)!==peer)return;matchmaker.leave(peer.id);parties();peers.delete(peer.id);const room=peer.room;if(room){room.clients.delete(peer.id);const member=room.members.get(peer.id);if(member)member.disconnectedAt=peer.explicitLeave?clock()-config.resumeSeconds*1000-1:clock();if(peer.explicitLeave&&!room.started){room.game.units=room.game.units.filter(u=>u.owner!==peer.id);delete room.game.players[peer.id];room.members.delete(peer.id);}else{const u=room.game.player(peer.id);if(u){u.bot=true;if(u.bonkHero){u.bonkDisconnected=true;u.bonkMove={dx:0,dz:0};}}}if(room.host===peer.id&&room.clients.size)room.host=room.clients.keys().next().value;if(!room.clients.size){room.paused=true;if(peer.explicitLeave&&![...room.members.values()].some(m=>!m.bot&&(m.disconnectedAt==null||clock()-m.disconnectedAt<=config.resumeSeconds*1000))){rooms.delete(room.code);store.delete(room.code);}else checkpoint(room);}else checkpoint(room);}if(draining&&!peers.size)finishClose();});ws.on('error',()=>{});
  });
- const interval=setInterval(()=>{const start=performance.now(),now=clock();frame++;for(const[code,room]of rooms){if(!room.clients.size){if(now-room.lastActivity>config.idleSeconds*1000){rooms.delete(code);store.delete(code);}continue;}room.lastActivity=now;try{if(!room.paused&&(room.started||!['treetag','kodotag','warlock','phasekiller','bloody','castlefight','dungeon','bonk'].includes(room.game.options.mode))){if(!room.started&&room.game.phase==='preparation')room.game.timer=Math.max(3600,room.game.timer);room.game.tick(1/config.simulationHz);if(room.game.phase!=='preparation'||room.game.wave>0)room.started=true;}if(frame%Math.max(1,Math.round(config.simulationHz/config.snapshotHz))===0)for(const peer of room.clients.values())send(peer,{type:'state',state:snapshot(room,peer.id)});if(now-lastSave>=5000)checkpoint(room);}catch{room.paused=true;for(const peer of room.clients.values())send(peer,{type:'error',message:'A sala foi pausada após um erro. O estado foi preservado para recuperação.'});}}if(now-lastSave>=5000)lastSave=now;tickWorstMs=Math.max(tickWorstMs,performance.now()-start);},1000/config.simulationHz);
+ const interval=setInterval(()=>{const start=performance.now(),now=clock();frame++;for(const[code,room]of rooms){if(!room.clients.size){if(now-room.lastActivity>config.idleSeconds*1000){rooms.delete(code);store.delete(code);}continue;}room.lastActivity=now;try{if(!room.paused&&(room.started||!['treetag','kodotag','warlock','phasekiller','bloody','castlefight','dungeon','bonk'].includes(room.game.options.mode)&&[...room.members.values()].every(m=>m.heroChosen!==false))){if(!room.started&&room.game.phase==='preparation')room.game.timer=Math.max(3600,room.game.timer);room.game.tick(1/config.simulationHz);if(room.game.phase!=='preparation'||room.game.wave>0)room.started=true;}if(frame%Math.max(1,Math.round(config.simulationHz/config.snapshotHz))===0)for(const peer of room.clients.values())send(peer,{type:'state',state:snapshot(room,peer.id)});if(now-lastSave>=5000)checkpoint(room);}catch{room.paused=true;for(const peer of room.clients.values())send(peer,{type:'error',message:'A sala foi pausada após um erro. O estado foi preservado para recuperação.'});}}if(now-lastSave>=5000)lastSave=now;tickWorstMs=Math.max(tickWorstMs,performance.now()-start);},1000/config.simulationHz);
  const heartbeat=setInterval(()=>{for(const peer of peers.values()){if(!peer.alive){peer.ws.terminate();continue;}peer.alive=false;if(peer.ws.readyState===1)peer.ws.ping();}for(const[ip,budget]of ipBudgets)if(clock()-budget.at>120000)ipBudgets.delete(ip);},30000);
  let resolveClosed;const done=new Promise(resolve=>resolveClosed=resolve);
  function finishClose(){if(closed)return;closed=true;clearInterval(interval);clearInterval(heartbeat);clearTimeout(drainTimer);for(const room of rooms.values())checkpoint(room);for(const peer of peers.values())peer.ws.terminate();wss.close();server.close(()=>{store.close();resolveClosed();});server.closeIdleConnections?.();}

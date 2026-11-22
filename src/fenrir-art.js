@@ -3,7 +3,7 @@ import {voxelTagPortrait} from './tag-character-art.js';
 
 // Cosmetic identity only. Hero statistics, skills and summoning rules live in
 // the shared simulation; this original geometry never changes those values.
-export const FENRIR_ART=Object.freeze({name:'Fenrir',title:'O lobo de Gleipnir',description:'Um lobo colossal dos Nove Reinos, de juba cinzenta, presas de marfim e olhos de gelo. Runas douradas marcam as algemas que ele desafia.'});
+export const FENRIR_ART=Object.freeze({name:'Fenrir',title:'O lobo de Gleipnir',description:'Um lobo colossal dos Nove Reinos, de ombros poderosos, pelo preto e violeta e ventre claro. Correntes partidas pendem da coleira e das patas; olhos e runas brilham em lilás.'});
 let spec=null,portrait='';
 const valid=value=>value==='fenrir'||value?.hero==='fenrir';
 export function fenrirSpec(value='fenrir'){if(!valid(value))return null;return spec||=(Object.freeze(sculptFenrir()));}

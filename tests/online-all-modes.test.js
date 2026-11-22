@@ -122,3 +122,18 @@ test('online players confirm independent characters after entering, and only the
   const locked=next(a.ws,'error');a.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'knight'}}));assert.match((await locked).message,/antes/);
  }finally{await close(app,sockets);}
 });
+
+test('a waiting room changes games with two connected humans, keeps bots and requires new independent choices',async()=>{
+ const app=createGameServer({config:config()}),sockets=[];try{
+  await app.listen();const a=await request(app,sockets,{type:'join',intent:'create',room:'SWITCHQA',hero:'knight',chooseHeroInRoom:true,options:{mode:'campaign'}});
+  const b=await request(app,sockets,{type:'join',intent:'join',room:'SWITCHQA',hero:'mage',chooseHeroInRoom:true});
+  const denied=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'roomSettings',settings:{options:{mode:'castlefight'}}}}));assert.match((await denied).message,/host/);
+  const bots=next(a.ws,'state',m=>m.state.onlineRoom.players.some(p=>p.bot));a.ws.send(JSON.stringify({type:'command',command:{type:'roomBots',count:1}}));await bots;
+  const changed=next(a.ws,'state',m=>m.state.options.mode==='castlefight');a.ws.send(JSON.stringify({type:'command',command:{type:'roomSettings',settings:{options:{mode:'castlefight',laneCount:2}}}}));const waiting=(await changed).state;
+  assert.equal(waiting.onlineRoom.players.filter(p=>!p.bot).length,2);assert.ok(waiting.onlineRoom.players.some(p=>p.bot));assert.ok(waiting.onlineRoom.players.filter(p=>!p.bot).every(p=>!p.heroChosen));
+  const own=next(a.ws,'state',m=>m.state.onlineRoom.players.find(p=>p.id===a.data.id)?.heroChosen);a.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'orc'}}));await own;
+  const other=next(b.ws,'state',m=>m.state.onlineRoom.players.every(p=>p.heroChosen));b.ws.send(JSON.stringify({type:'command',command:{type:'roomChooseHero',hero:'mage'}}));await other;
+  const begun=next(a.ws,'state',m=>m.state.onlineRoom.started);a.ws.send(JSON.stringify({type:'command',command:{type:'roomStart'}}));const state=(await begun).state;
+  assert.equal(state.options.mode,'castlefight');const g=app.rooms.get('SWITCHQA').game;assert.equal(g.player(a.data.id).castleBuilderKey,'orc');assert.equal(g.player(b.data.id).castleBuilderKey,'mage');
+ }finally{await close(app,sockets);}
+});

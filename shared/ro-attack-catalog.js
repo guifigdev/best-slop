@@ -36,6 +36,7 @@ const modernProfile=skill=>{
  if(kind==='zone')return profile('cast',.70,tint,{motion:element==='fire'?'firefield':element==='ice'||element==='water'?'icefield':'runezone',anchor:'target',stationary:true,centered:true,utility:true,opacity:.8});
  if(kind==='summon')return profile('cast',.72,tint,{motion:'summon',stationary:true,centered:true,utility:true,opacity:.82});
  if(kind==='passive')return profile('cast',.48,tint,{motion:'rune',stationary:true,centered:true,utility:true});
+ if(skill.key==='lg_earthdrive')return profile('cast',.8,0xb89d7b,{motion:'earth',stationary:true,centered:true,utility:true,opacity:0});
  const original=ORIGINAL_ATTACK_SKILLS[skill.key];
  if(original&&original.family!=='cast')return original;
  if(element!=='physical'&&element!=='wind'||kind==='chain')return profile('cast',.52,tint,{motion:elementMotion(element),plane:kind==='projectile'?'vertical':'ground',travelSpeed:kind==='projectile'?Math.min(28,skill.speed||22):0,centered:kind!=='projectile',opacity:.86});
@@ -52,6 +53,7 @@ export function roAttackProfile(event={},unit={}){
  let base=RO_ATTACK_SKILLS[skillKey]||(own(RO_ATTACK_LINEAGES,lineage)?RO_ATTACK_LINEAGES[lineage]:own(NORDIC,event.hero||unit.hero)?NORDIC[event.hero||unit.hero]:null);
  if(!skillKey&&['merchant','acolyte','archer','swordsman','mage','thief'].includes(job)){const families={merchant:'impact',acolyte:'impact',archer:'arrow',swordsman:'blade',mage:'cast',thief:'dagger'};base=profile(families[job],base?.duration||.26,base?.tint||0xc8ced2,job==='archer'?{travelSpeed:32}:job==='swordsman'?{motion:'overhead',opacity:.94}:job==='thief'?{motion:'daggerStreaks',opacity:.82}:{});}
  if(!skillKey&&['meister','biolo'].includes(lineage))base=profile('impact',.68,0xffffff,{motion:'axeSlam',plane:'vertical',opacity:1,forwardOffset:1.1});
+ if(base&&['blade','dagger','impact','fist'].includes(base.family)&&base.motion!=='axeSlam'&&(!skillKey||['slash','dash'].includes(RO_SKILLS[skillKey]?.kind))&&(lineage||skillKey))base=profile('blade',.60,0xffffff,{motion:'overhead',opacity:1,impactFlash:!!skillKey});
  const definition=RO_SKILLS[skillKey],element=event.element||definition?.element||'physical',kind=event.attackKind||event.kind||definition?.kind||'slash';
  if(event.bonk===true&&event.type!=='roAttack'&&!base?.utility&&['fireball','frostnova','poison','bolt'].includes(event.type)){const motion=event.type==='fireball'?'firefield':event.type==='frostnova'?'icefield':event.type==='poison'?'poison':'lightning';base=profile('cast',.55,ELEMENTS[event.type==='fireball'?'fire':event.type==='frostnova'?'ice':event.type==='poison'?'poison':'lightning'],{motion,stationary:true,centered:true,opacity:.8});}
  if(base?.autoFamily&&lineage&&RO_ATTACK_LINEAGES[lineage])base={...RO_ATTACK_LINEAGES[lineage],duration:base.duration};

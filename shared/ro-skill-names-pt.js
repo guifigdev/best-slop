@@ -675,9 +675,10 @@ wh_wild_walk|Passos Selvagens`.split('\n').map(row=>row.split('|'))));
 export const roSkillNamePt=(key,fallback)=>names[key]||fallback;
 const deepFreeze=value=>{if(value&&typeof value==='object'){Object.values(value).forEach(deepFreeze);Object.freeze(value);}return value;};
 const gameplay=deepFreeze({
+ lg_earthdrive:{description:'Golpe de escudo causa um terremoto circular ao seu redor, abrindo rachaduras e levantando pedras. Enfraquece os inimigos atingidos.',kind:'pulse',element:'earth',range:6,mechanics:{status:{armorBreak:.15,slow:.20},duration:4}},
  sm_magnum:{description:'Explosão de fogo em área que empurra inimigos comuns até 4,2 m e provoca queimadura. MVPs resistem ao empurrão.',mechanics:{knockback:4.2,status:{burn:2}}},
  al_blessing:{description:'Abençoa aliados próximos por 20s, reforçando poder e cadência. Bênçãos iguais não acumulam.',mechanics:{duration:20,allyRadius:9,modifiers:{damage:.10,haste:.08}}},
  al_incagi:{description:'Aumenta o movimento e a esquiva dos aliados em 9 m por 20s.',mechanics:{duration:20,allyRadius:9,modifiers:{speed:.17,evasion:.025}}},
  al_angelus:{description:'Protege aliados em 9 m por 20s, reduzindo o dano recebido.',mechanics:{duration:20,allyRadius:9,modifiers:{armor:4,magicDefense:3,damageReduction:.08}}}
 });
-export function localizeRoSkills(catalog){return Object.freeze(Object.fromEntries(Object.entries(catalog).map(([key,skill])=>[key,roSkillNamePt(key,skill.name)===skill.name&&!gameplay[key]?skill:Object.freeze({...skill,...(gameplay[key]||{}),originalName:skill.originalName||skill.name,name:roSkillNamePt(key,skill.name)})])));}
+export function localizeRoSkills(catalog){for(const skill of Object.values(catalog))if(skill.kind==='projectile'&&['armor_break','blind','silence','weaken','slow','root','stun'].includes(skill.role))catalog[skill.key]={...skill,description:skill.description.replace(/do alvo/g,'dos inimigos em um círculo de 2,6 m').replace(/o alvo/g,'os inimigos em um círculo de 2,6 m')+' O automático prioriza o inimigo mais forte no alcance.'};return Object.freeze(Object.fromEntries(Object.entries(catalog).map(([key,skill])=>[key,roSkillNamePt(key,skill.name)===skill.name&&!gameplay[key]?skill:Object.freeze({...skill,...(gameplay[key]||{}),originalName:skill.originalName||skill.name,name:roSkillNamePt(key,skill.name)})])));}
