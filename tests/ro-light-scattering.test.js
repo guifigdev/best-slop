@@ -40,3 +40,8 @@ test('renderer target, viewport, scissor, tone settings and info reset policy su
 test('render size selection remains finite and bounded across aspect ratios and quality levels',()=>{
  for(const [w,h]of [[390,844],[1920,1080],[10000,500],[500,10000],[1,1],[0,0]])for(const low of [false,true]){const size=roScatteringSize(w,h,low);assert.ok(Object.values(size).every(v=>Number.isInteger(v)&&v>0));assert.ok(size.width*size.height<=B.maxColorPixels);assert.ok(size.rayWidth*size.rayHeight<=B.maxRayPixels);assert.ok(Math.max(size.width,size.height)<=B.maxSide);}
 });
+
+
+test('solar shafts use a stronger configurable budget without extra render passes and zero strength removes the halo',()=>{
+ const f=fixture();try{render(f);assert.equal(f.effect.stats().intensity,.7);f.effect.render(f.state,0,{...f.options,intensity:1.25});assert.equal(f.effect.stats().intensity,1.25);assert.equal(f.effect.stats().extraDrawCalls,2);f.effect.render(f.state,0,{...f.options,intensity:0});assert.equal(f.effect.stats().intensity,0);assert.equal(draws(f).at(-1).material.uniforms.halo.value,0);f.effect.render(f.state,0,{...f.options,intensity:10});assert.equal(f.effect.stats().intensity,1.5);}finally{f.effect.dispose();}
+});

@@ -9,6 +9,7 @@ import {ARENAS} from '../shared/arenas.js';
 import {Matchmaker} from './matchmaking.js';
 import {RoomStore} from './room-store.js';
 import {createPhaseHandler} from './phase-rooms.js';
+import {handlerRagnarokRequest} from './ro-accounts.js';
 import {runtimeConfig,originAllowed,publicRuntimeConfig} from './runtime-config.js';
 const hash=token=>createHash('sha256').update(String(token)).digest('hex');
 const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -57,6 +58,20 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
    if(url.pathname==='/healthz')return json(res,draining?503:200,{service:'Custom Hero',ready:!draining,rooms:rooms.size,clients:peers.size,version:config.version,persistent:store.persistent,tickWorstMs:Math.round(tickWorstMs)},cors);
    if(url.pathname==='/api/config')return json(res,200,publicRuntimeConfig(config,{persistent:store.persistent,draining}),cors);
    if(url.pathname.startsWith('/api/phase')){if(!originAllowed(origin,host,config))return json(res,403,{message:'Origem não autorizada.'});const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>8192)return json(res,413,{message:'Pedido muito grande.'},cors);chunks.push(chunk);}const body=Buffer.concat(chunks),protocol=config.publicOrigin?.startsWith('https:')?'https:':'http:',request=new Request(protocol+'//'+host+req.url,{method:req.method,headers:req.headers,...(body.length?{body}:{})}),response=await phaseHandler(request,{DB:store});if(!response)return json(res,404,{message:'Endpoint não encontrado.'},cors);res.writeHead(response.status,{...Object.fromEntries(response.headers),...cors});return res.end(Buffer.from(await response.arrayBuffer()));}
+   if(url.pathname.startsWith('/api/ragnarok/')){
+    if(!originAllowed(origin,host,config))return json(res,403,{message:'Origem não autorizada.'});
+    const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>150*1024)return json(res,413,{message:'Pedido muito grande.'},cors);chunks.push(chunk);}
+    const body=Buffer.concat(chunks),headers=new Headers(req.headers);
+    // A self-hosted Node server has no trusted Sites identity gateway. Visitor
+    // supplied identity headers must never select or bind a player's account.
+    headers.delete('oai-authenticated-user-id');
+    // Origin was checked at this transport boundary against the VPS allowlist.
+    // The internal handler can also serve explicitly allowed native app origins.
+    headers.delete('origin');
+    const protocol=config.publicOrigin?.startsWith('https:')?'https:':'http:',request=new Request(protocol+'//'+host+req.url,{method:req.method,headers,...(body.length&&!['GET','HEAD'].includes(req.method)?{body}:{})}),response=await handlerRagnarokRequest(request,{DB:store});
+    if(!response)return json(res,404,{message:'Endpoint não encontrado.'},cors);
+    res.writeHead(response.status,{...Object.fromEntries(response.headers),...cors});return res.end(Buffer.from(await response.arrayBuffer()));
+   }
    if(!['GET','HEAD'].includes(req.method))return json(res,405,{message:'Método não permitido.'});
    const docs=url.pathname.startsWith('/guides/'),root=path.resolve(docs?path.join(config.clientDir,'guides'):config.clientDir),relative=decodeURIComponent(docs?url.pathname.slice(8):url.pathname==='/'?'index.html':url.pathname.slice(1)),file=path.resolve(root,relative);if(!file.startsWith(root+path.sep)&&file!==root)return json(res,403,{message:'Caminho inválido.'});let resolved=file;try{if(!(await stat(resolved)).isFile())throw Error();}catch{if(docs||path.extname(relative))return json(res,404,{message:'Arquivo não encontrado.'});resolved=path.join(root,'index.html');}const data=await readFile(resolved);res.writeHead(200,{'Content-Type':MIME[path.extname(resolved)]||'application/octet-stream','Cache-Control':url.pathname.startsWith('/assets/')?'public, max-age=31536000, immutable':'no-cache','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);
   }catch{json(res,500,{message:'Não foi possível processar o pedido.'});}

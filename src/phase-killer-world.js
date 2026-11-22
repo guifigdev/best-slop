@@ -55,7 +55,7 @@ export function createPhaseKillerWorld({scene}){
   }
   const previous=batches.get('houses');if(previous){previous.removeFromParent();previous.dispose();batches.delete('houses');}
   if(parts.length){const geo=compile('houses-'+dimension+'-'+revision,parts),mesh=new T.InstancedMesh(geo,mat,1);mesh.setMatrixAt(0,new T.Matrix4());mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);batches.set('houses',mesh);}
-  const forest=phaseKillerForestObstacles(dimension).filter(o=>!removed.has(o.id)),trunks=batch('trunks',forest.length),leaves=batch('trees',forest.length*6,box,canopy),rocks=batch('rocks',forest.length*20);let t=0,l=0,r=0;
+  const forest=phaseKillerForestObstacles(dimension).filter(o=>!removed.has(o.id)),trunks=batch('trunks',forest.length),leaves=batch('trees',forest.length*6,box,canopy),rocks=batch('rocks',forest.filter(o=>o.phaseProp==='rock').length*112+1);let t=0,l=0,r=0;
   for(const p of forest){
    if(p.phaseProp==='landmark')continue;
    if(p.phaseProp==='rock'){const h=.5+(p.variation%5)*.22;for(const part of rockAssembly({id:p.id,x:p.x,z:p.z,w:p.w,d:p.d,h,biome:dimension==='normal'?'forest':dimension==='aether'?'frost':'void'}))put(rocks,r++,...part);continue;}
@@ -63,7 +63,7 @@ export function createPhaseKillerWorld({scene}){
    for(const part of art.parts)put(leaves,l++,...part);
   }finish(trunks,t);finish(leaves,l);finish(rocks,r);
   // Native lamp/fountain/ruin positions remain recognizable without copying WC3 models.
-  const scenery=phaseKillerScenery(dimension),props=batch('landmarks',scenery.length*20),lights=batch('windows',structures.length*6+scenery.length*5,box,glow);n=0;let g=0;
+  const scenery=phaseKillerScenery(dimension),props=batch('landmarks',scenery.length*112),lights=batch('windows',structures.length*6+scenery.length*5,box,glow);n=0;let g=0;
   for(const p of scenery){
    if(removed.has(p.id))continue;
    if(['YTpc','YOks','YSca','YOfn'].includes(p.rawId)&&!forest.some(o=>o.id===p.id))continue;

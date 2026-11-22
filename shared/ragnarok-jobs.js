@@ -1,14 +1,15 @@
 // Class progression follows the original first/second/third/fourth job lines.
 // Survivor damage budgets are local; attack identity never comes from loot.
 import {attributeCost,attributePointsForLevel} from './progression.js';
+import {RO_EXPANDED_SKILLS,RO_LINEAGE_SKILL_KEYS,RO_LINEAGE_SKILL_TIERS} from './ro-expanded-skills.js';
 export {attributeCost,attributePointsForLevel};
-const line=(key,hero,focus,jobs,names,weapon,attack,skills,description)=>Object.freeze({key,hero,focus,jobs:Object.freeze(jobs.split(',')),names:Object.freeze(names.split(',')),weapon,attack:Object.freeze(attack),skills:Object.freeze(skills),description});
+const line=(key,hero,focus,jobs,names,weapon,attack,skills,description)=>Object.freeze({key,hero,focus,jobs:Object.freeze(jobs.split(',')),names:Object.freeze(names.split(',')),weapon,attack:Object.freeze(attack),skills:Object.freeze([...new Set([...skills,...(RO_LINEAGE_SKILL_KEYS[key]||[])])]),skillTiers:RO_LINEAGE_SKILL_TIERS[key]||Object.freeze({}),description});
 const attack=(kind,element,damage,cooldown,range,extra={})=>({kind,element,damage,cooldown,range,...extra});
 export const RO_LINEAGES=Object.freeze(Object.fromEntries([
  line('dragonknight','knight','str','swordsman,knight,runeknight,dragonknight','Espadachim,Cavaleiro,Cavaleiro Rúnico,Cavaleiro Dracônico','Espada',attack('slash','physical',22,.8,5),['bash','bowlingbash','dragonbreath','hackandslasher'],'Espadas, golpes amplos e o sopro dos dragões.'),
  line('imperialguard','turtle','vit','swordsman,crusader,royalguard,imperialguard','Espadachim,Templário,Guardião Real,Guarda Imperial','Lança e escudo',attack('slash','physical',20,.9,5.5),['bash','shieldboomerang','overbrand','crossrain'],'Escudos, lanças e resistência para enfrentar grupos.'),
- line('archmage','mage','int','mage,wizard,warlock,archmage','Mago,Bruxo,Arcano,Arquimago','Cajado',attack('projectile','arcane',17,.95,24,{speed:22}),['firebolt','stormgust','chainlightning','crystalimpact'],'Magias elementais, congelamento e tempestades.'),
- line('elementalmaster','owl','int','mage,sage,sorcerer,elementalmaster','Mago,Sábio,Feiticeiro,Mestre Elemental','Livro elemental',attack('projectile','arcane',17,.95,23,{speed:20}),['coldbolt','heavensdrive','psychicwave','conflagration'],'Combina terra, gelo, fogo e ondas psíquicas.'),
+ line('archmage','mage','int','mage,wizard,warlock,archmage','Mago,Bruxo,Arcano,Arquimago','Cajado',attack('projectile','fire',17,.95,24,{speed:22,radius:1.6}),['fireball','stormgust','chainlightning','crystalimpact'],'Magias elementais, congelamento e tempestades.'),
+ line('elementalmaster','owl','int','mage,sage,sorcerer,elementalmaster','Mago,Sábio,Feiticeiro,Mestre Elemental','Livro elemental',attack('projectile','fire',17,.95,23,{speed:20,radius:1.6}),['fireball','heavensdrive','psychicwave','conflagration'],'Combina terra, gelo, fogo e ondas psíquicas.'),
  line('windhawk','ranger','dex','archer,hunter,ranger,windhawk','Arqueiro,Caçador,Sentinela,Falcão do Vento','Arco',attack('projectile','physical',17,.7,28,{speed:32}),['doublestrafe','blitzbeat','arrowstorm','cresivebolt'],'Flechas velozes, falcões e rajadas perfurantes.'),
  line('troubadour','ranger','dex','archer,bard,minstrel,troubadour','Arqueiro,Bardo,Trovador,Trovador Celestial','Arco e instrumento',attack('projectile','physical',16,.75,26,{speed:29}),['doublestrafe','musicalstrike','severerainstorm','rhythmshooting'],'Flechas e ondas musicais que varrem a horda.'),
  line('cardinal','owl','int','acolyte,priest,archbishop,cardinal','Noviço,Sacerdote,Arcebispo,Cardeal','Maça sagrada',attack('slash','holy',23,.9,4.6),['holylight','magnusexorcismus','judex','adoramus'],'Luz sagrada, áreas consagradas e recuperação.'),
@@ -21,7 +22,7 @@ export const RO_LINEAGES=Object.freeze(Object.fromEntries([
 export const roLineage=key=>typeof key==='string'&&Object.hasOwn(RO_LINEAGES,key)?RO_LINEAGES[key]:RO_LINEAGES.dragonknight;
 export const roJob=(lineage,tier=0)=>{const p=roLineage(lineage),i=Math.max(0,Math.min(3,Math.floor(tier)||0));return {key:p.jobs[i],name:p.names[i],tier:i,lineage:p.key,next:p.names[i+1]||null};};
 const spell=(key,name,tier,skill,description,profile)=>Object.freeze({key,name,tier,skill,description,...profile});
-export const RO_SKILLS=Object.freeze(Object.fromEntries([
+export const RO_SKILLS=Object.freeze({...RO_EXPANDED_SKILLS,...Object.fromEntries([
  spell('bash','Bash',0,'cleave','Golpe concentrado à frente.',attack('slash','physical',35,1.5,6)),
  spell('bowlingbash','Bowling Bash',1,'shockwave','Impacto amplo que abre espaço na horda.',attack('pulse','physical',42,2.8,7)),
  spell('dragonbreath','Dragon Breath',2,'fireball','Sopro ardente com explosão e queimadura.',attack('projectile','fire',40,2.2,25,{speed:19,radius:4.5,pierce:3})),
@@ -65,8 +66,9 @@ export const RO_SKILLS=Object.freeze(Object.fromEntries([
  spell('backstab','Back Stab',1,'cleave','Punhalada poderosa em arco curto.',attack('slash','physical',48,1.5,5)),
  spell('triangleShot','Triangle Shot',2,'multishot','Projéteis sombrios atravessam a formação.',attack('projectile','dark',43,1.2,28,{speed:31,pierce:5})),
  spell('abysssquare','Abyss Square',3,'shockwave','O abismo explode ao redor do renegado.',attack('pulse','dark',98,3,12))
-].map(s=>[s.key,s])));
-export function roBasicAttack(u){const p=roLineage(u.roLineage),tier=Math.max(0,Math.min(3,u.roTier||0));return {key:'basic',name:(p.key==='shadowcross'&&tier===0?'Adaga':p.weapon)+' · ataque de classe',skill:p.attack.kind==='projectile'?'multishot':'cleave',description:'Ataque característico. Equipamentos alteram os atributos, preservando este ataque.',...p.attack,damage:p.attack.damage*(1+tier*.28),cooldown:p.attack.cooldown/(1+tier*.07)};}
+].map(s=>[s.key,Object.freeze({...RO_EXPANDED_SKILLS[s.key],...s,manaCost:2+(s.tier||0)*2})]))});
+export const roSkillTier=(lineage,key)=>roLineage(lineage).skillTiers[key]??RO_SKILLS[key]?.tier??3;
+export function roBasicAttack(u){const p=roLineage(u.roLineage),tier=Math.max(0,Math.min(3,u.roTier||0));return {key:'basic',name:(p.focus==='int'&&p.jobs[0]==='mage'?'Fire Ball':p.key==='shadowcross'&&tier===0?'Adaga':p.weapon)+' · ataque de classe',skill:p.attack.element==='fire'?'fireball':p.attack.kind==='projectile'?'multishot':'cleave',description:'Ataque característico. Equipamentos alteram os atributos, preservando este ataque.',...p.attack,damage:p.attack.damage*(1+tier*.28),cooldown:p.attack.cooldown/(1+tier*.07)};}
 export function advanceRoJob(u,tier){const j=roJob(u.roLineage,tier);const previous=u.roTier||0;u.roTier=j.tier;if(u.roLineage==='shadowcross'&&previous<1&&j.tier>=1&&Array.isArray(u.roInventory)){const item={id:'job-dagger-'+u.id,key:'knife',cards:[]};if(!u.roInventory.some(i=>i.id===item.id)){if(u.roInventory.length<48){u.roInventory.push(item);if(!u.roEquipment.offhand)u.roEquipment.offhand=item.id;}else (u.roUnclaimed||=[]).push(item);}}u.bonkJob=j.key;u.name=j.name;return j;}
 export function initializeRoJob(u,key){const p=roLineage(key);u.roLineage=p.key;u.attributes={str:5,agi:5,vit:5,int:5,dex:5,luk:5,[p.focus]:12};u.attributePoints=6;advanceRoJob(u,0);}
 export function spendRoAttribute(u,key){if(!Object.hasOwn(u.attributes||{},key)||!['str','agi','vit','int','dex','luk'].includes(key))return false;const cost=attributeCost(u.attributes[key]);if(u.attributes[key]>=99||u.attributePoints<cost)return false;u.attributes[key]++;u.attributePoints-=cost;return true;}

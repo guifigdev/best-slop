@@ -21,7 +21,7 @@ export function useShortcuts({target=window,context,onAction}){
    if(c.bonkOffer&&key==='TAB')return;
    if(['w','a','s','d'].includes(e.key.toLowerCase())||e.key.startsWith('Arrow')){e.preventDefault();held.add(e.key.toLowerCase());return;}
    if(e.repeat)return;
-   if(c.bonkOffer&&/^[1-3]$/.test(e.key)){e.preventDefault();const choice=c.bonkOffer.choices[Number(e.key)-1];if(choice)onAction('bonkChoice',choice.id);return;}
+   if(c.bonkOffer&&/^[1-4]$/.test(e.key)){e.preventDefault();const choice=c.bonkOffer.choices[Number(e.key)-1];if(choice)onAction('bonkChoice',choice.id);return;}
    if(!c.bonkOffer&&/^[1-4]$/.test(e.key)){e.preventDefault();onAction('bonkSkill',Number(e.key)-1);return;}
    if(e.code==='Space'){e.preventDefault();onAction('bonk','jump');}else if(e.key==='Shift'){e.preventDefault();onAction('bonk','dash');}else if(key==='E'){e.preventDefault();onAction('bonk','interact');}else if(key==='TAB'){e.preventDefault();onAction('bonk','build');}else if(key==='P'){e.preventDefault();onAction('bonk','pause');}return;
   }

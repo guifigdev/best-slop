@@ -1,19 +1,10 @@
+import {stoneRockParts,stoneColumnParts} from './stone-landmark-art.js';
 // Small voxel sculptures, designed as complete objects rather than proxy boxes.
 // Local coordinates are shared by scenery and interactive objects.
 const P={stone:[0x566367,0x718083,0x8c9b98,0xa7b2a7],wood:[0x66462f,0x8d6745,0xb18b5d,0xd0ac76],clay:[0x764c36,0xa5744c,0xc8996a,0xe0bd8c],iron:[0x35474b,0x677f83,0xa5b8b1],moss:[0x425c46,0x65805a,0x8a9b65]};
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const seedOf=id=>[...String(id)].reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))>>>0,7);
-export function dungeonRockParts({id='rock',w=3,d=2.6,h=3,biome='cavern'}={}){
- const seed=seedOf(id),parts=[],nx=10,nz=9,sx=w/nx,sz=d/nz,p=biome==='frost'?[0x658d9a,0x8ab4bf,0xb5d1d0,0xd7e6db]:biome==='forge'?[0x353839,0x4f4640,0x736155,0x98816a]:P.stone;
- for(let ix=0;ix<nx;ix++)for(let iz=0;iz<nz;iz++){
-  const x=(ix+.5)/nx*2-1,z=(iz+.5)/nz*2-1,r=Math.sqrt((x+.12)**2*.92+(z-.08)**2*1.14),r2=Math.hypot((x-.36)*1.6,(z+.22)*1.7),bulge=Math.max(Math.sqrt(Math.max(0,1-r*r)),.72*Math.sqrt(Math.max(0,1-r2*r2)));
-  if(bulge<.23||hash(seed+ix*37+iz*3)<.06&&r>.7)continue;
-  const height=Math.max(.16,Math.round(h*(bulge*.79+.06*hash(seed+ix*11+iz*7))/.16)*.16),tint=p[Math.floor(hash(seed+ix*13+iz*29)*3)];
-  parts.push([(ix+.5)*sx-w/2,height/2,(iz+.5)*sz-d/2,sx+.005,height,sz+.005,tint]);
-  if(hash(seed+ix*19+iz*23)>.73)parts.push([(ix+.5)*sx-w/2,height+.035,(iz+.5)*sz-d/2,sx*.83,.07,sz*.8,biome==='forest'||biome==='cavern'?P.moss[(ix+iz)%3]:p[3]]);
- }
- return parts;
-}
+export function dungeonRockParts(options={}){return stoneRockParts({w:3,d:2.6,h:3,...options});}
 export function dungeonPropParts(type,{id=type,w=1.25,d=1.25,h=1.6,biome='cavern'}={}){
  const a=[],wood=P.wood,iron=P.iron,seed=seedOf(id),b=(x,y,z,ww,hh,dd,c,ry=0,rx=0,rz=0)=>a.push([x,y,z,ww,hh,dd,c,ry,rx,rz]);
  if(['rock','boulder','stalagmite','rubble'].includes(type))return dungeonRockParts({id,w,d,h,biome});
@@ -46,9 +37,7 @@ export function dungeonPropParts(type,{id=type,w=1.25,d=1.25,h=1.6,biome='cavern
   for(const side of [-1,1])b(side*w*.43,h*.5,0,w*.12,h,d*.72,wood[1]);for(const yy of [.08,.4,.72,1]){for(let i=-2;i<=2;i++)b(i*w*.18,h*yy,0,w*.17,.12,d,wood[2]);}
   for(let row=0;row<3;row++)for(let i=0;i<5;i++)b((i-2)*w*.15,h*(.2+row*.3),0,w*.11,h*.22,d*.62,[0x87795d,0x66857e,0xb0a27c,0x735d66,0xa4b59d][(i+row)%5]);
  }else if(type==='pillar'){
-  for(let j=0;j<3;j++)b(0,.12+j*.17,0,w*(1-j*.12),.18,d*(1-j*.12),P.stone[2]);
-  for(let j=0;j<9;j++)for(let k=0;k<4;k++){const t=k*Math.PI/2;b(Math.sin(t)*w*.22,.65+j*(h-.9)/9,Math.cos(t)*d*.22,w*.35,(h-.9)/9-.025,d*.35,P.stone[(j+k)%3]);}
-  b(0,h-.16,0,w,.22,d,P.stone[3]);
+  return stoneColumnParts({id,w,d,h,biome,broken:seed%4===3});
  }
  return a;
 }

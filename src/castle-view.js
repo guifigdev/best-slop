@@ -1,3 +1,4 @@
+import {createCastleKeepArt} from './castle-keep-art.js';
 import {createCastleBuildingArt} from './castle-building-art.js';
 import * as T from 'three';
 import {CASTLE_BUILDINGS,CASTLE_RACES,CASTLE_ITEMS} from '../shared/castle-catalog.js';
@@ -56,7 +57,7 @@ export function createCastleView({scene,voxel,bake,overlay}){
  function architecture(parent,entry,{castle=false,tower=false}={}){
   const holder=new T.Group(),model=new T.Group(),definition=CASTLE_BUILDINGS[entry.key||entry.building]||{},race=entry.race||definition.race||'human',accent=raceColor(race),team=teamColor(entry.team),w=num(entry.w,3),d=num(entry.d,3);holder.position.set(entry.x,groundHeight(entry.x,entry.z),entry.z);holder.add(model);parent.add(holder);
   const block=(x,y,z,bw,bh,bd,color)=>voxel(model,x,y,z,bw,bh,bd,color),stone=0xbab79b,wood=0x806b50,ivory=0xded4b4,dark=0x4b5057;
-  const art=!castle&&!tower?createCastleBuildingArt(entry.key||entry.building,definition):null;if(art)model.add(art);
+  const art=castle?createCastleKeepArt({w,d,race,team:entry.team}):!tower?createCastleBuildingArt(entry.key||entry.building,definition):null;if(art)model.add(art);
   if(!art){
   block(0,.16,0,w+.12,.3,d+.12,0x989d89);
   if(tower){

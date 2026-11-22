@@ -156,6 +156,20 @@ export function buildingModelSpec(key,definition){
  else if(raw==='h07I'){add(0,3.48,0,.13,.49,.13,'glow','star-ray');add(0,3.48,0,.45,.13,.13,'glow','star-ray');add(0,3.48,0,.13,.13,.42,'glow','star-ray');}
  else if(['h06J','h05R'].includes(raw)){const c=raw==='h05R'?'fire':'glow';for(const side of [-1,1]){add(side*.23,2.64,.16,.13,.35,.12,c,'shield-arc');add(side*.12,2.86,.16,.17,.12,.12,c,'shield-arc');}add(0,2.29,.16,.13,.19,.12,c,'shield-point');}
  // Family siblings gain a visible structural wing, not just a different icon.
+ // Pixel-scale details follow the building's construction, never scattered cubes.
+ const domestic=['hall','chapel','academy','city','fortress','range','granary','stable','village','hut'];
+ if(domestic.includes(family)){
+  const wall=boxes.filter(b=>['hall','academy','city','fortress','range','granary','stable','hut'].includes(b.part)&&b.h>.5).sort((a,b)=>b.w*b.h*b.d-a.w*a.h*a.d)[0];
+  if(wall){const face=wall.z+wall.d/2+.01,base=wall.y-wall.h/2,windowY=base+wall.h*.65,windowW=Math.min(.085,wall.w*.14),windowH=Math.min(.35,wall.h*.28);
+   for(const side of [-1,1]){const x=wall.x+side*wall.w*.29;add(x,windowY,face,windowW+.024,windowH+.06,.018,'wood','window-frame');add(x,windowY,face+.012,windowW,windowH,.014,'glow','window-glass');add(x,windowY,face+.023,.012,windowH,.012,'ivory','window-mullion');add(x,windowY-windowH*.1,face+.023,windowW,.03,.012,'ivory','window-crossbar');add(x,windowY-windowH/2-.04,face,.13,.05,.06,'stone','window-sill');}
+   for(let row=0;row<3;row++)for(let column=0;column<6;column++){const x=wall.x+wall.w*(-.42+column*.165+(row%2)*.03),y=base+.16+row*.24;if(y>base+wall.h-.08||Math.abs(x-wall.x)<wall.w*.16&&y<.95)continue;add(x,y,face-.003,wall.w*.132,.045,.012,row%2?'ivory':'stone','masonry-course');}
+  }
+  const tiles=boxes.filter(b=>b.part==='roof').sort((a,b)=>a.y-b.y);for(const slab of tiles.slice(0,4))for(const side of [-1,1])add(slab.x+side*slab.w*.32,slab.y+slab.h/2+.012,slab.z,.016,.025,slab.d*.88,'ivory','roof-tile-seam');
+ }
+ if(race==='mech'){
+  const wall=boxes.find(b=>['hangar','armory','assembly-hall','forge','bunker','mill','control-room'].includes(b.part));if(wall){const x=wall.x-wall.w*.29,z=wall.z+wall.d/2+.014;add(x,wall.y,z,.14,.28,.025,'dark','vent-panel');for(let i=0;i<4;i++)add(x,wall.y-.09+i*.06,z+.018,.11,.019,.013,'iron','vent-slat');for(const side of [-1,1])add(x+side*.055,wall.y+.115,z+.026,.022,.026,.015,'gold','panel-fastener');}
+ }
+ if(['pyramid','obelisk','shrine','totem'].includes(family)){for(const side of [-1,1]){add(side*.11,.48,.31,.07,.035,.026,'gold','carved-glyph');add(side*.11,.55,.31,.025,.13,.028,'gold','carved-glyph');}}
  if(index>0&&race!=='mech'&&family!=='treasury'){const side=index%2?1:-1,height=.55+index*.21;add(side*.36,.3+height/2,-.27,.22,height,.24,'stone','expansion-wing');add(side*.36,.35+height,-.27,.29,.13,.3,'accent','expansion-roof');}
  const w=b.footprint?.w||3,d=b.footprint?.d||3,scaled=boxes.map(box=>{const bw=box.w*w,bd=box.d*d;return Object.freeze({...box,x:Math.max(-w/2+bw/2,Math.min(w/2-bw/2,box.x*w)),z:Math.max(-d/2+bd/2,Math.min(d/2-bd/2,box.z*d)),w:bw,d:bd});});
  const spec=Object.freeze({key,name:b.name,race,family,boxes:Object.freeze(scaled),height:Math.max(...scaled.map(a=>a.y+a.h/2)),footprint:Object.freeze({w,d})});specs.set(signature,spec);return spec;

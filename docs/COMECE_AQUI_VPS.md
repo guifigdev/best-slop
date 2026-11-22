@@ -1,10 +1,27 @@
 # Do projeto local ao jogo online
 
-Roteiro para os dados informados: VPS `216.158.236.156`, acesso inicial `root`, domínio `gfig.space`, repositório `guifigdev/best-slop`. Revisado em 19/11/2026. **Execute as etapas em ordem.** Publicar no Sites e enviar ao GitHub são operações separadas.
+Roteiro para os dados informados: VPS `216.158.236.156`, acesso inicial `root`, domínio `gfig.space`, repositório `guifigdev/best-slop`. Revisado em 21/11/2026. **Execute as etapas em ordem.** Publicar no Sites e enviar ao GitHub são operações separadas.
+
+
+## Antes de começar: qual janela eu uso?
+
+Vamos colocar tudo no endereço **https://play.gfig.space**. Pense assim: o GitHub é a caixa do código; a VPS é o computador que deixa o jogo ligado; a Cloudflare dá o endereço.
+
+Você vai alternar entre três lugares:
+
+1. **Seu PC:** abra o PowerShell no Windows. Os comandos `git`, o envio do código e a criação da chave do CI começam aqui.
+2. **Painéis no navegador:** Cloudflare para DNS; GitHub para atualizações automáticas.
+3. **Terminal da VPS:** depois de `ssh root@216.158.236.156`, você passa a controlar o Linux. Os comandos `apt-get`, `nano`, `docker` e `bash scripts/deploy.sh` vão aqui.
+
+Copie **um bloco de cada vez** e aperte Enter. Se um passo der erro, não avance para os próximos. Senhas digitadas no SSH não mostram bolinhas nem letras: isso é normal. Digite e aperte Enter. Nunca cole senha, chave privada ou `.env` na conversa.
+
+**Para jogar online pela primeira vez, basta concluir os passos 1 a 4.** Atualização automática e R2 vêm depois. Você não precisa contratar Worker, instalar Node na VPS nem instalar banco manualmente: o Dockerfile já usa Node24, e o serviço cria seu SQLite persistente.
+
+Os valores abaixo são os que estão registrados no projeto. Se o IP/domínio da sua VPS mudou, substitua-os em todos os passos. O roteiro de instalação assume Ubuntu ou Debian.
 
 ## 1. Enviar o código ao GitHub — PowerShell no seu PC
 
-O repositório estava vazio na consulta. O código está nesta pasta local e a versão do Sites já está commitada. O remoto adicional preserva o remoto interno do Sites:
+O código fica nesta pasta local. Confira se a atualização desejada já foi concluída e commitada com `git status` antes de enviar. O estado atual do GitHub e da VPS deve ser conferido por você. O remoto adicional preserva o remoto interno do Sites:
 
 ```powershell
 Set-Location 'C:\Users\Guilherme\Downloads\games-gpt\custom hero'
@@ -199,3 +216,12 @@ bash scripts/deploy-backup.sh --env /opt/custom-hero/.env
 Backups fora da VPS usam outro bucket **privado** e `BACKUP_R2_BUCKET`, conforme [CONFIGURACOES.md](CONFIGURACOES.md). O CI não agenda backups periódicos sozinho. Não use `docker compose down -v` para atualizar: isso apaga os volumes.
 
 Steam, Android e pagamentos não são pré-requisitos deste online web. Seus wrappers/SDKs e validação de compras ainda são trabalho de implementação; preencher AppIDs não conclui essas integrações. Consulte [MONETIZACAO.md](MONETIZACAO.md).
+
+
+## Contas de Ragnarok na VPS
+
+A VPS também serve `/api/ragnarok/*`, com contas, cartas, presets e personagens no SQLite persistente `/data/game.sqlite`. O acesso é por uma chave de recuperação gerada pelo jogo: guarde essa chave para recuperar a conta em outro navegador. No domínio próprio não existe login automático do ChatGPT. Cabeçalhos de identidade enviados pelo visitante são descartados.
+
+Para conferir que a rota existe sem expor uma chave, execute `curl -i https://play.gfig.space/api/ragnarok/account`. O resultado esperado sem autenticação é **401** e JSON de autenticação; HTML do jogo nessa URL significa versão antiga do servidor. Crie uma conta no jogo, salve um personagem e teste a recuperação em outro perfil. O modo Ragnarok Survivors continua solo; as salas multiplayer são dos modos que oferecem o botão online. Hospedar não adiciona co-op a um modo solo.
+
+O D1 do site ChatGPT e o SQLite da VPS são bancos separados: esta instalação não transfere automaticamente as cartas/personagens que já existem no Sites. Para copiar dados existentes, é necessário um fluxo explícito de migração; não copie credenciais administrativas para o cliente.

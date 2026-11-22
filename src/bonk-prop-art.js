@@ -1,3 +1,4 @@
+import {roRegionalPropParts} from './ro-regional-prop-art.js';
 import {habitatSceneryParts} from './habitat-scenery.js';
 // Purpose-built small voxel props, in metres around the object's ground anchor.
 // The open lids, hollow necks and separate staves keep silhouettes legible at play distance.
@@ -67,7 +68,7 @@ export function bonkRockParts(o,p){
 }
 // Regional landmarks. Geometry uses layered masonry, open arches, roof tiles and
 // recognisable silhouettes; no invisible decorative cubes replace these assets.
-export function bonkSceneryParts(type,p,variant=0){const habitat=habitatSceneryParts(type,p,variant);if(habitat)return habitat;
+export function bonkSceneryParts(type,p,variant=0){const regional=roRegionalPropParts(type,p,variant);if(regional)return regional;const habitat=habitatSceneryParts(type,p,variant);if(habitat)return habitat;
  const parts=[],b=(x,y,z,w,h,d,c=p.stone,a=0,lit=false)=>parts.push([x,y,z,w,h,d,c,a,lit]),stone=p.stone,dark=p.dark,wood=p.wood,cream=0xd8c9a9,roof=type.includes('payon')?0x526569:0x9e5447;
  const base=(w=7,d=6)=>{for(let i=0;i<3;i++)b(0,.14+i*.2,0,w-i*.3,.25,d-i*.3,i%2?stone:dark);};
  const ring=(r,y,thick,h,c,n=24)=>{for(let i=0;i<n;i++){const a=i*Math.PI*2/n;b(Math.sin(a)*r,y,Math.cos(a)*r,thick,h,2*Math.PI*r/n*.96,c,-a);}};

@@ -38,7 +38,7 @@ test('new support landmarks depict their functions through architecture rather t
 test('support portraits and world meshes share one finite model and release shared geometry after the last owner',()=>{
  for(const key of Object.keys(CASTLE_SUPPORT_BUILDINGS)){
   const spec=buildingModelSpec(key),a=createCastleBuildingArt(key),b=createCastleBuildingArt(key);let disposed=0;
-  try{assert.equal(a.geometry,b.geometry);a.geometry.addEventListener('dispose',()=>disposed++);assert.equal(a.geometry.attributes.position.count,spec.boxes.length*36);assert.equal((castleBuildingPortrait(key).match(/<polygon /g)||[]).length,spec.boxes.length*3);assert.ok(spec.boxes.length<=40);assert.ok(Math.abs(a.geometry.boundingBox.max.y-spec.height)<1e-5);for(const box of spec.boxes){assert.ok(Math.abs(box.x)+box.w/2<=spec.footprint.w/2+1e-6);assert.ok(Math.abs(box.z)+box.d/2<=spec.footprint.d/2+1e-6);}}
+  try{assert.equal(a.geometry,b.geometry);a.geometry.addEventListener('dispose',()=>disposed++);assert.equal(a.geometry.attributes.position.count,spec.boxes.length*36);assert.equal((castleBuildingPortrait(key).match(/<polygon /g)||[]).length,spec.boxes.length*3);assert.ok(spec.boxes.length<=64);assert.ok(Math.abs(a.geometry.boundingBox.max.y-spec.height)<1e-5);for(const box of spec.boxes){assert.ok(Math.abs(box.x)+box.w/2<=spec.footprint.w/2+1e-6);assert.ok(Math.abs(box.z)+box.d/2<=spec.footprint.d/2+1e-6);}}
   finally{a.userData.dispose();assert.equal(disposed,0);b.userData.dispose();assert.equal(disposed,1);}
  }
 });

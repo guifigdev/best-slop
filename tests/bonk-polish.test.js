@@ -4,6 +4,7 @@ import * as T from 'three';
 import {bonkObjectParts,bonkMonumentParts,bonkRockParts} from '../src/bonk-prop-art.js';
 import {bonkNavigation,bonkStatsMarkup} from '../src/bonk-ui.js';
 import {createBonkWorld} from '../src/bonk-world.js';
+import {RO_PROJECTILE_ART_BUDGET} from '../src/ro-projectile-art.js';
 import {generateBonkLevel} from '../shared/bonk-level.js';
 import {createBattlefield} from '../src/battlefield.js';
 const palette={dark:0x304533,stone:0x8e997d,glow:0xe6d798};
@@ -42,8 +43,8 @@ test('full loot and projectile loads stay inside reusable rendering budgets thro
  try{for(const key of ['grove','forge','glacier']){
   const map=generateBonkLevel(513,key),state={options:{mode:'bonk'},units:[{bonkHero:true,alive:true,x:0,z:23}],bonk:{map,objects:map.objects,objectives:map.landmarks,pickups:Array.from({length:450},(_,i)=>({id:i,x:i%30,z:Math.floor(i/30),type:i%2?'xp':'gold',value:4})),projectiles:Array.from({length:250},(_,i)=>({id:i,x:i%20,z:Math.floor(i/20),dx:1,dz:0,element:i%2?'fire':'ice'}))}};
   world.update(state,2);const children=world.root.children.slice();world.update(state,3);assert.deepEqual(world.root.children,children);
-  assert.ok(children.length<=14);for(const mesh of children.filter(c=>c.isInstancedMesh)){assert.ok(mesh.count<=mesh.instanceMatrix.count,mesh.name);const m=new T.Matrix4();for(let i=0;i<mesh.count;i+=31){mesh.getMatrixAt(i,m);assert.ok(m.elements.every(Number.isFinite),mesh.name);}}
-  assert.ok(world.root.getObjectByName('bonk-weather').count>60);assert.ok(world.root.getObjectByName('bonk-interactables').count>1000);assert.equal(world.root.getObjectByName('bonk-shots').count,1000);
+  const interactionGlow=world.root.getObjectByName('bonk-interaction-glow');assert.ok(interactionGlow);assert.ok(children.filter(child=>child!==interactionGlow&&child.name!=='ro-filled-ground-areas').length<=14);assert.ok(world.stats().interactionGlow.drawCalls<=1);assert.ok(world.stats().groundAreas.drawCalls<=1);for(const mesh of children.filter(c=>c.isInstancedMesh)){assert.ok(mesh.count<=mesh.instanceMatrix.count,mesh.name);const m=new T.Matrix4();for(let i=0;i<mesh.count;i+=31){mesh.getMatrixAt(i,m);assert.ok(m.elements.every(Number.isFinite),mesh.name);}}
+  if(key==='grove')assert.equal(world.root.getObjectByName('bonk-weather').count,0,'forest uses canopy leaves rather than hero-relative weather');else assert.ok(world.root.getObjectByName('bonk-weather').count>60);assert.ok(world.root.getObjectByName('bonk-interactables').count>1000);assert.equal(world.root.getObjectByName('bonk-shots').count,RO_PROJECTILE_ART_BUDGET.instances);
  }}finally{world.dispose();}assert.equal(scene.children.length,0);
 });
 

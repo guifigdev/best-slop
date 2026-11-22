@@ -4,7 +4,7 @@ export {RO_ATTACK_BUDGET};
 const atlases=new Map(),N=RO_ATTACK_BUDGET.frameSize,F=RO_ATTACK_BUDGET.frames,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const segment=(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-ax-dx*t,y-ay-dy*t);};
 const gray=(v,alpha)=>[v,v,v,clamp(Math.round(alpha),0,255)];
-const variants=Object.freeze({blade:Object.freeze(['standard','overhead']),dagger:Object.freeze(['standard','daggerStreaks'])});
+const variants=Object.freeze({blade:Object.freeze(['standard','overhead']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield'])});
 // Tiny software rasterizer: every family has twelve pre-baked nearest-filtered
 // frames. Data is read-only by convention; descriptors and frame bounds freeze.
 export function roAttackFrames(value='blade'){
@@ -18,7 +18,53 @@ export function roAttackFrames(value='blade'){
    // from its tail instead of blinking off. The entire sprite stays in front.
    const arc=(phase=sweep,offset=0,wide=1,mirror=false)=>{const a=mirror?-angle:angle,center=-.65+phase*1.3,tail=center-a,rr=.76+.065*Math.sin(phase*Math.PI)+offset,thick=.083*wide,erase=Math.max(0,p-.63)*1.5;if(Math.abs(a)>.75||r>.98||Math.abs(sx)>z||tail<-.06||tail>Math.min(1.3,.2+phase*1.3)-erase)return null;const dist=Math.abs(r-rr),trail=.7+.3*(1-clamp(tail/1.4,0,1));if(dist<thick*.62)return ink(250,235*trail);if(dist<thick)return ink(185,225*trail);if(dist<thick+.028)return ink(43,195*trail);return null;};
    const weapon=(phase=sweep,offset=0,mirror=false,heavy=false)=>{const a=(-.65+phase*1.3)*(mirror?-1:1),cs=Math.cos(a),sn=Math.sin(a),along=sx*sn+z*cs,cross=sx*cs-z*sn,rad=.78+offset,blade=Math.abs(cross),guard=Math.abs(along-(rad-.35));if(Math.abs(sx)>z||r>.98)return null;if(heavy){if(Math.abs(along-rad)<.095&&blade<.145)return ink(blade>.115||Math.abs(along-rad)>.066?42:blade<.032?252:181);if(blade<.024&&along>rad-.42&&along<rad)return ink(231);}else{if(along>rad-.29&&along<rad+.13&&blade<(.036+(rad+.13-along)*.015)){return ink(blade>.024?44:cross<0?252:183);}if(guard<.025&&blade<.13)return ink(blade>.10?46:215);if(along>rad-.43&&along<rad-.33&&blade<.025)return ink(140);}return null;};
-   if(motion==='overhead'){
+   if(family==='cast'&&motion!=='standard'){
+    const cx=0,cy=.50,yy=z-cy,rr=Math.hypot(sx,yy*2),phase=frame*.51;
+    const dot=(xx,zz,size,value=242,alpha=235)=>{if(Math.hypot(sx-xx,(z-zz)*1.7)<size)merge(ink(value,alpha));};
+    const line=(ax,ay,bx,by,width=.025,value=242,alpha=235)=>{if(segment(sx,z,ax,ay,bx,by)<width)merge(ink(value,alpha));};
+    const ring=(radius=.64,width=.035,value=232,alpha=220)=>{if(Math.abs(rr-radius)<width)merge(ink(value,alpha));};
+    if(motion==='fireorb'){
+     const wobble=Math.sin(phase)*.018,ball=Math.hypot(sx-wobble,(z-.56)*1.8),radius=.32+Math.sin(phase)*.018;
+     if(ball<radius+.035)pixel=ink(ball>radius?56:ball>radius*.73?164:ball>radius*.38?225:255,ball>radius?160:250);
+     for(let j=0;j<4;j++){const side=(j-1.5)*.135,base=.40-(j%2)*.03,tail=.13+Math.sin(phase+j)*.025;line(side*.6,base,side+Math.sin(phase+j)*.035,tail,.027,150+j*22,190);}
+     for(let j=0;j<4;j++)dot(Math.sin(j*2.4+phase)*.42,.35+(j%3)*.14,.026,238,150);
+    }else if(motion==='icecrystal'){
+     const gem=Math.abs(sx)*1.1+Math.abs(yy)*2.2;
+     if(gem<.60)pixel=ink(gem>.53?55:sx<-.06?193:sx>.06?232:255,245);
+     for(let j=0;j<6;j++){const a=j*Math.PI/3+phase*.07;line(Math.sin(a)*.45,.5+Math.cos(a)*.21,Math.sin(a)*.70,.5+Math.cos(a)*.32,.018,224,190);}
+     line(-.08,.29,-.08,.68,.014,255,245);
+    }else if(motion==='lightning'){
+     const xs=[.16,-.12,.10,-.18,.13],zs=[.88,.68,.52,.36,.12];for(let j=0;j<4;j++){line(xs[j],zs[j],xs[j+1],zs[j+1],.048,100,165);line(xs[j],zs[j],xs[j+1],zs[j+1],.018,255,250);}
+     line(-.06,.52,-.45,.45,.018,233,185);line(-.45,.45,-.33,.32,.015,228,160);
+    }else if(motion==='heal'){
+     for(let j=0;j<3;j++){const x=(j-1)*.33,y=.19+((p*.53+j*.23)% .65),size=.075+(j===1?.025:0);line(x-size,y,x+size,y,.018,242,235);line(x,y-size*.55,x,y+size*.55,.025,255,245);}
+     ring(.53,.022,168,130);for(let j=0;j<4;j++)dot(Math.sin(j*2+phase)*.5,.2+j*.17,.022,255,150);
+    }else if(motion==='shield'){
+     const shield=Math.abs(sx)+Math.max(0,.47-z)*1.6,inside=z>.22&&z<.80&&Math.abs(sx)<.42&&shield<.65;
+     if(inside){const rim=Math.abs(sx)>.36||z>.75||shield>.57;pixel=ink(rim?249:172,rim?235:45);}
+     line(-.18,.52,.18,.52,.025,255,245);line(0,.39,0,.68,.025,255,245);ring(.77,.018,217,150);
+    }else if(motion==='holy'){
+     line(-.24,.53,.24,.53,.034,249,245);line(0,.23,0,.82,.031,255,250);ring(.64,.03,231,200);for(let j=0;j<4;j++)dot(Math.sin(j*Math.PI/2)*.78,.5+Math.cos(j*Math.PI/2)*.35,.04,238,210);
+    }else if(motion==='earth'){
+     for(let j=0;j<4;j++){const x=(j-1.5)*.27,y=.40+(j%2)*.12,shape=Math.abs(sx-x)*1.3+Math.abs(z-y)*2.5;if(shape<.20)merge(ink(shape>.16?64:x<0?174:230,245));}
+     for(let j=0;j<5;j++)dot((j-2)*.19,.22+(j%2)*.06,.045,198,190);
+    }else if(motion==='poison'){
+     for(let j=0;j<5;j++){const x=Math.sin(j*2.4+phase*.18)*.34,y=.28+(j%3)*.17+p*.04,radius=.12+(j%2)*.025,d=Math.hypot(sx-x,(z-y)*1.8);if(d<radius)merge(ink(d>radius*.72?91:229,d>radius*.72?190:120));dot(x-.035,y+.025,.022,255,220);}
+     line(-.29,.29,-.29,.12,.021,175,170);
+    }else if(motion==='dark'){
+     const outer=Math.hypot(sx+.08,(z-.51)*1.8),cut=Math.hypot(sx-.12,(z-.60)*1.8);if(outer<.55&&outer>.43&&cut>.45)pixel=ink(outer>.51?241:146,230);
+     for(let j=0;j<5;j++){const a=j*1.26+phase*.06;line(Math.sin(a)*.58,.5+Math.cos(a)*.27,Math.sin(a)*.78,.5+Math.cos(a)*.36,.022,222,205);}
+    }else if(motion==='summon'){
+     ring(.67,.033,218,215);for(let j=0;j<3;j++){const x=(j-1)*.25;dot(x,.52+(j%2)*.12,.085,246,230);line(x,.43,x,.32,.035,178,200);}for(let j=0;j<5;j++)dot(Math.sin(j*1.256)*.68,.5+Math.cos(j*1.256)*.30,.045,253,230);
+    }else if(motion==='firefield'){
+     ring(.76,.04,164,145);for(let j=0;j<7;j++){const x=(j-3)*.19,y=.32+Math.sin(j*2.4)*.08,head=y+.17+Math.sin(phase+j)*.04;line(x,y,x+.035*Math.sin(phase+j),head,.028,198,230);line(x,y+.03,x,head-.04,.012,253,250);}
+    }else if(motion==='icefield'){
+     ring(.75,.027,211,180);for(let j=0;j<8;j++){const a=j*Math.PI/4,x=Math.sin(a)*.52,y=.5+Math.cos(a)*.22;line(x,y,x*.82,y+.13,.025,233,230);dot(x,y,.038,255,230);}
+    }else{
+     ring(.68,.025,216,185);ring(.49,.016,166,140);for(let j=0;j<6;j++){const a=j*Math.PI/3+phase*.06,x=Math.sin(a)*.67,y=.5+Math.cos(a)*.31;line(x,y,x*.80,.5+(y-.5)*.8,.022,244,220);if(motion==='runezone')line(Math.sin(a)*.43,.5+Math.cos(a)*.21,Math.sin(a+Math.PI*2/3)*.43,.5+Math.cos(a+Math.PI*2/3)*.21,.014,225,140);}
+    }
+   }
+   else if(motion==='overhead'){
     // A narrow vertical stroke, lifted over the shoulder then pulled down.
     // The trailing light is a blade-sized afterimage, never a floor-sized fan.
     const progress=clamp((p-.25)/.43,0,1),head=.90-progress*.72,tail=Math.min(.94,head+.27),path=yy=>-.20+(.90-yy)*.46,dist=Math.abs(sx-path(z));
@@ -47,14 +93,18 @@ export function roAttackFrames(value='blade'){
 }
 const NATIVE_HEROES=new Set(['knight','mage','ranger','turtle','owl','raccoon','fenrir']);
 const nativeHero=u=>!!u&&NATIVE_HEROES.has(u.hero)&&!u.castleBuilderKey&&!u.treeTagCharacter&&!u.warlockCharacter&&!u.kodoTagCharacter;
-export function roAttackArtHandles(event,source){return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source));}
+const SKILL_VISUAL_EVENTS=new Set(['heal','devotion','battlecry','frostnova','poison','fireball','abilityPulse','summon','bolt','sprint']);
+export function roAttackArtHandles(event,source){return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source)||event.bonk===true&&typeof event.skillKey==='string'&&!!RO_ATTACK_SKILLS[event.skillKey]&&SKILL_VISUAL_EVENTS.has(event.type));}
 const observes=(event,source)=>roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);
 const facing=(e,source)=>{if(Number.isFinite(e.direction))return e.direction;const d=e.direction,dx=Array.isArray(d)?d[0]:d?.x??e.dx,dz=Array.isArray(d)?d[1]:d?.z??e.dz;if(Number.isFinite(dx)&&Number.isFinite(dz)&&Math.hypot(dx,dz)>.001)return Math.atan2(dx,dz);const x=Number.isFinite(e.x)?e.x:source?.x||0,z=Number.isFinite(e.z)?e.z:source?.z||0,tx=e.tx??e.targetPoint?.x,tz=e.tz??e.targetPoint?.z;return Number.isFinite(tx)&&Number.isFinite(tz)&&Math.hypot(tx-x,tz-z)>.001?Math.atan2(tx-x,tz-z):source?.facing||0;};
 export function roAttackPlacement(event,profile,age,heightAt=()=>0,source){
- const yaw=facing(event,source),x=Number.isFinite(event.x)?event.x:source?.x,z=Number.isFinite(event.z)?event.z:source?.z;if(!Number.isFinite(x)||!Number.isFinite(z))return null;const travel=(profile.forwardOffset||0)+(profile.melee?0:Math.min(Math.max(0,profile.range-profile.visualRange),Math.max(0,age)*(profile.travelSpeed||0))),px=x+Math.sin(yaw)*travel,pz=z+Math.cos(yaw)*travel,ground=heightAt(px,pz),y=(Number.isFinite(ground)?ground:0)+profile.height;
- const c=Math.cos(yaw),s=Math.sin(yaw),vertical=profile.plane==='vertical',width=profile.width,length=vertical?profile.verticalHeight:profile.visualRange,g=(x,z)=>{const n=heightAt(x,z);return Number.isFinite(n)?n:0;},rightSlope=vertical?0:(g(px+c*width/2,pz-s*width/2)-g(px-c*width/2,pz+s*width/2))/width,forwardSlope=vertical?0:(g(px+s*length,pz+c*length)-(Number.isFinite(ground)?ground:0))/length;
+ const yaw=facing(event,source),x=profile.anchor==='target'&&Number.isFinite(event.tx)?event.tx:Number.isFinite(event.x)?event.x:source?.x,z=profile.anchor==='target'&&Number.isFinite(event.tz)?event.tz:Number.isFinite(event.z)?event.z:source?.z;
+ if(!Number.isFinite(x)||!Number.isFinite(z))return null;
+ const travel=(profile.forwardOffset||0)+(profile.melee||profile.stationary?0:Math.min(Math.max(0,profile.range-profile.visualRange),Math.max(0,age)*(profile.travelSpeed||0))),c=Math.cos(yaw),s=Math.sin(yaw),vertical=profile.plane==='vertical',width=profile.width,length=vertical?profile.verticalHeight:profile.visualRange,centered=profile.centered&&!vertical;
+ const px=x+s*travel-(centered?s*length*.5:0),pz=z+c*travel-(centered?c*length*.5:0),g=(x,z)=>{const n=heightAt(x,z);return Number.isFinite(n)?n:0;},ground=g(px,pz),y=ground+profile.height,rightSlope=vertical?0:(g(px+c*width/2,pz-s*width/2)-g(px-c*width/2,pz+s*width/2))/width,forwardSlope=vertical?0:(g(px+s*length,pz+c*length)-ground)/length;
  return{x:px,y,z:pz,yaw,width,length,vertical,rightSlope,forwardSlope,frame:Math.min(F-1,Math.floor(clamp(age/profile.duration,0,.999999)*F))};
 }
+
 const vertexShader=`uniform float atlasRows;attribute float attackFrame;attribute float attackVariant;attribute float attackOpacity;varying vec2 vAtlas;varying vec3 vTint;varying float vAlpha;void main(){vAtlas=vec2((uv.x+attackFrame)/${F.toFixed(1)},(uv.y+attackVariant)/atlasRows);vTint=instanceColor;vAlpha=attackOpacity;gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.0);}`;
 const fragmentShader=`uniform sampler2D atlas;varying vec2 vAtlas;varying vec3 vTint;varying float vAlpha;void main(){vec4 texel=texture2D(atlas,vAtlas);float a=texel.a*vAlpha;if(a<0.008)discard;gl_FragColor=vec4(texel.rgb*vTint,a);#include <colorspace_fragment>}`;
 // Eight instanced sprite batches maximum. Meshes/textures are allocated lazily,

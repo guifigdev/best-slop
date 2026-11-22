@@ -1,6 +1,6 @@
 import * as T from 'three';
 const random=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
-export const BONK_TREE_ART_BUDGET=Object.freeze({canopyGrid:5,maxCanopyTriangles:400,clustersPerTree:7,fallingLeaves:24,leafPeriod:30,leafLifetime:5.5});
+export const BONK_TREE_ART_BUDGET=Object.freeze({canopyGrid:5,maxCanopyTriangles:400,clustersPerTree:7,fallingLeaves:24,leafPeriod:30,leafLifetime:8});
 
 // One baked, hollow-surface voxel crown is instanced for every small leaf clump.
 // Internal cube faces never reach the GPU. Bounds remain the unit cube assumed
@@ -23,11 +23,21 @@ export function bonkTreeParts(tree,p,variant=0,{distant=false}={}){
  return{wood,leaves};
 }
 
-// Decorative leaves use a deterministic time window, not accumulated particles.
-// A paused clock freezes them; a map change cannot retain old emitters.
-export function bonkFallingLeaves(emitters,time,hero={x:0,z:0}){
- const parts=[],B=BONK_TREE_ART_BUDGET,near=(emitters||[]).filter(e=>(e.x-hero.x)**2+(e.z-hero.z)**2<45**2).sort((a,b)=>(a.x-hero.x)**2+(a.z-hero.z)**2-((b.x-hero.x)**2+(b.z-hero.z)**2)).slice(0,8);
- for(const [index,e]of near.entries())for(let j=0;j<3&&parts.length<B.fallingLeaves;j++){const seed=e.seed||index*7,phase=random(seed*11+j*31)*B.leafPeriod,age=((time+phase)%B.leafPeriod+B.leafPeriod)%B.leafPeriod;if(age>B.leafLifetime)continue;const life=age/B.leafLifetime,a=seed+j*2.1+t(time),x=e.x+Math.sin(a)*.45+age*.33,z=e.z+Math.cos(a*.8)*.5+age*.12,y=e.y-age*(e.height||5)/B.leafLifetime,size=.13*(1-life*.45);parts.push([x,y,z,size,.026,size*1.8,j%3===0?0xb6aa67:j%3===1?0x8c9f55:0x60844f,a]);}
- return parts;
+// Analytic world-space particles: launch points belong to actual tree canopies.
+// Velocity relaxes toward wind/terminal fall speed under drag; no camera or
+// observer position enters a trajectory. A frozen simulation clock freezes it.
+const leafSeed=e=>Number.isFinite(e.seed)?e.seed:[...String(e.id??(e.x+':'+e.z))].reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))>>>0,7);
+export function bonkLeafTrajectory(emitter,time,index=0,{heightAt=()=>0}={}){
+ const B=BONK_TREE_ART_BUDGET,seed=leafSeed(emitter),phase=random(seed*11+index*31)*B.leafPeriod,epoch=Math.floor((time+phase)/B.leafPeriod),emittedAt=epoch*B.leafPeriod-phase,age=time-emittedAt,event=seed+index*177+epoch*971,angle=random(event+2)*Math.PI*2,radius=(emitter.radius||1.3)*(.15+random(event+5)*.7),origin={x:emitter.x+Math.cos(angle)*radius,y:emitter.y-(emitter.height||5)*(.04+random(event+7)*.18),z:emitter.z+Math.sin(angle)*radius},drag=.65,gravity=1.18,wind={x:.26+Math.sin(emittedAt*.14+seed)*.13,z:.1+Math.cos(emittedAt*.11+seed*.37)*.12},initial={x:(random(event+13)-.5)*.24,y:-.06-random(event+17)*.16,z:(random(event+19)-.5)*.2},terminalY=-gravity/drag;
+ const position=t=>{const decay=(1-Math.exp(-drag*t))/drag;return{x:origin.x+wind.x*t+(initial.x-wind.x)*decay,y:origin.y+terminalY*t+(initial.y-terminalY)*decay,z:origin.z+wind.z*t+(initial.z-wind.z)*decay};};
+ const spin={x:1.8+random(event+23)*1.3,y:(random(event+29)-.5)*2,z:(random(event+31)-.5)*2.7},id=String(emitter.id??seed)+':'+index+':'+epoch;
+ if(age<0||age>B.leafLifetime)return{id,alive:false};
+ let p=position(age),ground=heightAt(p.x,p.z)+.035,grounded=p.y<=ground,hitTime=age,fade=0;
+ if(grounded){let low=0,high=B.leafLifetime;for(let i=0;i<10;i++){const mid=(low+high)/2,q=position(mid);if(q.y>heightAt(q.x,q.z)+.035)low=mid;else high=mid;}hitTime=high;p=position(hitTime);p.y=heightAt(p.x,p.z)+.035;fade=Math.max(0,(age-hitTime-.35)/.85);if(fade>=1)return{id,alive:false};}
+ const flight=grounded?hitTime:age,settle=grounded?Math.exp(-(age-hitTime)*7):1,yaw=angle+flight*spin.y,pitch=(Math.sin(flight*spin.x+angle)*.85+.15)*settle,roll=(flight*spin.z+Math.sin(flight*2.3+angle)*.28)*settle,scale=(.105+random(event+37)*.045)*(1-fade),color=[0xb6aa67,0x8c9f55,0x60844f][index%3],damping=Math.exp(-drag*age),velocity=grounded?{x:0,y:0,z:0}:{x:wind.x+(initial.x-wind.x)*damping,y:terminalY+(initial.y-terminalY)*damping,z:wind.z+(initial.z-wind.z)*damping};
+ return{id,alive:true,emittedAt,age,grounded,origin,position:p,velocity,rotation:{x:pitch,y:yaw,z:roll},parts:[p.x,p.y,p.z,scale,.022,scale*1.65,color,yaw,pitch,roll]};
 }
-const t=time=>Math.floor(time*12)/12;
+export function bonkFallingLeaves(emitters,time,hero={x:0,z:0},options={}){
+ const near=(emitters||[]).filter(e=>(e.x-hero.x)**2+(e.z-hero.z)**2<45**2).sort((a,b)=>(a.x-hero.x)**2+(a.z-hero.z)**2-((b.x-hero.x)**2+(b.z-hero.z)**2)).slice(0,8),parts=[];
+ for(const e of near)for(let index=0;index<3&&parts.length<BONK_TREE_ART_BUDGET.fallingLeaves;index++){const particle=bonkLeafTrajectory(e,time,index,options);if(particle.alive)parts.push(particle.parts);}return parts;
+}

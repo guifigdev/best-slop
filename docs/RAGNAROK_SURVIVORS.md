@@ -61,3 +61,22 @@ Os arquivos publicados têm nomes versionados e cache imutável. Cloudflare Stat
 - [Cloudflare R2](https://developers.cloudflare.com/r2/how-r2-works/)
 
 `scripts/build-ragnarok-tower-drops.py` registra URLs e hashes SHA-256 das fontes e gera as associações. `scripts/benchmark-bonk-spatial.mjs` e `scripts/benchmark-ragnarok-spawns.mjs` reproduzem as medições de desempenho. Os testes cobrem progressão, checkpoints, preservação dos personagens entre atividades, filas da Torre, geometria, limites de renderização, cartas, conta D1 e segurança das recompensas.
+
+
+## Árvore ampliada e resistência dos monstros
+
+O catálogo agora contém 681 habilidades de combate/suporte das 12 linhagens atuais: 609 ativas e 72 passivas. A [cobertura](RAGNAROK_SKILL_COVERAGE.md) identifica as classes, fontes e 108 exclusões. São adaptações para sobrevivência solo, com custos e números locais; não 681 animações exclusivas nem reprodução integral das fórmulas do MMO.
+
+Cada nível oferece quatro escolhas, com ao menos duas habilidades quando disponíveis. **Escolher outra habilidade** abre toda a árvore desbloqueada e consome a mesma melhoria, sem sorteio obrigatório. Aprender não apaga uma habilidade antiga. Até 128 habilidades aprendidas são salvas; quatro atalhos ficam equipados, com ataque básico fixo no primeiro. O menu **Habilidades** permite buscar, filtrar e trocar os outros três atalhos. Passivas aprendidas funcionam sem atalho. Trocar uma habilidade não apaga sua recarga nem sua preferência AUTO. Classes futuras continuam bloqueadas pela evolução de classe.
+
+Monstros comuns usam 150 PV base com multiplicadores de espécie, nível e região; elites usam 650, guardiões 1.050 e MVPs de exploração 4.800. São orçamentos iniciais, não valores absolutos de todas as criaturas. O escalonamento lê nível/região/tempo de spawn e não copia o DPS ou equipamento do jogador. A vida de um inimigo existente não muda ao subir de nível. O dano básico recebido não foi aumentado por essa revisão; a velocidade tardia da Torre foi limitada. Testes com os personagens iniciais exigem combate sustentado e distinguem criaturas leves/pesadas/elites/MVPs. Builds avançadas ainda podem eliminar criaturas fracas rapidamente.
+
+O modo GM permanece explicitamente identificado como **DANO DE UM GOLPE** e aprende todas as skills para revisão. Ele não representa o balanceamento normal e nunca salva recompensas na conta. Ambos os caminhos de Mago começam com Fire Ball; gelo e outras magias continuam na árvore. Efeitos persistentes têm limites de quantidade, alvos e dano total por duração.
+
+### Leitura visual e cenografia
+
+Os avisos de área agora usam uma superfície preenchida com brilho animado, ajustada ao relevo, mantendo os espaços seguros dos anéis. O menu Visual está disponível também fora de GM, com quatro opções e intensidade dos raios solares de 0 a 150%. A noite usa céu quase preto e estrelas até perto do horizonte; a faixa clara diurna também é mais estreita. O terreno contínuo ganhou colinas, vales, caminhos graduais e 27 modelos de cenografia regional, com pontos de apoio para objetos.
+
+As regiões comuns começam com 10 monstros e recebem encontros em pares. Depois da derrota do MVP, pequenos grupos continuam aparecendo (limite de 28), mantendo XP e drops normais, sem repetir os guardiões. Folhas decorativas seguem trajetórias no espaço do mundo, emitidas das copas, com vento, queda, rotação e pouso no relevo; não se reposicionam junto da câmera.
+
+Portais e escadarias abertos permitem viajar mesmo com mochila cheia e espólios pendentes. Os itens já recolhidos nos pendentes acompanham o personagem e continuam no checkpoint/conta; é possível recolhê-los ao liberar espaço depois. O limite permanece 48 itens na mochila e 128 pendentes.

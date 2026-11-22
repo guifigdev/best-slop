@@ -6,10 +6,10 @@ export function roGateContext(data,hero,{range=36}={}){
  if(!data?.route||!hero)return null;
  const candidates=(data.exitGates||[data.exitGate]).filter(g=>g&&Number.isFinite(g.x)&&Number.isFinite(g.z)).map(g=>({...g,distance:Math.hypot(g.x-(hero.x||0),g.z-(hero.z||0))})).sort((a,b)=>a.distance-b.distance||String(a.id).localeCompare(String(b.id))),gate=candidates[0];
  if(!gate||gate.distance>range)return null;
- const boss=MVP_BY_KEY[gate.mvp||data.route.mvp]?.name||'MVP guardião',missing=Math.max(0,11-(data.clearedStages||[]).filter(key=>key!=='valhalla').length),pending=gate.open&&hero.roUnclaimed?.length>0;
- return {...gate,directionName:direction(gate),distance:Math.round(gate.distance),state:pending?'inventory':gate.open?'open':'locked',requirement:pending?'Recolha ou deixe os espólios no inventário antes de viajar.':gate.open?'Atravesse a passagem para viajar.':gate.lockedBy==='final'?`Derrote os outros 11 MVPs. Faltam ${missing} ${missing===1?'selo':'selos'}.`:`Derrote ${boss} para abrir a passagem.`};
+ const boss=MVP_BY_KEY[gate.mvp||data.route.mvp]?.name||'MVP guardião',missing=Math.max(0,11-(data.clearedStages||[]).filter(key=>key!=='valhalla').length),pendingCount=gate.open?hero.roUnclaimed?.length||0:0;
+ return {...gate,directionName:direction(gate),distance:Math.round(gate.distance),state:gate.open?'open':'locked',pendingCount,requirement:gate.open?'Atravesse a passagem para viajar.'+(pendingCount?' Seus '+pendingCount+' espólios pendentes serão preservados.':''):gate.lockedBy==='final'?`Derrote os outros 11 MVPs. Faltam ${missing} ${missing===1?'selo':'selos'}.`:`Derrote ${boss} para abrir a passagem.`};
 }
-export function roGateContextMarkup(context){return context?`<aside class="ro-gate-cue ${context.state}" aria-label="Destino da passagem" data-ro-gate-cue="${esc(context.id||context.nextKey)}"><small>${context.directionName} · ${context.distance} m · ${context.state==='open'?'Passagem aberta':context.state==='inventory'?'Espólios pendentes':'Passagem selada'}</small><h2>${esc(context.nextName||'Próxima região')}</h2><p>${esc(context.requirement)}</p></aside>`:'';}
+export function roGateContextMarkup(context){return context?`<aside class="ro-gate-cue ro-gate-${context.state}" aria-label="Destino da passagem" data-ro-gate-cue="${esc(context.id||context.nextKey)}"><small>${context.directionName} · ${context.distance} m · ${context.state==='open'?'Passagem aberta':'Passagem selada'}</small><h2>${esc(context.nextName||'Próxima região')}</h2><p>${esc(context.requirement)}</p></aside>`:'';}
 
 export function createRoRegionAnnouncement({duration=3.6}={}){
  let key=null,enteredAt=0;

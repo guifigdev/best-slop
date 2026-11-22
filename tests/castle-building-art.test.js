@@ -15,7 +15,7 @@ test('all 161 building identities have different physical voxel compositions, sa
   for(const box of spec.boxes){assert.ok([box.x,box.y,box.z,box.w,box.h,box.d,box.color].every(Number.isFinite),key);assert.ok(box.w>0&&box.h>0&&box.d>0);assert.ok(Math.abs(box.x)+box.w/2<=b.footprint.w/2+1e-6,key+' width');assert.ok(Math.abs(box.z)+box.d/2<=b.footprint.d/2+1e-6,key+' depth');}
   const svg=castleBuildingPortrait(key);assert.match(svg,/<svg .*viewBox="0 0 128 128"/);assert.match(svg,/<title>/);assert.doesNotMatch(svg,/NaN|undefined|Infinity|<script|<image|href=/i);assert.equal(svg,castleBuildingPortrait(key));
  }
- assert.equal(models.size,Object.keys(CASTLE_BUILDINGS).length);assert.ok(max<=40,'bounded static geometry budget');assert.equal(JSON.stringify(CASTLE_BUILDINGS),before);assert.equal(buildingModelSpec('__proto__'),null);assert.equal(castleBuildingPortrait('missing'),'');
+ assert.equal(models.size,Object.keys(CASTLE_BUILDINGS).length);assert.ok(max<=64,'bounded static geometry budget after facade detailing');assert.equal(JSON.stringify(CASTLE_BUILDINGS),before);assert.equal(buildingModelSpec('__proto__'),null);assert.equal(castleBuildingPortrait('missing'),'');
 });
 
 test('mechanical factories depict their actual output through substantial architectural features',()=>{
