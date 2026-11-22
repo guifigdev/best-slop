@@ -1,4 +1,5 @@
 import {createLocalLobby} from '../shared/room-lobby.js';
+import './ro-equipment-bag.css';
 import {createConsumableDock} from './consumable-dock.js';
 import './consumable-dock.css';
 import './ro-job-panel.css';

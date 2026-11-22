@@ -85,6 +85,21 @@ export function initializeRoInventory(u,lineage){
  return true;
 }
 const inventory=u=>Array.isArray(u?.roInventory)?u.roInventory:[];
+export const roEquipmentQuantity=item=>Number.isSafeInteger(item?.quantity)&&item.quantity>0?item.quantity:1;
+export const roInventoryItemCount=u=>inventory(u).reduce((n,item)=>n+roEquipmentQuantity(item),0);
+export function roReceiveEquipment(u,item,{stack=true}={}){
+ if(!u||!item||!validId(item.id)||!own(RO_EQUIPMENT,item.key)||item.quantity!==undefined&&(!Number.isSafeInteger(item.quantity)||item.quantity<1))return null;
+ u.roInventory??=[];const same=u.roInventory.find(existing=>existing.id===item.id);if(same)return same;
+ const target=stack&&!(item.cards||[]).length?u.roInventory.find(existing=>existing.key===item.key&&!(existing.cards||[]).length):null;
+ if(target){const quantity=roEquipmentQuantity(target)+roEquipmentQuantity(item);if(!Number.isSafeInteger(quantity))return null;target.quantity=quantity;return target;}
+ u.roInventory.push(item);return item;
+}
+export function roCompactInventory(u){
+ const equipped=new Set(Object.values(u.roEquipment||{})),targets=new Map(),kept=[];
+ for(const item of inventory(u))if(!(item.cards||[]).length&&(!targets.has(item.key)||equipped.has(item.id)))targets.set(item.key,item);
+ for(const item of inventory(u)){const target=targets.get(item.key);if(!target||item===target||equipped.has(item.id)||(item.cards||[]).length){kept.push(item);continue;}const quantity=roEquipmentQuantity(target)+roEquipmentQuantity(item);if(!Number.isSafeInteger(quantity)){kept.push(item);continue;}target.quantity=quantity;}
+ u.roInventory=kept;return kept;
+}
 const findItem=(u,id)=>validId(id)?inventory(u).find(item=>item&&item.id===id&&own(RO_EQUIPMENT,item.key)):null;
 const offhandWeapon=u=>u.roLineage==='shadowcross'&&(u.roTier||0)>=1;
 function fits(u,item,slot){const definition=RO_EQUIPMENT[item.key];return definition.slot===slot||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&offhandWeapon(u)&&['dagger','sword','axe'].includes(definition.weaponType);}
@@ -92,9 +107,15 @@ function fits(u,item,slot){const definition=RO_EQUIPMENT[item.key];return defini
 // A successful swap preserves both items in the bag. A two-handed weapon
 // unequips the offhand; equipping an offhand cannot silently remove the weapon.
 export function roEquip(u,itemId,slot){
- const item=findItem(u,itemId);if(!item||!RO_EQUIPMENT_SLOTS.includes(slot)||!fits(u,item,slot)||!u.roEquipment)return false;
+ let item=findItem(u,itemId);if(!item||!RO_EQUIPMENT_SLOTS.includes(slot)||!fits(u,item,slot)||!u.roEquipment)return false;
  const definition=RO_EQUIPMENT[item.key],main=findItem(u,u.roEquipment.weapon);
  if(slot==='offhand'&&main&&RO_EQUIPMENT[main.key].hands===2)return false;
+ // A stack contains physical copies, not bonuses that multiply when equipped.
+ const wornElsewhere=Object.entries(u.roEquipment).some(([position,id])=>position!==slot&&id===item.id),current=findItem(u,u.roEquipment[slot]);
+ if(wornElsewhere&&current?.key===item.key&&!(current.cards||[]).length&&!(item.cards||[]).length)return true;
+ if(roEquipmentQuantity(item)>1&&wornElsewhere){
+  let n=1,id;do{id=String(item.id).slice(0,80)+':copy:'+n++;}while(findItem(u,id));item.quantity--;const copy={...item,id,quantity:1,cards:[]};u.roInventory.push(copy);item=copy;itemId=copy.id;
+ }
  for(const position of RO_EQUIPMENT_SLOTS)if(u.roEquipment[position]===itemId)u.roEquipment[position]=null;
  if(slot==='weapon'&&definition.hands===2)u.roEquipment.offhand=null;
  u.roEquipment[slot]=itemId;return true;
