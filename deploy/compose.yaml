@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
     init: true
     expose: ["2567"]
+    ports: ["127.0.0.1:${GAME_BIND_PORT:-2567}:2567"]
     environment:
       NODE_ENV: production
       PORT: "2567"

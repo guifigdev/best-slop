@@ -19,6 +19,94 @@ Copie **um bloco de cada vez** e aperte Enter. Se um passo der erro, não avance
 
 Os valores abaixo são os que estão registrados no projeto. Se o IP/domínio da sua VPS mudou, substitua-os em todos os passos. O roteiro de instalação assume Ubuntu ou Debian.
 
+## Retomar sua instalação atual — VPS já tem Caddy e outros sites
+
+Conferência de 21/11/2026: o registro `play` aponta para a VPS, o código foi clonado e o build terminou. Sua chave `best-slop-ci` entra como `game-deploy` e esse usuário usa Docker. **Não gere a chave outra vez.** A instalação parou ao ler o `.env`; a correção já está no código. O Caddy do sistema já ocupa 80/443, portanto use `REVERSE_PROXY_MODE=host` e mantenha esse serviço.
+
+O DNS mostrado nas suas capturas está na Vercel. Não é necessário transferi-lo: o registro A existente está certo. R2 e token GitHub podem esperar até o jogo abrir pelo domínio.
+
+**A. No PowerShell do PC**, entre como administrador da VPS:
+
+```powershell
+ssh root@216.158.236.156
+```
+
+Depois do login, confira que o início da linha é `root@...`. **Na VPS**, ajuste a propriedade somente da pasta do jogo e entre como o usuário que você já criou:
+
+```bash
+chown -R game-deploy:game-deploy /opt/custom-hero
+su - game-deploy
+```
+
+Agora a linha começa com `game-deploy@...`. Execute:
+
+```bash
+cd /opt/custom-hero
+git pull --ff-only origin master
+nano .env
+```
+
+No nano, mantenha os dados já preenchidos e configure estas duas linhas; se não existirem, acrescente no final:
+
+```dotenv
+REVERSE_PROXY_MODE=host
+GAME_BIND_PORT=2567
+```
+
+Salve com **Ctrl+O**, **Enter**, saia com **Ctrl+X**. Ainda como `game-deploy`:
+
+```bash
+bash scripts/deploy.sh
+```
+
+Só depois que ele terminar sem erro, teste:
+
+```bash
+curl --fail http://127.0.0.1:2567/healthz
+```
+
+Deve aparecer uma resposta JSON saudável. O jogo está ligado localmente; o próximo item dá a ele o endereço HTTPS.
+
+**B. Volte ao administrador**, digitando uma vez:
+
+```bash
+exit
+```
+
+Confira `root@...`. Faça uma cópia do Caddyfile atual e abra-o:
+
+```bash
+cp -a /etc/caddy/Caddyfile /etc/caddy/Caddyfile.before-custom-hero
+nano /etc/caddy/Caddyfile
+```
+
+Vá até o final do arquivo. **Mantenha todos os blocos dos outros sites**. Se ainda não existir um bloco `play.gfig.space`, acrescente:
+
+```caddyfile
+play.gfig.space {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:2567
+}
+```
+
+Salve com Ctrl+O, Enter, Ctrl+X. Valide e recarregue; o segundo comando só executa se a validação passar:
+
+```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && systemctl reload caddy
+```
+
+Espere alguns segundos para o certificado e teste:
+
+```bash
+curl --fail https://play.gfig.space/healthz
+```
+
+Abra **https://play.gfig.space**. Se o teste falhar, veja os registros do Caddy com `journalctl -u caddy -n 60 --no-pager`; não reinstale nem desligue os proxies dos outros sites. O modo `host` inicia somente o container `game`, publicado no loopback; o Caddy existente cuida do HTTPS.
+
+**ACME_EMAIL** é o email de contato para configuração dos certificados HTTPS. Não é senha, token nem precisa ser um endereço `@gfig.space`. A configuração que você mostrou passou na validação. No modo `host`, as opções de certificado são as do Caddy já instalado. [Documentação do Caddy](https://caddyserver.com/docs/caddyfile/options).
+
+**C. Atualizações automáticas são a próxima etapa.** Só depois que o jogo abrir, continue no passo 6. Sua chave SSH já existe; abaixo está explicado como criar o token, copiar os secrets e executar o workflow.
+
 ## 1. Enviar o código ao GitHub — PowerShell no seu PC
 
 O código fica nesta pasta local. Confira se a atualização desejada já foi concluída e commitada com `git status` antes de enviar. O estado atual do GitHub e da VPS deve ser conferido por você. O remoto adicional preserva o remoto interno do Sites:
@@ -152,14 +240,82 @@ No repositório → Settings → Environments, crie `production`. Em Settings �
 | Variable | `VPS_PATH` | `/opt/custom-hero` |
 | Variable | `PRODUCTION_ENABLED` | `true`, após preparar tudo |
 
-O workflow publica uma imagem em GHCR. Se o package for privado, crie um token GitHub com permissão de leitura de packages e, na VPS, autentique o **mesmo usuário do CI** pelo prompt:
+### 6.1. O que cada nome significa
 
-```bash
-su - game-deploy
-docker login ghcr.io -u guifigdev
+| Nome | Onde é usado |
+| --- | --- |
+| `game-deploy` | Usuário Linux da VPS; é ele que baixa e inicia a imagem. |
+| `guifigdev` | Sua conta do GitHub; dona do código e da imagem. |
+| `best-slop-ci` | Chave SSH já criada no seu PC; permite ao workflow entrar na VPS. |
+| Token `read:packages` | Credencial do GitHub que a VPS usa para baixar uma imagem privada. |
+| `GITHUB_TOKEN` | Gerado automaticamente pelo Actions para publicar a imagem; não crie esse secret manualmente. |
+
+### 6.2. Criar o token — somente no navegador, conta `guifigdev`
+
+1. Entre no GitHub e confira que a conta é **guifigdev**.
+2. Abra [Tokens clássicos da sua conta](https://github.com/settings/tokens). Pelo menu: foto no canto superior direito → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**.
+3. Clique **Generate new token** → **Generate new token (classic)**. Confirme senha/2FA se o GitHub pedir.
+4. Em **Note**, escreva `VPS best-slop leitura`.
+5. Em **Expiration**, escolha **90 days** ou uma data menor. Quando expirar, será preciso repetir o login na VPS com um token novo.
+6. Em **Select scopes**, marque **somente `read:packages`**. Não selecione `write:packages`, `delete:packages` ou `repo` para esta tarefa.
+7. Desça e clique **Generate token**.
+8. Copie o valor exibido e guarde-o no seu gerenciador de senhas. O GitHub mostra esse valor uma única vez. Não envie o token ao chat nem o coloque no `.env`.
+
+Esse tipo **classic** é o usado pelo Container Registry para essa autenticação; o escopo `read:packages` permite baixar imagens privadas às quais sua conta tem acesso. [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry), [criação do token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic).
+
+### 6.3. Usar o token — no terminal da VPS, como `game-deploy`
+
+No PowerShell do seu PC, abra uma conexão nova usando a chave existente:
+
+```powershell
+ssh -i "$env:USERPROFILE/.ssh/best-slop-ci" game-deploy@216.158.236.156
 ```
 
-Na pergunta de senha do Docker, use o token de leitura de packages. Não é a senha SSH nem a senha normal do GitHub. Como alternativa, um package GHCR público pode ser baixado sem login. [Autenticação GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+Já na VPS, confirme o usuário:
+
+```bash
+whoami
+```
+
+O resultado deve ser `game-deploy`. Agora execute:
+
+```bash
+docker login ghcr.io --username guifigdev
+```
+
+Quando aparecer **Password:**, cole o token que acabou de gerar e aperte Enter. Nada aparecer enquanto cola é normal. Deve retornar **Login Succeeded**. Aqui o login GitHub é `guifigdev`; a sessão Linux continua sendo `game-deploy`. Não use senha do SSH nesse campo. Não execute o login como `root`, porque o workflow vai usar as credenciais do usuário `game-deploy`.
+
+Esse token fica no login Docker da VPS. Ele **não** é o valor de `VPS_SSH_PRIVATE_KEY`, e não precisa virar um secret adicional no GitHub neste workflow. O Actions publica com seu próprio `GITHUB_TOKEN`.
+
+### 6.4. Copiar os valores para os secrets — no PC e no navegador
+
+No **PowerShell do PC**, copie a chave privada para sua própria área de transferência:
+
+```powershell
+Get-Content -Raw "$env:USERPROFILE/.ssh/best-slop-ci" | Set-Clipboard
+```
+
+No repositório → **Settings → Secrets and variables → Actions → Secrets → New repository secret**, use o nome `VPS_SSH_PRIVATE_KEY`, cole no campo **Secret** e salve em **Add secret**. A chave vai completa, com as linhas BEGIN/END; não é o arquivo `.pub`. Não cole esse conteúdo em mensagens.
+
+Para `VPS_SSH_KNOWN_HOSTS`, execute os dois comandos abaixo **separadamente no PowerShell**, só depois que o primeiro terminar. Na tentativa anterior o `ssh-keyscan` foi colado no final de outro comando; por isso o arquivo não apareceu:
+
+```powershell
+ssh-keyscan -t ed25519 216.158.236.156 2>$null | Set-Content -Encoding ascii "$env:USERPROFILE/.ssh/best-slop-known-hosts"
+```
+
+```powershell
+ssh-keygen -lf "$env:USERPROFILE/.ssh/best-slop-known-hosts"
+```
+
+Compare a fingerprint com `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` no console confiável do provedor. Após confirmar a igualdade:
+
+```powershell
+Get-Content -Raw "$env:USERPROFILE/.ssh/best-slop-known-hosts" | Set-Clipboard
+```
+
+Crie o secret `VPS_SSH_KNOWN_HOSTS` e cole o conteúdo. Os outros secrets da tabela são texto simples; crie um por vez. Para as variáveis, mude para a aba **Variables**, clique **New repository variable**, informe nome/valor e salve. Só defina `PRODUCTION_ENABLED=true` depois do login Docker e de todos os secrets estarem prontos.
+
+### 6.5. Rodar a atualização e conferir
 
 Em GitHub → Actions → **Validate and deploy VPS**, execute **Run workflow** selecionando `master`. Confira os jobs `validate` e `deploy`. Cada push futuro para `master` executará o fluxo. O deploy gera imagem por commit, faz backup quando aplicável e verifica a saúde; pode haver interrupção breve e retomada de salas compatíveis.
 

@@ -196,3 +196,10 @@ Guarde pelo menos duas imagens e backups antes de uma atualização de schema. N
 | Retorno após queda perde sala | Janela de retomada, checkpoint compatível e `DATA_DIR` persistente |
 
 Workers/D1 do site ChatGPT e SQLite desta VPS são bancos distintos. O kit não copia automaticamente contas ou partidas entre esses ambientes.
+
+
+## VPS com Caddy/Nginx existente
+
+Defina `REVERSE_PROXY_MODE=host` e `GAME_BIND_PORT=2567` no `.env`. O deploy inicia só `game`, com porta `127.0.0.1:2567`; configure seu proxy existente para esse upstream. O modo padrão `standalone` continua usando o Caddy Docker. Não inicie dois proxies nas portas 80/443. O passo a passo de retomada está em `COMECE_AQUI_VPS.md`.
+
+A validação do `.env` usa o UID/GID proprietário do arquivo, mantendo `chmod 600`, em container offline, somente leitura e sem capabilities. O processo do jogo permanece `USER node`.

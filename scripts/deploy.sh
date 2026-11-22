@@ -31,9 +31,15 @@ else
 fi
 doctor_args=(--env /configuration.env --built-index dist/client/index.html)
 [[ -z "$image" ]] || doctor_args+=(--assets-published)
-docker run --rm --network none --mount "type=bind,src=$env_file,dst=/configuration.env,readonly" --entrypoint node "$GAME_IMAGE" scripts/doctor-deploy.mjs "${doctor_args[@]}"
+# Match the mounted file owner so chmod 600 remains private on the host.
+# The checker is offline, read-only and has no Linux capabilities.
+doctor=(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --user "$(stat -c '%u:%g' "$env_file")" --mount "type=bind,src=$env_file,dst=/configuration.env,readonly" --entrypoint node "$GAME_IMAGE" scripts/doctor-deploy.mjs "${doctor_args[@]}")
+"${doctor[@]}"
 "${compose[@]}" config --quiet
-asset_base="$(docker run --rm --network none --mount "type=bind,src=$env_file,dst=/configuration.env,readonly" --entrypoint node "$GAME_IMAGE" scripts/doctor-deploy.mjs "${doctor_args[@]}" --public-asset-base)"
+asset_base="$("${doctor[@]}" --public-asset-base)"
+proxy_mode="$("${doctor[@]}" --proxy-mode)"
+up_services=()
+if [[ "$proxy_mode" == host ]]; then up_services=(game); fi
 if [[ -n "$asset_base" && -z "$image" ]]; then
   command -v node >/dev/null && command -v aws >/dev/null || { echo "CDN R2 habilitada: instale Node24 e AWS CLI no host ou publique pelo CI; docs/CONFIGURACOES.md." >&2; exit 1; }
   asset_temp="$(mktemp -d /tmp/custom-hero-assets.XXXXXX)"
@@ -43,12 +49,12 @@ if [[ -n "$asset_base" && -z "$image" ]]; then
   node "$task_root/scripts/deploy-r2-assets.mjs" --env "$env_file" --directory "$asset_temp/client"
   [[ "$asset_temp" == /tmp/custom-hero-assets.* ]] && rm -rf -- "$asset_temp"
 fi
-"${compose[@]}" pull caddy
+if [[ "$proxy_mode" != host ]]; then "${compose[@]}" pull caddy; fi
 if [[ -n "$old_id" ]] && [[ "$(docker inspect --format '{{.State.Running}}' "$old_id")" == true ]]; then
   bash "$task_root/scripts/deploy-backup.sh" --env "$env_file"
 fi
 up_ok=true
-"${compose[@]}" up -d --no-build --pull never || up_ok=false
+"${compose[@]}" up -d --no-build --pull never "${up_services[@]}" || up_ok=false
 healthy=false
 for ((attempt=0; attempt<40; attempt++)); do
   [[ "$up_ok" == true ]] || break
@@ -71,4 +77,8 @@ if [[ -n "$old_image" ]]; then printf '%s\n' "$old_image" > "$task_state/previou
 printf '%s\n' "$GAME_IMAGE" > "$task_state/current-image"
 printf '%s\n' "$task_root" > "$task_state/current-kit"
 printf '%s\n' "$env_file" > "$task_state/current-env"
-echo "Versão saudável. Abra seu domínio e /api/config para verificar as integrações."
+if [[ "$proxy_mode" == host ]]; then
+  echo "Jogo saudável. Configure o proxy HTTPS existente para 127.0.0.1:GAME_BIND_PORT (2567 por padrão); docs/COMECE_AQUI_VPS.md."
+else
+  echo "Versão saudável. Abra seu domínio e /api/config para verificar as integrações."
+fi

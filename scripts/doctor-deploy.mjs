@@ -16,6 +16,8 @@ export function assessDeployConfig(env,{assetsAlreadyPublished=false}={}){
  let origin;try{origin=new URL(env.PUBLIC_ORIGIN);}catch{}
  add('origin',origin?.protocol==='https:'&&origin.hostname===domain&&origin.origin===env.PUBLIC_ORIGIN?'ready':'required','PUBLIC_ORIGIN deve ser https://DOMAIN, sem barra final.');
  add('email',/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.ACME_EMAIL||'')&&!/seudominio|example\./i.test(env.ACME_EMAIL)?'ready':'required','ACME_EMAIL recebe avisos de certificado; informe um email válido.');
+ add('reverse_proxy',['standalone','host'].includes(env.REVERSE_PROXY_MODE||'standalone')?'ready':'required','REVERSE_PROXY_MODE aceita standalone ou host (proxy HTTPS já instalado na VPS).');
+ if(env.GAME_BIND_PORT!==undefined&&env.GAME_BIND_PORT!=='')add('game_bind_port',/^\d+$/.test(env.GAME_BIND_PORT)&&Number(env.GAME_BIND_PORT)>=1024&&Number(env.GAME_BIND_PORT)<=65535?'ready':'required','GAME_BIND_PORT deve estar entre 1024 e 65535; acesso apenas no loopback.');
  const allowed=(env.ALLOWED_ORIGINS||env.PUBLIC_ORIGIN||'').split(',').map(s=>s.trim()).filter(Boolean);
  add('allowed_origins',allowed.includes(env.PUBLIC_ORIGIN)&&allowed.every(value=>{try{const u=new URL(value);return u.protocol==='https:'&&u.origin===value;}catch{return false;}})?'ready':'required','ALLOWED_ORIGINS aceita origens HTTPS exatas separadas por vírgula; sem * nem caminhos.');
  for(const [key,min,max]of [['ROOM_LIMIT',1,1024],['MAX_CLIENTS',1,4096],['ROOM_IDLE_SECONDS',60,86400],['ROOM_RESUME_SECONDS',10,3600],['ROOM_SNAPSHOT_HZ',1,30],['SIMULATION_HZ',10,60],['DRAIN_TIMEOUT_SECONDS',0,120]])if(env[key]!==undefined&&env[key]!=='')add(key,Number.isInteger(Number(env[key]))&&Number(env[key])>=min&&Number(env[key])<=max?'ready':'required',`${key}: inteiro entre ${min} e ${max}.`);
@@ -30,7 +32,7 @@ async function main(){
  try{env=parseDeployEnv(await readFile(file,'utf8'));}catch(error){console.error(`Não foi possível ler ${file}: ${error.message}`);process.exitCode=1;return;}
  const result=assessDeployConfig(env,{assetsAlreadyPublished:args.includes('--assets-published')});
  const builtIndex=args.indexOf('--built-index');if(builtIndex>=0){const html=await readFile(args[builtIndex+1],'utf8'),base=env.VITE_ASSET_BASE_URL||'/',matches=html.includes(base+'assets/');result.checks.push({id:'cdn_build',state:matches?'ready':'required',message:'A base de assets do build precisa coincidir com VITE_ASSET_BASE_URL do .env.'});if(!matches)result.ok=false;}
- if(args.includes('--public-asset-base')){if(result.ok)console.log(env.VITE_ASSET_BASE_URL||'');}else if(args.includes('--json'))console.log(JSON.stringify(result));else for(const check of result.checks)console.log(`[${check.state}] ${check.message}`);
+ if(args.includes('--proxy-mode')){if(result.ok)console.log(env.REVERSE_PROXY_MODE||'standalone');}else if(args.includes('--public-asset-base')){if(result.ok)console.log(env.VITE_ASSET_BASE_URL||'');}else if(args.includes('--json'))console.log(JSON.stringify(result));else for(const check of result.checks)console.log(`[${check.state}] ${check.message}`);
  if(!result.ok)process.exitCode=1;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)await main();

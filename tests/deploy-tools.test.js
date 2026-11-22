@@ -59,3 +59,32 @@ source "$1" --env "$2" --image registry.invalid/game:new
 `);
  const script=fileURLToPath(new URL('../scripts/deploy.sh',import.meta.url)),result=spawnSync(bash,[harness,script,envFile],{encoding:'utf8',timeout:10000,env:{...process.env,XDG_STATE_HOME:folder,DOCKER_LOG:log}});assert.equal(result.status,1,result.stderr);const lines=(await readFile(log,'utf8')).split('\n');assert.ok(lines.some(line=>line.includes('pull caddy')));assert.ok(lines.some(line=>line.includes('up -d')&&line.endsWith('image=registry.invalid/game:new')));assert.ok(lines.some(line=>line.includes('up -d')&&line.endsWith('image=sha256:previous')));assert.match(result.stderr,/Imagem anterior/);
 });
+
+
+test('private env checks use its exact owner offline and host-proxy mode starts only the game',async t=>{
+ const bash=process.platform==='win32'?'C:/Program Files/Git/bin/bash.exe':'bash';if(spawnSync(bash,['--version']).error){t.skip('Bash not installed');return;}
+ for(const mode of ['standalone','host']){
+  const folder=await temporary(t),envFile=path.join(folder,'private.env'),log=path.join(folder,'docker.log'),harness=path.join(folder,'harness.sh');await writeFile(envFile,'PUBLIC_ORIGIN=https://play.gfig.space\n',{mode:0o600});
+  await writeFile(harness,`#!/usr/bin/env bash
+set -euo pipefail
+docker() {
+ printf '%s\\n' "$*" >> "$DOCKER_LOG"
+ if [[ "$1" == run && "$*" == *'--proxy-mode'* ]]; then echo "$TEST_PROXY_MODE"; return 0; fi
+ if [[ "$1" == inspect && "$*" == *'.State.Health'* ]]; then echo healthy; return 0; fi
+ if [[ "$1" == inspect && "$*" == *'.State.Running'* ]]; then echo false; return 0; fi
+ if [[ "$1" == inspect && "$*" == *'.Image'* ]]; then echo sha256:previous; return 0; fi
+ if [[ "$1" == compose && "$*" == *' ps -q game'* ]]; then echo game-container; return 0; fi
+ return 0
+}
+flock() { return 0; }
+source "$1" --env "$2" --image registry.invalid/game:new
+`);
+  const script=fileURLToPath(new URL('../scripts/deploy.sh',import.meta.url)),result=spawnSync(bash,[harness,script,envFile],{encoding:'utf8',timeout:10000,env:{...process.env,XDG_STATE_HOME:folder,DOCKER_LOG:log,TEST_PROXY_MODE:mode}});assert.equal(result.status,0,result.stderr);const lines=(await readFile(log,'utf8')).trim().split('\n'),checks=lines.filter(l=>l.startsWith('run '));assert.equal(checks.length,3);for(const line of checks){assert.match(line,/--user \d+:\d+/);assert.match(line,/--network none --read-only --cap-drop ALL --security-opt no-new-privileges:true/);assert.match(line,/dst=\/configuration.env,readonly/);}assert.equal(lines.some(l=>l.includes('pull caddy')),mode==='standalone');const activation=lines.find(l=>l.includes(' up -d '));assert.equal(activation.endsWith(' game'),mode==='host');
+ }
+});
+
+test('proxy configuration rejects unknown modes and non-loopback port values without changing the application image user',async()=>{
+ for(const change of [{REVERSE_PROXY_MODE:'host'},{REVERSE_PROXY_MODE:'standalone'},{GAME_BIND_PORT:'2567'}])assert.equal(assessDeployConfig({...valid,...change}).ok,true);
+ for(const change of [{REVERSE_PROXY_MODE:'other'},{GAME_BIND_PORT:'0'},{GAME_BIND_PORT:'65536'},{GAME_BIND_PORT:'2567:80'}])assert.equal(assessDeployConfig({...valid,...change}).ok,false);
+ const compose=await readFile(new URL('../deploy/compose.yaml',import.meta.url),'utf8');assert.match(compose,/127\.0\.0\.1:\$\{GAME_BIND_PORT:-2567\}:2567/);const dockerfile=await readFile(new URL('../deploy/Dockerfile',import.meta.url),'utf8');assert.match(dockerfile,/USER node/);
+});
