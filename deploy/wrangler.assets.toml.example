@@ -2,7 +2,9 @@ name = "best-slop-assets"
 main = "assets-worker.js"
 compatibility_date = "2026-11-19"
 account_id = "a9cf0f539d37afe46de8c5d1aec58cdf"
-routes = [{ pattern = "assets.gfig.space", custom_domain = true }]
+workers_dev = true
+# Domínio próprio é opcional e requer a zona ativa na Cloudflare.
+# routes = [{ pattern = "assets.gfig.space", custom_domain = true }]
 
 [vars]
 PUBLIC_ASSET_ORIGINS = "https://play.gfig.space,https://gfig.space"

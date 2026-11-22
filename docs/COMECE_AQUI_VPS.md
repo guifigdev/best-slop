@@ -321,47 +321,97 @@ Em GitHub → Actions → **Validate and deploy VPS**, execute **Run workflow** 
 
 Na pasta local do PC, o envio de futuras versões já commitadas é `git push github HEAD:master`. Publicar no Sites não envia automaticamente esse push ao GitHub.
 
-## 7. Publicar os assets em `clients/games/` — Cloudflare e PC
+## 7. Cloudflare R2/CDN — opcional, depois de o site e o CI funcionarem
 
-Primeiro deixe o jogo online pela VPS, então habilite o CDN. **Mantenha o bucket `clients` privado.** O Worker fornecido expõe somente `games/assets/*`; os demais arquivos de clientes não ficam públicos.
+O jogo em `https://play.gfig.space` já pode servir todos os arquivos pela VPS. Esta etapa passa JS, CSS, fontes e imagens compilados para o R2, através de um Worker. O servidor das salas, WebSocket e banco continuam na VPS.
 
-No PC com Node 24, na pasta do projeto:
+Seu DNS está na Vercel. Para começar, use a URL **workers.dev** fornecida pela Cloudflare; ela não exige mover o domínio. O exemplo do projeto já vem com `workers_dev = true`. O domínio `assets.gfig.space` fica para uma configuração futura, se a zona estiver ativa na Cloudflare. [workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/).
+
+### 7.1. Confirmar o bucket no navegador
+
+1. Entre no painel da sua conta Cloudflare.
+2. Abra **Storage & databases → R2 → Overview**.
+3. Confira se o bucket **clients** existe. Se já existe, use-o; se não, crie-o com esse nome.
+4. Mantenha o bucket privado. O Worker do projeto só libera `games/assets/*`; documentos de clientes e backups ficam fora dessa rota.
+
+### 7.2. Publicar o Worker no PowerShell do PC
+
+Na pasta local do jogo:
 
 ```powershell
+Set-Location 'C:\Users\Guilherme\Downloads\games-gpt\custom hero'
 Copy-Item deploy/wrangler.assets.toml.example deploy/wrangler.assets.toml
 npx wrangler login
+```
+
+Se pedir para instalar Wrangler, confirme a instalação do pacote `wrangler`. O navegador abre a autorização da Cloudflare; entre na conta que tem o bucket `clients` e conclua o fluxo.
+
+Depois execute:
+
+```powershell
 npx wrangler deploy --config deploy/wrangler.assets.toml
 ```
 
-Confirme no arquivo a conta `a9cf0f539d37afe46de8c5d1aec58cdf`, binding `CLIENTS_BUCKET`, bucket `clients` e domínio `assets.gfig.space`. Wrangler pode pedir autorização para criar o custom domain. Se já existir um registro conflitante desse hostname, resolva-o no painel sem alterar o domínio raiz. Workers gerencia o DNS/certificado do seu custom domain. [Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+Se pedir para escolher um subdomínio workers.dev, defina um disponível. Confira no arquivo a conta `a9cf0f539d37afe46de8c5d1aec58cdf`, binding `CLIENTS_BUCKET` e bucket `clients`.
 
-O CORS já é aplicado pelo Worker para `https://play.gfig.space` e `https://gfig.space`. Não é necessário liberar o CORS do endpoint S3 para uploads do CI. Para mais origens, edite `PUBLIC_ASSET_ORIGINS` no TOML e publique o Worker novamente.
+No fim, o comando mostra uma URL parecida com `https://best-slop-assets.SEUSUBDOMINIO.workers.dev`. **Copie a URL real retornada**; `SEUSUBDOMINIO` é apenas uma ilustração. Vamos chamá-la de **URL_DO_WORKER** abaixo. A raiz pode responder 404: o Worker serve somente `/games/assets/`, e os arquivos serão enviados pelo CI.
 
-No painel R2 → Manage R2 API Tokens, crie uma credencial **Object Read & Write**, restrita ao bucket `clients`. Guarde Access Key ID e Secret Access Key no GitHub como secrets. [Tokens R2](https://developers.cloudflare.com/r2/get-started/s3/).
+### 7.3. Criar as credenciais R2 no navegador
 
-No GitHub, acrescente:
+No painel, abra **Storage & databases → R2 → Overview → Manage in API Tokens**. Clique **Create Account API token** ou **Create User API token**. Dê o nome `best-slop-assets`, escolha **Object Read & Write** e **Apply to specific buckets only → clients**. Clique em **Create API Token**.
 
-| Tipo | Nome | Valor |
+Guarde **Access Key ID**, **Secret Access Key** e **S3 endpoint**. A chave secreta só é mostrada nessa criação. Não envie esses valores ao chat. [Instruções oficiais R2](https://developers.cloudflare.com/r2/get-started/s3/).
+
+### 7.4. Acrescentar secrets e variáveis no GitHub
+
+No repositório → Settings → Secrets and variables → Actions, adicione:
+
+| Aba | Nome | Valor |
 | --- | --- | --- |
-| Secret | `AWS_ACCESS_KEY_ID` | Access Key ID do R2 |
-| Secret | `AWS_SECRET_ACCESS_KEY` | Secret Access Key do R2 |
-| Variable | `R2_ENDPOINT` | `https://a9cf0f539d37afe46de8c5d1aec58cdf.r2.cloudflarestorage.com` |
-| Variable | `R2_BUCKET` | `clients` |
-| Variable | `R2_ASSET_PREFIX` | `games` |
-| Variable | `VITE_ASSET_BASE_URL` | `https://assets.gfig.space/games/` |
+| Secrets | `AWS_ACCESS_KEY_ID` | Access Key ID que o R2 acabou de mostrar |
+| Secrets | `AWS_SECRET_ACCESS_KEY` | Secret Access Key que o R2 acabou de mostrar |
+| Variables | `R2_ENDPOINT` | S3 endpoint retornado, neste projeto normalmente `https://a9cf0f539d37afe46de8c5d1aec58cdf.r2.cloudflarestorage.com` |
+| Variables | `R2_BUCKET` | `clients` |
+| Variables | `R2_ASSET_PREFIX` | `games` |
+| Variables | `VITE_ASSET_BASE_URL` | URL real do Worker seguida de `/games/` |
 
-O endpoint não leva `/clients`; bucket e pasta são separados. Antes de executar o novo release, na `.env` da VPS ajuste:
+O endpoint não leva `/clients`; bucket e pasta são separados. Exemplo de formato do último campo: `https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games/`. Use seu endereço real.
 
-```dotenv
-VITE_ASSET_BASE_URL=https://assets.gfig.space/games/
-R2_PUBLIC_URL=https://assets.gfig.space/games
+### 7.5. Ajustar o `.env` da VPS como game-deploy
+
+No PowerShell do PC:
+
+```powershell
+ssh -i "$env:USERPROFILE/.ssh/best-slop-ci" game-deploy@216.158.236.156
 ```
 
-Execute **Run workflow** em `master` novamente. O CI compila com a URL do CDN, envia JS/CSS/fontes/imagens para `games/assets/` e só depois ativa a imagem na VPS. Nesse caminho, as chaves S3 ficam no GitHub; Node/AWS CLI de upload são executados pelo runner, sem instalação adicional no host da VPS. O modo de upload manual continua explicado em [CONFIGURACOES.md](CONFIGURACOES.md).
+Na VPS:
+
+```bash
+cd /opt/custom-hero
+nano .env
+```
+
+Configure estes dois valores, substituindo o exemplo pela URL real do Worker:
+
+```dotenv
+VITE_ASSET_BASE_URL=https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games/
+R2_PUBLIC_URL=https://best-slop-assets.SEUSUBDOMINIO.workers.dev/games
+```
+
+O primeiro termina com `/`; o segundo não. Salve com Ctrl+O, Enter, Ctrl+X. Mantenha `REVERSE_PROXY_MODE=host` e `GAME_BIND_PORT=2567`.
+
+As credenciais de upload R2 ficam nos secrets do GitHub neste fluxo. Elas não precisam ser copiadas para a VPS. Depois de habilitar o CDN, use o CI para publicar, pois ele envia os assets antes de ativar a imagem.
+
+### 7.6. Publicar pelo CI e testar
+
+Abra Actions → **Validate and deploy VPS → Run workflow → master → Run workflow**. O CI compila com a URL do Worker, envia os assets para `clients/games/assets/` e só depois ativa o jogo.
+
+Espere `validate` e `deploy` ficarem verdes. Recarregue o jogo em `play.gfig.space`; no Network do navegador, JS/CSS devem carregar pela URL do Worker com HTTP200. O CORS do Worker já aceita `https://play.gfig.space` e `https://gfig.space`. Raiz 404 não indica falha; o teste é um arquivo real de `/games/assets/`.
 
 ## 8. Conferir funcionamento e preservar dados
 
-Recarregue `https://play.gfig.space`, confira Network do navegador para os assets em `assets.gfig.space/games/assets/`, e teste a mesma sala com duas pessoas. Teste desconexão/reentrada e chat. A API de diagnóstico deve marcar online como disponível; R2 configurado não significa que todos os objetos já foram verificados pelo diagnóstico.
+Recarregue `https://play.gfig.space`, se habilitou o CDN, confira no Network os assets em sua URL do Worker seguida de `/games/assets/`, e teste a mesma sala com duas pessoas. Teste desconexão/reentrada e chat. A API de diagnóstico deve marcar online como disponível; R2 configurado não significa que todos os objetos já foram verificados pelo diagnóstico.
 
 Execute um backup na VPS pelo kit de deploy em uso:
 
