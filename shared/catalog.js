@@ -1,3 +1,4 @@
+import {classicRagnarokSkills} from './classic-ragnarok-skills.js';
 import {CUSTOM_HERO_IDENTITIES} from './hero-identities.js';
 import {equipmentEffectAt} from './equipment-effects.js';
 // Historical guides document the origin, not a promise of patch equivalence.
@@ -92,6 +93,7 @@ export const SKILLS={
  auraflame:skill('Coração de Surtr','passive',190,'self',{damage:[3,4.5,6,7.5,9],radius:[2,2.1,2.2,2.3,2.4],pulseInterval:.6},'Aura próxima causa dano mágico de fogo por segundo, em pulsos. Auras iguais da mesma equipe usam apenas a mais forte.'),
  icepulse:skill('Pulso de Skadi','passive',190,'self',{damage:[2,3,4,5,6],radius:[2,2.1,2.2,2.3,2.4],pulseInterval:.75,slow:.15,slowDuration:1.1},'Aura de gelo causa dano mágico por segundo e 15% lentidão breve aos inimigos próximos. Não soma lentidões.')
 };
+Object.assign(SKILLS,classicRagnarokSkills(skill));
 Object.assign(SKILLS.fireball,{aliases:['Bola de fogo','Fire Ball'],reference:'MG_FIREBALL · inspiração Ragnarok',source:'https://raw.githubusercontent.com/rathena/rathena/master/db/re/skill_db.yml'});
 for(const [key,reference]of Object.entries({doubleattack:'TF_DOUBLE',violentforce:'BS_OVERTHRUST',hurricane:'NC_AXETORNADO',manabreak:'Mana Break'}))Object.assign(SKILLS[key],{reference,source:key==='manabreak'?'https://www.dota2.com/hero/Anti-mage':'https://raw.githubusercontent.com/rathena/rathena/master/db/re/skill_db.yml',originalRanks:0,aliases:[reference],balanceNote:'Mecânica original inspirada na referência; cinco ranks e valores próprios deste jogo.'});
 const ultimateLevels={blizzard:10,gungnir:10,helsfrost:10,avatar:12,gravity:12,helguard:12,thorsjudgment:15};

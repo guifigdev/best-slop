@@ -1,3 +1,4 @@
+import {refineStarterSurfaces,starterGarmentRelief} from './starter-surface-detail.js';
 import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 // Voxel workers and kodos. Descriptors supply the same boxes to the
 // renderer and to selection portraits; no Warcraft models are imported.
@@ -40,7 +41,7 @@ export function tagCharacterSpec(key){
  }
  if(key==='runner'){b(0,2.12,.02,.87,.22,.73,0x9aadae);b(0,1.53,.43,.61,.32,.2,0xc7c5ad);b(0,1.25,.44,.43,.25,.19,0xa7ad9d);for(const side of [-1,1])b(side*.48,1.47,0,.43,.23,.61,0x9aaeb0);b(-.7,1.68,.14,.71,.37,.4,0xa6b6ae);}
  if(key==='soldier:hC10'){b(0,2.13,.03,.79,.25,.71,0x9dafb1);b(0,1.07,.33,.7,.55,.16,0x9dafb1);b(-.67,1.05,.29,.19,.81,.7,0x6b8794);b(.7,1.38,.25,.12,1.47,.14,0xd4dfd2);}
- const spec=Object.freeze({key,parts:Object.freeze(parts),legs:Object.freeze(legs),wings:Object.freeze(wings),fur,muzzle,height,eyeLine});cache.set(key,spec);return spec;
+ if(key==='runner'||key.startsWith('worker:'))starterGarmentRelief(parts,{cloth:fur,trim:0xc8b181});const spec=Object.freeze({key,parts:Object.freeze(refineStarterSurfaces(parts).map(Object.freeze)),legs:Object.freeze(legs),wings:Object.freeze(wings),fur,muzzle,height,eyeLine});cache.set(key,spec);return spec;
 }
 export function buildTagCharacter(u,body,voxel){const spec=tagCharacterSpec(tagCharacterKey(u));if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
 export function voxelTagPortrait(parts,className='tag-portrait'){

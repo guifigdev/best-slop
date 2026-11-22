@@ -1,3 +1,4 @@
+import {refineStarterSurfaces} from './starter-surface-detail.js';
 import {carveNordicSurfaces,nordicHeroRelief,fenrirFurRelief} from './nordic-hero-detail.js';
 import {FENRIR_ART,fenrirSpec} from './fenrir-art.js';
 import {voxelTagPortrait} from './tag-character-art.js';
@@ -95,25 +96,24 @@ export function nordicHeroSpec(kind){
  for(let i=parts.length-1;i>=0;i--){const p=parts[i];if(!hairColors.includes(p[6])||p[3]<.4||p[5]<.5||p[1]<2)continue;parts.splice(i,1);const[x,y,z,w,h,d,c]=p;for(let ix=0;ix<9;ix++)for(let iz=0;iz<6;iz++){const nx=(ix-4)/4,nz=(iz-2.5)/2.5;if(nx*nx+nz*nz>1.7)continue;const drop=(Math.abs(nx)**2+Math.abs(nz)**2)*.035;parts.push([x-w/2+w*(ix+.5)/9,y-drop+((ix+iz)%3)*.009,z-d/2+d*(iz+.5)/6,w/9+.003,h,d/6+.003,c]);}}
  const detailed=carveNordicSurfaces(parts);nordicHeroRelief(kind,detailed);parts.splice(0,parts.length,...detailed);
  const height=Math.max(...parts.map(p=>p[1]+p[4]/2),...legs.map(p=>p.y+p.h/2));
- const result=Object.freeze({key:kind,theme:'nordic-hero',parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine:1.91,motion:'humanoid'});specs.set(kind,result);return result;
+ const refined=refineStarterSurfaces(parts);parts.splice(0,parts.length,...refined);const result=Object.freeze({key:kind,theme:'nordic-hero',parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(detailStarterLeg)),wings:Object.freeze([]),fur,muzzle,height,eyeLine:1.91,motion:'humanoid'});specs.set(kind,result);return result;
 }
 
 let detailedWolf=null;
-function detailedFenrirSpec(){
- if(detailedWolf)return detailedWolf;const source=fenrirSpec(),parts=[],legs=source.legs.map(p=>Object.freeze({...p}));
- // Replace the major rectangular masses with stepped, bevelled cross sections.
- for(const p of source.parts){const[x,y,z,w,h,d,c]=p;if(w>.75&&h>.65&&d>.65){for(let i=0;i<9;i++){const edge=Math.abs(i-4)/4;parts.push([x,y-h/2+h*(i+.5)/9,z,w*(1-edge*edge*.18),h/9+.004,d*(1-edge*edge*.12),c]);}}else parts.push([...p]);}
- const b=(...p)=>parts.push(p);for(let side of [-1,1]){for(let row=0;row<7;row++)for(let j=0;j<5;j++){const y=.98+row*.12,z=.05+j*.15;b(side*(.64+Math.sin(row+j)*.035),y,z,.095,.17,.13,(row+j)%3===0?0xa3b1b5:0x788995);}for(let i=0;i<8;i++){b(side*(.25+i*.03),2.12-i*.039,1.43,.047,.06,.04,i%2?0x839399:0xaebfc0);b(side*.69,1.22+i*.055,.99,.034,.025,.025,0xe2cc91);}for(let i=0;i<4;i++)b(side*(.18+i*.08),1.58,1.99,.044,.075,.036,0x334c57);for(let i=0;i<5;i++)b(side*.39,2.28+i*.07,.99,.055,.063,.025,i%2?0x6d8591:0xaabbbd);}
- const detailed=carveNordicSurfaces(parts);fenrirFurRelief(detailed);parts.splice(0,parts.length,...detailed);
- detailedWolf=Object.freeze({...source,key:'fenrir',theme:'nordic-hero',parts:Object.freeze(parts.map(Object.freeze)),legs:Object.freeze(legs),motion:'quadruped'});return detailedWolf;
-}
+function detailedFenrirSpec(){return fenrirSpec();}
 export function buildNordicHeroModel(kind,body,voxel){const spec=nordicHeroSpec(kind);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
 const shade=(color,tint)=>'#'+[16,8,0].map(shift=>Math.round(((color>>shift)&255)*tint).toString(16).padStart(2,'0')).join('');
 export function nordicHeroPortrait(kind){
- if(kind==='fenrir'){const spec=nordicHeroSpec(kind);if(!portraits.has(kind))portraits.set(kind,voxelTagPortrait([...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],'nordic-hero-portrait'));return portraits.get(kind);}
+ if(kind==='fenrir'){const spec=nordicHeroSpec(kind);if(!portraits.has(kind))portraits.set(kind,voxelTagPortrait([...spec.parts,...spec.legs.flatMap(p=>p.parts?p.parts.map(q=>[q[0]+p.x,q[1]+p.y,q[2]+p.z,...q.slice(3)]):[[p.x,p.y,p.z,p.w,p.h,p.d,p.color]])],'nordic-hero-portrait'));return portraits.get(kind);}
  const spec=nordicHeroSpec(kind);if(!spec)return '';if(portraits.has(kind))return portraits.get(kind);
- const parts=[...spec.parts,...spec.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],polygons=[],project=([x,y,z])=>[x*.88-z*.72,-y+z*.38+x*.27];
+ const parts=[...spec.parts,...spec.legs.flatMap(p=>p.parts?p.parts.map(q=>[q[0]+p.x,q[1]+p.y,q[2]+p.z,...q.slice(3)]):[[p.x,p.y,p.z,p.w,p.h,p.d,p.color]])],polygons=[],project=([x,y,z])=>[x*.88-z*.72,-y+z*.38+x*.27];
  for(const[x,y,z,w,h,d,color]of parts){const a=x-w/2,b=x+w/2,l=y-h/2,t=y+h/2,n=z-d/2,f=z+d/2;for(const[corners,tint,depth]of [[[[a,t,n],[b,t,n],[b,t,f],[a,t,f]],1,x+z-.01],[[[b,l,n],[b,t,n],[b,t,f],[b,l,f]],.77,x+z+.02],[[[a,l,f],[a,t,f],[b,t,f],[b,l,f]],.9,x+z+.03]])polygons.push({points:corners.map(project),color:shade(color,tint),depth});}
  const all=polygons.flatMap(p=>p.points),minX=Math.min(...all.map(p=>p[0])),maxX=Math.max(...all.map(p=>p[0])),minY=Math.min(...all.map(p=>p[1])),maxY=Math.max(...all.map(p=>p[1])),scale=Math.min(80/(maxX-minX),81/(maxY-minY)),ox=(96-(maxX-minX)*scale)/2-minX*scale,oy=(92-(maxY-minY)*scale)/2-minY*scale;
  const svg=`<svg viewBox="0 0 96 96" class="army-portrait nordic-hero-portrait" aria-hidden="true"><path d="m6 82 42-11 42 11-42 12z" fill="#607b6b" opacity=".23"/>${polygons.sort((a,b)=>a.depth-b.depth).map(p=>`<polygon points="${p.points.map(([x,y])=>(x*scale+ox).toFixed(2)+','+(y*scale+oy).toFixed(2)).join(' ')}" fill="${p.color}"/>`).join('')}</svg>`;portraits.set(kind,svg);return svg;
+}
+
+function detailStarterLeg(p){
+ const {w,h,d,color:c}=p,parts=[[0,0,0,w*.84,h,d*.88,c],[0,-h*.35,d*.16,w*1.1,h*.3,d*1.15,0x64757a],[0,h*.3,0,w*1.08,h*.14,d,0x9aa9a7],[0,0,d*.47,w*.7,h*.7,.035,0x4c6065]];
+ for(let i=0;i<4;i++){parts.push([w*-.21,-h*.22+i*h*.14,d*.53,.027,.025,.025,0xd7c795],[w*.21,-h*.22+i*h*.14,d*.53,.027,.025,.025,0xd7c795]);}
+ return Object.freeze({...p,parts:Object.freeze(parts.map(Object.freeze))});
 }

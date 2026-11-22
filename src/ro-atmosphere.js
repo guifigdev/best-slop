@@ -39,9 +39,9 @@ export function createRoAtmosphere({scene,sun,skyLight,actorLighting}){
  const rays=new T.InstancedMesh(new T.PlaneGeometry(1,1),rayMaterial,6);rays.name='ro-soft-light-shafts';rays.frustumCulled=true;rays.count=0;rays.renderOrder=1;root.add(rays);
  const dummy=new T.Object3D(),topDay=new T.Color(0x4e94cd),topNight=new T.Color(0x02040b),horizonDay=new T.Color(0x8ebfdb),paletteSky=new T.Color(),horizonNight=new T.Color(0x0a1321),sunDay=new T.Color(0xffd58a),sunDusk=new T.Color(0xffa258),skyDay=new T.Color(0xffe7ba),groundDay=new T.Color(0xa69668),groundNight=new T.Color(0x74836b),lightDirection=new T.Vector3(),sunNight=new T.Color(0xb4c6f0),horizon=new T.Color();let disposed=false,smoothedMs=16,slowFrames=0,active=false,last=null;
  const rayFrustum=new T.Frustum(),rayProjection=new T.Matrix4(),raySphere=new T.Sphere();
- return {root,update(state,time,camera,{target,dt=.016,renderer,palette,scattering=false}={}){
-  if(disposed)return;active=state?.options?.mode==='bonk';root.visible=active;if(actorLighting)actorLighting.uniforms.roEnvEnabled.value=active?1:0;if(!active){rays.count=0;return;}
-  const phase=roDaylight(state.bonk?.totalElapsed??time),direction=uniforms.sunDirection.value.set(Math.cos(phase.angle),Math.sin(phase.angle),.35*Math.sin(phase.angle)).normalize();last=phase;
+ return {root,update(state,time,camera,{target,dt=.016,renderer,palette,scattering=false,outdoor=false}={}){
+  if(disposed)return;active=state?.options?.mode==='bonk'||!!(outdoor&&state?.options);root.visible=active;if(actorLighting)actorLighting.uniforms.roEnvEnabled.value=active?1:0;if(!active){rays.count=0;return;}
+  const phase=roDaylight(outdoor&&state.arena==='moon'?482.4:state.bonk?.totalElapsed??time),direction=uniforms.sunDirection.value.set(Math.cos(phase.angle),Math.sin(phase.angle),.35*Math.sin(phase.angle)).normalize();last=phase;
   horizonDay.setHex(0x8ebfdb);if(palette)horizonDay.lerp(paletteSky.setHex(palette.sky),.10);uniforms.day.value=phase.day;uniforms.topColor.value.copy(topNight).lerp(topDay,phase.day);horizon.copy(horizonNight).lerp(horizonDay,phase.day).lerp(sunDusk,phase.twilight*.18);uniforms.horizonColor.value.copy(horizon);sky.position.copy(camera.position);
   // Keep a readable floor at midnight. Underground biomes retain neutral fill.
   skyLight.intensity=phase.hemisphere;skyLight.color.copy(sunNight).lerp(skyDay,phase.day).lerp(sunDusk,phase.twilight*phase.day*.25);skyLight.groundColor.copy(groundNight).lerp(groundDay,phase.day);

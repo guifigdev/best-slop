@@ -275,6 +275,20 @@ const normalize=game=>['survival','campaign','best','tower','war','linewars','cu
 function register(game,kind,catalog,drawings){for(const [key,definition]of Object.entries(catalog)){const drawing=drawings[key];if(!drawing)throw Error(`Missing illustration: ${game}/${kind}/${key}`);const [palette,paths]=drawing;registry.set(`${game}/${kind}/${key}`,Object.freeze({game,kind,key,name:definition.name||key,palette,paths}));}}
 Object.assign(survivalSkills,{fenrirfang:packArt.fenrirFang,scarabs:packArt.scarabSwarm,packaura:packArt.packAura,runicbarrier:packArt.runicBarrier,spiritward:packArt.spiritWard,weakeninghowl:packArt.weakeningHowl,lifeaura:['nature',L('M32 54V18m0 19L16 25m16 18 17-15','accent',5)+P('m32 17-7-9 7-5 7 5z','bright')+P('m15 21-8 3 8 11 9-3z','light')+P('m50 24 8 5-9 11-9-5z','light')]});
 register('phasekiller','skill',PHASE_KILLER_SKILLS,PHASE_KILLER_SKILL_ILLUSTRATIONS);register('phasekiller','item',PHASE_KILLER_ITEMS,PHASE_KILLER_ITEM_ILLUSTRATIONS);
+for(const [key,base]of Object.entries({ro_bash:'stomp',ro_meteor:'fireball',ro_magnus:'heal',ro_sanctuary:'heal',ro_increaseagi:'endurance',ro_magnificat:'brilliance',ro_impositio:'packaura',ro_angelus:'devotion',ro_homunculus:'scarabs',ro_falcon:'odinsravens',ro_valkyrie:'helguard'})){const [palette,paths]=survivalSkills[base];survivalSkills[key]=[palette,paths+R(43,43,16,16,'shade')+P('m51 45 5 6-5 6-5-6z','bright')];}
+Object.assign(survivalSkills,{
+ ro_bash:['steel',P('m15 52 8-18 25-27 7 7-27 25z','light')+L('M12 24q27-15 42 13','bright',5)+L('M12 47 23 58','accent',6)],
+ ro_meteor:['fire',P('M8 7 25 32 12 29zm18-5 22 30-15-5zM44 8l16 24-11-3z','accent')+C(22,39,11,'light')+C(45,45,9,'bright')+P('m8 57 8-10 10 7 13-6 16 10z','accent')],
+ ro_magnus:['gold',P('M27 8h10v16h14v10H37v20H27V34H13V24h14z','light')+L('M8 51q24 17 48 0M11 47l5-5m34 5-5-5','accent',3)+C(32,29,4,'bright')],
+ ro_sanctuary:['nature',L('M8 48q24 20 48 0M10 43q22-15 44 0','accent',5)+P('M28 16h8v9h9v8h-9v9h-8v-9h-9v-8h9z','light')+L('M12 36V20m40 16V20M19 15v-7m26 7V8','bright',3)],
+ ro_increaseagi:['nature',P('m8 48 17-16 13 7 13-21 7 5-15 33-20-11-9 10z','light')+L('M7 18h20M4 26h17M37 10l7-5m-5 14 14-4','accent',4)],
+ ro_magnificat:['arcane',P('M10 18 30 23v32L10 47zm21 5 23-5v29L31 55z','accent')+L('M16 26l9 3m-9 7 9 3m13-10 10-3m-10 13 10-3','light',2)+P('m31 2 5 8 10 2-8 7 1 10-8-5-8 5 2-10-8-7 10-2z','bright')],
+ ro_impositio:['blood',P('m11 40 15-17 13 12-14 19-14-4z','accent')+P('m28 30 19-23 7 6-21 23z','light')+L('M24 27 39 40M7 15l10 9M5 29h11M45 45l9 9','bright',4)],
+ ro_angelus:['gold',P('M13 19 32 12l19 7v20L32 58 13 39z','accent')+P('m20 24 12-5 12 5v13L32 49 20 37z','light')+L('M17 10q15-12 30 0M26 32l6 6 9-13','bright',4)],
+ ro_homunculus:['nature',P('M12 41q0-30 20-30t20 30q-2 14-20 14T12 41z','accent')+P('M18 35q14-27 28 0l-2 8-12 7-12-7z','light')+R(23,31,5,6,'shade')+R(37,31,5,6,'shade')+L('M27 43h11','bright',3)],
+ ro_falcon:['storm',P('m5 14 20 8 7 15 7-15 20-8-6 22-18 12-3 11-3-11L11 36z','accent')+P('m10 21 13 8 5 11-12-8zm44 0-13 8-5 11 12-8z','light')+P('m27 20 9-5 8 10-12 2z','bright')+R(32,18,3,3,'shade')],
+ ro_valkyrie:['gold',P('M29 21 8 9l7 27 13 9zm6 0L56 9l-7 27-13 9z','accent')+P('m26 14 6-8 7 8-3 10 7 23-11 10-10-10 7-23z','light')+L('M48 12v44M41 24h14','bright',3)+P('m47 3 5 9-9 0z','bright')]
+});
 register('survival','skill',SKILLS,survivalSkills);register('survival','item',ITEMS,survivalItems);
 register('warlock','skill',WARLOCK_SKILLS,Object.fromEntries(Object.entries(WARLOCK_SKILLS).map(([key,s])=>[key,warlockSkills[s.family]])));
 register('warlock','item',WARLOCK_ITEMS,warlockItems);register('warlock','mastery',WARLOCK_MASTERIES,masteries);

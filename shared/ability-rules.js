@@ -25,7 +25,7 @@ export const AbilityMethods={
    // Safe instant spells may support a selected attack/guard order, but an
    // automatic channel or relocation must never replace that manual order.
    if(['attack','hold'].includes(u.order)&&(MOBILITY.has(key)||key==='blizzard'||key==='icewall'))continue;
-   if(s.heal){const injured=key==='freyjasgrace'?this.units.some(v=>v.alive&&v.team===u.team&&v.challenge===u.challenge&&distance(u,v)<=s.radius&&v.hp<v.maxHp*.65):u.hp<u.maxHp*.65&&u.maxHp-u.hp>=s.heal*(u.magicPower||1)*.3;if(!injured)continue;}
+   if(s.heal){const injured=(key==='freyjasgrace'||key==='ro_sanctuary')?this.units.some(v=>v.alive&&v.team===u.team&&v.challenge===u.challenge&&distance(u,v)<=s.radius&&v.hp<v.maxHp*.65):u.hp<u.maxHp*.65&&u.maxHp-u.hp>=s.heal*(u.magicPower||1)*.3;if(!injured)continue;}
    else if(!target)continue;
    if(key==='shield'&&(u.shieldUntil||0)>this.time+.5&&u.shield>0||key==='avatar'&&(u.avatar||0)>this.time||['rage','battlecry'].includes(key)&&(u.rageUntil||0)>this.time||key==='violentforce'&&(u.violentForce?.until||0)>this.time||key==='hurricane'&&(u.hurricane?.until||0)>this.time)continue;
    if((key==='summon'||s.summonKind)&&this.units.filter(v=>v.alive&&v.summon&&v.summoner===u.id&&(v.summonSkill||'summon')===key&&v.expires>this.time+8).length>=(s.summonCount||2))continue;
@@ -33,6 +33,7 @@ export const AbilityMethods={
    if(s.target==='self'&&!s.heal){const range=['stomp','frostnova','thorsjudgment','hurricane'].includes(key)?s.radius:key==='multishot'?10:8;if(distance(u,target)>range)continue;}
    if(MOBILITY.has(key)&&(['hold','stop'].includes(u.order)||distance(u,target)<2.2))continue;
    let point=target?{x:target.x,z:target.z}:{x:u.x,z:u.z};
+   if(key==='ro_sanctuary'){const ally=this.units.filter(v=>v.alive&&v.team===u.team&&v.challenge===u.challenge&&distance(u,v)<=14&&v.hp<v.maxHp*.8).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(ally)point={x:ally.x,z:ally.z};}
    if(MOBILITY.has(key)&&target){const d=distance(u,target)||1,stand=key==='blink'?Math.max(1.5,(u.range||1.5)*.8):1.25;point={x:target.x-(target.x-u.x)/d*stand,z:target.z-(target.z-u.z)/d*stand};}
    if(key==='icewall'&&target){const dx=target.x-u.x,dz=target.z-u.z,d=Math.hypot(dx,dz)||1;point={x:(u.x+target.x)/2-dz/d*2.3,z:(u.z+target.z)/2+dx/d*2.3};}
    if(this.cast(u,{slot,target:target?.id,...point})){u.nextAutoCastAt=this.time+.3;this.fx('autoCast',u.x,u.z,{source:u.id,skill:key});return true;}

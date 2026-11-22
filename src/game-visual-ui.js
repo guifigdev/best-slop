@@ -6,7 +6,7 @@ export function createGameVisualUI({view,getState,onToggle=()=>{}}){
  const preferences=createRoVisualPreference({view,getState,allModes:true});let modal=null,button=null;
  function close(){if(!modal)return;modal.remove();modal=null;onToggle(false);button?.focus({preventScroll:true});}
  function open(){if(modal){close();return;}modal=document.createElement('div');modal.className='game-visual-backdrop';modal.id='game-visual-modal';modal.innerHTML=roVisualPanelMarkup({preset:preferences.preset,intensity:preferences.intensity});document.body.append(modal);onToggle(true);
-  modal.querySelector('[data-bk-visual-close]').onclick=close;modal.onclick=e=>{if(e.target===modal)close();};modal.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}};
+  modal.querySelector('[data-bk-visual-close]').onclick=close;modal.querySelector('[data-bk-visual-sky]').onclick=()=>{view.toggleSky?.();close();};modal.onclick=e=>{if(e.target===modal)close();};modal.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}};
   modal.querySelector('[data-bk-visual-preset]').onchange=e=>preferences.choose(e.target.value);
   modal.querySelector('[data-bk-visual-intensity]').oninput=e=>{if(preferences.setIntensity(Number(e.target.value)))modal.querySelector('output').textContent=Math.round(preferences.intensity*100)+'%';};modal.querySelector('select').focus();
  }

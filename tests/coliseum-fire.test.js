@@ -14,3 +14,7 @@ test('many campfires share three bounded batches, pause with time and dispose wi
  for(const mesh of fire.root.children){assert.ok(mesh.count<=mesh.instanceMatrix.count);assert.ok(Array.from(mesh.instanceMatrix.array).every(Number.isFinite));assert.equal(mesh.castShadow,false);}
  fire.update(2,{enabled:false});assert.equal(fire.root.visible,false);assert.equal(fire.stats().drawCalls,0);const scene=new T.Scene();scene.add(fire.root);fire.dispose();fire.dispose();assert.equal(scene.children.length,0);
 });
+
+test('flames form repeatable irregular clusters with different sizes, phases and speeds instead of one identical flame per tile',()=>{
+ const zones=ARENAS.volcano.zones,a=coliseumFireAnchors(zones,17),b=coliseumFireAnchors(zones,17),c=coliseumFireAnchors(zones,18);assert.deepEqual(a,b);assert.notDeepEqual(a,c);assert.ok(new Set(a.map(p=>p.scale)).size>10);assert.ok(new Set(a.map(p=>p.tempo)).size>10);const ring=a.filter(p=>Math.hypot(p.x,p.z)>20),angles=ring.map(p=>(Math.atan2(p.z,p.x)+Math.PI*2)%(Math.PI*2)).sort((x,y)=>x-y),gaps=angles.map((x,i)=>(angles[(i+1)%angles.length]-x+Math.PI*2)%(Math.PI*2));assert.ok(Math.max(...gaps)>Math.min(...gaps)*3);assert.ok(a.length<=COLISEUM_FIRE_BUDGET.sources);
+});

@@ -1,3 +1,4 @@
+import {refineStarterSurfaces} from './starter-surface-detail.js';
 import {PHASE_KILLER_SKILLS as SKILLS,PHASE_KILLER_ITEMS as ITEMS} from '../shared/phase-killer-catalog.js';
 import {voxelTagPortrait} from './tag-character-art.js';
 
@@ -30,7 +31,7 @@ export function phaseKillerSpec(value){
   const zombie=key==='zombie',armored=key!=='townsperson'&&!zombie,skin=zombie?0x90a18c:0xc7b295,cloth=zombie?0x776a69:armored?{lightarmor:0x7a8b86,mediumarmor:0x70828d,heavyarmor:0x657887}[key]:0x7d8e80,metal=0xabb8ae;fur=skin;muzzle=skin;b(0,1.01,0,.82,.92,.58,cloth);b(0,1.81,.05,.73,.65,.65,skin);b(0,1.63,.41,.24,.16,.14,skin);b(0,.61,.01,.85,.13,.62,0x5a5c49);b(0,.64,.36,.19,.19,.08,0xc3b178);b(0,2.15,-.02,.82,.21,.72,zombie?0x576c5c:0x8e7655);
   for(const side of [-1,1]){b(side*.53,1.05,.01,.29,.68,.35,cloth);b(side*.53,.73,.07,.29,.23,.36,skin);b(side*.18,1.87,.42,.12,.13,.045,zombie?0xc6d1ac:dark);leg(side*.25,0,.31,.52,0x586252);}if(zombie){b(.2,1.72,.43,.25,.13,.06,0x50665b);b(-.24,1.9,-.27,.25,.53,.18,0x647760);b(.27,.72,.37,.23,.31,.09,0x9f8f77);}else if(armored){b(0,1.14,.35,.75,.58,.13,metal);b(0,2.12,.02,.85,.23,.78,metal);for(const side of [-1,1])b(side*.51,1.49,0,.41,.22,.61,metal);if(key!=='lightarmor'){b(0,1.96,.46,.16,.42,.11,0x8ca2a1);for(const side of [-1,1])b(side*.38,1.82,.03,.13,.51,.68,metal);}if(key==='heavyarmor'){b(0,2.34,.02,.17,.32,.62,0xc5b777);for(const side of [-1,1])b(side*.6,1.51,.01,.55,.33,.69,metal);}}else{b(0,.92,.36,.61,.67,.13,0xaa9670);b(0,.59,.39,.68,.14,.16,0xc3b18d);b(-.3,1.91,-.26,.2,.57,.18,0x8c7657);}height=2.55;eyeLine=1.87;
  }
- const data=Object.freeze({key:'phase-killer:'+key,theme:'phase-killer',parts:Object.freeze(parts.map(Object.freeze)),legs:Object.freeze(legs.map(Object.freeze)),wings:Object.freeze(wings),fur,muzzle,height,eyeLine,motion});models.set(key,data);return data;
+ const data=Object.freeze({key:'phase-killer:'+key,theme:'phase-killer',parts:Object.freeze(refineStarterSurfaces(parts).map(Object.freeze)),legs:Object.freeze(legs.map(Object.freeze)),wings:Object.freeze(wings),fur,muzzle,height,eyeLine,motion});models.set(key,data);return data;
 }
 export function buildPhaseKillerModel(unit,body,voxel){const spec=phaseKillerSpec(unit);if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;}
 export function phaseKillerPortrait(value){const key=appearance(value);if(!publicLooks.has(key))return '';if(portraits.has(key))return portraits.get(key);const s=phaseKillerSpec(key),svg=voxelTagPortrait([...s.parts,...s.legs.map(p=>[p.x,p.y,p.z,p.w,p.h,p.d,p.color])],'phase-killer-portrait');portraits.set(key,svg);return svg;}

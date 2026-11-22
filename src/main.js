@@ -1,3 +1,4 @@
+import './ro-job-panel.css';
 import {createGameVisualUI} from './game-visual-ui.js';
 import {createShopGuide} from './shop-guide.js';
 import './shop-guide.css';

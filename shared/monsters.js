@@ -1,3 +1,4 @@
+import {CLASSIC_RO_MONSTER_SKILLS} from './classic-ragnarok-skills.js';
 import {EXPANDED_CUSTOM_HERO_BESTIARY,EXPANDED_SKILL_THEMES} from './ragnarok-expansion.js';
 import {LOOT_SKILLS} from './loot-skills.js';
 import {SKILLS} from './catalog.js';
@@ -94,7 +95,7 @@ export const MONSTER_SKILL_THEMES=Object.freeze(Object.fromEntries(Object.entrie
  wolf:['fenrirfang','summon','packaura','weakeninghowl','critical','endurance','doubleattack'],
  bonus:['dash','evasion','endurance','critical','doubleattack'],
  ...CUSTOM_HERO_SKILL_THEMES,...EXPANDED_SKILL_THEMES
-}).map(([kind,skills])=>[kind,Object.freeze(skills)])));
+}).map(([kind,skills])=>[kind,Object.freeze([...skills,...(CLASSIC_RO_MONSTER_SKILLS[kind]||[])])])));
 
 // A boss can mix roles, but cannot fill every slot with stuns or self-sustain.
 const CONTROL_SKILLS=new Set(['bolt','stomp','bash','stormdive','hornrush','forcepush','hook','gravity','warlockfire']);

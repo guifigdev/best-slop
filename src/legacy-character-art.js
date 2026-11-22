@@ -1,3 +1,4 @@
+import {refineStarterSurfaces,starterGarmentRelief} from './starter-surface-detail.js';
 import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 // Voxel characters for the legacy custom-map games. No Warcraft
 // meshes or textures are imported. Model boxes also drive their HUD portraits.
@@ -64,7 +65,7 @@ export function legacyCharacterSpec(key){
   }
   height=3.2;eyeLine=2.13;
  }
- const frozen=Object.freeze({key,parts:Object.freeze(parts.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine});specs.set(key,frozen);return frozen;
+ if(mode==='warlock')starterGarmentRelief(parts,{cloth:fur,trim:muzzle,robe:true});const frozen=Object.freeze({key,parts:Object.freeze(refineStarterSurfaces(parts).map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze([]),fur,muzzle,height,eyeLine});specs.set(key,frozen);return frozen;
 }
 export function buildLegacyCharacterModel(unit,body,voxel){
  const spec=legacyCharacterSpec(legacyCharacterModelKey(unit));if(!spec)return null;for(const p of spec.parts)voxel(body,...p);return spec;

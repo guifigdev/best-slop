@@ -85,8 +85,8 @@ test('co-op projectiles credit their real owner, rewards reach both accounts, an
  g.bonk.projectiles.push({id:g.id(),source:b.id,x:2,z:0,dx:0,dz:0,speed:0,remaining:10,travelled:0,damage:1000,element:'fire',hitIds:[],radius:0,pierce:1});
  g.tick(1/30);assert.equal(a.kills,0);assert.equal(b.kills,1);assert.equal(a.bonkRewardKills.length,1);assert.equal(b.bonkRewardKills.length,1);assert.equal(g.bonk.routeBossDefeated,true);assert.equal(g.bonk.stage,'playing');
  assert.equal(g.command('host',{type:'bkAcknowledgeRewards',ids:[String(target.id)]}),true);assert.equal(a.bonkRewardKills.length,0);assert.equal(b.bonkRewardKills.length,1);
- const gate=g.bonk.exitGates.find(t=>t.open);b.x=gate.x+gate.direction.x*4;b.z=gate.z+gate.direction.z*4;g.tick(1/30);
- assert.equal(g.bonk.route.key,'payon-forest');assert.ok(Math.hypot(a.x-b.x,a.z-b.z)<5);assert.equal(a.roTier,1);assert.equal(b.roTier,1);
+ const beforeTravelJob=a.roJobLevel;const gate=g.bonk.exitGates.find(t=>t.open);b.x=gate.x+gate.direction.x*4;b.z=gate.z+gate.direction.z*4;g.tick(1/30);
+ assert.equal(g.bonk.route.key,'payon-forest');assert.ok(Math.hypot(a.x-b.x,a.z-b.z)<5);assert.equal(a.roTier,0);assert.equal(b.roTier,0);assert.equal(a.roJobLevel,beforeTravelJob,'region travel does not grant job levels');
 });
 
 

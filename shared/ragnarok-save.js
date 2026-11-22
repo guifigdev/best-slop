@@ -1,3 +1,4 @@
+import {roJobLevelCap} from './ro-job-progression.js';
 import {RO_LEARNED_SKILL_LIMIT,roIsPassive} from './ro-skill-loadout.js';
 import {RO_LINEAGES} from './ragnarok-jobs.js';
 import {RO_EQUIPMENT} from './ragnarok-equipment.js';
@@ -24,6 +25,7 @@ export function validateRoCheckpoint(value){
   cleared=Array.isArray(value.clearedStages)?value.clearedStages.slice(0,value.activity==='tower'?99:3).filter(k=>own(BONK_STAGES,k)):[];if(cleared.length!==value.floor-1)return null;stageKey=own(BONK_STAGES,value.stageKey)?value.stageKey:'grove';
  }
  const u=value.hero;if(!u||!num(u.level,1,150)||!Number.isInteger(u.level)||!num(u.xp,0,20000)||!num(u.gold,0,1e7)||!num(u.roTier,0,3)||!Number.isInteger(u.roTier)||!num(u.attributePoints,0,10000)||!num(u.hp,0,1e6)||!u.attributes||attrs.some(k=>!Number.isInteger(u.attributes[k])||!num(u.attributes[k],1,99)))return null;
+ if(u.roJobLevel!==undefined&&(!Number.isInteger(u.roJobLevel)||!num(u.roJobLevel,1,roJobLevelCap(u.roTier)))||u.roJobXp!==undefined&&!num(u.roJobXp,0,20000))return null;
  if(u.bonkPendingLevels!==undefined&&(!Number.isInteger(u.bonkPendingLevels)||!num(u.bonkPendingLevels,0,300)))return null;
  const weapons=ranked(u.bonkBuild?.weapons,{basic:{},...BONK_WEAPONS},8,RO_LEARNED_SKILL_LIMIT),tomes=ranked(u.bonkBuild?.tomes,BONK_TOMES,8,4),relics=ranked(u.bonkBuild?.relics,BONK_RELICS,999,32);if(!weapons||!tomes||!relics)return null;
  let skillAuto=null;if(u.bonkSkillAuto!==undefined){if(!u.bonkSkillAuto||Array.isArray(u.bonkSkillAuto)||typeof u.bonkSkillAuto!=='object')return null;const entries=Object.entries(u.bonkSkillAuto);if(entries.length>RO_LEARNED_SKILL_LIMIT||entries.some(([key,enabled])=>!Object.hasOwn(weapons,key)||typeof enabled!=='boolean'))return null;skillAuto=Object.fromEntries(entries);}
@@ -32,7 +34,7 @@ export function validateRoCheckpoint(value){
  for(const item of u.roInventory){if(!item||typeof item.id!=='string'||item.id.length>100||ids.has(item.id)||!own(RO_EQUIPMENT,item.key))return null;ids.add(item.id);inventory.push({id:item.id,key:item.key,cards:[]});}
  const equipment={};for(const slot of ['weapon','offhand','armor','garment','shoes','accessory','head']){const id=u.roEquipment?.[slot];equipment[slot]=ids.has(id)?id:null;}
  const pending=[];if(u.roUnclaimed!==undefined&&!Array.isArray(u.roUnclaimed))return null;if((u.roUnclaimed||[]).length>128)return null;for(const item of u.roUnclaimed||[]){if(!item||typeof item.id!=='string'||item.id.length>100||ids.has(item.id)||!own(RO_EQUIPMENT,item.key))return null;ids.add(item.id);pending.push({id:item.id,key:item.key,cards:[]});}
- return {version:1,lineage:value.lineage,activity:value.activity,seed:Math.floor(value.seed),floor:value.floor,stageKey,clearedStages:cleared,...route,hero:{level:u.level,bonkPendingLevels:u.bonkPendingLevels||0,mana:num(u.mana,0,1e6)?u.mana:50+u.attributes.int*8,xp:u.xp,gold:u.gold,roTier:u.roTier,attributePoints:Math.floor(u.attributePoints),attributes:Object.fromEntries(attrs.map(k=>[k,u.attributes[k]])),hp:u.hp,...(skillAuto?{bonkSkillAuto:skillAuto}:{}),...(skillSlots?{bonkSkillSlots:skillSlots}:{}),bonkBuild:{weapons,tomes,relics},roInventory:inventory,roEquipment:equipment,roUnclaimed:pending}};
+ return {version:1,lineage:value.lineage,activity:value.activity,seed:Math.floor(value.seed),floor:value.floor,stageKey,clearedStages:cleared,...route,hero:{level:u.level,bonkPendingLevels:u.bonkPendingLevels||0,mana:num(u.mana,0,1e6)?u.mana:50+u.attributes.int*8,xp:u.xp,gold:u.gold,roTier:u.roTier,roJobLevel:u.roJobLevel??Math.min(roJobLevelCap(u.roTier),1+Math.floor((u.level-1)*1.5)),roJobXp:u.roJobXp||0,attributePoints:Math.floor(u.attributePoints),attributes:Object.fromEntries(attrs.map(k=>[k,u.attributes[k]])),hp:u.hp,...(skillAuto?{bonkSkillAuto:skillAuto}:{}),...(skillSlots?{bonkSkillSlots:skillSlots}:{}),bonkBuild:{weapons,tomes,relics},roInventory:inventory,roEquipment:equipment,roUnclaimed:pending}};
 }
 export function createRoCheckpoint(game){
  if(game?.options?.bonkDebug===true)return null;

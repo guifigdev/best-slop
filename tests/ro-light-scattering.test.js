@@ -57,3 +57,9 @@ test('every game uses the shared compositor and edge smoothing adds no extra ren
  f.calls.length=0;assert.equal(f.effect.render({options:{mode:'campaign'}},0,{...f.options,preset:'smooth'}),true);assert.equal(draws(f).length,3);assert.equal(f.effect.stats().extraDrawCalls,2);
  }finally{f.effect.dispose();}
 });
+
+test('top-down coliseum shafts sample the real sun shadow map within the existing two-pass budget and turn off at night',()=>{
+ const f=fixture(),texture=new T.Texture(),light={castShadow:true,target:{position:new T.Vector3()},shadow:{map:{texture},matrix:new T.Matrix4()}};
+ try{const options={...f.options,volumetric:true,shadowLight:light,sunDirection:new T.Vector3(0,1,1).normalize(),weatherStrength:.68};assert.equal(f.effect.render({options:{mode:'campaign'}},0,options),true);const calls=draws(f);assert.equal(calls.length,3);const uniforms=calls[1].material.uniforms;assert.equal(uniforms.tShadow.value,texture);assert.equal(uniforms.volumetric.value,1);assert.equal(uniforms.sampleCount.value,12);assert.equal(calls[2].material.uniforms.halo.value,0);assert.equal(f.effect.stats().extraDrawCalls,2);assert.ok(f.effect.stats().intensity<.7);assert.match(calls[1].material.fragmentShader,/unpackRGBAToDepth/);assert.match(calls[1].material.fragmentShader,/inverseProjection/);f.calls.length=0;assert.equal(f.effect.render({options:{mode:'campaign'}},0,{...options,day:0}),false);assert.equal(f.calls.length,0);
+ }finally{f.effect.dispose();texture.dispose();}
+});

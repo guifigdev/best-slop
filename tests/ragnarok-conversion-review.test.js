@@ -37,9 +37,9 @@ test('The tower does not clear after the first Beelzebub form while its true for
 test('Replacing a class weapon changes gear bonuses while preserving the characteristic class attack',()=>{
  const{g,u}=setup();const before=roBasicAttack(u),bow=createRoEquipment('bow','review-bow');u.roInventory.push(bow);assert.ok(g.command('review',{type:'bkEquip',itemId:bow.id,slot:'weapon'}));assert.deepEqual(roBasicAttack(u),before);
 });
-test('Tower transitions retain the developed job, while adventure regions unlock the next class',()=>{
+test('Both activities retain the developed job until the player chooses a class evolution',()=>{
  const{g,u}=setup({bonkActivity:'tower'});g.command('review',{type:'bkReady'});advanceRoJob(u,2);g.bonk.clearedStages=Array(24).fill('grove');g.bonk.stage='cleared';assert.ok(g.command('review',{type:'bkNext'}));assert.equal(u.roTier,2);
- g.bonk.activity='adventure';g.bonk.clearedStages=['grove','payon','crypt'];g.bonk.stage='cleared';assert.ok(g.command('review',{type:'bkNext',stageKey:'forge'}));assert.equal(u.roTier,3);
+ g.bonk.activity='adventure';g.bonk.clearedStages=['grove','payon','crypt'];g.bonk.stage='cleared';assert.ok(g.command('review',{type:'bkNext',stageKey:'forge'}));assert.equal(u.roTier,2);
 });
 test('Separate activity entrances retain their floor positions and share the latest developed character',()=>{
  const{g,u}=setup();g.command('review',{type:'bkReady'});g.bonk.clearedStages=['grove'];g.bonk.map.stageKey='payon';u.level=8;const adventure=createRoCheckpoint(g);let progress=saveRoCharacter(null,{id:'both-activities',name:'Review',lineage:u.roLineage,checkpoint:adventure,updatedAt:1});

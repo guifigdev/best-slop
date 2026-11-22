@@ -9,7 +9,7 @@ test('normal characters and tower characters share persistent visual presets and
 });
 
 test('visual panel exposes five shaders, range controls and the actual sun-facing limitation',()=>{
- const html=roVisualPanelMarkup({preset:'cinematic',intensity:1.2});assert.match(html,/role="dialog" aria-modal="true"/);assert.match(html,/<option value="cinematic" selected>Cinema suave/);assert.equal((html.match(/<option /g)||[]).length,5);assert.match(html,/data-bk-visual-intensity/);assert.match(html,/max="1.5"/);assert.match(html,/120%/);assert.match(html,/olhando para o sol entre as árvores/);assert.match(html,/desaparecem naturalmente/);assert.match(html,/não alteram dano/);assert.doesNotMatch(html,/GM|debug/);
+ const html=roVisualPanelMarkup({preset:'cinematic',intensity:1.2});assert.match(html,/role="dialog" aria-modal="true"/);assert.match(html,/<option value="cinematic" selected>Cinema suave/);assert.equal((html.match(/<option /g)||[]).length,5);assert.match(html,/data-bk-visual-intensity/);assert.match(html,/max="1.5"/);assert.match(html,/120%/);assert.match(html,/olhando para o sol entre as árvores/);assert.match(html,/desaparecem quando ele sai da tela/);assert.match(html,/não alteram dano/);assert.doesNotMatch(html,/GM|debug/);
 });
 
 test('visual dialog pauses movement and returns without consuming a level-up offer or changing combat commands',()=>{

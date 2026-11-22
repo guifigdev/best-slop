@@ -1,3 +1,4 @@
+import {refineStarterSurfaces,starterGarmentRelief} from './starter-surface-detail.js';
 // Independent faction builders. Stable Castle Fight identity keys choose these
 // original vertex-colour models; combat heroes and animal NPCs keep their art.
 const palettes=Object.freeze({
@@ -52,7 +53,7 @@ export function castleBuilderSpec(key){
   body(c.skin,c.skin);b(0,1.15,.35,.21,.69,.17,0x4d5044);for(const side of [-1,1]){b(side*.37,1.65,-.06,.16,.81,.72,c.skin);b(side*.68,1.18,.05,.24,.87,.28,c.skin);b(side*.8,1.48,.04,.17,.46,.21,c.skin);b(side*.94,1.71,.04,.35,.15,.2,c.skin);b(side*.5,.22,.25,.55,.19,.48,0x625c50);b(side*.44,2.18,-.11,.17,.8,.22,c.skin);b(side*.67,2.47,-.1,.53,.17,.26,c.skin);}b(0,2.36,-.02,1.25,.52,.92,c.hair);b(-.49,2.57,-.04,.68,.35,.66,0x6f6682);b(.5,2.59,-.03,.7,.39,.7,0xa18bae);b(0,2.76,-.04,.64,.25,.59,0xb3a0ba);eyes(1.85,.46,0xcab8e5);scroll(-.86);b(.81,1.02,.27,.12,.98,.13,c.skin);b(.81,1.58,.27,.65,.26,.38,c.metal);
  }
  const height=Math.max(...boxes.map(p=>p[1]+p[4]/2),...legs.map(p=>p.y+p.h/2));
- const spec=Object.freeze({key,theme:'castle-builder',boxes:Object.freeze(boxes.map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze(wings),fur:c.skin,muzzle:c.skin,height,eyeLine});cache.set(key,spec);return spec;
+ starterGarmentRelief(boxes,{cloth:c.cloth,trim:c.trim,hair:c.hair,skin:c.skin});const spec=Object.freeze({key,theme:'castle-builder',boxes:Object.freeze(refineStarterSurfaces(boxes).map(p=>Object.freeze(p))),legs:Object.freeze(legs.map(p=>Object.freeze(p))),wings:Object.freeze(wings),fur:c.skin,muzzle:c.skin,height,eyeLine});cache.set(key,spec);return spec;
 }
 export function buildCastleBuilderModel(unit,body,voxel){const spec=castleBuilderSpec(unit?.castleBuilderKey);if(!spec)return null;for(const part of spec.boxes)voxel(body,...part);return spec;}
 const shade=(color,tint)=>'#'+[16,8,0].map(shift=>Math.round(((color>>shift)&255)*tint).toString(16).padStart(2,'0')).join('');

@@ -8,7 +8,7 @@ test('all ten faction builders have independent original voxel silhouettes and p
  const silhouettes=new Set(),portraits=new Set(),keys=new Set();
  for(const [key,profile]of Object.entries(CASTLE_BUILDERS)){
   const unit={hero:profile.hero,castleBuilderKey:key,castleBuilder:true},boxes=[],m=buildCastleBuilderModel(unit,{},(_body,...box)=>boxes.push(box));
-  assert.equal(m,castleBuilderSpec(key));assert.ok(Object.isFrozen(m));assert.equal(m.theme,'castle-builder');assert.ok(m.height>2&&m.eyeLine>1&&m.eyeLine<m.height);assert.ok(boxes.length>20&&boxes.length<=90);assert.equal(m.legs.length,key==='turtle'?0:2);assert.equal(m.wings.length,0);assert.deepEqual(boxes,m.boxes);
+  assert.equal(m,castleBuilderSpec(key));assert.ok(Object.isFrozen(m));assert.equal(m.theme,'castle-builder');assert.ok(m.height>2&&m.eyeLine>1&&m.eyeLine<m.height);assert.ok(boxes.length>20&&boxes.length<=330);assert.equal(m.legs.length,key==='turtle'?0:2);assert.equal(m.wings.length,0);assert.deepEqual(boxes,m.boxes);
   for(const box of boxes){assert.ok(box.every(Number.isFinite));assert.ok(box.slice(3,6).every(n=>n>0));assert.ok(box[6]>=0&&box[6]<=0xffffff);}
   for(const p of m.legs)assert.ok([p.x,p.y,p.z,p.w,p.h,p.d,p.color].every(Number.isFinite));
   silhouettes.add(JSON.stringify(boxes));const svg=castleBuilderPortrait(key);portraits.add(svg);assert.match(svg,/<svg/);assert.match(svg,/castle-builder-portrait/);assert.doesNotMatch(svg,/NaN|undefined|<image|<script|href=/);assert.equal(castleBuilderPortrait(key),svg);

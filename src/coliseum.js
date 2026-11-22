@@ -36,7 +36,7 @@ export function createColiseum(scene,tiles,environment,sun,base,material,groundD
   for(const e of state?.effects||[]){if(seen.has(e.id))continue;seen.add(e.id);if(['critical','fireball','stomp','thunder','levelup','bonus'].includes(e.type))cheerUntil=Math.max(cheerUntil,time+(e.type==='critical'?1.4:2.3));}if(seen.size>5000)seen.clear();
   const frame=Math.floor(time*8),mode=time<cheerUntil?'cheer':'idle';if(frame!==lastFrame||mode!==lastMode){lastFrame=frame;lastMode=mode;for(const [key,mesh]of Object.entries(parts)){mesh.instanceMatrix.array.set(frames[mode][((frame%8)+8)%8][key]);mesh.instanceMatrix.needsUpdate=true;}}
   hazards.update(state?.zones||a.zones.map((zone,i)=>({...zone,id:key+i})),time);
-  fire.update(time,{enabled:key==='volcano'&&!expanded,zones:state?.zones||a.zones});
+  fire.update(time,{enabled:key==='volcano'&&!expanded,zones:state?.zones||a.zones,seed:state?.worldSeed||1937});
   if(moat.root.visible)moat.update(time);
   if(!expanded)weather.update(key,time,state?.zones||a.zones);visibility();
  }
