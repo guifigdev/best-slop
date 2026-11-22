@@ -123,3 +123,9 @@ Na Forja de Muspelheim, um canal animado contorna o limite externo do campo e te
 ## Distribuição de objetos na arena
 
 Árvores, pedras e runas passam a usar amostragem uniforme em toda a área útil do coliseu, recortada pelo mesmo quadrado de cantos arredondados do movimento. Foi removido o anel central de 4,8–8,2m. A quantidade permanece dez objetos por campo; o afastamento mínimo entre centros aumenta para 3,25m e há margem para circulação junto à borda. O centro de entrada, as fachadas e o acesso das lojas, os perigos do bioma e os corpos de unidades vivas ficam livres. O terreno é igual nas arenas privadas dos competidores, varia por onda e usa uma nova semente em cada partida iniciada pela interface ou sala online. O plantio ao entrar no PvP também respeita as posições finais dos heróis. As margens das lanes continuam seguindo os caminhos e as marcações de seus mapas.
+
+## Bash e leitura do ataque de espada
+
+O estudo usa a silhueta do [Knight oficial](https://ragnarokonline.gungho.jp/gameguide/character/swordman/knight.html), os quadros de ataque do sprite do Knight e o mapeamento do Bash (skill 5 → hit effect 1) disponibilizados pelo [renderizador ragassets](https://github.com/adsonpleal/ragassets). O impacto original contém raios curtos de `lens1/lens2`, com desaparecimento rápido. A pose voxel e os pixels do efeito são autorais; os sprites consultados permanecem apenas nas referências locais de revisão.
+
+A espada prepara acima do ombro, desce rapidamente e recupera com inclinação do tronco. O Bash acrescenta um clarão no alvo, separado do rastro. Ambos continuam legíveis com câmera alta; o impacto fica centralizado e deslocado para a frente da superfície do alvo para evitar desaparecer dentro dele. A mudança é visual. Alcance, acerto, dano e recarga continuam na simulação. O limite permanece 64 eventos e oito lotes de desenho; os buffers comportam até 128 quads para os pares de corte e impacto e um atlas adicional de 192 KiB.
