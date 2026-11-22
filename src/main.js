@@ -90,6 +90,7 @@ import './skill-shop.css';
 import './line-context.css';
 import {installMobileHUD} from './mobile-hud.js';
 import './mobile.css';
+import './ro-mobile-hud.css';
 const $=id=>document.getElementById(id);
 document.querySelector('#app').innerHTML=`
 <header class="topbar"><div class="brand"><span class="brandmark">${icon('avatar')}</span><div><strong>CUSTOM HERO</strong><small>O PÁTIO DOS NOVE REINOS</small></div></div><div class="toplinks"><span class="tag">SAGA 01</span><span class="status"><i class="dot"></i><span id="connection">Treino solo</span></span><button class="secondary" id="hall">Hall da Fama</button><button class="secondary" id="loot">Espólios <span id="loot-count">0</span></button><button class="secondary" id="scoreboard">Competição</button><button class="secondary" id="maps">Mapas</button><button class="secondary" id="help">Guia</button><button class="secondary" id="newgame">Nova partida</button></div></header>

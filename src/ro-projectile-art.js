@@ -25,7 +25,7 @@ export function roProjectileParts(shot,time=0){
  }else{
   // Physical arrows retain a visible head, shaft and fletching.
   put(0,0,1.25,.075,.075,.80,palette[2]);put(.40,0,1.25,.20,.10,.23,palette[0]);put(.55,0,1.25,.10,.08,.13,palette[0]);put(-.32,0,1.25,.25,.06,.19,palette[1]);put(-.32,0,1.25,.06,.25,.19,palette[1]);
-  for(let i=0;i<3;i++)put(-.60-i*.20,0,1.25,.055-i*.01,.055-i*.01,.14,palette[1]);
+  for(let i=0;i<3;i++)put(-.60-i*.31,0,1.25,.10-i*.02,.10-i*.02,.28,palette[i===0?0:1]);
  }
  return parts;
 }

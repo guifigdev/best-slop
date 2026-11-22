@@ -86,18 +86,33 @@ export function roAttackFrames(value='blade'){
     }
    }
    else if(motion==='daggerStreaks'){
-    // Two short, separate dagger glints. Their staggered heads suggest the two
-    // hands without drawing literal giant daggers over the character.
-    for(let hand=0;hand<2;hand++){const progress=clamp((p-(hand?.10:0))/.61,0,1),head=.34+progress*.46,tail=head-.23,side=hand?1:-1,path=yy=>side*(.23+(yy-.5)*.12),dist=Math.abs(sx-path(z));if(z>tail&&z<head){const edge=Math.min(1,(z-tail)/.06,(head-z)/.035);if(dist<.025)merge(ink(244,245*edge));else if(dist<.052)merge(ink(157,225*edge));else if(dist<.078)merge(ink(74,205*edge));else if(dist<.10)merge(ink(220,35*edge*(1-(dist-.078)/.022)));}}
+    // Two independently timed curved cuts, with silver cores and mint edges.
+    for(let hand=0;hand<2;hand++){const progress=clamp((p-(hand?.10:0))/.53,0,1),head=.87-progress*.66,tail=Math.min(.91,head+.40),side=hand?1:-1,path=yy=>side*(.16+.54*Math.sin(clamp((yy-.12)/.83,0,1)*Math.PI)),d=Math.abs(sx-path(z)),taper=Math.sin(clamp((z-head)/(tail-head||1),0,1)*Math.PI),width=.028+.072*taper;if(z>head&&z<tail){if(d<width*.45)merge([239,255,250,Math.round(248*fade)]);else if(d<width)merge([135,218,210,Math.round(212*fade)]);else if(d<width+.035)merge([99,149,188,Math.round(80*fade)]);}}
    }
    else if(family==='blade'){pixel=arc();merge(weapon());}
-   else if(family==='dagger'){pixel=arc(sweep,-.14,.72);merge(arc(clamp((sweep-.15)/.85,0,1),-.31,.68,true));merge(weapon(sweep,-.14));merge(weapon(clamp((sweep-.15)/.85,0,1),-.31,true));}
-   else if(family==='impact'){pixel=arc(sweep,-.08,1.55);merge(weapon(sweep,-.04,false,true));if(p>.27)for(let j=0;j<7;j++){const a=(j-3)*.17,reach=.69+.15*sweep,xx=Math.sin(a)*reach,zz=Math.cos(a)*reach,d=segment(sx,z,xx,zz,xx+Math.sin(a)*.13,zz+.08);if(d<.026)merge(ink(244,220));}}
-   else if(family==='fist'){const combo=Math.min(2,Math.floor(sweep*3)),cx=[-.19,.19,0][combo],cy=[.44,.58,.73][combo],d=Math.hypot((sx-cx)*1.05,z-cy),rim=.18+.025*Math.sin(sweep*Math.PI);if(Math.abs(sx)<z&&r<.97){if(d<rim&&d>rim-.055)pixel=ink(d>rim-.015?45:242);if(Math.abs(sx-cx)<.105&&Math.abs(z-cy)<.075)pixel=ink(Math.abs(sx-cx)>.082?46:205);for(let j=0;j<4;j++)if(Math.abs(sx-cx-(j-1.5)*.046)<.018&&z>cy&&z<cy+.09)pixel=ink(250);for(let side of [-1,1])if(segment(sx,z,cx+side*.11,cy-.14,cx+side*.23,cy-.32)<.025)merge(ink(215,190));}}
+   else if(family==='dagger'){pixel=arc(sweep,-.03,.68);merge(arc(clamp((sweep-.08)/.92,0,1),-.18,.62));merge(arc(clamp((sweep-.16)/.84,0,1),-.33,.58));}
+   else if(family==='impact'){
+    pixel=arc(sweep,-.08,1.8);
+    const cy=.66,rr=Math.hypot(sx,(z-cy)*1.4),radius=.10+sweep*.31;
+    if(p>.18){if(rr<.09*(1-p))merge(ink(255,255));if(Math.abs(rr-radius)<.035)merge(ink(236,210));for(let j=0;j<9;j++){const a=j*Math.PI*2/9,xx=Math.sin(a)*radius,yy=cy+Math.cos(a)*radius*.65;if(segment(sx,z,xx,yy,xx+Math.sin(a)*.16,yy+Math.cos(a)*.11)<.024)merge(ink(253,230));}}
+   }
+   else if(family==='fist'){
+    const combo=Math.min(2,Math.floor(sweep*3)),cx=[-.25,.25,0][combo],cy=.35+sweep*.38,rr=Math.hypot(sx-cx,(z-cy)*1.7),radius=.13+.13*sweep;
+    if(Math.abs(sx)<z&&r<.98){if(rr<radius*.58)pixel=[244,253,255,Math.round(245*fade)];else if(rr<radius)pixel=[147,205,233,Math.round(205*fade)];else if(rr<radius+.04)pixel=ink(250,220);for(const side of [-1,1])if(segment(sx,z,cx+side*.09,cy-.04,cx+side*.27,cy-.29)<.033)merge(ink(245,210));for(let j=0;j<6;j++){const a=j*Math.PI/3;if(segment(sx,z,cx+Math.sin(a)*radius,cy+Math.cos(a)*radius*.58,cx+Math.sin(a)*(radius+.13),cy+Math.cos(a)*(radius+.13)*.58)<.018)merge(ink(255,220));}}
+   }
    else if(family==='arrow'){const center=.33+sweep*.43,head=Math.abs(sx)*.55+Math.abs(z-center);if(Math.abs(sx)<.055&&z>center-.43&&z<center)pixel=ink(Math.abs(sx)>.032?48:232);if(z<center+.13&&z>center-.12&&head<.15)pixel=ink(head>.115?44:head<.065?255:194);for(let side of [-1,1])if(segment(sx,z,side*.018,center-.27,side*.20,center-.42)<.04)merge(ink(248));if(p<.45){const bow=Math.abs(Math.hypot(sx*1.1,z-.33)-.28);if(z<.36&&bow<.03)merge(ink(194));if(segment(sx,z,-.24,.23,.24,.23)<.013)merge(ink(250));}if(Math.abs(sx)<.08&&z>center-.6&&z<center-.44)merge(ink(170,140));}
-   else if(family==='cast'){const reach=.30+sweep*.32,rr=Math.hypot(sx,z-reach);if(rr>.14&&rr<.21)pixel=ink(rr<.16||rr>.19?45:224);for(let j=0;j<5;j++){const a=(j-2)*.38,cx=Math.sin(a)*(.17+sweep*.4),cy=reach+Math.cos(a)*.13,d=segment(sx,z,cx,cy,cx*.5,cy-.24);if(d<.034)merge(ink(j%2?200:255));}if(Math.abs(sx+.23)<.028&&z>.13&&z<.61)merge(ink(205));if(Math.abs(sx+.23)+Math.abs(z-.65)<.12)merge(ink(rr>.18?251:184));if(segment(sx,z,-.22,reach,.22,reach)<.025||segment(sx,z,0,reach-.17,0,reach+.17)<.025)merge(ink(252));}
+   else if(family==='cast'){
+    const cy=.51,rr=Math.hypot(sx,(z-cy)*1.75),radius=.30+sweep*.13;
+    if(rr<.105)pixel=ink(255,250);else if(rr<.17)pixel=ink(210,190);if(Math.abs(rr-radius)<.028||Math.abs(rr-.62)<.018)merge(ink(237,200));
+    for(let j=0;j<6;j++){const a=j*Math.PI/3+frame*.075,x=Math.sin(a)*radius,y=cy+Math.cos(a)*radius*.55;if(segment(sx,z,x,y,x*1.40,cy+(y-cy)*1.40)<.019)merge(ink(252,230));}
+    for(const side of [-1,1])if(segment(sx,z,side*.18,.42,side*.57,.15)<.025)merge(ink(225,180));
+   }
    else if(family==='music'){for(let note=0;note<3;note++){const cx=(note-1)*.32+Math.sin(sweep*2+note)*.04,cy=.31+sweep*.3+(note%2)*.16,head=((sx-cx)/.13)**2+((z-cy)/.07)**2;if(head<1.35)merge(ink(head>1?43:246));if(Math.abs(sx-cx-.10)<.025&&z>cy&&z<cy+.24)merge(ink(235));if(segment(sx,z,cx+.10,cy+.24,cx+.25,cy+.19)<.028)merge(ink(230));}for(let j=0;j<3;j++)if(segment(sx,z,-.58+j*.04,.33+sweep*.18+j*.08,.58-j*.04,.35+sweep*.18+j*.08)<.014)merge(ink(178,140));}
    else if(family==='flask'){const cy=.28+sweep*.43,xx=sx+Math.sin(sweep*Math.PI)*.08,body=Math.abs(xx)<.23&&Math.abs(z-cy)<.16,neck=Math.abs(xx)<.075&&z>cy+.12&&z<cy+.28;if(body||neck){const edge=Math.abs(xx)>.195||Math.abs(z-cy)>.13;pixel=ink(edge?43:Math.abs(xx)<.10&&z<cy+.03?207:156,edge?245:235);}if(Math.abs(xx)<.10&&z>cy+.26&&z<cy+.31)merge(ink(250));if(Math.abs(xx+.12)<.025&&z>cy-.06&&z<cy+.07)merge(ink(255));for(let j=0;j<5;j++)if(Math.hypot(xx+(j%2-.5)*.18,z-cy+.22+j*.05)<.045)merge(ink(219,190));}
+   if(family==='arrow'&&motion==='standard'){if(Math.abs(sx)<.025&&z>.06&&z<.75)merge(ink(250,200));for(const side of [-1,1]){if(segment(sx,z,side*.11,.13,side*.045,.58)<.025)merge(ink(211,180));}const rr=Math.hypot(sx*1.3,(z-.22)*2);if(p<.45&&Math.abs(rr-(.28+p*.45))<.025)merge(ink(245,190));}
+   if(family==='music'){for(let j=0;j<3;j++){const wave=.34+j*.10+Math.sin(sx*5-p*8+j)*.045;if(Math.abs(sx)<.79&&Math.abs(z-wave)<.017)merge([j%2?205:155,223,255,Math.round(185*fade)]);}}
+   if(family==='flask'&&p>.25){for(let j=0;j<8;j++){const a=j*Math.PI/4+frame*.046,x=Math.sin(a)*(.22+sweep*.25),y=.64+Math.cos(a)*(.10+sweep*.12),rr=Math.hypot(sx-x,(z-y)*1.7);if(rr<.025+(j%2)*.014)merge([205,248,151,Math.round(235*fade)]);}}
+   if(family==='cast'&&motion!=='standard'){const rr=Math.hypot(sx,(z-.5)*1.8),radius=.48+p*.21;if(Math.abs(rr-radius)<.015)merge(ink(230,90));for(let j=0;j<5;j++){const a=j*Math.PI*2/5+frame*.031,x=Math.sin(a)*radius,y=.5+Math.cos(a)*radius*.5;if(Math.hypot(sx-x,(z-y)*1.7)<.023)merge(ink(255,220));}}
    if(motion==='standard'&&(family==='blade'||family==='dagger'||family==='impact'||family==='fist')){if(Math.abs(sx)>z||r>.98)pixel=null;}
    if(!pixel||pixel[3]<1)continue;const at=(y*(N*F)+frame*N+x)*4;data.set(pixel,at);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);count++;
   }
@@ -116,7 +131,7 @@ export function roAttackPlacement(event,profile,age,heightAt=()=>0,source){
  if(!Number.isFinite(x)||!Number.isFinite(z))return null;
  const travel=(profile.forwardOffset||0)+(profile.melee||profile.stationary?0:Math.min(Math.max(0,profile.range-profile.visualRange),Math.max(0,age)*(profile.travelSpeed||0))),c=Math.cos(yaw),s=Math.sin(yaw),vertical=profile.plane==='vertical',width=profile.width,length=vertical?profile.verticalHeight:profile.visualRange,centered=profile.centered&&!vertical;
  const px=x+s*travel-(centered?s*length*.5:0),pz=z+c*travel-(centered?c*length*.5:0),g=(x,z)=>{const n=heightAt(x,z);return Number.isFinite(n)?n:0;},ground=g(px,pz),y=ground+profile.height,rightSlope=vertical?0:(g(px+c*width/2,pz-s*width/2)-g(px-c*width/2,pz+s*width/2))/width,forwardSlope=vertical?0:(g(px+s*length,pz+c*length)-ground)/length;
- return{x:px,y,z:pz,yaw,width,length,vertical,billboard:profile.motion==='overhead',ribbon:profile.motion==='overhead',rightSlope,forwardSlope,frame:Math.min(F-1,Math.floor(clamp(age/profile.duration,0,.999999)*F))};
+ return{x:px,y,z:pz,yaw,width,length,vertical,billboard:profile.plane==='vertical',ribbon:profile.motion==='overhead',rightSlope,forwardSlope,frame:Math.min(F-1,Math.floor(clamp(age/profile.duration,0,.999999)*F))};
 }
 
 export function roBashImpactPlacement(event,profile,age,heightAt=()=>0){

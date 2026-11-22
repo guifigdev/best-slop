@@ -40,9 +40,9 @@ export function createSkillHoverCard({root,getDetails}){
  const hide=()=>{anchor?.removeAttribute('aria-describedby');anchor=null;pinned=false;if(card)card.hidden=true;signature='';};
  function update(){if(!anchor?.isConnected||!anchor.getClientRects().length){hide();return;}const d=getDetails(anchor.dataset.skillInspect);if(!d){hide();return;}if(!card){card=document.createElement('aside');card.id='skill-hover-card';card.className='skill-hover-card';card.setAttribute('role','tooltip');document.body.append(card);}const html=skillHoverCardMarkup(d);if(html!==signature){card.innerHTML=html;signature=html;}card.hidden=false;anchor.setAttribute('aria-describedby',card.id);const r=anchor.getBoundingClientRect(),c=card.getBoundingClientRect(),left=Math.max(8,Math.min(innerWidth-c.width-8,r.left+r.width/2-c.width/2)),top=Math.max(8,Math.min(innerHeight-c.height-8,r.top-c.height-12));card.style.left=left+'px';card.style.top=top+'px';}
  const show=node=>{if(!node)return;anchor?.removeAttribute('aria-describedby');anchor=node;update();};
- const over=e=>{if(!pinned)show(e.target.closest?.('[data-skill-inspect]'));};
+ const over=e=>{if(e.pointerType==='touch')return;if(!pinned)show(e.target.closest?.('[data-skill-inspect]'));};
  const out=e=>{if(!pinned&&anchor&&!anchor.contains(e.relatedTarget))hide();};
- const focus=e=>show(e.target.closest?.('[data-skill-inspect]'));
+ const focus=e=>{if(globalThis.matchMedia?.('(hover: none)').matches)return;show(e.target.closest?.('[data-skill-inspect]'));};
  const blur=e=>{if(!pinned&&anchor&&!anchor.contains(e.relatedTarget))hide();};
  const click=e=>{const info=e.target.closest?.('[data-skill-info]');if(info){e.preventDefault();e.stopPropagation();const node=info.closest('[data-skill-inspect]');if(pinned&&anchor===node)hide();else{pinned=true;show(node);}}else if(anchor&&!anchor.contains(e.target))hide();};
  const key=e=>{if(e.key==='Escape')hide();};
