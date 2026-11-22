@@ -5,18 +5,19 @@ import {installCompetitionMenu,dungeonRoomSettingsMarkup} from '../src/competiti
 // Minimal event fixture: the assertions exercise the menu's returned network
 // options, persistence and party lock rather than duplicating mode rules.
 class Element {
- constructor(dataset={}){this.dataset=dataset;this.disabled=false;this.hidden=false;this.checked=false;this.textContent='';this.attrs={};this.handlers={};this.classes=new Set();this.classList={toggle:(c,value)=>{if(value)this.classes.add(c);else this.classes.delete(c);},contains:c=>this.classes.has(c)};}
- setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,fn){this.handlers[k]=fn;}insertAdjacentHTML(_where,html){this.html=(this.html||'')+html;}click(){if(!this.disabled)this.onclick?.();}replaceChildren(){this.html='';}before(){}set innerHTML(html){this.html=html;}get innerHTML(){return this.html||'';}
+ constructor(dataset={}){this.dataset=dataset;this.disabled=false;this.hidden=false;this.checked=false;this.textContent='';this.attrs={};this.handlers={};this.classes=new Set();this.classList={toggle:(c,value)=>{if(value)this.classes.add(c);else this.classes.delete(c);},contains:c=>this.classes.has(c),add:c=>this.classes.add(c),remove:c=>this.classes.delete(c)};}
+ append(...children){(this.children||=[]).push(...children);}prepend(...children){this.children=[...children,...(this.children||[])];}closest(){return this.parent||this;}setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,fn){this.handlers[k]=fn;}insertAdjacentHTML(_where,html){this.html=(this.html||'')+html;}click(){if(!this.disabled)this.onclick?.();}replaceChildren(){this.html='';}before(){}set innerHTML(html){this.html=html;}get innerHTML(){return this.html||'';}
 }
 function fixture(){
- const ids=Object.fromEntries(['arena-select','start','online','start-title','war-options','tower-options','party-section','party-code','party-status','party-create','party-join','party-queue','party-leave','line-format-info','line-format','castle-lanes','castle-format-info','castle-options','line-options','dungeon-options','bloody-options','dungeon-session','bloody-format'].map(id=>[id,new Element()]));ids['start-title'].nextElementSibling=new Element();
+ const ids=Object.fromEntries(['room','room-password','room-intent','arena-select','start','online','start-title','war-options','tower-options','party-section','party-code','party-status','party-create','party-join','party-queue','party-leave','line-format-info','line-format','castle-lanes','castle-format-info','castle-options','line-options','dungeon-options','bloody-options','dungeon-session','bloody-format'].map(id=>[id,new Element()]));ids['start-title'].nextElementSibling=new Element();ids['room-intent'].value='create';const modal=new Element();
  for(const [id,value]of [['team-size','2'],['team-count','5'],['clash-every','5'],['tower-limit','0']])ids[id]=Object.assign(new Element(),{value});
- const kinds=['survival','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
+ const kinds=['survival','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody','bonk'].map(gameKind=>new Element({gameKind})),modes=['campaign','tower','best','war','linewars','castlefight','treetag','warlock','kodotag','phasekiller','dungeon','bloody','bonk'].map(gameMode=>new Element({gameMode})),picker=new Element(),grid=new Element(),root=new Element(),groups={'line-format':[Object.assign(new Element(),{value:'ffa',checked:true}),Object.assign(new Element(),{value:'teams'})],'castle-lanes':[Object.assign(new Element(),{value:'2',checked:true}),Object.assign(new Element(),{value:'1'})]};
+ root.parent=modal;
  for(const [name,values]of Object.entries({'dungeon-session':['co-op','solo'],'bloody-format':['ffa','teams']}))groups[name]=values.map((value,i)=>Object.assign(new Element(),{value,checked:i===values.length-1}));
  for(const [name,inputs]of Object.entries(groups)){const cards=inputs.map(input=>{const card=new Element();card.querySelector=()=>input;return card;});ids[name].querySelectorAll=()=>cards;}
- root.querySelector=selector=>{if(selector==='.game-picker')return picker;if(selector==='.mode-grid')return grid;const checked=selector.match(/input\[name="([^"]+)"\]:checked/);if(checked)return groups[checked[1]].find(radio=>radio.checked);const mode=selector.match(/data-game-mode="([^"]+)"/);if(mode)return modes.find(b=>b.dataset.gameMode===mode[1]);throw Error('Unexpected selector '+selector);};
+ root.querySelector=selector=>{if(selector==='.game-picker')return picker;if(selector==='.mode-grid')return grid;const kind=selector.match(/data-game-kind="([^"]+)"/);if(kind)return kinds.find(b=>b.dataset.gameKind===kind[1]);const checked=selector.match(/input\[name="([^"]+)"\]:checked/);if(checked)return groups[checked[1]].find(radio=>radio.checked);const mode=selector.match(/data-game-mode="([^"]+)"/);if(mode)return modes.find(b=>b.dataset.gameMode===mode[1]);throw Error('Unexpected selector '+selector);};
  root.querySelectorAll=selector=>selector==='[data-game-mode]'?modes:selector==='[data-game-kind]'?kinds:selector==='.format-choices'?Object.keys(groups).map(name=>ids[name]):selector.startsWith('select,')?[...Object.values(groups).flat(),...modes,...kinds,...['team-size','team-count','clash-every','tower-limit','party-create','party-join','party-code'].map(id=>ids[id])]:[];
- return{ids,kinds,modes,root,groups,document:{createElement:()=>root,getElementById:id=>ids[id],querySelectorAll:()=>[]},select(group,value){for(const input of groups[group])input.checked=input.value===value;ids[group].onchange?.();ids[group].handlers.change?.();}};
+ let created=0;return{ids,kinds,modes,root,modal,groups,document:{createElement:()=>created++===0?root:new Element(),getElementById:id=>ids[id],querySelectorAll:()=>[]},select(group,value){for(const input of groups[group])input.checked=input.value===value;ids[group].onchange?.();ids[group].handlers.change?.();}};
 }
 test('native format cards preserve network options, defaults, cross-game choices and party locking',()=>{
  const f=fixture(),previous=globalThis.document;globalThis.document=f.document;
@@ -93,4 +94,17 @@ test('cooperative room configuration is compact for the host and authoritative r
  const html=dungeonRoomSettingsMarkup(room);assert.match(html,/data-room-capacity/);assert.match(html,/data-room-limit/);assert.match(html,/value="3" selected/);assert.match(html,/value="50" selected/);assert.equal((html.match(/<select /g)||[]).length,2);assert.doesNotMatch(html,/PvPvE|Dupla|Quarteto|Trio/);
  const guest=dungeonRoomSettingsMarkup({...room,isHost:false});assert.doesNotMatch(guest,/<select|data-room-save/);assert.match(guest,/3 jogadores/);assert.match(guest,/50 andares/);assert.match(guest,/Configuração do host/);
  assert.doesNotMatch(dungeonRoomSettingsMarkup({...room,started:true}),/<select|data-room-save/);assert.equal(dungeonRoomSettingsMarkup({...room,options:{mode:'castlefight'}}),'');
+});
+
+test('guests discover the host game by room code and cannot see game configuration or the solo start action',()=>{
+ const f=fixture(),previous=globalThis.document;globalThis.document=f.document;
+ try{
+  const selected=[],menu=installCompetitionMenu({connect(){},getSocket(){return null;},onGameChange:kind=>selected.push(kind)});
+  f.ids['room-intent'].value='join';f.ids['room-intent'].handlers.change();
+  assert.equal(f.modal.classList.contains('joining-room'),true);assert.equal(f.ids.start.hidden,true);assert.equal(f.ids.online.hidden,false);
+  menu.selectRoom({code:'FRIENDS',options:{game:'bonk',mode:'bonk'},players:2,capacity:4,protected:true});
+  assert.equal(menu.options().mode,'bonk');assert.equal(selected.at(-1),'bonk');assert.equal(f.modal.classList.contains('room-found'),true);assert.equal(f.ids.online.textContent,'Entrar na sala');
+  f.ids['room-intent'].value='create';f.ids['room-intent'].handlers.change();menu.resetRoom();
+  assert.equal(f.modal.classList.contains('joining-room'),false);assert.equal(f.ids.start.hidden,false);assert.equal(f.ids.online.textContent,'Criar sala online');
+ }finally{globalThis.document=previous;}
 });
