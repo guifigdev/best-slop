@@ -44,8 +44,8 @@ test('only verified source palette families declare variantOf; owl nobles retain
  assert.equal(byKey.get('tower_1295').variantOf,undefined);assert.equal(byKey.get('tower_1320').variantOf,undefined);assert.notEqual(shape('tower_1295'),shape('tower_1320'));
 });
 
-test('Classic Tower preserves100floors, source encounters, floor99 random groups and floor100 thorn composition',()=>{
- assert.equal(floors.length,100);assert.deepEqual(floors.map(f=>f.floor),Array.from({length:100},(_,i)=>i+1));assert.equal(ids.length,327);assert.equal(queued.length,186);frozen(floors);
+test('Classic Tower preserves101floors, source encounters, floor99 random groups and floor100 thorn composition',()=>{
+ assert.equal(floors.length,101);assert.deepEqual(floors.map(f=>f.floor),Array.from({length:101},(_,i)=>i+1));assert.equal(ids.length,328);assert.equal(queued.length,186);frozen(floors);
  for(const f of floors){for(const m of [...f.monsters,...(f.randomGroups?.pool||[]).flatMap(g=>g.monsters)]){assert.ok(ids.includes(m.sourceId));assert.ok(m.key&&Number.isInteger(m.count)&&m.count>0);}}
  assert.equal(floors[0].monsters.reduce((n,m)=>n+m.count,0),36);assert.ok(floors[4].monsters.some(m=>m.sourceId===1086&&m.count===1));
  const f99=floors[98];assert.equal(f99.monsters.length,0);assert.equal(f99.randomGroups.draws,7);assert.equal(f99.randomGroups.pool.length,30);assert.equal(f99.randomGroups.replacement,true);

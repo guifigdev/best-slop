@@ -1,4 +1,5 @@
 // One continuous, deterministic height field for simulation, props and renderer.
+import {roTowerHeightAt} from './ro-tower-layout.js';
 // The playable landscape is a patch of a larger relief, not a flat square island.
 export const RO_TERRAIN_VERSION=3;
 export const RO_TERRAIN_GRID=3.6;
@@ -24,7 +25,7 @@ function context(map){
 }
 
 export function roTerrainHeightAt(map,x,z){
- if(!map||!Number.isFinite(x)||!Number.isFinite(z))return 0;const c=context(map),step=RO_TERRAIN_GRID,ix=Math.floor(x/step+1e-9),iz=Math.floor(z/step+1e-9),tx=clamp(x/step-ix,0,1),tz=clamp(z/step-iz,0,1),vertex=(a,b)=>{const key=a+','+b;let value=c.vertices.get(key);if(value===undefined){value=c.final(a*step,b*step);c.vertices.set(key,value);}return value;},a=vertex(ix,iz),b=vertex(ix+1,iz),d=vertex(ix,iz+1);
+ if(!map||!Number.isFinite(x)||!Number.isFinite(z))return 0;if(map.tower)return roTowerHeightAt(map,x,z);const c=context(map),step=RO_TERRAIN_GRID,ix=Math.floor(x/step+1e-9),iz=Math.floor(z/step+1e-9),tx=clamp(x/step-ix,0,1),tz=clamp(z/step-iz,0,1),vertex=(a,b)=>{const key=a+','+b;let value=c.vertices.get(key);if(value===undefined){value=c.final(a*step,b*step);c.vertices.set(key,value);}return value;},a=vertex(ix,iz),b=vertex(ix+1,iz),d=vertex(ix,iz+1);
  // Same diagonal and barycentric interpolation as the detailed ground mesh.
  return tx+tz<=1?a+(b-a)*tx+(d-a)*tz:vertex(ix+1,iz+1)+(d-vertex(ix+1,iz+1))*(1-tx)+(b-vertex(ix+1,iz+1))*(1-tz);
 }

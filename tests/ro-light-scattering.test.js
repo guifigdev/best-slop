@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import {RO_LIGHT_SCATTERING_BUDGET as B,roScatteringSize,createRoLightScattering} from '../src/ro-light-scattering.js';
@@ -43,7 +44,7 @@ test('render size selection remains finite and bounded across aspect ratios and 
 
 
 test('solar shafts use a stronger configurable budget without extra render passes and zero strength removes the halo',()=>{
- const f=fixture();try{render(f);assert.equal(f.effect.stats().intensity,.7);f.effect.render(f.state,0,{...f.options,intensity:1.25});assert.equal(f.effect.stats().intensity,1.25);assert.equal(f.effect.stats().extraDrawCalls,2);f.effect.render(f.state,0,{...f.options,intensity:0});assert.equal(f.effect.stats().intensity,0);assert.equal(draws(f).at(-1).material.uniforms.halo.value,0);f.effect.render(f.state,0,{...f.options,intensity:10});assert.equal(f.effect.stats().intensity,1.5);}finally{f.effect.dispose();}
+ const f=fixture();try{render(f);assert.equal(f.effect.stats().intensity,.2);f.effect.render(f.state,0,{...f.options,intensity:1.25});assert.equal(f.effect.stats().intensity,1.25);assert.equal(f.effect.stats().extraDrawCalls,2);f.effect.render(f.state,0,{...f.options,intensity:0});assert.equal(f.effect.stats().intensity,0);assert.equal(draws(f).at(-1).material.uniforms.halo.value,0);f.effect.render(f.state,0,{...f.options,intensity:10});assert.equal(f.effect.stats().intensity,1.5);}finally{f.effect.dispose();}
 });
 
 
@@ -62,4 +63,29 @@ test('top-down coliseum shafts sample the real sun shadow map within the existin
  const f=fixture(),texture=new T.Texture(),light={castShadow:true,target:{position:new T.Vector3()},shadow:{map:{texture},matrix:new T.Matrix4()}};
  try{const options={...f.options,volumetric:true,shadowLight:light,sunDirection:new T.Vector3(0,1,1).normalize(),weatherStrength:.68};assert.equal(f.effect.render({options:{mode:'campaign'}},0,options),true);const calls=draws(f);assert.equal(calls.length,3);const uniforms=calls[1].material.uniforms;assert.equal(uniforms.tShadow.value,texture);assert.equal(uniforms.volumetric.value,1);assert.equal(uniforms.sampleCount.value,12);assert.equal(calls[2].material.uniforms.halo.value,0);assert.equal(f.effect.stats().extraDrawCalls,2);assert.ok(f.effect.stats().intensity<.7);assert.match(calls[1].material.fragmentShader,/unpackRGBAToDepth/);assert.match(calls[1].material.fragmentShader,/inverseProjection/);f.calls.length=0;assert.equal(f.effect.render({options:{mode:'campaign'}},0,{...options,day:0}),false);assert.equal(f.calls.length,0);
  }finally{f.effect.dispose();texture.dispose();}
+});
+
+test('atlas styles reuse the same scene depth and render targets while the original pixel grid stays unchanged',()=>{
+ const f=fixture();try{
+  const original=structuredClone(f.state);let target=null;
+  for(const [preset,index]of [['pixel',0],['retro',1],['chartogne',2],['smooth',3]]){
+   f.calls.length=0;assert.equal(f.effect.render(f.state,2,{...f.options,preset,day:0}),true);const list=draws(f),uniforms=list.at(-1).material.uniforms;
+   assert.equal(list.length,2);assert.equal(f.effect.stats().renderTargets,2);assert.equal(f.effect.stats().extraDrawCalls,1);assert.equal(uniforms.artStyle.value,index);assert.equal(uniforms.pixelGrid.value.x,preset==='pixel'?400:0);
+   assert.equal(uniforms.tDepth.value,list[0].target.depthTexture);assert.ok(uniforms.inverseProjection.value.equals(f.camera.projectionMatrixInverse));assert.ok(uniforms.cameraWorld.value.equals(f.camera.matrixWorld));if(target)assert.equal(list[0].target,target);target=list[0].target;
+  }
+  assert.deepEqual(f.state,original);
+ }finally{f.effect.dispose();}
+});
+
+
+test('original pixel plus ink preserves the approved four-tap contour exactly and never changes SP or simulation state',()=>{
+ const f=fixture();try{
+  f.state.units=[{id:1,mana:42,maxMana:100,cooldowns:{fireball:2}}];const before=structuredClone(f.state);
+  const ink=readFileSync(new URL('./fixtures/ro-ink-73261ea.glsl',import.meta.url),'utf8').trim();
+  assert.equal(f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:true}),true);
+  const uniforms=draws(f).at(-1).material.uniforms,shader=draws(f).at(-1).material.fragmentShader;
+  assert.equal(uniforms.outlines.value,1);assert.equal(uniforms.artStyle.value,0);assert.equal(uniforms.pixelGrid.value.x,400);assert.equal(uniforms.scattering.value,.2);
+  assert.ok(shader.includes('if(outlines>0.5){'+ink+'}'));assert.ok(shader.indexOf(ink)<shader.indexOf('#include <tonemapping_fragment>'));assert.ok(shader.includes('if(artStyle<0.5)return c;'));
+  const target=draws(f)[0].target;f.calls.length=0;f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:false});assert.equal(draws(f).at(-1).material.uniforms.outlines.value,0);assert.equal(draws(f)[0].target,target);assert.deepEqual(f.state,before);assert.equal(f.effect.stats().renderTargets,2);
+ }finally{f.effect.dispose();}
 });

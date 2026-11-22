@@ -16,7 +16,9 @@ function patchNode(node,next,keys){
   if(!next.hasAttribute(attribute.name))node.removeAttribute(attribute.name);
  }
  for(const attribute of [...next.attributes])if(node.getAttribute(attribute.name)!==attribute.value)node.setAttribute(attribute.name,attribute.value);
- patchChildren(node,next,keys);
+ // Account widgets and other mounted controllers own their child DOM. Moving
+ // or emptying an open select closes its native popup on every room snapshot.
+ if(!node.hasAttribute('data-ui-preserve'))patchChildren(node,next,keys);
 }
 export function patchChildren(parent,source,keys=DEFAULT_KEYS){
  const previous=[...parent.childNodes],used=new Set(),keyed=new Map();

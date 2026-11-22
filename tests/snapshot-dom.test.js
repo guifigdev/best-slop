@@ -18,6 +18,12 @@ const keys=['data-cf-build','data-cf-action'];
 const text=value=>new Node('#text',{text:value});
 const button=(key,value,attributes={})=>new Node('BUTTON',{'data-cf-build':key,...attributes},[text(value)]);
 
+test('independently mounted account selectors survive room updates without being detached',()=>{
+ const selector=new Node('SELECT',{'data-ro-character':''},[new Node('OPTION',{value:'saved'},[text('Mago')])]),account=new Node('DIV',{'data-ui-key':'account','data-ui-preserve':''},[selector]),root=new Node('DIV',{},[account,text('1 jogador')]);
+ for(let i=2;i<20;i++)patchChildren(root,new Node('DIV',{},[new Node('DIV',{'data-ui-key':'account','data-ui-preserve':''}),text(i+' jogadores')]));
+ assert.equal(root.childNodes[0],account);assert.equal(account.childNodes[0],selector);assert.equal(selector.parentNode,account);assert.equal(selector.childNodes[0].childNodes[0].nodeValue,'Mago');
+});
+
 test('HUD snapshots retain pressed buttons and their text nodes while costs and availability change',()=>{
  const current=button('factory','Faltam 20 de ouro',{disabled:''}),label=current.childNodes[0],handler=()=>{};current.onclick=handler;
  const root=new Node('DIV',{},[current]);

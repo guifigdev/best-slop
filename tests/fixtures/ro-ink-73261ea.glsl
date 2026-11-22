@@ -1,0 +1,1 @@
+float center=texture2D(tDepth,uv).r;float edge=0.0;for(int j=0;j<4;j++){vec2 dir=j==0?vec2(1.0,0.0):j==1?vec2(-1.0,0.0):j==2?vec2(0.0,1.0):vec2(0.0,-1.0);float d=texture2D(tDepth,uv+dir*texelSize*1.5).r;edge=max(edge,abs(d-center)/max(0.00003,1.0-center));}color*=1.0-smoothstep(0.025,0.10,edge)*0.65;

@@ -1,4 +1,4 @@
-import {CONSUMABLES,addConsumable,canCarryConsumable,consumePouch} from './consumables.js';
+import {consumePouch} from './consumables.js';
 import {CLASSIC_RO_AURAS,classicRagnarokMethods} from './classic-ragnarok-skills.js';
 import {BonkMethods} from './bonk.js';
 import {treeTagVision,kodoTagVision,filterExplorationSnapshot} from './exploration-vision.js';
@@ -102,16 +102,7 @@ export class Game {
    u.skillPoints--;if(!level){u.skills.push(c.skill);u.skillOrigins||={};u.skillOrigins[c.skill]='catalog';}u.skillLevels[c.skill]=next;this.refresh(u);return true;
   }
   if(c.type==='useConsumable'){const used=consumePouch(u,c.slot,this.time);if(!used)return false;this.fx(used.hp?'heal':'mana',u.x,u.z,{source:u.id,target:u.id,amount:used.hp||used.mana});return true;}
-  if(c.type==='item'){
-   const s=Object.hasOwn(ITEMS,c.item)?ITEMS[c.item]:null,stock=this.stockFor(u);
-   if(!s||!this.atShop(u,shopForItem(c.item))||u.gold<s.cost||!(stock[c.item]>0))return false;
-   if(Object.hasOwn(CONSUMABLES,c.item)){if(!addConsumable(u,c.item))return false;u.gold-=s.cost;stock[c.item]--;return true;}
-   const stack=s.consumable&&u.inventory.find(slot=>slot?.key===c.item&&!slot.xpValue&&slot.charges<3),empty=u.inventory.findIndex(slot=>!slot);
-   if(!stack&&empty===-1&&u.inventory.length>=6)return false;
-   u.gold-=s.cost;stock[c.item]--;
-   if(stack)stack.charges++;else{const slot={key:c.item,charges:1,...(!s.consumable?{level:1,invested:s.cost}:{})};if(empty>=0)u.inventory[empty]=slot;else u.inventory.push(slot);}
-   this.refresh(u);return true;
-  }
+  if(c.type==='item')return this.buyShopItem(u,c.item);
   if(c.type==='enchantItem'){
    if(!this.atShop(u,'enchanter')||!Number.isInteger(c.slot)||c.slot<0||c.slot>=6||!Object.hasOwn(ENCHANTMENTS,c.enchantment))return false;const slot=u.inventory[c.slot];if(!slot||!canEnchant(slot.key,c.enchantment)||slot.enchantment===c.enchantment)return false;const cost=enchantPrice(c.enchantment,slot.level||1);if(cost===null||u.gold<cost)return false;u.gold-=cost;slot.invested=(slot.invested??ITEMS[slot.key].cost)+cost;slot.enchantment=c.enchantment;this.refresh(u);return true;
   }

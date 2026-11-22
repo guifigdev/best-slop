@@ -1,4 +1,6 @@
 export function debugModeEnabled(search=globalThis.location?.search||''){
  return [...new URLSearchParams(search)].some(([key,value])=>key.toLowerCase()==='debug'&&value.toLowerCase()==='true');
 }
-export const DEBUG_SHADERS=Object.freeze({off:'Padrão',toon:'Ilustração · cores em faixas',ink:'Contornos de tinta',dither:'Pixel pontilhado · dithering',retro:'Retrô · paleta reduzida',warm:'Luz quente · fantasia',silver:'Prata · tons de cinza'});
+// The debug panel inspects the same visual styles as the normal menu. No
+// second stack of experimental overlays is left on top of the selected style.
+export const DEBUG_SHADERS=Object.freeze({off:'Estilo selecionado no menu Visual'});

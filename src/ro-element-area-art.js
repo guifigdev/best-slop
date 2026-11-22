@@ -1,14 +1,15 @@
 import * as T from 'three';
 import {roGroundAreas} from './ro-ground-area-art.js';
 import {RO_SKILLS} from '../shared/ragnarok-jobs.js';
+import {roFireImpactHandles} from './ro-fire-impact-art.js';
 
 export const RO_ELEMENT_AREA_BUDGET=Object.freeze({areas:12,particles:16,instances:192,drawCalls:1});
 const elements=['physical','fire','ice','holy','poison','dark','wind','lightning','water','earth','arcane'];
 export function roElementAreaParticles(state,time,heightAt=()=>0){
  const areas=roGroundAreas(state,time).filter(a=>!a.enemy&&a.skillKey!=='lg_earthdrive');
- for(const e of state?.effects||[])if(e.bonk&&['fireball','frostnova'].includes(e.type)&&e.radius>.5&&time-e.time>=0&&time-e.time<.65)areas.push({...e,element:e.element||(e.type==='fireball'?'fire':'ice')});
+ for(const e of state?.effects||[])if(e.bonk&&!roFireImpactHandles(e)&&['fireball','frostnova'].includes(e.type)&&e.radius>.5&&time-e.time>=0&&time-e.time<.65)areas.push({...e,element:e.element||(e.type==='fireball'?'fire':'ice')});
  const parts=[];for(const a of areas.slice(-12)){
-  const element=a.element||a.weapon?.element||RO_SKILLS[a.skillKey]?.element||'physical',kind=Math.max(0,elements.indexOf(element));if(['earth','physical'].includes(element))continue;
+  const element=a.element||a.weapon?.element||RO_SKILLS[a.skillKey]?.element||'physical',kind=Math.max(0,elements.indexOf(element));if(['fire','earth','physical'].includes(element))continue;
   const age=a.time===undefined?time:time-a.time,fade=a.time===undefined?.8:Math.min(1,(.75-age)*3),radius=a.radius||3;
   for(let i=0;i<16;i++){
    const theta=i*2.39996,life=(age*1.4+i*.173)%1,spread=radius*Math.sqrt((i+.5)/16)*.9,x=a.x+Math.sin(theta)*spread,z=a.z+Math.cos(theta)*spread,

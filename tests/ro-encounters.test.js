@@ -32,7 +32,7 @@ test('real adventure spawning, guardians and final bosses use the selected ecolo
  }
 });
 
-test('classic tower rosters stay intact while scenery follows the floor ecology, including ice and fire floors',()=>{
+test('classic tower roster ecology remains correct independently of the dedicated stone-room renderer',()=>{
  const seen=new Set();for(let floor=1;floor<=100;floor++){
   const roster=planRoTowerFloor(floor,()=>.5),before=structuredClone(roster),habitat=dominantRoHabitat(roster),scene=roFloorRegion(floor,roster);assert.equal(scene,habitatScene(habitat));assert.ok(BONK_STAGES[scene]);assert.deepEqual(roster,before);seen.add(scene);
  }

@@ -1,3 +1,4 @@
+import {roFireImpactHandles} from './ro-fire-impact-art.js';
 import * as T from 'three';
 import {RO_ATTACK_FAMILIES,RO_ATTACK_BUDGET,RO_ATTACK_SKILLS,roAttackProfile} from '../shared/ro-attack-catalog.js';
 export {RO_ATTACK_BUDGET};
@@ -133,7 +134,7 @@ const NATIVE_HEROES=new Set(['knight','mage','ranger','turtle','owl','raccoon','
 const nativeHero=u=>!!u&&NATIVE_HEROES.has(u.hero)&&!u.castleBuilderKey&&!u.treeTagCharacter&&!u.warlockCharacter&&!u.kodoTagCharacter;
 const SKILL_VISUAL_EVENTS=new Set(['heal','devotion','battlecry','frostnova','poison','fireball','abilityPulse','summon','bolt','sprint']);
 export function roAttackArtHandles(event,source){return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source)||event.bonk===true&&typeof event.skillKey==='string'&&!!RO_ATTACK_SKILLS[event.skillKey]&&SKILL_VISUAL_EVENTS.has(event.type));}
-const observes=(event,source)=>{if(event?.bonk&&source?.bonkHero&&(event.type==='roAttack'&&['projectile','pulse','orbit','zone'].includes(event.attackKind)||['fireball','frostnova','abilityPulse'].includes(event.type)))return false;return roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);};
+const observes=(event,source)=>{if(roFireImpactHandles(event))return false;if(event?.bonk&&source?.bonkHero&&(event.type==='roAttack'&&['projectile','pulse','orbit','zone'].includes(event.attackKind)||['fireball','frostnova','abilityPulse'].includes(event.type)))return false;return roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);};
 const facing=(e,source)=>{if(Number.isFinite(e.direction))return e.direction;const d=e.direction,dx=Array.isArray(d)?d[0]:d?.x??e.dx,dz=Array.isArray(d)?d[1]:d?.z??e.dz;if(Number.isFinite(dx)&&Number.isFinite(dz)&&Math.hypot(dx,dz)>.001)return Math.atan2(dx,dz);const x=Number.isFinite(e.x)?e.x:source?.x||0,z=Number.isFinite(e.z)?e.z:source?.z||0,tx=e.tx??e.targetPoint?.x,tz=e.tz??e.targetPoint?.z;return Number.isFinite(tx)&&Number.isFinite(tz)&&Math.hypot(tx-x,tz-z)>.001?Math.atan2(tx-x,tz-z):source?.facing||0;};
 export function roAttackPlacement(event,profile,age,heightAt=()=>0,source){
  const yaw=facing(event,source),x=profile.anchor==='target'&&Number.isFinite(event.tx)?event.tx:Number.isFinite(event.x)?event.x:source?.x,z=profile.anchor==='target'&&Number.isFinite(event.tz)?event.tz:Number.isFinite(event.z)?event.z:source?.z;

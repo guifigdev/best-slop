@@ -1,3 +1,4 @@
+import {RAGNAROK_TOWER_FINALE} from './ragnarok-tower-finale.js';
 import {RAGNAROK_TOWER_PACK_A} from './ragnarok-tower-pack-a.js';
 import {RAGNAROK_TOWER_PACK_B} from './ragnarok-tower-pack-b.js';
 import {RAGNAROK_CENTENNIAL} from './ragnarok-centennial.js';
@@ -5,7 +6,7 @@ import {RAGNAROK_NATURE_EXPANSION} from './ragnarok-nature-expansion.js';
 import {RAGNAROK_DARK_EXPANSION} from './ragnarok-dark-expansion.js';
 import {RAGNAROK_MVPS} from './ragnarok-mvp-catalog.js';
 
-export const RAGNAROK_TOWER_EXPANSION=Object.freeze([...RAGNAROK_TOWER_PACK_A,...RAGNAROK_TOWER_PACK_B].map(m=>Object.freeze({...m,sourceElement:m.element,element:({water:'ice',wind:'lightning',undead:'dark',ghost:'arcane',neutral:'physical'})[m.element]||m.element})));
+export const RAGNAROK_TOWER_EXPANSION=Object.freeze([...RAGNAROK_TOWER_PACK_A,...RAGNAROK_TOWER_PACK_B,...RAGNAROK_TOWER_FINALE].map(m=>Object.freeze({...m,sourceElement:m.element,element:({water:'ice',wind:'lightning',undead:'dark',ghost:'arcane',neutral:'physical'})[m.element]||m.element})));
 const towerMvps=RAGNAROK_TOWER_EXPANSION.filter(m=>m.boss).map(m=>Object.freeze({...m,patterns:Object.freeze([{shape:'circle',element:m.element,radius:5,delay:2.3},{shape:m.role==='caster'?'ring':'cone',element:m.element,radius:8,inner:3,angle:Math.PI*.55,delay:2.5},{shape:'line',element:m.element,length:18,width:3,delay:2.4}].map(Object.freeze))}));
 export const RAGNAROK_EXPANSION=Object.freeze([...RAGNAROK_NATURE_EXPANSION,...RAGNAROK_DARK_EXPANSION,...RAGNAROK_CENTENNIAL,...RAGNAROK_TOWER_EXPANSION,...RAGNAROK_MVPS]);
 export const RAGNAROK_COMMON_EXPANSION=Object.freeze([...RAGNAROK_NATURE_EXPANSION,...RAGNAROK_DARK_EXPANSION,...RAGNAROK_CENTENNIAL,...RAGNAROK_TOWER_EXPANSION.filter(m=>!m.boss)]);

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {insideBossPattern} from '../shared/boss-patterns.js';
 import {RO_SKILLS} from '../shared/ragnarok-jobs.js';
+import {roFireImpactHandles} from './ro-fire-impact-art.js';
 
 export const RO_GROUND_AREA_BUDGET=Object.freeze({warnings:8,impacts:8,friendly:12,areas:28,triangles:32768,vertices:98304,grid:1.8,cache:40,drawCalls:1});
 const B=RO_GROUND_AREA_BUDGET,clamp=(v,a,b)=>Math.max(a,Math.min(b,Number.isFinite(v)?v:a)),finite=(v,f=0)=>Number.isFinite(v)?v:f;
@@ -30,7 +31,7 @@ export function roGroundAreas(state,time=state?.time||0){
  }
  const impacts=effects.filter(e=>e.bonk&&e.type==='bossImpact'&&time-e.time>=0&&time-e.time<(e.duration||.7)).slice(-B.impacts).map(e=>({...e,id:'impact:'+e.id,progress:1,opacity:.38*(1-clamp((time-e.time)/(e.duration||.7),0,1)),color:0xffac59,enemy:true}));
  const zones=(b.roSkillZones||[]).filter(z=>z.until>elapsed).slice(-B.friendly).map(z=>({...z,id:'zone:'+z.id,shape:'circle',progress:clamp((elapsed-(z.until-(z.weapon?.mechanics?.duration||6)))/Math.max(1,z.weapon?.mechanics?.duration||6),0,1),opacity:.09,color:friendlyColors[z.weapon?.element]||friendlyColors.arcane,enemy:false}));
- const pulses=effects.filter(e=>e.bonk&&e.type==='abilityPulse'&&e.radius>=1.2&&time-e.time>=0&&time-e.time<(e.duration||.55)&&!zones.some(z=>e.skillKey&&z.key===e.skillKey&&Math.hypot(z.x-e.x,z.z-e.z)<2)).slice(-Math.max(0,B.friendly-zones.length)).map(e=>({...e,id:'spell:'+e.id,shape:'circle',progress:clamp((time-e.time)/(e.duration||.55),0,1),opacity:.11*(1-clamp((time-e.time)/(e.duration||.55),0,1)),color:friendlyColors[e.element||RO_SKILLS[e.skillKey]?.element]||friendlyColors.physical,enemy:false}));
+ const pulses=effects.filter(e=>e.bonk&&e.type==='abilityPulse'&&!roFireImpactHandles(e)&&e.radius>=1.2&&time-e.time>=0&&time-e.time<(e.duration||.55)&&!zones.some(z=>e.skillKey&&z.key===e.skillKey&&Math.hypot(z.x-e.x,z.z-e.z)<2)).slice(-Math.max(0,B.friendly-zones.length)).map(e=>({...e,id:'spell:'+e.id,shape:'circle',progress:clamp((time-e.time)/(e.duration||.55),0,1),opacity:.11*(1-clamp((time-e.time)/(e.duration||.55),0,1)),color:friendlyColors[e.element||RO_SKILLS[e.skillKey]?.element]||friendlyColors.physical,enemy:false}));
  return [...enemy,...impacts,...zones,...pulses].slice(0,B.areas);
 }
 

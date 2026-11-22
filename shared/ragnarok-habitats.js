@@ -2991,6 +2991,8 @@ const CURATED={
   "provenance": "Payon deep forest tiger patriarch"
  }
 };
+// The throne guardian belongs to the tower's haunted stone sanctuary.
+CURATED[1956]={habitats:['haunted','ruins'],ecologyRule:'endless-tower-final-throne',provenance:'EndlessTower.txt, 6@tower Tyrant throne, source monster 1956'};
 // Named minibosses occupy guardian encounters, not ordinary random waves.
 const minibosses=new Set([1088,1090,1091,1092,1096,1120,1186,1259,1262,1270,1283,1296,1298,1299,1302,1307,1388,1582,1618,1720,1765]);
 const expansion=new Map(RAGNAROK_EXPANSION.map(m=>[m.key,m])),mvps=new Set(RAGNAROK_MVPS.map(m=>m.key));
