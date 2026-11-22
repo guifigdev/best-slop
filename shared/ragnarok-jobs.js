@@ -1,3 +1,4 @@
+import {localizeRoSkills} from './ro-skill-names-pt.js';
 // Class progression follows the original first/second/third/fourth job lines.
 // Survivor damage budgets are local; attack identity never comes from loot.
 import {RO_NATURE_SKILLS} from './ro-nature-skills.js';
@@ -23,7 +24,7 @@ export const RO_LINEAGES=Object.freeze(Object.fromEntries([
 export const roLineage=key=>typeof key==='string'&&Object.hasOwn(RO_LINEAGES,key)?RO_LINEAGES[key]:RO_LINEAGES.dragonknight;
 export const roJob=(lineage,tier=0)=>{const p=roLineage(lineage),i=Math.max(0,Math.min(3,Math.floor(tier)||0));return {key:p.jobs[i],name:p.names[i],tier:i,lineage:p.key,next:p.names[i+1]||null};};
 const spell=(key,name,tier,skill,description,profile)=>Object.freeze({key,name,tier,skill,description,...profile});
-export const RO_SKILLS=Object.freeze({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...Object.fromEntries([
+export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...Object.fromEntries([
  spell('bash','Bash',0,'cleave','Golpe concentrado à frente.',attack('slash','physical',35,1.5,6)),
  spell('bowlingbash','Bowling Bash',1,'shockwave','Impacto amplo que abre espaço na horda.',attack('pulse','physical',42,2.8,7)),
  spell('dragonbreath','Dragon Breath',2,'fireball','Sopro ardente com explosão e queimadura.',attack('projectile','fire',40,2.2,25,{speed:19,radius:4.5,pierce:3})),
@@ -69,7 +70,7 @@ export const RO_SKILLS=Object.freeze({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,
  spell('abysssquare','Abyss Square',3,'shockwave','O abismo explode ao redor do renegado.',attack('pulse','dark',98,3,12))
 ].map(s=>[s.key,Object.freeze({...RO_EXPANDED_SKILLS[s.key],...s,manaCost:2+(s.tier||0)*2})]))});
 export const roSkillTier=(lineage,key)=>roLineage(lineage).skillTiers[key]??RO_SKILLS[key]?.tier??3;
-export function roBasicAttack(u){const p=roLineage(u.roLineage),tier=Math.max(0,Math.min(3,u.roTier||0));return {key:'basic',name:(p.focus==='int'&&p.jobs[0]==='mage'?'Fire Ball':p.key==='shadowcross'&&tier===0?'Adaga':p.weapon)+' · ataque de classe',skill:p.attack.element==='fire'?'fireball':p.attack.kind==='projectile'?'multishot':'cleave',description:'Ataque característico. Equipamentos alteram os atributos, preservando este ataque.',...p.attack,damage:p.attack.damage*(1+tier*.28),cooldown:p.attack.cooldown/(1+tier*.07)};}
+export function roBasicAttack(u){const p=roLineage(u.roLineage),tier=Math.max(0,Math.min(3,u.roTier||0));return {key:'basic',name:(p.focus==='int'&&p.jobs[0]==='mage'?'Bola de Fogo':p.key==='shadowcross'&&tier===0?'Adaga':p.weapon)+' · ataque de classe',skill:p.attack.element==='fire'?'fireball':p.attack.kind==='projectile'?'multishot':'cleave',description:['meister','biolo'].includes(p.key)?'Machadada de cima para baixo; o impacto afasta inimigos comuns à frente.':'Ataque característico. Equipamentos alteram os atributos, preservando este ataque.',...p.attack,...(['meister','biolo'].includes(p.key)?{mechanics:{knockback:1.7},slam:true}:{}),damage:p.attack.damage*(1+tier*.28),cooldown:p.attack.cooldown/(1+tier*.07)};}
 export function advanceRoJob(u,tier){const j=roJob(u.roLineage,tier);const previous=u.roTier||0;u.roTier=j.tier;if(previous!==j.tier||!Number.isInteger(u.roJobLevel)){u.roJobLevel=1;u.roJobXp=0;}if(u.roLineage==='shadowcross'&&previous<1&&j.tier>=1&&Array.isArray(u.roInventory)){const item={id:'job-dagger-'+u.id,key:'knife',cards:[]};if(!u.roInventory.some(i=>i.id===item.id)){if(u.roInventory.length<48){u.roInventory.push(item);if(!u.roEquipment.offhand)u.roEquipment.offhand=item.id;}else (u.roUnclaimed||=[]).push(item);}}u.bonkJob=j.key;u.name=j.name;return j;}
 export function initializeRoJob(u,key){const p=roLineage(key);u.roLineage=p.key;u.attributes={str:5,agi:5,vit:5,int:5,dex:5,luk:5,[p.focus]:12};u.attributePoints=6;advanceRoJob(u,0);}
 export function spendRoAttribute(u,key){if(!Object.hasOwn(u.attributes||{},key)||!['str','agi','vit','int','dex','luk'].includes(key))return false;const cost=attributeCost(u.attributes[key]);if(u.attributes[key]>=99||u.attributePoints<cost)return false;u.attributes[key]++;u.attributePoints-=cost;return true;}

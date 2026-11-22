@@ -10,9 +10,9 @@ const setup=options=>{const g=new Game(29,{mode:'bonk',...options});g.addPlayer(
 const chest=(g,u,cost=25)=>{const o={id:'test-chest-'+g.id(),type:'chest',x:u.x,z:u.z,cost,used:false};g.bonk.objects.push(o);return o;};
 
 test('every chest pool entry is a real normal RO item and level/progression favour stronger normal gear without granting cards',()=>{
- assert.equal(RO_CHEST_EQUIPMENT_KEYS.length,24);for(const key of RO_CHEST_EQUIPMENT_KEYS){const d=RO_EQUIPMENT[key];assert.ok(d&&!Object.hasOwn(RO_TOWER_MVP_GEAR,key));assert.match(d.source,/divine-pride\.net\/database\/item\/\d+/);assert.ok(Number.isInteger(d.sourceId));}
+ assert.equal(RO_CHEST_EQUIPMENT_KEYS.length,26);for(const key of RO_CHEST_EQUIPMENT_KEYS){const d=RO_EQUIPMENT[key];assert.ok(d&&!Object.hasOwn(RO_TOWER_MVP_GEAR,key));assert.match(d.source,/divine-pride\.net\/database\/item\/\d+/);assert.ok(Number.isInteger(d.sourceId));}
  const high=new Set(['maingauche','katana','staff','compositebow','battleaxe','spear','buckler','coat','manteau','boots','clip','ring']),ratio=pool=>pool.filter(p=>high.has(p.key)).reduce((s,p)=>s+p.weight,0)/pool.reduce((s,p)=>s+p.weight,0);assert.ok(ratio(roChestEquipmentPool({level:50},8))>ratio(roChestEquipmentPool({level:1},0))+.4);
- const u={level:1,roInventory:[],roCards:[{id:'existing',key:'poring'}]};for(let i=0;i<24;i++){const award=awardRoChestEquipment(u,{random:()=>i/24,id:'item-'+i});assert.ok(award);assert.deepEqual(award.item.cards,[]);}assert.deepEqual(u.roCards,[{id:'existing',key:'poring'}]);assert.deepEqual(RO_LOOT_RATES,{card:.0001,bossCard:.001,equipment:.025});
+ const u={level:1,roInventory:[],roCards:[{id:'existing',key:'poring'}]};for(let i=0;i<24;i++){const award=awardRoChestEquipment(u,{random:()=>i/24,id:'item-'+i});assert.ok(award);assert.deepEqual(award.item.cards,[]);}assert.deepEqual(u.roCards,[{id:'existing',key:'poring'}]);assert.deepEqual(RO_LOOT_RATES,{card:.00015,bossCard:.0015,equipment:.06});
 });
 
 test('real adventure, tower and GM chests each grant exactly one equipment and one relic, once, with a serializable receipt',()=>{

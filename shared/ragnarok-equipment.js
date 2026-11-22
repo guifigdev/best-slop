@@ -31,6 +31,9 @@ const BASE_RO_EQUIPMENT=freeze(Object.fromEntries([
  gear('clip','Clip [1]',2607,'accessory',1,{maxHp:8}),
  gear('ring','Ring',2601,'accessory',0,{str:2}),
  gear('cap','Cap [1]',2227,'head',1,{armor:.6}),
+ gear('criticalring','Anel Crítico',2616,'accessory',0,{crit:.05}),
+ // Katar precision is a survivor adaptation; it preserves the class attack.
+ gear('katar','Katar [2]',1253,'weapon',2,{attack:10,dex:1,crit:.06},{weaponType:'katar',hands:2}),
 ].map(item=>[item.key,item])));
 
 const card=(key,name,sourceId,slot,stats,monsters,original)=>({key,name,sourceId,source:source(sourceId),slot,stats,monsters,original});
@@ -67,7 +70,7 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
 ].map(item=>[item.key,item])));
 export const RO_EQUIPMENT=freeze({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR});
 export const RO_CARDS=freeze({...BASE_RO_CARDS,...RO_TOWER_CARDS});
-export const RO_LOOT_RATES=freeze({card:.0001,bossCard:.001,equipment:.025});
+export const RO_LOOT_RATES=freeze({card:.00015,bossCard:.0015,equipment:.06});
 export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','armor','garment','shoes','accessory','head']);
 const starter=freeze({dragonknight:'sword',imperialguard:'spear',archmage:'rod',elementalmaster:'staff',windhawk:'bow',troubadour:'bow',cardinal:'mace',inquisitor:'mace',meister:'axe',biolo:'axe',shadowcross:'knife',abysschaser:'knife'});
 const validId=id=>(typeof id==='string'&&id.length>0)||(typeof id==='number'&&Number.isSafeInteger(id));
@@ -122,7 +125,7 @@ export function rollRoLoot(random,monsterVisual,{boss=false}={}){
  if(typeof random!=='function')return null;const roll=random();if(!Number.isFinite(roll)||roll<0||roll>=1)return null;
  const chance=boss?RO_LOOT_RATES.bossCard:RO_LOOT_RATES.card,card=Object.values(RO_CARDS).find(card=>card.monsters.includes(monsterVisual));
  if(roll<chance&&card)return{kind:'card',key:card.key};
- if(roll>=chance&&roll<chance+RO_LOOT_RATES.equipment){const source=RO_TOWER_DROP_MAP[monsterVisual],list=source?.equipmentKeys?.length?source.equipmentKeys:Object.keys(BASE_RO_EQUIPMENT),selection=random();if(!Number.isFinite(selection)||selection<0||selection>=1)return null;return{kind:'equipment',key:list[Math.floor(selection*list.length)]};}
+ if(roll>=chance&&roll<chance+RO_LOOT_RATES.equipment){const source=RO_TOWER_DROP_MAP[monsterVisual],list=[...new Set([...(source?.equipmentKeys?.length?source.equipmentKeys:Object.keys(BASE_RO_EQUIPMENT)),'criticalring','katar'])],selection=random();if(!Number.isFinite(selection)||selection<0||selection>=1)return null;return{kind:'equipment',key:list[Math.floor(selection*list.length)]};}
  return null;
 }
 

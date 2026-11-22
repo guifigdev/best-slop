@@ -6,7 +6,7 @@ import {RO_TOWER_CARDS,RO_TOWER_MVP_GEAR} from '../shared/ragnarok-tower-drops.j
 const make=(lineage='dragonknight')=>{const u={id:10,roTier:1,bonkAttack:'fixed-class-attack'};initializeRoInventory(u,lineage);return u;};
 const add=(u,key,id=key)=>{const item=createRoEquipment(key,id);u.roInventory.push(item);return item;};
 test('RO equipment catalogs are immutable, sourced, valid and create independent inventories',()=>{
- assert.equal(Object.keys(RO_EQUIPMENT).length,24+Object.keys(RO_TOWER_MVP_GEAR).length);assert.equal(Object.keys(RO_CARDS).length,28+Object.keys(RO_TOWER_CARDS).length);assert.ok(Object.values(RO_CARDS).filter(c=>c.mvp).length>=16);
+ assert.equal(Object.keys(RO_EQUIPMENT).length,26+Object.keys(RO_TOWER_MVP_GEAR).length);assert.equal(Object.keys(RO_CARDS).length,28+Object.keys(RO_TOWER_CARDS).length);assert.ok(Object.values(RO_CARDS).filter(c=>c.mvp).length>=16);
  for(const catalog of [RO_EQUIPMENT,RO_CARDS])for(const item of Object.values(catalog)){assert.equal(item.source,`https://www.divine-pride.net/database/item/${item.sourceId}`);assert.ok(Object.isFrozen(item.stats));}
  const a=make(),b=make();a.roInventory[0].cards.push({id:1,key:'fabre'});assert.equal(b.roInventory[0].cards.length,0);const ids=a.roInventory.map(i=>i.id);initializeRoInventory(a,'dragonknight');assert.deepEqual(a.roInventory.map(i=>i.id),ids);
  assert.equal(createRoEquipment('__proto__',1),null);assert.equal(createRoEquipment('constructor',1),null);assert.equal(createRoEquipment('knife',undefined),null);
@@ -37,6 +37,6 @@ test('Rare card drops are monster-specific with exact normal and boss probabilit
  assert.deepEqual(rollRoLoot(fixed(0),'poring'),{kind:'card',key:'poring'});assert.equal(rollRoLoot(fixed(0),'unknown'),null);
  assert.deepEqual(rollRoLoot(fixed(RO_LOOT_RATES.card-.0000001),'fabre'),{kind:'card',key:'fabre'});
  assert.equal(rollRoLoot(fixed(.0005),'poring',{boss:true}).kind,'card');assert.equal(rollRoLoot(fixed(.0005),'poring').kind,'equipment');
- assert.equal(rollRoLoot(fixed(.03),'poring'),null);assert.equal(rollRoLoot(fixed(NaN),'poring'),null);assert.equal(rollRoLoot(fixed(1),'poring'),null);
+ assert.equal(rollRoLoot(fixed(RO_LOOT_RATES.card+RO_LOOT_RATES.equipment),'poring'),null);assert.equal(rollRoLoot(fixed(NaN),'poring'),null);assert.equal(rollRoLoot(fixed(1),'poring'),null);
  for(const mvp of RAGNAROK_MVPS){const drop=rollRoLoot(fixed(.0005),mvp.key,{boss:true});assert.equal(drop?.kind,'card');assert.ok(RO_CARDS[drop.key].mvp);assert.ok(RO_CARDS[drop.key].monsters.includes(mvp.key));}
 });

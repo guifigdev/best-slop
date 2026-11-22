@@ -37,15 +37,15 @@ test('every game admits a host and guests through password-protected rooms, neve
 
 test('Ragnarok co-op keeps the lobby paused, classes and offers personal, commands owned, and map delivery compact',async()=>{
  const app=createGameServer({config:config()}),sockets=[];try{
-  await app.listen();const a=await request(app,sockets,{type:'join',intent:'create',room:'RAGCOOP',options:{mode:'bonk',bonkWorld:'dominion',bonkDebug:true},ragnarok:{lineage:'dragonknight'},features:['static-world-v1']});
+  await app.listen();const a=await request(app,sockets,{type:'join',intent:'create',room:'RAGCOOP',options:{mode:'bonk',bonkWorld:'dominion',bonkSkillMode:'class',bonkDebug:true},ragnarok:{lineage:'dragonknight'},features:['static-world-v1']});
   const b=await request(app,sockets,{type:'join',intent:'join',room:'RAGCOOP',options:{mode:'bonk'},ragnarok:{lineage:'shadowcross'},features:['static-world-v1']});
   const room=app.rooms.get('RAGCOOP'),g=room.game,first=g.player(a.data.id),second=g.player(b.data.id);
-  assert.equal(g.options.bonkDebug,undefined);assert.equal(first.roLineage,'dragonknight');assert.equal(second.roLineage,'shadowcross');
+  assert.equal(g.options.bonkDebug,undefined);assert.equal(first.roLineage,'dragonknight');assert.equal(second.roLineage,'shadowcross');assert.equal(first.roSkillMode,'class');assert.equal(second.roSkillMode,'class');
   await new Promise(r=>setTimeout(r,110));assert.equal(g.time,0);assert.equal(g.bonk.stage,'preparation');
   const denied=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'bkReady'}}));assert.match((await denied).message,/host/);
   const started=next(a.ws,'state',m=>m.state.onlineRoom.started);a.ws.send(JSON.stringify({type:'command',command:{type:'roomStart'}}));await started;
   const compact=await next(b.ws,'state',m=>!!m.state.worldStaticKey&&!Object.hasOwn(m.state.bonk,'map'));assert.ok(!Object.hasOwn(compact.state.bonk,'map'));assert.ok(!Object.hasOwn(compact.state,'obstacles'));
-  assert.equal(g.phase,'wave');assert.equal(g.bonk.stage,'playing');assert.ok(g.units.some(u=>u.bonkEnemy));
+  assert.equal(g.phase,'wave');assert.equal(g.bonk.stage,'playing');assert.ok(g.units.some(u=>u.bonkEnemy));first.hp=1;const otherHp=second.hp;assert.ok(g.command(a.data.id,{type:'bkConsumable',slot:0,target:second.id}));assert.ok(first.hp>1);assert.equal(second.hp,otherHp);
   first.bonkMove={dx:1,dz:0};first.bonkMoveAt=g.bonk.elapsed;second.bonkMove={dx:-1,dz:0};second.bonkMoveAt=g.bonk.elapsed;
   g.bonk.pickups=[{id:g.id(),x:first.x,z:first.z,age:0,type:'xp',value:100}];g.tick(1/30);
   assert.ok(first.bonkOffer);assert.ok(second.bonkOffer);assert.equal(g.bonk.stage,'playing');

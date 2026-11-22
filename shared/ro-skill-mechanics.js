@@ -76,11 +76,15 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   const modifiers={};for(const [key,value]of Object.entries(m.modifiers||{}))if(Object.hasOwn(modifierCaps,key))modifiers[key]=finite(value)*scale;
   unit.roSkillBuffs=(unit.roSkillBuffs||[]).filter(v=>v.until>time&&v.key!==weapon.key);
   if(unit.roSkillBuffs.length>=RO_SKILL_EFFECT_LIMITS.buffs)unit.roSkillBuffs.shift();
-  unit.roSkillBuffs.push({key:weapon.key,until:time+duration,modifiers,...(m.status||m.proc?{weapon,level}: {})});
+  unit.roSkillBuffs.push({key:weapon.key,until:time+duration,level,modifiers,...(m.status||m.proc?{weapon,level}: {})});
   if(m.shieldPercent){const amount=unit.maxHp*clamp(m.shieldPercent*scale,0,.45);unit.roSkillShield={value:Math.max(unit.roSkillShield?.until>time?unit.roSkillShield.value:0,amount),until:time+duration};}
   if(m.cleanse)cleanse(unit,time);
   if(m.healPercent||m.healFlat)unit.hp=Math.min(unit.maxHp,unit.hp+unit.maxHp*clamp(m.healPercent,0,.25)+Math.max(0,finite(m.healFlat)));
   if(m.manaPercent)unit.mana=Math.min(unit.maxMana,unit.mana+unit.maxMana*clamp(m.manaPercent,0,.35));
+  if(m.allyRadius)for(const ally of game.units||[])if(ally!==unit&&ally.bonkHero&&ally.alive&&ally.team===unit.team&&distance(unit,ally)<=m.allyRadius){
+   const old=(ally.roSkillBuffs||[]).find(b=>b.key===weapon.key&&b.until>time);if(old&&(old.level||1)>level)continue;
+   ally.roSkillBuffs=(ally.roSkillBuffs||[]).filter(b=>b.until>time&&b.key!==weapon.key).slice(-(RO_SKILL_EFFECT_LIMITS.buffs-1));ally.roSkillBuffs.push({key:weapon.key,level,until:time+duration,modifiers:{...modifiers}});emit(api,'battlecry',ally,{source:unit.id,target:ally.id,radius:1.5,duration:.55,skillKey:weapon.key});
+  }
   emit(api,m.shieldPercent?'devotion':'battlecry',unit,{source:unit.id,target:unit.id,radius:2.5,duration:.7,skillKey:weapon.key});return true;
  }
  const targets=nearby(game,unit,Math.max(3,weapon.range*(stats.area||1)),api).sort((a,c)=>distance(a,unit)-distance(c,unit)),target=targets.find(e=>clear(api,unit,e));
@@ -126,7 +130,7 @@ export function applyRoSkillHit(game,unit,enemy,weapon,level,api={}){
   enemy['bonk'+name+'Until']=Math.max(enemy['bonk'+name+'Until']||0,until);enemy['bonk'+name+'Damage']=Math.max(enemy['bonk'+name+'Damage']||0,damage);
   enemy.dots={...enemy.dots,[element]:{until:finite(game.time)+(until-time)}};applied=true;
  }
- if(m.knockback&&!boss&&api.move){const dx=enemy.x-unit.x,dz=enemy.z-unit.z;api.move(enemy,dx,dz,.05,clamp(m.knockback,0,2)/.05);}
+ if(m.knockback&&!boss&&api.move){const dx=enemy.x-unit.x,dz=enemy.z-unit.z;api.move(enemy,dx,dz,.05,clamp(m.knockback,0,5)/.05);}
  if(applied)emit(api,status.poison?'poison':status.burn?'fireball':status.slow||status.root?'frostnova':'abilityPulse',enemy,{source:unit.id,target:enemy.id,radius:Math.min(1.5,enemy.size||1),duration:.3,skillKey:weapon.key});
  if(weapon.key==='basic'){
   for(const buff of (unit.roSkillBuffs||[]).slice(0,RO_SKILL_EFFECT_LIMITS.buffs)){

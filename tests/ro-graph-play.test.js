@@ -33,10 +33,10 @@ test('the compact atlas shows all twelve regions, the volcano junction, northern
 });
 
 
-test('the northern branch can be finished before the desert, survives save/restore and opens Valhalla only after eleven seals',()=>{
+test('the northern branch can be finished before the desert, survives save/restore and opens Valhalla only after all fifteen other seals',()=>{
  const g=game();for(const next of ['payon-forest','payon-cave','geffen','glast-heim','thor-volcano']){defeat(g);cross(g,next);}defeat(g);cross(g,'juno');defeat(g);cross(g,'ice-cavern');defeat(g);
  assert.equal(g.bonk.clearedStages.length,8);assert.equal(g.bonk.exitGates.find(t=>t.nextKey==='valhalla').lockedBy,'final');
  for(const next of ['juno','thor-volcano','morroc'])cross(g,next);defeat(g);cross(g,'morroc-pyramid');defeat(g);cross(g,'rachel');defeat(g);assert.equal(g.bonk.clearedStages.length,11);
  const cp=createRoCheckpoint(g),resumed=new Game(29,{mode:'bonk',bonkWorld:'dominion'});assert.ok(cp);resumed.addPlayer('p','knight');assert.ok(resumed.command('p',{type:'bkRestore',checkpoint:cp}));assert.deepEqual(resumed.bonk.clearedStages,g.bonk.clearedStages);
- for(const next of ['morroc-pyramid','morroc','thor-volcano','juno','ice-cavern','valhalla'])cross(resumed,next);assert.equal(resumed.bonk.stage,'playing');defeat(resumed);assert.equal(resumed.bonk.clearedStages.length,12);assert.equal(resumed.bonk.won,true);assert.equal(resumed.phase,'victory');assert.ok(createRoCheckpoint(resumed));
+ for(const next of ['morroc-pyramid','morroc','thor-volcano','juno'])cross(resumed,next);cross(resumed,'thanatos-tower');defeat(resumed);cross(resumed,'juno');cross(resumed,'ice-cavern');cross(resumed,'lutie');defeat(resumed);cross(resumed,'toy-factory');defeat(resumed);for(const next of ['lutie','ice-cavern','juno','thor-volcano','glast-heim','geffen','clock-tower'])cross(resumed,next);defeat(resumed);for(const next of ['geffen','glast-heim','thor-volcano','juno','ice-cavern','valhalla'])cross(resumed,next);assert.equal(resumed.bonk.stage,'playing');defeat(resumed);assert.equal(resumed.bonk.clearedStages.length,16);assert.equal(resumed.bonk.won,true);assert.equal(resumed.phase,'victory');assert.ok(createRoCheckpoint(resumed));
 });

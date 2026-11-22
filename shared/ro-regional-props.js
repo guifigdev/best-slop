@@ -2,6 +2,10 @@
 // Used by generation and art so footprints and declared budgets stay in sync.
 const spec=(w,d,h,models)=>Object.freeze({w,d,h,models:Object.freeze(models)});
 export const RO_REGION_PROP_POOLS=Object.freeze({
+ 'snow-village':spec(9,7,8,['snow-village','snowed-sled','frost-rune-arch','snow-festival-tree']),
+ 'toy-factory':spec(10,7,7,['toy-factory','toy-train','toy-gifts','mine-wagon']),
+ clockwork:spec(10,7,11,['clockwork','clock-gears','juno-telescope','runic-engine']),
+ thanatos:spec(10,8,11,['thanatos','thanatos-spire','pilgrim-bellgate','buried-sarcophagus']),
  pastoral:spec(8,6,11,['prontera-windmill','peco-caravan','hay-granary','traveler-stonebridge']),
  bamboo:spec(7,6,8,['payon-wayshrine','payon-waterwheel','rice-granary','paper-lantern-arch']),
  'burial-cave':spec(7,5,7,['payon-wayshrine','mine-wagon','burial-bell','mushroom-log']),

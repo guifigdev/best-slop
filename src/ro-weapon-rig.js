@@ -19,7 +19,7 @@ export function createRoWeaponRig({unit,spec,body,voxel,bake}){
 }
 
 export function updateRoWeaponRig(rig,unit,effects,time){
- if(!rig)return;let latest=null,profile=null;for(const event of effects||[]){if(event.type!=='roAttack'||event.source!==unit?.id||!Number.isFinite(event.time)||event.time>time||latest&&event.time<latest.time)continue;const p=roAttackProfile(event,unit);if((rig.arms?p.family==='dagger':p.motion==='overhead')&&time-event.time<p.duration){latest=event;profile=p;}}
+ if(!rig)return;let latest=null,profile=null;for(const event of effects||[]){if(event.type!=='roAttack'||event.source!==unit?.id||!Number.isFinite(event.time)||event.time>time||latest&&event.time<latest.time)continue;const p=roAttackProfile(event,unit);if((rig.arms?p.family==='dagger':['overhead','axeSlam'].includes(p.motion))&&time-event.time<p.duration){latest=event;profile=p;}}
  if(rig.arms){const pose=latest?roThiefCombatPose(time-latest.time,profile.duration,rig.job):roThiefCombatPose(-1);for(const arm of rig.arms){const p=pose.arms[arm.key];arm.group.rotation.set(p.x,p.y,p.z);arm.group.position.set(arm.pivot[0],arm.pivot[1],arm.pivot[2]+p.push);}return pose;}
  const pose=latest?roSwordPose(time-latest.time,profile.duration):roSwordPose(-1);rig.group.rotation.set(pose.x,pose.y,pose.z);return pose;
 }

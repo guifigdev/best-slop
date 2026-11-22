@@ -75,12 +75,12 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
    if(route==='rewards'){
     if(!Array.isArray(input.kills)||input.kills.length>40||input.kills.some(k=>!validKill(k)))return error(400,'Invalid monster reports');
     const run=state.run;if(!run||input.runId!==run.id||stamp<run.started||stamp-run.started>RUN_TTL)return error(409,'Run expired or replaced');
-    const tower=run.activity==='tower',processed=new Set(run.processed),credits=Math.min(MAX_RECEIPTS,(tower?280:6)+Math.floor((stamp-run.started)/1000*(tower?64:3))),newCards=[],acknowledgedIds=[];
+    const tower=run.activity==='tower',processed=new Set(run.processed),credits=Math.min(MAX_RECEIPTS,(tower?280:6)+Math.floor((stamp-run.started)/1000*(tower?64:3))),newCards=[],cardDrops=[],acknowledgedIds=[];
     for(const kill of input.kills){const receipt=String(kill.id);if(processed.has(receipt)){acknowledgedIds.push(receipt);continue;}if(run.count>=credits)break;processed.add(receipt);acknowledgedIds.push(receipt);run.count++;
      // Boss odds derive from the server catalog, never the reported flag.
-     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'&&!state.cards.includes(drop.key)){state.cards.push(drop.key);newCards.push(drop.key);}
+     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'&&!state.cards.includes(drop.key)){state.cards.push(drop.key);newCards.push(drop.key);cardDrops.push({key:drop.key,receipt});}
     }
-    run.processed=[...processed];extra.newCards=newCards;extra.acknowledgedIds=acknowledgedIds;
+    run.processed=[...processed];extra.newCards=newCards;extra.cardDrops=cardDrops;extra.acknowledgedIds=acknowledgedIds;
    }
    const payload=JSON.stringify(state);if(payload.length>1900000)return error(413,'Account run receipt limit reached');
    const result=await db.prepare('UPDATE ro_accounts SET payload=?,revision=revision+1 WHERE id=? AND revision=?').bind(payload,row.id,row.revision).run();

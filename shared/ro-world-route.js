@@ -17,6 +17,11 @@ const regions=[
  {key:'geffen',name:'Ruínas Arcanas de Geffen',scene:'geffen',habitat:'arcane',mvp:'doppelganger',style:'mage-ruins',description:'Bibliotecas partidas, jardins de cristais e uma estrada arcana cercada por ruínas.',landmarks:['Biblioteca perdida','Jardim dos cristais','Torre do espelho'],featured:['deviruchi','rideword','clock','alarm','sageworm'],transition:'Os arcos se tornam góticos e as raízes cobrem a estrada para Glast Heim.'},
  {key:'glast-heim',name:'Glast Heim',scene:'crypt',habitat:'haunted',mvp:'tower_1272',style:'gothic',description:'Pátios de castelo, estátuas quebradas e uma igreja escura antes do último caminho.',landmarks:['Pátio da cavalaria','Cemitério da abadia','Catedral do Lorde Sombrio'],featured:['whisper','ghoul','dullahan','raydric','wraith'],transition:'A pedra escura vira mármore antigo e a luz abre caminho para o santuário.'},
  {key:'valhalla',name:'Santuário da Valquíria',scene:'geffen',habitat:'arcane',mvp:'valkyrierandgris',style:'valkyrie-sanctuary',description:'Terraços elevados, colunas luminosas e uma arena ampla com caminhos seguros entre os ataques finais.',landmarks:['Escadaria das asas','Terraço das runas','Trono da Valquíria'],featured:['skeggiold','skogul','frus','angeling','rideword'],transition:'A jornada termina no terraço da Valquíria.',adaptation:'O santuário reúne motivos de Odin e Valhalla; sua posição ao fim da rota é uma composição original deste modo.'}
+ ,{key:'lutie',name:'Lutie · Vila da Neve',scene:'glacier',habitat:'icecave',mvp:'hatii',style:'snow-village',description:'Telhados nevados, pinheiros, trenós e uma praça iluminada no vale de Lutie.',landmarks:['Praça do inverno','Vila dos presentes','Estrada da fábrica'],featured:['marin','siroma','snowier','gazeti'],transition:'Uma estrada de presentes e engrenagens leva à fábrica.'},
+ {key:'toy-factory',name:'Fábrica de Brinquedos',scene:'payon',habitat:'arcane',mvp:'stormyknight',style:'toy-factory',description:'Galpões de brinquedos, esteiras, caixas coloridas e autômatos de madeira.',landmarks:['Linha de montagem','Depósito dos presentes','Salão do Cavaleiro da Nevasca'],featured:['marionette','rideword','alarm','clock'],transition:'Os portões da fábrica se abrem novamente para a neve de Lutie.'},
+ {key:'clock-tower',name:'Torre do Relógio',scene:'geffen',habitat:'arcane',mvp:'tower_1957',style:'clockwork',description:'Grandes relógios, engrenagens de bronze, mecanismos e escadarias antigas.',landmarks:['Pátio dos pêndulos','Sala das engrenagens','Coração do relógio'],featured:['clock','alarm','tower_1270','rideword'],transition:'A escadaria de bronze retorna aos caminhos de Geffen.',adaptation:'O guardião Entweihen é uma adaptação desta expedição, não um spawn oficial da Torre do Relógio.'},
+ {key:'thanatos-tower',name:'Torre de Thanatos',scene:'crypt',habitat:'haunted',mvp:'fallenbishop',style:'thanatos',description:'Torres partidas, arcos suspensos, pilares rúnicos e plataformas nas alturas.',landmarks:['Escadaria da agonia','Galeria das memórias','Catedral despedaçada'],featured:['tower_1704','tower_1705','tower_1706','tower_1707','wraith'],transition:'Uma ponte de pedra antiga retorna aos campos de Juno.',adaptation:'O Bispo Caído guarda esta adaptação; não substitui a identidade de Memória de Thanatos.'}
+
 ];
 
 export const RO_WORLD_ROUTE=freeze(regions.map((region,index)=>({...region,index,entry:{x:0,z:96},exit:{x:0,z:-101},corridor:{width:18,length:28},bossArena:{x:0,z:-64,radius:28},previousKey:regions[index-1]?.key||null,nextKey:regions[index+1]?.key||null})));
@@ -48,7 +53,7 @@ export const RO_WORLD_GEOGRAPHY=freeze({
  'thor-volcano':{x:0,z:0},
  'glast-heim':{x:1,z:1},geffen:{x:2,z:1},'payon-cave':{x:3,z:2},'payon-forest':{x:3,z:3},prontera:{x:4,z:4},
  morroc:{x:-1,z:0},'morroc-pyramid':{x:-2,z:-1},rachel:{x:-3,z:-1},
- juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3}
+ juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3},lutie:{x:-1,z:-2},'toy-factory':{x:-2,z:-2},'clock-tower':{x:2,z:0},'thanatos-tower':{x:1,z:-1}
 });
 export const RO_WORLD_LINKS=freeze([
  {a:'prontera',b:'payon-forest'},
@@ -61,7 +66,11 @@ export const RO_WORLD_LINKS=freeze([
  {a:'morroc-pyramid',b:'rachel'},
  {a:'thor-volcano',b:'juno'},
  {a:'juno',b:'ice-cavern'},
- {a:'ice-cavern',b:'valhalla'}
+ {a:'ice-cavern',b:'valhalla'},
+ {a:'ice-cavern',b:'lutie'},
+ {a:'lutie',b:'toy-factory'},
+ {a:'geffen',b:'clock-tower'},
+ {a:'juno',b:'thanatos-tower'}
 ]);
 const emptyNeighbors=freeze([]),neighbors=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>[region.key,RO_WORLD_LINKS.flatMap(link=>link.a===region.key?[link.b]:link.b===region.key?[link.a]:[])])));
 export function roWorldNeighbors(value=0){const region=roRouteStage(value);return region?neighbors[region.key]:emptyNeighbors;}
@@ -73,12 +82,16 @@ const worldRegions=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>{
  const gates=neighbors[region.key].map(key=>worldGate(region,RO_WORLD_ROUTE_BY_KEY[key]));
  return [region.key,{...region,graph:true,position:RO_WORLD_GEOGRAPHY[region.key],bossArena:{x:0,z:0,radius:28},neighborKeys:neighbors[region.key],gates,spokes:gates.map(gate=>({from:{x:0,z:0},to:{x:gate.x,z:gate.z},width:18,direction:gate.direction,nextKey:gate.nextKey}))}];
 })));
-export function roWorldRegion(value=0){const region=roRouteStage(value);return region?worldRegions[region.key]:null;}
-export function roWorldGates(value=0,clearedKeys=[],visitedKeys=[]){
- const region=roWorldRegion(value);if(!region)return emptyNeighbors;
+export function roWorldRegion(value=0,seed){
+ const region=roRouteStage(value),base=region?worldRegions[region.key]:null;if(!base||!Number.isFinite(seed))return base;
+ const gates=base.gates.map(gate=>{const pair=[base.key,gate.nextKey].sort().join(':'),cave=/cave|factory|tower/.test(pair),offset=cave?((hash(seed,pair)%13)-6)*4:0,x=gate.x+(gate.axis==='z'?offset:0),z=gate.z+(gate.axis==='x'?offset:0);return {...gate,x,z,caveEntrance:cave,nextEntry:{x:-gate.direction.x*90+(gate.axis==='z'?offset:0),z:-gate.direction.z*90+(gate.axis==='x'?offset:0)}};});
+ return freeze({...base,gates,spokes:gates.map(gate=>({from:{x:0,z:0},to:{x:gate.x,z:gate.z},width:18,direction:gate.direction,nextKey:gate.nextKey}))});
+}
+export function roWorldGates(value=0,clearedKeys=[],visitedKeys=[],seed){
+ const region=roWorldRegion(value,seed);if(!region)return emptyNeighbors;
  const cleared=new Set(clearedKeys||[]),visited=new Set(visitedKeys||[]),localCleared=cleared.has(region.key),finalReady=RO_WORLD_ROUTE.every(r=>r.key==='valhalla'||cleared.has(r.key));
  return freeze(region.gates.map(gate=>{
   const lockedBy=gate.nextKey==='valhalla'&&!finalReady?'final':visited.has(gate.nextKey)||localCleared?null:'mvp';
-  return {...gate,open:lockedBy===null,locked:lockedBy!==null,lockedBy,nextRoute:worldRegions[gate.nextKey]};
+  return {...gate,open:lockedBy===null,locked:lockedBy!==null,lockedBy,nextRoute:roWorldRegion(gate.nextKey,seed)};
  }));
 }

@@ -1,7 +1,12 @@
+import {roExpansionSceneryParts} from './ro-expansion-scenery.js';
 import {bonkSceneryParts,bonkMonumentParts} from './bonk-prop-art.js';
 
 const freeze=o=>Object.freeze(o);
 export const RO_ROUTE_PALETTES=freeze({
+ 'snow-village':freeze({soil:0xd9e3df,grass:0xecf0e8,dark:0x456879,stone:0xb5cbce,wood:0x805c49,sky:0xacc9dc,glow:0xffd68b,path:0x9daeb1}),
+ 'toy-factory':freeze({soil:0x7f6354,grass:0xa99270,dark:0x423b43,stone:0xb6a883,wood:0x8a6046,sky:0x76859b,glow:0xffd77e,path:0xc1a781}),
+ clockwork:freeze({soil:0x77725d,grass:0x9c987c,dark:0x41484e,stone:0xb8ad86,wood:0x785b44,sky:0x919eae,glow:0xf8ce78,path:0xb5a283}),
+ thanatos:freeze({soil:0x524e68,grass:0x716d86,dark:0x292e43,stone:0x9895af,wood:0x5b4c64,sky:0x747b9e,glow:0xceabf6,path:0x89839d}),
  pastoral:freeze({soil:0x77934f,grass:0x9bb469,dark:0x436345,stone:0xb1ae94,wood:0x826341,sky:0xb8cbbb,glow:0xefdb9e,path:0xbaad7b}),
  bamboo:freeze({soil:0x506c45,grass:0x82935b,dark:0x2e5142,stone:0x9c9e86,wood:0x684d3d,sky:0xa4b6a5,glow:0xf1bc82,path:0xa08b69}),
  'burial-cave':freeze({soil:0x696b59,grass:0x818464,dark:0x3a4944,stone:0x9a9380,wood:0x685140,sky:0x929f99,glow:0xe7b983,path:0x95896e}),
@@ -22,6 +27,7 @@ const MODELS=freeze({pastoral:['prontera-house','prontera-fountain','prontera-ga
 // The same lateral sites have different architectural silhouettes by region.
 // All dimensions fit their existing 11m pocket; the 18m central road stays open.
 export function roRouteSceneryParts(style,index,p){
+ const expansion=roExpansionSceneryParts(style,p,index);if(expansion)return expansion;
  const models=MODELS[style];if(!models)return null;const model=models[index%models.length];if(!['tomb-obelisk','rachel-temple','rachel-aqueduct','juno-observatory','juno-orrery','valkyrie-throne','valkyrie-colonnade','valkyrie-arch'].includes(model))return bonkSceneryParts(model,p,index);
  const parts=[],b=(x,y,z,w,h,d,c=p.stone,a=0,lit=false)=>parts.push([x,y,z,w,h,d,c,a,lit]),column=(x,z,h=6)=>{b(x,.25,z,1.7,.5,1.7,p.dark);for(let i=0;i<7;i++)b(x,.7+i*(h-.8)/7,z,.9,(h-.8)/7*.95,.9,i%3?p.stone:p.dark);b(x,h,z,1.6,.4,1.6);};
  if(model==='tomb-obelisk'){for(let level=0;level<3;level++)b(0,.18+level*.3,0,5-level*.7,.35,4.8-level*.7,level%2?p.stone:p.dark);for(const side of [-1,1]){for(let j=0;j<8;j++)b(side*1.35,1.3+j*.6,0,.9-j*.045,.6,.95-j*.045,j%3?p.stone:0xab8b58);for(let j=0;j<5;j++){b(side*1.35,1.6+j*.7,.52,.08,.18,.03,p.glow);b(side*1.35+.15,1.64+j*.7,.52,.14,.05,.03,p.dark);}b(side*1.35,6.2,0,.27,.6,.3,p.glow);}b(0,1.1,1.6,1.7,.3,1.2,p.dark);for(let j=0;j<4;j++)b(0,1.4+j*.15,1.6,1.5-j*.12,.2,1-j*.1);}

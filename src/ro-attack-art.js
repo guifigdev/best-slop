@@ -4,7 +4,7 @@ export {RO_ATTACK_BUDGET};
 const atlases=new Map(),N=RO_ATTACK_BUDGET.frameSize,F=RO_ATTACK_BUDGET.frames,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const segment=(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-ax-dx*t,y-ay-dy*t);};
 const gray=(v,alpha)=>[v,v,v,clamp(Math.round(alpha),0,255)];
-const variants=Object.freeze({blade:Object.freeze(['standard','overhead','bashImpact']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield'])});
+const variants=Object.freeze({impact:Object.freeze(['standard','axeSlam']),blade:Object.freeze(['standard','overhead','bashImpact']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield'])});
 // Tiny software rasterizer: every family has twelve pre-baked nearest-filtered
 // frames. Data is read-only by convention; descriptors and frame bounds freeze.
 export function roAttackFrames(value='blade'){
@@ -84,6 +84,12 @@ export function roAttackFrames(value='blade'){
       }else if(rr>=outer&&rr<outer+.025)pixel=[78,100,161,Math.round(92*fade)];
      }
     }
+   }
+   else if(motion==='axeSlam'){
+    // A weighty vertical chop, followed by ground dust and broken chips.
+    const strike=clamp((p-.15)/.36,0,1),head=.86-strike*.72,tail=Math.min(.94,head+.34),curve=.10+Math.sin(z*3.2)*.14;
+    if(z>head&&z<tail&&Math.abs(sx-curve)<.025+.13*Math.sin((z-head)/(tail-head)*Math.PI))pixel=[245,239,200,Math.round(220*fade)];
+    if(p>.45){const q=clamp((p-.45)/.5,0,1),rr=Math.hypot(sx,(z-.13)*3),radius=.12+q*.72;if(Math.abs(rr-radius)<.035)merge([255,207,119,Math.round(210*(1-q))]);for(let j=0;j<9;j++){const a=j*2.4,xx=Math.sin(a)*radius,yy=.13+Math.abs(Math.cos(a))*.18*(1-q);if(Math.abs(sx-xx)<.035&&Math.abs(z-yy)<.02)merge([218,179,117,Math.round(240*(1-q))]);}}
    }
    else if(motion==='daggerStreaks'){
     // Two independently timed curved cuts, with silver cores and mint edges.

@@ -3,7 +3,7 @@ import {RO_SKILLS} from './ragnarok-jobs.js';
 // Original Nordic survivor content. Mechanics take inspiration from automatic
 // attack roguelikes; local balance and maps share the voxel bestiary.
 export const BONK_REFERENCE='https://store.steampowered.com/app/3405340/Megabonk/';
-export const BONK_RULES=Object.freeze({weaponSlots:4,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
+export const BONK_RULES=Object.freeze({interactRange:8,weaponSlots:4,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
 const weapon=(key,name,skill,description,damage,cooldown,range,extra={})=>Object.freeze({key,name,skill,description,damage,cooldown,range,...extra});
 export const BONK_WEAPONS=Object.freeze({...RO_SKILLS,
  runeblade:weapon('runeblade','Lâmina das runas','cleave','Golpes largos à frente. Evoluções ampliam o arco e atravessam grupos.',22,.85,5,{kind:'slash',element:'physical'}),
@@ -21,7 +21,7 @@ export const BONK_TOMES=Object.freeze({
  haste:tome('haste','Tomo dos ventos','endurance','+9% de frequência de ataque por nível.'),
  amount:tome('amount','Tomo das constelações','multishot','+1 projétil a cada dois níveis; melhora armas em área.'),
  area:tome('area','Tomo dos gigantes','avatar','+11% de área por nível.'),
- crit:tome('crit','Tomo do destino','critical','+7% de crítico por nível; acima de 100%, críticos adicionais.'),
+ crit:tome('crit','Tomo do destino','critical','Tomo antigo: ao carregar o personagem, devolve suas melhorias para redistribuir. Crítico vem de equipamento.'),
  magnet:tome('magnet','Tomo da colheita','brilliance','+28% de alcance de coleta e +6% de experiência por nível.'),
  vitality:tome('vitality','Tomo da vida','lifeaura','+18 de vida e regeneração lenta por nível.'),
  speed:tome('speed','Tomo do viajante','sprint','+8% de movimento e menor recarga da esquiva por nível.')
@@ -32,7 +32,7 @@ export const BONK_RELICS=Object.freeze({
  frozenheart:relic('frozenheart','Coração de geada','frostnova','Golpes contra inimigos lentos causam +18% de dano por cópia.','rare'),
  thundercoin:relic('thundercoin','Moeda da tempestade','bolt','Críticos têm chance de disparar uma corrente elétrica.','epic'),
  bloodpetal:relic('bloodpetal','Pétala rubra','vampiric','A cada 12 eliminações, recupere vida.','common'),
- luckybell:relic('luckybell','Guizo de Hugin','critical','+5% de crítico e +10% de ouro por cópia.','common'),
+ luckybell:relic('luckybell','Guizo de Hugin','critical','+10% de ouro por cópia.','common'),
  giantbone:relic('giantbone','Osso de gigante','avatar','+10% de área e +8% de vida máxima por cópia.','rare'),
  glassrune:relic('glassrune','Runa de vidro','rage','+22% de dano e -8 de vida máxima por cópia.','epic'),
  travelersboots:relic('travelersboots','Botas do caminho','sprint','+5% de velocidade; esquivar deixa uma explosão.','rare'),

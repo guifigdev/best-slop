@@ -8,7 +8,7 @@ import {bonkStats} from '../shared/bonk.js';
 const allowedKinds=new Set(['slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash']);
 const modifierKeys=new Set(['damage','haste','area','crit','armor','magicDefense','evasion','regen','speed','manaRegen','damageReduction','lifeSteal','accuracy','critDamage','xp','magnet','amount','maxHp']);
 const statusKeys=new Set(['slow','stun','root','poison','burn','armorBreak','blind']);
-const mechanicKeys=new Set(['modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance']);
+const mechanicKeys=new Set(['allyRadius','modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance']);
 
 test('every source skill has an executable combat role, coherent numeric profile and a primary source identity',()=>{
  assert.equal(Object.keys(RO_EXPANDED_SKILLS).length,681);
@@ -54,7 +54,7 @@ test('all twelve lineages expose the complete curated skills of their own 54 fir
 test('both mage paths start with an identifiable exploding fireball while bolt alternatives remain in the learnable tree',()=>{
  for(const key of ['archmage','elementalmaster']){
   const p=RO_LINEAGES[key],basic=roBasicAttack({roLineage:key,roTier:0});
-  assert.equal(p.skills[0],'fireball');assert.equal(basic.element,'fire');assert.equal(basic.kind,'projectile');assert.equal(basic.radius,1.6);assert.equal(basic.skill,'fireball');assert.match(basic.name,/Fire Ball/);
+  assert.equal(p.skills[0],'fireball');assert.equal(basic.element,'fire');assert.equal(basic.kind,'projectile');assert.equal(basic.radius,1.6);assert.equal(basic.skill,'fireball');assert.match(basic.name,/Bola de Fogo/);
   for(const alternative of ['firebolt','coldbolt'])assert.ok(p.skills.includes(alternative));
  }
  assert.equal(RO_SKILLS.fireball.sourceAegis,'MG_FIREBALL');assert.equal(RO_SKILLS.fireball.element,'fire');assert.ok(RO_SKILLS.fireball.mechanics.radius>=2);

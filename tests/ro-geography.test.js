@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {RO_WORLD_ROUTE,RO_WORLD_GEOGRAPHY,RO_WORLD_LINKS,roWorldNeighbors,roWorldRegion,roWorldGates,roRouteNext,roRouteGate} from '../shared/ro-world-route.js';
 
-test('the supplied diorama becomes one connected Y with the volcano as the only three-way nexus',()=>{
- assert.equal(RO_WORLD_LINKS.length,11);assert.equal(Object.keys(RO_WORLD_GEOGRAPHY).length,12);const seenEdges=new Set();
+test('the supplied diorama becomes one connected Y with the volcano nexus and four additional regional branches',()=>{
+ assert.equal(RO_WORLD_LINKS.length,15);assert.equal(Object.keys(RO_WORLD_GEOGRAPHY).length,16);const seenEdges=new Set();
  for(const link of RO_WORLD_LINKS){assert.ok(roWorldRegion(link.a)&&roWorldRegion(link.b));assert.notEqual(link.a,link.b);const id=[link.a,link.b].sort().join(':');assert.ok(!seenEdges.has(id));seenEdges.add(id);assert.ok(Object.isFrozen(link));}
- for(const region of RO_WORLD_ROUTE){const count=roWorldNeighbors(region).length;assert.ok(count>=1);assert.ok(count<=(region.key==='thor-volcano'?3:2));}assert.equal(roWorldNeighbors('thor-volcano').length,3);
- const reached=new Set(['prontera']),queue=['prontera'];while(queue.length)for(const key of roWorldNeighbors(queue.shift()))if(!reached.has(key)){reached.add(key);queue.push(key);}assert.equal(reached.size,12);
+ for(const region of RO_WORLD_ROUTE){const count=roWorldNeighbors(region).length;assert.ok(count>=1);assert.ok(count<=3);}assert.equal(roWorldNeighbors('thor-volcano').length,3);
+ const reached=new Set(['prontera']),queue=['prontera'];while(queue.length)for(const key of roWorldNeighbors(queue.shift()))if(!reached.has(key)){reached.add(key);queue.push(key);}assert.equal(reached.size,16);
  const t=RO_WORLD_GEOGRAPHY['thor-volcano'];assert.ok(RO_WORLD_GEOGRAPHY.morroc.x<t.x&&RO_WORLD_GEOGRAPHY.prontera.x>t.x);assert.ok(RO_WORLD_GEOGRAPHY['ice-cavern'].z<RO_WORLD_GEOGRAPHY.juno.z&&RO_WORLD_GEOGRAPHY.juno.z<t.z);
 });
 

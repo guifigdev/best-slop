@@ -2,7 +2,7 @@ import {RO_EQUIPMENT,createRoEquipment} from './ragnarok-equipment.js';
 
 // Normal equipment identities already sourced by the RO equipment catalog.
 // MVP-exclusive database drops remain on their respective boss loot tables.
-export const RO_CHEST_EQUIPMENT_KEYS=Object.freeze(['knife','maingauche','sword','katana','rod','staff','bow','compositebow','mace','axe','battleaxe','spear','guard','buckler','cottonshirt','adventurersuit','coat','manteau','muffler','shoes','boots','clip','ring','cap']);
+export const RO_CHEST_EQUIPMENT_KEYS=Object.freeze(['knife','maingauche','sword','katana','rod','staff','bow','compositebow','mace','axe','battleaxe','spear','guard','buckler','cottonshirt','adventurersuit','coat','manteau','muffler','shoes','boots','clip','ring','cap','criticalring','katar']);
 export const RO_CHEST_INVENTORY_LIMIT=48,RO_CHEST_PENDING_LIMIT=128;
 const advanced=new Set(['maingauche','katana','staff','compositebow','battleaxe','spear','buckler','coat','manteau','boots','clip','ring']),preferred={dragonknight:'sword',imperialguard:'spear',archmage:'staff',elementalmaster:'staff',windhawk:'bow',troubadour:'bow',cardinal:'mace',inquisitor:'mace',meister:'axe',biolo:'axe',shadowcross:'dagger',abysschaser:'dagger'};
 export const canReceiveRoChestEquipment=hero=>(hero?.roInventory?.length||0)<RO_CHEST_INVENTORY_LIMIT||(hero?.roUnclaimed?.length||0)<RO_CHEST_PENDING_LIMIT;

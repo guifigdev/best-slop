@@ -34,5 +34,5 @@ test('individual AUTO preferences survive save/restore and invalid preferences a
 });
 
 test('starting chest is immediately advertised and opens without movement, while range remains bounded',()=>{
- const{g,u}=arena(),chest=g.bonk.objects.find(o=>o.id==='starting-chest'),position=[u.x,u.z];assert.ok(Math.hypot(chest.x-u.x,chest.z-u.z)>4);assert.equal(g.snapshotBonk().nearestObject,chest.id);assert.ok(g.command('p',{type:'bkInteract',object:chest.id}));assert.deepEqual([u.x,u.z],position);assert.equal(g.bonk.lastLoot.equipment.length,1);assert.ok(g.bonk.lastLoot.relic);g.bonk.objects.push({id:'too-far',type:'pot',x:u.x+4.81,z:u.z,used:false});assert.equal(g.command('p',{type:'bkInteract',object:'too-far'}),false);
+ const{g,u}=arena(),chest=g.bonk.objects.find(o=>o.id==='starting-chest'),position=[u.x,u.z];assert.ok(Math.hypot(chest.x-u.x,chest.z-u.z)>4);assert.equal(g.snapshotBonk().nearestObject,chest.id);assert.ok(g.command('p',{type:'bkInteract',object:chest.id}));assert.deepEqual([u.x,u.z],position);assert.equal(g.bonk.lastLoot.equipment.length,1);assert.ok(g.bonk.lastLoot.relic);g.bonk.objects.push({id:'too-far',type:'pot',x:u.x+8.01,z:u.z,used:false});assert.equal(g.command('p',{type:'bkInteract',object:'too-far'}),false);
 });

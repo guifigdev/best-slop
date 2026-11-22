@@ -19,3 +19,5 @@
 @media(max-width:1024px) and (max-height:500px){.ro-mobile-top{right:auto;width:330px}.bonk-hud .ro-mobile-objective{top:71px;width:216px}.bonk-hud .ro-mobile-sheet{left:25%;max-height:calc(100% - 16px)}body.bonk-mode .game-feedback{top:8px;right:135px;width:220px}body.bonk-mode .game-feedback-fixed{top:52px}body.bonk-mode .ro-loot-cue{top:45px;right:135px}}
 
 @media(max-width:1024px){body.bonk-mode .combat-text{font-size:13px}body.bonk-mode .combat-text.critical.critical{font-size:18px;padding:1px 3px;-webkit-text-stroke:.35px #8c4b17}body.bonk-mode .combat-overlay .combat-text.critical::before{inset:-4px -6px}body.bonk-mode .combat-text.healing{font-size:11px}}
+
+@media(max-width:1024px){.ro-mobile-sheet header button,.ro-mobile-auto-list>div>button:last-child{background:#294f42;color:#eaddb8;border:1px solid #89a17c;border-radius:9px;box-shadow:none}.ro-mobile-sheet header button{width:40px;height:40px;font-size:24px}}
