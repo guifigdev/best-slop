@@ -1,4 +1,5 @@
 import {syncRoCompanions,tickRoCompanions} from './ro-pet-companions.js';
+import {roSkillTargetRange} from './ro-skill-range.js';
 import {isRoArrowRainSkill,RO_ARROW_RAIN_TIMING} from './ro-arrow-rain.js';
 import {RO_SKILLS} from './ragnarok-jobs.js';
 import {isRoMeteorSkill,RO_METEOR_TIMING} from './ro-meteor.js';
@@ -55,7 +56,7 @@ export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
  if(kind==='summon'&&(game.bonk?.roSkillSummons||[]).some(s=>s.source===unit.id&&s.key===weapon.key&&s.until>time))return{ready:false,reasonCode:'active',readyReason:'Invocação ativa'};
  // Offensive utility still needs a nearby monster; heals and defensive buffs do not.
  if(['zone','summon','dash'].includes(kind)){
-  const range=Math.max(3,finite(weapon.range,15)*(stats.area||1));
+  const range=Math.max(3,roSkillTargetRange(weapon,stats));
   if(!live(game).some(e=>distance(e,unit)<=range))return{ready:false,reasonCode:'target',readyReason:'Sem inimigo no alcance'};
   return{ready:true,reasonCode:'ready',readyReason:'Pronta'};
  }
@@ -90,7 +91,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   }
   emit(api,m.shieldPercent?'devotion':'battlecry',unit,{source:unit.id,target:unit.id,radius:2.5,duration:.7,skillKey:weapon.key});return true;
  }
- const targets=nearby(game,unit,Math.max(3,weapon.range*(stats.area||1)),api).sort((a,c)=>distance(a,unit)-distance(c,unit)),target=targets.find(e=>clear(api,unit,e));
+ const targets=nearby(game,unit,Math.max(3,roSkillTargetRange(weapon,stats)),api).sort((a,c)=>distance(a,unit)-distance(c,unit)),target=targets.find(e=>clear(api,unit,e));
  if(!target)return false;
  if(kind==='dash'){
   const away=m.retreat===true? -1:1,dx=(target.x-unit.x)*away,dz=(target.z-unit.z)*away,length=Math.hypot(dx,dz)||1,dashDistance=clamp(m.dashDistance||5,1,10);

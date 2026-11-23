@@ -1,4 +1,5 @@
 import {RO_SKILLS,roBasicAttack} from '../shared/ragnarok-jobs.js';
+import {roSkillTargetRange,isRoTrapSkill} from '../shared/ro-skill-range.js';
 import {skillFor} from '../shared/skill-quality.js';
 import {levelOf} from '../shared/catalog.js';
 import {roSkillCastTime,roSkillManaCost,roSkillCooldown} from '../shared/ro-skill-controls.js';
@@ -25,8 +26,8 @@ export function equippedSkillDetails(state,unit,token){
   const damage=level=>(skill.damage||0)*(1+(level-1)*.28),rows=[];
   if(skill.damage>0)rows.push({label:'Dano base',current:fmt('damage',damage(rank)),next:next?fmt('damage',damage(next)):null});
   rows.push({label:'Conjuração',current:fmt('cooldown',roSkillCastTime(definition,rank,stats).total),next:next?fmt('cooldown',roSkillCastTime(definition,next,stats).total):null});
-  rows.push({label:'SP',current:fmt('mana',roSkillManaCost(skill)),next:next?fmt('mana',roSkillManaCost(skill,next)):null},{label:'Recarga',current:fmt('cooldown',roSkillCooldown(definition,rank,stats)),next:next?fmt('cooldown',roSkillCooldown(definition,next,stats)):null},{label:'Alcance',current:fmt('distance',(skill.range||0)*(stats.area||1)),next:next?fmt('distance',(skill.range||0)*(stats.area||1)):null});
-  for(const k of ['duration','radius','summonCount','healPercent'])if(Number.isFinite(skill.mechanics?.[k]))rows.push({label:k==='healPercent'?'Cura da vida máxima':labels[k]||k,current:k==='healPercent'?Math.round(skill.mechanics[k]*100)+'%':fmt(k,skill.mechanics[k]),next:null});
+  rows.push({label:'SP',current:fmt('mana',roSkillManaCost(skill)),next:next?fmt('mana',roSkillManaCost(skill,next)):null},{label:'Recarga',current:fmt('cooldown',roSkillCooldown(definition,rank,stats)),next:next?fmt('cooldown',roSkillCooldown(definition,next,stats)):null},{label:'Alcance',current:fmt('distance',roSkillTargetRange(definition,stats)),next:next?fmt('distance',roSkillTargetRange(definition,stats)):null});
+  for(const k of ['duration','radius','summonCount','healPercent'])if(Number.isFinite(skill.mechanics?.[k])){const value=k==='radius'&&isRoTrapSkill(definition)?Math.min(24,Math.max(1,skill.mechanics[k]*(stats.area||1))):skill.mechanics[k];rows.push({label:k==='healPercent'?'Cura da vida máxima':labels[k]||k,current:k==='healPercent'?Math.round(value*100)+'%':fmt(k,value),next:null});}
   const pending=!!b.offer,offered=!!b.offer?.choices?.some(c=>c.kind==='weapon'&&c.key===key),canUpgrade=offered&&rank<8,upgradeReason=rank>=8?'Nível máximo alcançado.':offered?'Usa uma das quatro ofertas desta subida de nível.':pending?'Esta habilidade não está entre as quatro ofertas.':'Melhore quando aparecer entre as quatro ofertas de nível.';
   return{key,name:skill.name,art:skill.skill||'cleave',description:skill.description,rank,max:8,kind:skill.kind==='passive'?'Passiva · sempre ativa':'Habilidade ativa',element:({physical:'Físico',fire:'Fogo',ice:'Gelo',wind:'Vento',holy:'Sagrado',poison:'Veneno',dark:'Sombrio',arcane:'Arcano'})[skill.element],rows,canUpgrade,upgradeReason,points:pending?1:0,auto:skill.auto!==false,passive:skill.kind==='passive'};
  }
