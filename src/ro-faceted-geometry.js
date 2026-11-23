@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {roFacetedSurfaceGeometry} from './ro-faceted-surface.js';
 
 // Geometric chamfers, inspired by the exposed-edge construction in the user's
 // atlas-in-relief TerrainMesh.tsx. Normals stay flat: no blur, AA or smoothing.
@@ -101,21 +102,24 @@ export function createRoGeometryPresentation({scene,interval=100}={}){
  const originals=new WeakMap(),variants=new Map();let style='blocks',chamfer=RO_FACETED_DEFAULT,dirty=true,last=-Infinity,disposed=false,report={meshes:0,geometries:0,triangles:0,bytes:0,skipped:0};
  const excluded=/particle|projectile|attack|voxel-fire|smoke|spark|health|hud|pickup|loot|light-shaft|impact-stones/i;
  function allowed(object){if(!object.isMesh||object.isSkinnedMesh||object.userData?.roNoFacet)return false;for(let node=object;node&&node!==scene;node=node.parent)if(node.userData?.roNoFacet||excluded.test(node.name||''))return false;const materials=Array.isArray(object.material)?object.material:[object.material];return materials.length&&materials.every(m=>m&&!m.transparent&&m.depthWrite!==false&&!m.isShaderMaterial&&m.blending!==T.AdditiveBlending)&&(!(!object.castShadow&&!object.receiveShadow)||!!object.geometry?.userData?.roVoxelParts);}
- function variant(source,object){let entry=variants.get(source);if(!entry)variants.set(source,entry={geometry:null,key:''});const key=style+':'+chamfer;if(entry.key===key&&entry.geometry)return entry.geometry;
+ function syncInstanceAttributes(source,target){for(const [key,attribute]of Object.entries(source.attributes))if(attribute.isInstancedBufferAttribute)target.setAttribute(key,attribute);}
+ function replaceGeometry(object,geometry,source){if(object.geometry===geometry)return;object.geometry=geometry;object.userData.roOnGeometryChanged?.(geometry,source);}
+ function variant(source,object){let entry=variants.get(source);if(!entry)variants.set(source,entry={geometry:null,key:''});const key=style+':'+chamfer;if(entry.key===key&&entry.geometry){syncInstanceAttributes(source,entry.geometry);return entry.geometry;}
   let geometry;
   if(source.userData.roVoxelParts)geometry=roFacetedVoxelGeometry(source.userData.roVoxelParts,{chamfer,exposedFaces:source.userData.roVoxelFaces});
+  else if(source.userData.roFacetedSurface)geometry=roFacetedSurfaceGeometry(source,{chamfer});
   else if(object.userData.roTerrainGrid)geometry=roFacetedTerrainGeometry({...object.userData.roTerrainGrid,chamfer});
   else {const p=source.parameters;geometry=roFacetedBoxGeometry(p.width,p.height,p.depth,chamfer);copyBoxAttributes(source,geometry);}
-  originals.set(geometry,source);const old=entry.geometry;entry.geometry=geometry;entry.key=key;if(old)(entry.retired||=[]).push(old);return geometry;
+  syncInstanceAttributes(source,geometry);originals.set(geometry,source);const old=entry.geometry;entry.geometry=geometry;entry.key=key;if(old)(entry.retired||=[]).push(old);return geometry;
  }
  function update(now=globalThis.performance?.now?.()||Date.now()){
   if(disposed||!dirty&&now-last<interval)return;last=now;dirty=false;const used=new Set();let meshes=0,skipped=0;
   scene.traverse(object=>{if(!object.isMesh||!object.geometry)return;const source=originals.get(object.geometry)||object.geometry;
-   if(style==='blocks'||chamfer===0||!allowed(object)){if(originals.has(object.geometry))object.geometry=source;return;}
-   if(source.type!=='BoxGeometry'&&!source.userData?.roVoxelParts&&!object.userData.roTerrainGrid)return;try{const geometry=variant(source,object);used.add(source);object.geometry=geometry;meshes++;}catch{object.geometry=source;skipped++;}
+   if(style==='blocks'||chamfer===0||!allowed(object)){if(originals.has(object.geometry))replaceGeometry(object,source,source);return;}
+   if(source.type!=='BoxGeometry'&&!source.userData?.roVoxelParts&&!source.userData?.roFacetedSurface&&!object.userData.roTerrainGrid)return;try{const geometry=variant(source,object);replaceGeometry(object,geometry,source);used.add(source);meshes++;}catch{replaceGeometry(object,source,source);skipped++;}
   });
   let triangles=0,bytes=0;for(const [source,entry]of variants){for(const g of entry.retired||[])g.dispose();entry.retired=[];if(!used.has(source)){entry.geometry?.dispose();variants.delete(source);continue;}triangles+=(entry.geometry?.attributes.position.count||0)/3;for(const attr of Object.values(entry.geometry.attributes))if(!attr.isInstancedBufferAttribute)bytes+=attr.array.byteLength;}
   report={meshes,geometries:variants.size,triangles,bytes,skipped};
  }
- return{setOptions(options={}){const next=options.terrainStyle===undefined?style:options.terrainStyle==='faceted'?'faceted':'blocks',amount=roChamferAmount(options.chamfer??chamfer);if(next!==style||amount!==chamfer){style=next;chamfer=amount;dirty=true;}return{terrainStyle:style,chamfer};},update,stats(){return{...report,terrainStyle:style,chamfer,interval};},dispose(){if(disposed)return;scene.traverse(object=>{if(object.isMesh&&originals.has(object.geometry))object.geometry=originals.get(object.geometry);});for(const entry of variants.values()){entry.geometry?.dispose();for(const g of entry.retired||[])g.dispose();}variants.clear();disposed=true;report={meshes:0,geometries:0,triangles:0,bytes:0,skipped:0};}};
+ return{setOptions(options={}){const next=options.terrainStyle===undefined?style:options.terrainStyle==='faceted'?'faceted':'blocks',amount=roChamferAmount(options.chamfer??chamfer);if(next!==style||amount!==chamfer){style=next;chamfer=amount;dirty=true;}return{terrainStyle:style,chamfer};},update,stats(){return{...report,terrainStyle:style,chamfer,interval};},dispose(){if(disposed)return;scene.traverse(object=>{if(object.isMesh&&originals.has(object.geometry))replaceGeometry(object,originals.get(object.geometry),originals.get(object.geometry));});for(const entry of variants.values()){entry.geometry?.dispose();for(const g of entry.retired||[])g.dispose();}variants.clear();disposed=true;report={meshes:0,geometries:0,triangles:0,bytes:0,skipped:0};}};
 }

@@ -13,24 +13,24 @@ import {roSurvivorEnemyBudget} from '../shared/ro-survivor-balance.js';
 import {RO_WORLD_ROUTE,roWorldRegion,roWorldGates} from '../shared/ro-world-route.js';
 import {roExpansionSceneryParts} from '../src/ro-expansion-scenery.js';
 const make=(options={})=>{const g=new Game(81,{mode:'bonk',bonkWorld:'dominion',...options});g.addPlayer('p','knight');return{g,u:g.player('p')};};
-test('Ragnabonk critical chance belongs to equipped gear and socketed cards, never attributes, tomes, relics or buffs',()=>{
- const {g,u}=make();u.attributes.luk=99;u.bonkBuild.tomes.crit=8;u.bonkBuild.relics.luckybell=20;u.roSkillBuffs=[{key:'test',until:100,modifiers:{crit:.25}}];assert.equal(bonkStats(u).crit,0);
- const ring=createRoEquipment('criticalring','crit-ring');u.roInventory.push(ring);assert.ok(roEquip(u,ring.id,'accessory'));assert.equal(bonkStats(u).crit,.05);
- u.roInventory[0].cards.push({id:'crit-card',key:'lunatic'});assert.ok(bonkStats(u).crit>.05);u.roEquipment.accessory=null;u.roEquipment.weapon=null;assert.equal(bonkStats(u).crit,0);
- assert.ok(!roSkillOfferPool(u).some(o=>o.kind==='tome'&&o.key==='crit'));
+test('Ragnabonk critical chance belongs to equipped gear, bound enchantments and cards, never naked attributes or buffs',()=>{
+ const {g,u}=make();u.attributes.luk=99;u.bonkBuild.relics.luckybell=20;u.roSkillBuffs=[{key:'test',until:100,modifiers:{crit:.25}}];assert.equal(bonkStats(u).crit,0);u.bonkBuild.tomes.crit=8;assert.equal(bonkStats(u).crit,.4);assert.deepEqual(u.bonkBuild.tomes,{});
+ const ring=createRoEquipment('criticalring','crit-ring');u.roInventory.push(ring);assert.ok(roEquip(u,ring.id,'accessory'));assert.equal(bonkStats(u).crit,.45);
+ u.roInventory[0].cards.push({id:'crit-card',key:'lunatic'});assert.ok(bonkStats(u).crit>.45);u.roEquipment.accessory=null;u.roEquipment.weapon=null;assert.equal(bonkStats(u).crit,0);
+ assert.ok(roSkillOfferPool(u).some(o=>o.kind==='tome'&&o.key==='crit'&&o.itemId===u.roEquipment.armor));
 });
 test('normal equipment drops are more present and include critical gear without replacing monster-specific cards',()=>{
  let gear=0,crit=0;for(let i=0;i<10000;i++){const sequence=[(i+.5)/10000,(i%26+.5)/26];const drop=rollRoLoot(()=>sequence.shift()??.5,'poring');if(drop?.kind==='equipment'){gear++;if(['criticalring','katar'].includes(drop.key))crit++;}}
  assert.equal(gear,600);assert.ok(crit>20);assert.equal(RO_LOOT_RATES.card,.00015);assert.equal(RO_LOOT_RATES.bossCard,.0015);
  assert.deepEqual(rollRoLoot(()=>0,'poring'),{kind:'card',key:'poring'});
 });
-test('class-only offers cover every lineage and the authoritative alternate chooser rejects another class',()=>{
- for(const key of Object.keys(RO_LINEAGES)){const {u}=make({bonkLineage:key,bonkSkillMode:'class'}),pool=roSkillOfferPool(u).filter(o=>o.kind==='weapon'&&o.key!=='basic');assert.ok(pool.length>20,key);assert.ok(pool.every(o=>RO_LINEAGES[key].skills.includes(o.key)));}
- const {g,u}=make({bonkSkillMode:'class'});g.command('p',{type:'bkReady'});u.bonkPendingLevels=1;g.bonk.stage='levelup';g.bonk.offer={choices:[]};assert.equal(g.command('p',{type:'bkChooseSkill',key:'stormgust'}),false);assert.ok(g.command('p',{type:'bkChooseSkill',key:'sm_magnum'}));
- const mixed=make({bonkSkillMode:'mixed'});assert.ok(roSkillOfferPool(mixed.u).some(o=>o.key==='stormgust'));assert.equal(g.snapshotBonk().skillCatalog.some(s=>s.key==='stormgust'),false);
+test('class-only offers cover every lineage and the authoritative chooser rejects skills outside the current offer',()=>{
+ for(const key of Object.keys(RO_LINEAGES)){const {u}=make({bonkLineage:key,bonkSkillMode:'class'}),pool=roSkillOfferPool({...u,roTier:3}).filter(o=>o.kind==='weapon'&&o.key!=='basic');assert.ok(pool.length>20,key);assert.ok(pool.every(o=>RO_LINEAGES[key].skills.includes(o.key)));}
+ const {g,u}=make({bonkSkillMode:'class'});g.command('p',{type:'bkReady'});u.bonkPendingLevels=1;g.bonk.stage='levelup';g.bonk.offer={choices:[]};assert.equal(g.command('p',{type:'bkChooseSkill',key:'stormgust'}),false);assert.equal(g.command('p',{type:'bkChooseSkill',key:'sm_magnum'}),false,'cannot select an eligible skill outside the drawn choices');g.bonk.offer.choices=[{...roSkillOfferPool(u).find(o=>o.kind==='weapon'&&o.key==='sm_magnum'),id:'drawn-magnum'}];assert.ok(g.command('p',{type:'bkChooseSkill',key:'sm_magnum'}));
+ const mixed=make({bonkSkillMode:'mixed'});assert.equal(roSkillOfferPool(mixed.u).some(o=>o.key==='stormgust'),false);mixed.u.roTier=1;assert.ok(roSkillOfferPool(mixed.u).some(o=>o.key==='stormgust'));assert.equal(g.snapshotBonk().skillCatalog.some(s=>s.key==='stormgust'),false);
 });
 test('offers omit repetitive generic damage buffs while retaining elemental enchants, active areas, summons and support',()=>{
- const {u}=make(),pool=roSkillOfferPool(u),keys=new Set(pool.map(o=>o.key));for(const key of ['tr_pron_march','so_striking','sc_enervation'])assert.equal(keys.has(key),false,key);
+ const {u}=make();u.roTier=3;const pool=roSkillOfferPool(u),keys=new Set(pool.map(o=>o.key));for(const key of ['tr_pron_march','so_striking','sc_enervation'])assert.equal(keys.has(key),false,key);
  for(const key of ['sa_flamelauncher','as_enchantpoison','sm_magnum','am_cannibalize','mg_firewall','al_blessing'])assert.ok(keys.has(key),key);
  for(const key of ['bash','coldbolt','cartrevolution','am_cannibalize','tr_pron_march'])assert.notEqual(RO_SKILLS[key].name,RO_SKILLS[key].originalName);
 });
@@ -57,8 +57,8 @@ test('Blessing supports nearby party members without stacking duplicate buffs or
  const {g,u}=make(),ally={...u,id:999,x:u.x+3,roSkillBuffs:[]},far={...u,id:1000,x:u.x+30,roSkillBuffs:[]};g.units.push(ally,far);const skill=RO_SKILLS.al_blessing;
  assert.ok(castRoUtilitySkill(g,u,skill,1,{},{}));assert.ok(ally.roSkillBuffs.some(b=>b.key===skill.key));assert.equal(far.roSkillBuffs.length,0);assert.equal(castRoUtilitySkill(g,u,skill,1,{},{}),false);assert.equal(ally.roSkillBuffs.length,1);
 });
-test('old critical tome ranks return as real level-up choices on restore and the atlas names all new regions',()=>{
- const {g,u}=make();g.command('p',{type:'bkReady'});u.bonkBuild.tomes.crit=3;const cp=createRoCheckpoint(g),restored=make();assert.ok(restored.g.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(restored.u.bonkBuild.tomes.crit,undefined);assert.ok(restored.u.bonkPendingLevels>=3);assert.equal(bonkStats(restored.u).crit,0);
+test('old critical tome ranks migrate onto equipment without refund or lost progress and the atlas names all new regions',()=>{
+ const {g,u}=make();g.command('p',{type:'bkReady'});u.bonkBuild.tomes.crit=3;const cp=createRoCheckpoint(g),restored=make();assert.ok(restored.g.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(restored.u.bonkBuild.tomes.crit,undefined);assert.equal(restored.u.bonkPendingLevels,0);assert.ok(Math.abs(bonkStats(restored.u).crit-.15)<1e-12);
  const html=roWorldAtlasMarkup({route:roWorldRegion('lutie'),clearedStages:[],visitedStages:[]});for(const text of ['Lutie','Fábrica de Brinquedos','Torre do Relógio','Torre de Thanatos','16 selos'])assert.ok(html.includes(text));assert.ok(!html.includes('undefined'));
 });
 

@@ -47,4 +47,18 @@ body.hud-revamp.bonk-mode .brand strong{font-size:12px}.hud-revamp.bonk-mode .hu
 @media(prefers-reduced-motion:reduce){body.hud-revamp #game-panel{transition:none}}
 body.hud-revamp #overlay-modal,body.hud-revamp .game-visual-backdrop{z-index:210}
 body.hud-revamp:not(.hud-ready-action) #game-panel .side-footer{display:none!important}
+@media(orientation:portrait) and (max-width:700px){.ro-paperdoll-slot>button{flex-direction:column!important;gap:1px!important}.ro-paperdoll-slot .ro-gear-icon{width:24px!important;height:24px!important}.ro-paperdoll-slot small{text-align:center!important;font-size:7px!important;line-height:1.1!important;overflow-wrap:normal!important}}
 body.hud-revamp .camera-tools #camera-mode{background:#d5dfbf;color:#203b2e}
+/* Vital signs have their own reserved space; interaction never covers them. */
+body.hud-revamp.bonk-mode .bonk-vitals{left:16px;bottom:18px;width:230px;padding:10px 12px;border:1px solid #8ca88955;border-radius:12px;background:#122e28dc;box-sizing:border-box}
+body.hud-revamp.bonk-mode .bonk-vitals>b{font-size:18px}.hud-revamp.bonk-mode .bonk-vitals>small{display:block;font-size:10px;margin-top:4px}
+body.hud-revamp.bonk-mode .consumable-dock{left:16px;right:auto;bottom:150px}
+body.hud-revamp.bonk-mode .bonk-controls{left:auto;right:16px;bottom:165px;max-width:230px}
+body.hud-revamp.bonk-mode .bonk-controls>span{display:none}
+body.hud-revamp.bonk-mode .bonk-controls>button{max-width:230px;border:1px solid #96b18a80;border-radius:10px;background:#163d32ed;padding:10px 12px;white-space:normal}
+body.hud-revamp.bonk-mode .ro-gate-cue{left:16px;bottom:211px;max-width:230px}
+body.hud-revamp.hud-compact.bonk-mode .consumable-dock{left:8px;right:auto;top:135px;bottom:auto}
+body.hud-revamp.hud-compact.bonk-mode .online-room-panel:not(.room-waiting){top:180px}
+@media(max-width:1024px){body.hud-revamp.bonk-mode .bonk-controls{right:10px;bottom:240px;max-width:170px}body.hud-revamp.bonk-mode .bonk-controls>button{max-width:170px;min-height:40px;padding:8px 10px}body.hud-revamp.bonk-mode .ro-gate-cue{left:8px;bottom:120px;max-width:calc(100% - 144px)}}
+@media(max-width:1024px) and (orientation:portrait){body.hud-revamp.bonk-mode .ro-mobile-objective{top:84px}body.hud-revamp.hud-compact.bonk-mode .consumable-dock{top:139px}body.hud-revamp.hud-compact.bonk-mode .online-room-panel:not(.room-waiting){top:184px}body.hud-revamp.bonk-mode .ro-loot-cue{top:226px}}
+@media(max-width:1024px) and (max-height:500px){body.hud-revamp.hud-compact.bonk-mode .consumable-dock{top:76px;left:232px}body.hud-revamp.hud-compact.bonk-mode .online-room-panel:not(.room-waiting){top:122px;max-width:168px}body.hud-revamp.bonk-mode .bonk-controls{bottom:210px}}

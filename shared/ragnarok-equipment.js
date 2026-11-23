@@ -1,4 +1,5 @@
 import {RO_TOWER_CARDS,RO_TOWER_MVP_GEAR,RO_TOWER_DROP_MAP} from './ragnarok-tower-drops.js';
+import {RO_BUILD_EQUIPMENT} from './ro-build-equipment.js';
 // Source identity, equipment positions and sockets follow Divine Pride.
 // Combat numbers are deliberately scaled for Frenesi's ~200 HP opening, not
 // copied from RO's much larger health/damage economy. Cards remain on the item.
@@ -31,6 +32,8 @@ const BASE_RO_EQUIPMENT=freeze(Object.fromEntries([
  gear('clip','Clip [1]',2607,'accessory',1,{maxHp:8}),
  gear('ring','Ring',2601,'accessory',0,{str:2}),
  gear('cap','Cap [1]',2227,'head',1,{armor:.6}),
+ gear('sunglasses','Óculos Escuros [1]',2202,'headMid',1,{}, {headPosition:'middle'}),
+ gear('flumask','Máscara Cirúrgica',2218,'headLow',0,{}, {headPosition:'lower'}),
  gear('criticalring','Anel Crítico',2616,'accessory',0,{crit:.05}),
  // Katar precision is a survivor adaptation; it preserves the class attack.
  gear('katar','Katar [2]',1253,'weapon',2,{attack:10,dex:1,crit:.06},{weaponType:'katar',hands:2}),
@@ -68,10 +71,14 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
  mvpCard('hatii','Hatii Card',4324,'armor',{vit:2,armor:2},['hatii'],'Chance to freeze an attacker when struck'),
  mvpCard('fallenbishop','Fallen Bishop Card',4441,'shoes',{int:3,matk:7},['fallenbishop'],'MATK +10%, max SP -50%, magic damage to Angel and Demihuman +50%'),
 ].map(item=>[item.key,item])));
-export const RO_EQUIPMENT=freeze({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR});
+export const RO_EQUIPMENT=freeze({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT});
 export const RO_CARDS=freeze({...BASE_RO_CARDS,...RO_TOWER_CARDS});
 export const RO_LOOT_RATES=freeze({card:.00015,bossCard:.0015,equipment:.06});
-export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','armor','garment','shoes','accessory','head']);
+export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','head','headMid','headLow','armor','garment','shoes','accessory','accessory2']);
+export const RO_EQUIPMENT_SLOT_NAMES=freeze({weapon:'Mão direita',offhand:'Mão esquerda',head:'Cabeça · topo',headMid:'Cabeça · meio',headLow:'Cabeça · baixo',armor:'Armadura',garment:'Capa',shoes:'Calçados',accessory:'Acessório 1',accessory2:'Acessório 2'});
+export const RO_BAG_CAPACITY=30;
+export const roSlotType=slot=>slot==='accessory2'?'accessory':['headMid','headLow'].includes(slot)?'head':slot;
+export const roCardFitsSlot=(card,slot)=>card?.slot===roSlotType(slot)||slot==='offhand'&&card?.slot==='weapon';
 const starter=freeze({dragonknight:'sword',imperialguard:'spear',archmage:'rod',elementalmaster:'staff',windhawk:'bow',troubadour:'bow',cardinal:'mace',inquisitor:'mace',meister:'axe',biolo:'axe',shadowcross:'knife',abysschaser:'knife'});
 const validId=id=>(typeof id==='string'&&id.length>0)||(typeof id==='number'&&Number.isSafeInteger(id));
 export function createRoEquipment(key,id){return own(RO_EQUIPMENT,key)&&validId(id)?{id,key,cards:[]}:null;}
@@ -80,29 +87,39 @@ export function initializeRoInventory(u,lineage){
  u.roLineage=own(starter,lineage)?lineage:'dragonknight';
  if(Array.isArray(u.roInventory)&&u.roEquipment&&Array.isArray(u.roCards))return true;
  const prefix=`${u.id??'hero'}:ro:starter`,weapon=createRoEquipment(starter[u.roLineage],`${prefix}:weapon`),armor=createRoEquipment('adventurersuit',`${prefix}:armor`);
- u.roInventory=[weapon,armor];u.roCards=[];u.roEquipment={weapon:weapon.id,offhand:null,armor:armor.id,garment:null,shoes:null,accessory:null,head:null};
+ u.roInventory=[weapon,armor];u.roCards=[];u.roEquipment=Object.fromEntries(RO_EQUIPMENT_SLOTS.map(slot=>[slot,slot==='weapon'?weapon.id:slot==='armor'?armor.id:null]));u.roBagVersion=1;
  if(u.roLineage==='shadowcross'&&(u.roTier||0)>=1){const second=createRoEquipment('knife',`${prefix}:offhand`);u.roInventory.push(second);u.roEquipment.offhand=second.id;}
  return true;
 }
 const inventory=u=>Array.isArray(u?.roInventory)?u.roInventory:[];
 export const roEquipmentQuantity=item=>Number.isSafeInteger(item?.quantity)&&item.quantity>0?item.quantity:1;
 export const roInventoryItemCount=u=>inventory(u).reduce((n,item)=>n+roEquipmentQuantity(item),0);
-export function roReceiveEquipment(u,item,{stack=true}={}){
+export const roBagUsage=u=>Math.max(0,roInventoryItemCount(u)-new Set(Object.values(u.roEquipment||{}).filter(id=>inventory(u).some(item=>item.id===id))).size);
+export function roBagPieces(u){const worn=new Set(Object.values(u.roEquipment||{}));return inventory(u).flatMap(item=>Array.from({length:Math.min(RO_BAG_CAPACITY,roEquipmentQuantity(item)-Number(worn.has(item.id)))},(_,copy)=>({item,copy}))).slice(0,RO_BAG_CAPACITY);}
+export function roMigrateBag(u,{force=false}={}){
+ if(!u||u.roBagVersion===1&&!force)return;u.roInventory??=[];u.roUnclaimed??=[];const worn=new Set(Object.values(u.roEquipment||{}));let available=RO_BAG_CAPACITY;const kept=[],ids=new Set([...u.roInventory,...u.roUnclaimed].map(i=>i.id));
+ for(const item of [...u.roInventory].sort((a,b)=>Number(worn.has(b.id))-Number(worn.has(a.id)))){const quantity=roEquipmentQuantity(item),equipped=Number(worn.has(item.id)),take=Math.min(quantity,equipped+available);available-=take-equipped;if(take){const keptItem={...item};if(take>1)keptItem.quantity=take;else delete keptItem.quantity;kept.push(keptItem);}if(quantity>take){let id=item.id;if(take){let n=1;do{id=String(item.id).slice(0,78)+':saved:'+n++;}while(ids.has(id));ids.add(id);}u.roUnclaimed.push({...item,id,quantity:quantity-take});}}
+ u.roInventory=kept;u.roBagVersion=1;
+}
+export function roReceiveEquipment(u,item,{stack=false}={}){
  if(!u||!item||!validId(item.id)||!own(RO_EQUIPMENT,item.key)||item.quantity!==undefined&&(!Number.isSafeInteger(item.quantity)||item.quantity<1))return null;
  u.roInventory??=[];const same=u.roInventory.find(existing=>existing.id===item.id);if(same)return same;
- const target=stack&&!(item.cards||[]).length?u.roInventory.find(existing=>existing.key===item.key&&!(existing.cards||[]).length):null;
+ if(roBagUsage(u)+roEquipmentQuantity(item)>RO_BAG_CAPACITY)return null;
+ const target=stack&&!(item.cards||[]).length&&!Object.keys(item.enchants||{}).length?u.roInventory.find(existing=>existing.key===item.key&&!(existing.cards||[]).length&&!Object.keys(existing.enchants||{}).length):null;
  if(target){const quantity=roEquipmentQuantity(target)+roEquipmentQuantity(item);if(!Number.isSafeInteger(quantity))return null;target.quantity=quantity;return target;}
  u.roInventory.push(item);return item;
 }
 export function roCompactInventory(u){
  const equipped=new Set(Object.values(u.roEquipment||{})),targets=new Map(),kept=[];
- for(const item of inventory(u))if(!(item.cards||[]).length&&(!targets.has(item.key)||equipped.has(item.id)))targets.set(item.key,item);
- for(const item of inventory(u)){const target=targets.get(item.key);if(!target||item===target||equipped.has(item.id)||(item.cards||[]).length){kept.push(item);continue;}const quantity=roEquipmentQuantity(target)+roEquipmentQuantity(item);if(!Number.isSafeInteger(quantity)){kept.push(item);continue;}target.quantity=quantity;}
+ for(const item of inventory(u))if(!(item.cards||[]).length&&!Object.keys(item.enchants||{}).length&&(!targets.has(item.key)||equipped.has(item.id)))targets.set(item.key,item);
+ for(const item of inventory(u)){const target=targets.get(item.key);if(!target||item===target||equipped.has(item.id)||(item.cards||[]).length||Object.keys(item.enchants||{}).length){kept.push(item);continue;}const quantity=roEquipmentQuantity(target)+roEquipmentQuantity(item);if(!Number.isSafeInteger(quantity)){kept.push(item);continue;}target.quantity=quantity;}
  u.roInventory=kept;return kept;
 }
 const findItem=(u,id)=>validId(id)?inventory(u).find(item=>item&&item.id===id&&own(RO_EQUIPMENT,item.key)):null;
 const offhandWeapon=u=>u.roLineage==='shadowcross'&&(u.roTier||0)>=1;
-function fits(u,item,slot){const definition=RO_EQUIPMENT[item.key];return definition.slot===slot||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&offhandWeapon(u)&&['dagger','sword','axe'].includes(definition.weaponType);}
+export function roItemFitsSlot(u,item,slot){const definition=RO_EQUIPMENT[item?.key];return !!definition&&(definition.slot===slot||definition.slot==='accessory'&&slot==='accessory2'||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&offhandWeapon(u)&&['dagger','sword','axe'].includes(definition.weaponType));}
+const fits=roItemFitsSlot;
+export const roCompatibleSlots=(u,item)=>RO_EQUIPMENT_SLOTS.filter(slot=>fits(u,item,slot));
 
 // A successful swap preserves both items in the bag. A two-handed weapon
 // unequips the offhand; equipping an offhand cannot silently remove the weapon.
@@ -112,19 +129,21 @@ export function roEquip(u,itemId,slot){
  if(slot==='offhand'&&main&&RO_EQUIPMENT[main.key].hands===2)return false;
  // A stack contains physical copies, not bonuses that multiply when equipped.
  const wornElsewhere=Object.entries(u.roEquipment).some(([position,id])=>position!==slot&&id===item.id),current=findItem(u,u.roEquipment[slot]);
- if(wornElsewhere&&current?.key===item.key&&!(current.cards||[]).length&&!(item.cards||[]).length)return true;
+ if(wornElsewhere&&current?.key===item.key&&!(current.cards||[]).length&&!(item.cards||[]).length&&JSON.stringify(current.enchants||{})===JSON.stringify(item.enchants||{}))return true;
+ const proposed={...u.roEquipment},splitting=roEquipmentQuantity(item)>1&&wornElsewhere,proposedId=splitting?'@split-copy':itemId;for(const position of RO_EQUIPMENT_SLOTS)if(proposed[position]===proposedId)proposed[position]=null;if(slot==='weapon'&&definition.hands===2)proposed.offhand=null;proposed[slot]=proposedId;if(roInventoryItemCount(u)-new Set(Object.values(proposed).filter(Boolean)).size>RO_BAG_CAPACITY)return false;
  if(roEquipmentQuantity(item)>1&&wornElsewhere){
-  let n=1,id;do{id=String(item.id).slice(0,80)+':copy:'+n++;}while(findItem(u,id));item.quantity--;const copy={...item,id,quantity:1,cards:[]};u.roInventory.push(copy);item=copy;itemId=copy.id;
+  let n=1,id;do{id=String(item.id).slice(0,80)+':copy:'+n++;}while(findItem(u,id));item.quantity--;const copy={...item,id,quantity:1,cards:[],...(item.enchants?{enchants:structuredClone(item.enchants)}:{})};u.roInventory.push(copy);item=copy;itemId=copy.id;
  }
  for(const position of RO_EQUIPMENT_SLOTS)if(u.roEquipment[position]===itemId)u.roEquipment[position]=null;
  if(slot==='weapon'&&definition.hands===2)u.roEquipment.offhand=null;
  u.roEquipment[slot]=itemId;return true;
 }
+export function roUnequip(u,slot){if(!u.roEquipment?.[slot]||roBagUsage(u)>=RO_BAG_CAPACITY)return false;u.roEquipment[slot]=null;return true;}
 export function roSocket(u,cardId,itemId){
  const item=findItem(u,itemId),cards=Array.isArray(u?.roCards)?u.roCards:[],index=cards.findIndex(card=>card&&card.id===cardId&&own(RO_CARDS,card.key));
  if(!item||index<0||!Array.isArray(item.cards))return false;
  const definition=RO_EQUIPMENT[item.key],card=cards[index],cardSpec=RO_CARDS[card.key];
- if(cardSpec.slot!==definition.slot||item.cards.length>=definition.sockets||inventory(u).some(gear=>Array.isArray(gear.cards)&&gear.cards.some(existing=>existing?.id===cardId)))return false;
+ if(cardSpec.slot!==roSlotType(definition.slot)||item.cards.length>=definition.sockets||inventory(u).some(gear=>Array.isArray(gear.cards)&&gear.cards.some(existing=>existing?.id===cardId)))return false;
  item.cards.push({id:card.id,key:card.key});cards.splice(index,1);return true;
 }
 export function roDrop(u,itemId){
@@ -138,7 +157,7 @@ export function roEquipmentBonuses(u){
  const main=findItem(u,u?.roEquipment?.weapon),twoHanded=main&&RO_EQUIPMENT[main.key].hands===2;
  for(const slot of RO_EQUIPMENT_SLOTS){const item=findItem(u,u?.roEquipment?.[slot]);if(!item||seenItems.has(item.id)||!fits(u,item,slot)||slot==='offhand'&&twoHanded)continue;seenItems.add(item.id);
   const definition=RO_EQUIPMENT[item.key];add(definition.stats);
-  for(const entry of (Array.isArray(item.cards)?item.cards:[]).slice(0,definition.sockets)){if(!entry||seenCards.has(entry.id)||!own(RO_CARDS,entry.key)||RO_CARDS[entry.key].slot!==definition.slot)continue;seenCards.add(entry.id);add(RO_CARDS[entry.key].stats);}
+  for(const entry of (Array.isArray(item.cards)?item.cards:[]).slice(0,definition.sockets)){if(!entry||seenCards.has(entry.id)||!own(RO_CARDS,entry.key)||RO_CARDS[entry.key].slot!==roSlotType(definition.slot))continue;seenCards.add(entry.id);add(RO_CARDS[entry.key].stats);}
  }
  return bonuses;
 }

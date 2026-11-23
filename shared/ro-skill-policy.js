@@ -1,4 +1,4 @@
-import {roLineage} from './ragnarok-jobs.js';
+import {roLineage,roSkillTier} from './ragnarok-jobs.js';
 // Keep old learned skills loadable; curate only new offers and library learning.
 const support=new Set(['sm_endure','al_blessing','al_incagi','al_angelus','mg_safetywall','al_pneuma','pr_kyrie','pr_magnificat','pr_aspersio']);
 const redundant=new Set(['attack_buff','mixed_buff','crit_buff','mastery','precision_passive','defense_passive','holy_passive','proc_passive','autospell_passive']);
@@ -12,5 +12,7 @@ export function roSkillIsCurated(skill){
 }
 export function roSkillIsAvailable(unit,skill){
  if(!roSkillIsCurated(skill))return false;
+ const tier=unit?.roSkillMode==='class'?roSkillTier(unit.roLineage,skill.key):skill.tier??0;
+ if(tier>Math.max(0,unit?.roTier||0))return false;
  return unit?.roSkillMode!=='class'||roLineage(unit.roLineage).skills.includes(skill.key);
 }

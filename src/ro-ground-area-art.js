@@ -1,3 +1,4 @@
+import {isRoArrowRainSkill} from '../shared/ro-arrow-rain.js';
 import * as T from 'three';
 import {insideBossPattern} from '../shared/boss-patterns.js';
 import {RO_SKILLS} from '../shared/ragnarok-jobs.js';
@@ -30,8 +31,8 @@ export function roGroundAreas(state,time=state?.time||0){
   enemy.push({...w,id:'warning:'+w.id,progress,opacity:.32+progress*.20,color:0xff583c,enemy:true});
  }
  const impacts=effects.filter(e=>e.bonk&&e.type==='bossImpact'&&time-e.time>=0&&time-e.time<(e.duration||.7)).slice(-B.impacts).map(e=>({...e,id:'impact:'+e.id,progress:1,opacity:.38*(1-clamp((time-e.time)/(e.duration||.7),0,1)),color:0xffac59,enemy:true}));
- const zones=(b.roSkillZones||[]).filter(z=>z.until>elapsed).slice(-B.friendly).map(z=>({...z,id:'zone:'+z.id,shape:'circle',progress:clamp((elapsed-(z.until-(z.weapon?.mechanics?.duration||6)))/Math.max(1,z.weapon?.mechanics?.duration||6),0,1),opacity:.09,color:friendlyColors[z.weapon?.element]||friendlyColors.arcane,enemy:false}));
- const pulses=effects.filter(e=>e.bonk&&e.type==='abilityPulse'&&!roFireImpactHandles(e)&&e.radius>=1.2&&time-e.time>=0&&time-e.time<(e.duration||.55)&&!zones.some(z=>e.skillKey&&z.key===e.skillKey&&Math.hypot(z.x-e.x,z.z-e.z)<2)).slice(-Math.max(0,B.friendly-zones.length)).map(e=>({...e,id:'spell:'+e.id,shape:'circle',progress:clamp((time-e.time)/(e.duration||.55),0,1),opacity:.11*(1-clamp((time-e.time)/(e.duration||.55),0,1)),color:friendlyColors[e.element||RO_SKILLS[e.skillKey]?.element]||friendlyColors.physical,enemy:false}));
+ const zones=(b.roSkillZones||[]).filter(z=>z.until>elapsed&&!isRoArrowRainSkill(z.key)).slice(-B.friendly).map(z=>({...z,id:'zone:'+z.id,shape:'circle',progress:clamp((elapsed-(z.until-(z.weapon?.mechanics?.duration||6)))/Math.max(1,z.weapon?.mechanics?.duration||6),0,1),opacity:.09,color:friendlyColors[z.weapon?.element]||friendlyColors.arcane,enemy:false}));
+ const pulses=effects.filter(e=>e.bonk&&e.type==='abilityPulse'&&!roFireImpactHandles(e)&&!isRoArrowRainSkill(e.skillKey)&&e.radius>=1.2&&time-e.time>=0&&time-e.time<(e.duration||.55)&&!zones.some(z=>e.skillKey&&z.key===e.skillKey&&Math.hypot(z.x-e.x,z.z-e.z)<2)).slice(-Math.max(0,B.friendly-zones.length)).map(e=>({...e,id:'spell:'+e.id,shape:'circle',progress:clamp((time-e.time)/(e.duration||.55),0,1),opacity:.11*(1-clamp((time-e.time)/(e.duration||.55),0,1)),color:friendlyColors[e.element||RO_SKILLS[e.skillKey]?.element]||friendlyColors.physical,enemy:false}));
  return [...enemy,...impacts,...zones,...pulses].slice(0,B.areas);
 }
 

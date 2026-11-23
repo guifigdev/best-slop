@@ -18,7 +18,7 @@ export function createBonkVisibility({cellSize=24,margin=.6}={}){
   entry.count=count;entry.cells=[...cells.values()].filter(c=>c.indices.length);batches.set(mesh,entry);mesh.userData.visibilitySourceCount=count;
  }
  function terrain(mesh,cells){
-  const sourceCount=cells.reduce((n,c)=>n+c.indices.length,0),index=new T.BufferAttribute(new Uint32Array(sourceCount),1).setUsage(T.DynamicDrawUsage);let n=0;for(const c of cells){index.array.set(c.indices,n);n+=c.indices.length;}
+  const sourceCount=cells.reduce((n,c)=>n+c.indices.length,0),index=mesh.geometry.index?.array.length>=sourceCount?mesh.geometry.index:new T.BufferAttribute(new Uint32Array(sourceCount),1).setUsage(T.DynamicDrawUsage);let n=0;for(const c of cells){index.array.set(c.indices,n);n+=c.indices.length;}index.needsUpdate=true;
   mesh.geometry.setIndex(index);mesh.geometry.setDrawRange(0,sourceCount);mesh.geometry.computeBoundingSphere();mesh.frustumCulled=true;terrains.set(mesh,{cells,sourceCount});
  }
  function update(camera){

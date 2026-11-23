@@ -1,3 +1,4 @@
+import {RO_COMPANION_SKILLS,RO_COMPANION_LINEAGE_SKILLS} from './ro-companion-skills.js';
 import {localizeRoSkills} from './ro-skill-names-pt.js';
 // Class progression follows the original first/second/third/fourth job lines.
 // Survivor damage budgets are local; attack identity never comes from loot.
@@ -5,7 +6,7 @@ import {RO_NATURE_SKILLS} from './ro-nature-skills.js';
 import {roAttributeCost as attributeCost,roAttributePointsForLevel as attributePointsForLevel,roAttributeCap,roAttributeBudget} from './ro-progression.js';
 import {RO_EXPANDED_SKILLS,RO_LINEAGE_SKILL_KEYS,RO_LINEAGE_SKILL_TIERS} from './ro-expanded-skills.js';
 export {attributeCost,attributePointsForLevel};
-const line=(key,hero,focus,jobs,names,weapon,attack,skills,description)=>Object.freeze({key,hero,focus,jobs:Object.freeze(jobs.split(',')),names:Object.freeze(names.split(',')),weapon,attack:Object.freeze(attack),skills:Object.freeze([...new Set([...skills,...(RO_LINEAGE_SKILL_KEYS[key]||[])])]),skillTiers:RO_LINEAGE_SKILL_TIERS[key]||Object.freeze({}),description});
+const line=(key,hero,focus,jobs,names,weapon,attack,skills,description)=>Object.freeze({key,hero,focus,jobs:Object.freeze(jobs.split(',')),names:Object.freeze(names.split(',')),weapon,attack:Object.freeze(attack),skills:Object.freeze([...new Set([...skills,...(RO_LINEAGE_SKILL_KEYS[key]||[]),...Object.keys(RO_COMPANION_LINEAGE_SKILLS[key]||{})])]),skillTiers:Object.freeze({...RO_LINEAGE_SKILL_TIERS[key],...RO_COMPANION_LINEAGE_SKILLS[key]}),description});
 const attack=(kind,element,damage,cooldown,range,extra={})=>({kind,element,damage,cooldown,range,...extra});
 export const RO_LINEAGES=Object.freeze(Object.fromEntries([
  line('dragonknight','knight','str','swordsman,knight,runeknight,dragonknight','Espadachim,Cavaleiro,Cavaleiro Rúnico,Cavaleiro Dracônico','Espada',attack('slash','physical',22,.8,5),['bash','bowlingbash','dragonbreath','hackandslasher'],'Espadas, golpes amplos e o sopro dos dragões.'),
@@ -24,7 +25,7 @@ export const RO_LINEAGES=Object.freeze(Object.fromEntries([
 export const roLineage=key=>typeof key==='string'&&Object.hasOwn(RO_LINEAGES,key)?RO_LINEAGES[key]:RO_LINEAGES.dragonknight;
 export const roJob=(lineage,tier=0)=>{const p=roLineage(lineage),i=Math.max(0,Math.min(3,Math.floor(tier)||0));return {key:p.jobs[i],name:p.names[i],tier:i,lineage:p.key,next:p.names[i+1]||null};};
 const spell=(key,name,tier,skill,description,profile)=>Object.freeze({key,name,tier,skill,description,...profile});
-export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...Object.fromEntries([
+export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...RO_COMPANION_SKILLS,...Object.fromEntries([
  spell('bash','Bash',0,'cleave','Golpe concentrado à frente.',attack('slash','physical',35,1.5,6)),
  spell('bowlingbash','Bowling Bash',1,'shockwave','Impacto amplo que abre espaço na horda.',attack('pulse','physical',42,2.8,7)),
  spell('dragonbreath','Dragon Breath',2,'fireball','Sopro ardente com explosão e queimadura.',attack('projectile','fire',40,2.2,25,{speed:19,radius:4.5,pierce:3})),
@@ -71,6 +72,6 @@ export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKIL
 ].map(s=>[s.key,Object.freeze({...RO_EXPANDED_SKILLS[s.key],...s,manaCost:2+(s.tier||0)*2})]))});
 export const roSkillTier=(lineage,key)=>roLineage(lineage).skillTiers[key]??RO_SKILLS[key]?.tier??3;
 export function roBasicAttack(u){const p=roLineage(u.roLineage),tier=Math.max(0,Math.min(3,u.roTier||0));return {key:'basic',name:(p.focus==='int'&&p.jobs[0]==='mage'?'Bola de Fogo':p.key==='shadowcross'&&tier===0?'Adaga':p.weapon)+' · ataque de classe',skill:p.attack.element==='fire'?'fireball':p.attack.kind==='projectile'?'multishot':'cleave',description:['meister','biolo'].includes(p.key)?'Machadada de cima para baixo; o dano e o empurrão vêm do círculo de impacto no chão.':'Ataque característico. Equipamentos alteram os atributos, preservando este ataque.',...p.attack,...(['meister','biolo'].includes(p.key)?{mechanics:{knockback:1.7},slam:true}:{}),damage:p.attack.damage*(1+tier*.28),cooldown:p.attack.cooldown};}
-export function advanceRoJob(u,tier){const j=roJob(u.roLineage,tier);const previous=u.roTier||0;u.roTier=j.tier;if(previous!==j.tier||!Number.isInteger(u.roJobLevel)){u.roJobLevel=1;u.roJobXp=0;}if(u.roLineage==='shadowcross'&&previous<1&&j.tier>=1&&Array.isArray(u.roInventory)){const item={id:'job-dagger-'+u.id,key:'knife',cards:[]};if(!u.roInventory.some(i=>i.id===item.id)){u.roInventory.push(item);if(!u.roEquipment.offhand)u.roEquipment.offhand=item.id;}}u.bonkJob=j.key;u.name=j.name;return j;}
+export function advanceRoJob(u,tier){const j=roJob(u.roLineage,tier);const previous=u.roTier||0;u.roTier=j.tier;if(previous!==j.tier||!Number.isInteger(u.roJobLevel)){u.roJobLevel=1;u.roJobXp=0;}if(u.roLineage==='shadowcross'&&previous<1&&j.tier>=1&&Array.isArray(u.roInventory)){const item={id:'job-dagger-'+u.id,key:'knife',cards:[]};if(!u.roEquipment.offhand&&!u.roInventory.some(i=>i.id===item.id)){u.roInventory.push(item);u.roEquipment.offhand=item.id;}}u.bonkJob=j.key;u.name=j.name;return j;}
 export function initializeRoJob(u,key){const p=roLineage(key);u.roLineage=p.key;u.attributes={str:1,agi:1,vit:5,int:1,dex:5,luk:1,[p.focus]:9};u.roProgressionVersion=2;u.attributePoints=roAttributeBudget(1);for(const value of Object.values(u.attributes))for(let n=1;n<value;n++)u.attributePoints-=attributeCost(n);advanceRoJob(u,0);}
 export function spendRoAttribute(u,key){if(!Object.hasOwn(u.attributes||{},key)||!['str','agi','vit','int','dex','luk'].includes(key))return false;const cost=attributeCost(u.attributes[key]);if(u.attributes[key]>=roAttributeCap(u)||u.attributePoints<cost)return false;u.attributes[key]++;u.attributePoints-=cost;return true;}

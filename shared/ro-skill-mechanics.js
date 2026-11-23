@@ -1,3 +1,5 @@
+import {syncRoCompanions,tickRoCompanions} from './ro-pet-companions.js';
+import {isRoArrowRainSkill,RO_ARROW_RAIN_TIMING} from './ro-arrow-rain.js';
 import {RO_SKILLS} from './ragnarok-jobs.js';
 import {isRoMeteorSkill,RO_METEOR_TIMING} from './ro-meteor.js';
 
@@ -103,9 +105,9 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
   if(b.roSkillZones.filter(z=>z.source===unit.id).length>=RO_SKILL_EFFECT_LIMITS.zones){const oldest=b.roSkillZones.findIndex(z=>z.source===unit.id);b.roSkillZones.splice(oldest,1);}
   const origin=m.follow?unit:m.centered?unit:target;
-  const meteor=isRoMeteorSkill(weapon.key),id=game.id?.()||'zone-'+weapon.key;
-  b.roSkillZones.push({id,key:weapon.key,source:unit.id,x:origin.x,z:origin.z,follow:!!m.follow,radius,interval,at:time+(meteor?RO_METEOR_TIMING.fall:0),until:time+duration+(meteor?RO_METEOR_TIMING.fall:0),ticks,damage,weapon,level});
-  emit(api,meteor?'roMeteorFall':weapon.skill||'abilityPulse',origin,{source:unit.id,radius,duration:meteor?RO_METEOR_TIMING.fall:Math.min(1.4,duration),skillKey:weapon.key,...(meteor?{showerId:id+':'+ticks,element:'fire'}:{})});return true;
+  const meteor=isRoMeteorSkill(weapon.key),rain=isRoArrowRainSkill(weapon.key),fall=meteor?RO_METEOR_TIMING.fall:rain?RO_ARROW_RAIN_TIMING.fall:0,id=game.id?.()||'zone-'+weapon.key;
+  b.roSkillZones.push({id,key:weapon.key,source:unit.id,x:origin.x,z:origin.z,follow:!!m.follow,radius,interval,at:time+fall,until:time+duration+fall,ticks,damage,weapon,level});
+  emit(api,meteor?'roMeteorFall':rain?'roArrowRainFall':weapon.skill||'abilityPulse',origin,{source:unit.id,radius,duration:fall||Math.min(1.4,duration),skillKey:weapon.key,...(meteor||rain?{showerId:id+':'+ticks,element:meteor?'fire':'physical'}:{})});return true;
  }
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
  const count=Math.min(clamp(m.summonCount||1,1,3),RO_SKILL_EFFECT_LIMITS.summons-b.roSkillSummons.filter(s=>s.source===unit.id).length);if(!count)return false;
@@ -173,11 +175,12 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  const b=game.bonk,time=now(game);unit.roSkillElapsed=time;
  unit.roSkillBuffs=(unit.roSkillBuffs||[]).filter(v=>v.until>time);
  if(unit.roSkillShield?.until<=time)delete unit.roSkillShield;
+ syncRoCompanions(game,unit,time,api);if(unit.alive)tickRoCompanions(game,unit,dt,time,api);
  if(!unit.alive||b.stage!=='playing')return;
  b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
- for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;const meteor=isRoMeteorSkill(zone.key),showerId=zone.id+':'+zone.ticks;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,meteor?'roMeteorImpact':zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:meteor?.85:.4,skillKey:zone.key,...(meteor?{showerId,element:'fire'}:{})});if(meteor&&zone.ticks>0)emit(api,'roMeteorFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'fire'});}
+ for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;const meteor=isRoMeteorSkill(zone.key),rain=isRoArrowRainSkill(zone.key),showerId=zone.id+':'+zone.ticks;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);}emit(api,meteor?'roMeteorImpact':rain?'roArrowRainImpact':zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:meteor?.85:rain?RO_ARROW_RAIN_TIMING.impact:.4,skillKey:zone.key,...(meteor||rain?{showerId,element:meteor?'fire':'physical'}:{})});if(meteor&&zone.ticks>0)emit(api,'roMeteorFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'fire'});if(rain&&zone.ticks>0)emit(api,'roArrowRainFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'physical'});}
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
- for(const summon of b.roSkillSummons.filter(s=>s.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.summons)){
+ for(const summon of b.roSkillSummons.filter(s=>s.source===unit.id&&!s.persistent).slice(-RO_SKILL_EFFECT_LIMITS.summons)){
   const target=nearby(game,unit,summon.range,api).filter(e=>clear(api,summon,e)).sort((a,c)=>distance(a,summon)-distance(c,summon))[0];
   if(!target)continue;
   const d=distance(summon,target),travel=Math.min(Math.max(0,finite(dt))*(summon.weapon.mechanics?.ranged?3:9),Math.max(0,d-1.5));

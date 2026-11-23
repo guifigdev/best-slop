@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {RO_EQUIPMENT,RO_CARDS,RO_LOOT_RATES,createRoEquipment,initializeRoInventory,roEquipmentBonuses,roEquip,roSocket,roDrop,rollRoLoot} from '../shared/ragnarok-equipment.js';
 import {RAGNAROK_MVPS} from '../shared/ragnarok-mvp-catalog.js';
+import {RO_BUILD_EQUIPMENT} from '../shared/ro-build-equipment.js';
 import {RO_TOWER_CARDS,RO_TOWER_MVP_GEAR} from '../shared/ragnarok-tower-drops.js';
 const make=(lineage='dragonknight')=>{const u={id:10,roTier:1,bonkAttack:'fixed-class-attack'};initializeRoInventory(u,lineage);return u;};
 const add=(u,key,id=key)=>{const item=createRoEquipment(key,id);u.roInventory.push(item);return item;};
 test('RO equipment catalogs are immutable, sourced, valid and create independent inventories',()=>{
- assert.equal(Object.keys(RO_EQUIPMENT).length,26+Object.keys(RO_TOWER_MVP_GEAR).length);assert.equal(Object.keys(RO_CARDS).length,28+Object.keys(RO_TOWER_CARDS).length);assert.ok(Object.values(RO_CARDS).filter(c=>c.mvp).length>=16);
+ assert.equal(Object.keys(RO_EQUIPMENT).length,28+Object.keys(RO_TOWER_MVP_GEAR).length+Object.keys(RO_BUILD_EQUIPMENT).length);assert.equal(Object.keys(RO_CARDS).length,28+Object.keys(RO_TOWER_CARDS).length);assert.ok(Object.values(RO_CARDS).filter(c=>c.mvp).length>=16);
  for(const catalog of [RO_EQUIPMENT,RO_CARDS])for(const item of Object.values(catalog)){assert.equal(item.source,`https://www.divine-pride.net/database/item/${item.sourceId}`);assert.ok(Object.isFrozen(item.stats));}
  const a=make(),b=make();a.roInventory[0].cards.push({id:1,key:'fabre'});assert.equal(b.roInventory[0].cards.length,0);const ids=a.roInventory.map(i=>i.id);initializeRoInventory(a,'dragonknight');assert.deepEqual(a.roInventory.map(i=>i.id),ids);
  assert.equal(createRoEquipment('__proto__',1),null);assert.equal(createRoEquipment('constructor',1),null);assert.equal(createRoEquipment('knife',undefined),null);

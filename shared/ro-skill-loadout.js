@@ -1,6 +1,7 @@
 import {BONK_WEAPONS} from './bonk-catalog.js';
 
-export const RO_LEARNED_SKILL_LIMIT=128,RO_ACTIVE_SLOT_COUNT=8;
+// Index zero is the native attack, kept separate from the twelve skill slots.
+export const RO_LEARNED_SKILL_LIMIT=128,RO_EQUIPPED_SKILL_COUNT=12,RO_ACTIVE_SLOT_COUNT=1+RO_EQUIPPED_SKILL_COUNT;
 export const roIsPassive=key=>BONK_WEAPONS[key]?.kind==='passive';
 export function roSkillSlots(unit){
  const learned=unit?.bonkBuild?.weapons||{},valid=key=>typeof key==='string'&&Object.hasOwn(learned,key)&&!roIsPassive(key);

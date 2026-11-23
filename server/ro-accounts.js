@@ -1,4 +1,4 @@
-import {RO_CARDS,RO_EQUIPMENT_SLOTS,rollRoLoot} from '../shared/ragnarok-equipment.js';
+import {RO_CARDS,RO_EQUIPMENT_SLOTS,roCardFitsSlot,rollRoLoot} from '../shared/ragnarok-equipment.js';
 import {RAGNAROK_VOXEL_REFERENCES} from '../shared/monster-visual-references.js';
 import {mvpDefinition} from '../shared/ragnarok-expansion.js';
 import {RO_TOWER_DROP_MAP} from '../shared/ragnarok-tower-drops.js';
@@ -22,7 +22,7 @@ function presets(input,cards){
  if(!Array.isArray(input)||input.length<1||input.length>6)return null;
  const ids=new Set(),unlocked=new Set(cards),result=[];
  for(const preset of input){if(!preset||typeof preset.id!=='string'||!/^[a-zA-Z0-9_-]{1,36}$/.test(preset.id)||ids.has(preset.id)||typeof preset.name!=='string'||preset.name.length<1||preset.name.length>40||!preset.cards||Array.isArray(preset.cards)||typeof preset.cards!=='object')return null;
-  ids.add(preset.id);const active={};for(const [slot,key]of Object.entries(preset.cards)){if(!RO_EQUIPMENT_SLOTS.includes(slot)||!own(RO_CARDS,key)||!unlocked.has(key)||!(RO_CARDS[key].slot===slot||slot==='offhand'&&RO_CARDS[key].slot==='weapon'))return null;active[slot]=key;}
+  ids.add(preset.id);const active={};for(const [slot,key]of Object.entries(preset.cards)){if(!RO_EQUIPMENT_SLOTS.includes(slot)||!own(RO_CARDS,key)||!unlocked.has(key)||!roCardFitsSlot(RO_CARDS[key],slot))return null;active[slot]=key;}
   result.push({id:preset.id,name:preset.name,cards:active});
  }return result;
 }

@@ -1,9 +1,10 @@
 import {buildRoEncounter,roStageSpecies,RO_STAGE_HABITATS} from './ro-encounters.js';
 import {RO_SKILLS} from './ragnarok-jobs.js';
+import {RO_ENCHANTMENTS} from './ro-equipment-enchants.js';
 // Original Nordic survivor content. Mechanics take inspiration from automatic
 // attack roguelikes; local balance and maps share the voxel bestiary.
 export const BONK_REFERENCE='https://store.steampowered.com/app/3405340/Megabonk/';
-export const BONK_RULES=Object.freeze({interactRange:8,weaponSlots:8,tomeSlots:4,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
+export const BONK_RULES=Object.freeze({interactRange:8,weaponSlots:12,enchantTypesPerItem:3,maxWeaponLevel:8,maxTomeLevel:8,aliveBudget:280,pickupBudget:420,projectileBudget:220,stageSize:230});
 const weapon=(key,name,skill,description,damage,cooldown,range,extra={})=>Object.freeze({key,name,skill,description,damage,cooldown,range,...extra});
 export const BONK_WEAPONS=Object.freeze({...RO_SKILLS,
  runeblade:weapon('runeblade','Lâmina das runas','cleave','Golpes largos à frente. Evoluções ampliam o arco e atravessam grupos.',22,.85,5,{kind:'slash',element:'physical'}),
@@ -15,17 +16,8 @@ export const BONK_WEAPONS=Object.freeze({...RO_SKILLS,
  axe:weapon('axe','Machado de retorno','whirlwind','Machados pesados atravessam a horda e voltam ao herói.',24,1.8,20,{kind:'projectile',element:'physical',pierce:5,speed:15,returning:true}),
  void:weapon('void','Sino do vazio','shockwave','Uma onda circular empurra e fere todos ao redor.',35,3.2,8.5,{kind:'pulse',element:'arcane'})
 });
-const tome=(key,name,skill,description)=>Object.freeze({key,name,skill,description});
-export const BONK_TOMES=Object.freeze({
- damage:tome('damage','Tomo da força','battlecry','+12% de dano por nível.'),
- haste:tome('haste','Tomo dos ventos','endurance','+9% de frequência de ataque por nível.'),
- amount:tome('amount','Tomo das constelações','multishot','+1 projétil a cada dois níveis; melhora armas em área.'),
- area:tome('area','Tomo dos gigantes','avatar','+11% de área por nível.'),
- crit:tome('crit','Tomo do destino','critical','Tomo antigo: ao carregar o personagem, devolve suas melhorias para redistribuir. Crítico vem de equipamento.'),
- magnet:tome('magnet','Tomo da colheita','brilliance','+28% de alcance de coleta e +6% de experiência por nível.'),
- vitality:tome('vitality','Tomo da vida','lifeaura','+18 de vida e regeneração lenta por nível.'),
- speed:tome('speed','Tomo do viajante','sprint','+8% de movimento e menor recarga da esquiva por nível.')
-});
+// Deprecated export retained for old checkpoints and icon/name consumers.
+export const BONK_TOMES=RO_ENCHANTMENTS;
 const relic=(key,name,skill,description,rarity)=>Object.freeze({key,name,skill,description,rarity});
 export const BONK_RELICS=Object.freeze({
  emberseed:relic('emberseed','Semente incandescente','fireball','Queimaduras duram mais e inimigos queimando podem explodir.','rare'),

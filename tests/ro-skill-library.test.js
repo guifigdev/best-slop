@@ -15,11 +15,12 @@ test('catalogue preserves learned skills outside the four slots and filters by l
 });
 
 test('normal library has accessible search, fixed native attack explanation, explicit target slot and no free learning',()=>{
- const html=roSkillLibraryMarkup(data,unit,{slot:2});assert.match(html,/role="dialog" aria-modal="true"/);assert.match(html,/data-bk-skill-query/);assert.match(html,/data-bk-skill-filter/);assert.match(html,/data-bk-skill-slot/);assert.match(html,/3 aprendidas · 5 habilidades/);assert.match(html,/Passiva ativa/);assert.match(html,/não ocupam atalhos/);assert.match(html,/Equipar Envenom no atalho 3/);assert.doesNotMatch(html,/Disponível ao evoluir/);assert.doesNotMatch(html,/data-bk-learn-skill/);assert.match(html,/Nome &lt;script&gt;/);assert.match(html,/&lt;img onerror=bad&gt;/);assert.doesNotMatch(html,/<script>|<img onerror/);
+ const html=roSkillLibraryMarkup(data,unit,{slot:2});assert.match(html,/role="dialog" aria-modal="true"/);assert.match(html,/data-bk-skill-query/);assert.match(html,/data-bk-skill-filter/);assert.match(html,/data-bk-select-skill-slot/);assert.match(html,/3 aprendidas · 5 habilidades/);assert.match(html,/Passiva ativa/);assert.match(html,/não ocupam atalhos/);assert.match(html,/Envenom no atalho 2/);assert.doesNotMatch(html,/Disponível ao evoluir/);assert.doesNotMatch(html,/data-bk-learn-skill/);assert.match(html,/Nome &lt;script&gt;/);assert.match(html,/&lt;img onerror=bad&gt;/);assert.doesNotMatch(html,/<script>|<img onerror/);
 });
 
-test('level-up alternate catalogue consumes the same pending improvement and can learn later-class skills but cannot improve maxed skills',()=>{
- const choosing={...data,offer:{id:7,choices:[]},skillCatalog:catalog.map(c=>({...c,...(c.key==='envenom'?{level:8}:{})}))},html=roSkillLibraryMarkup(choosing,unit);assert.match(html,/mesma melhoria desta subida de nível/);assert.match(html,/data-bk-learn-skill="rollingcutter" >Aprender/);assert.match(html,/data-bk-learn-skill="envenom" disabled/);assert.match(html,/Nível máximo/);assert.match(html,/data-bk-learn-skill="sonicblow" >Melhorar para N3/);assert.doesNotMatch(html,/data-bk-equip-skill=/);assert.match(bonkUpgradeMarkup({id:7,choices:[]}),/Escolher outra habilidade/);
+test('library only consults and equips learned skills even if a level offer exists',()=>{
+ const choosing={...data,offer:{id:7,choices:[]}},html=roSkillLibraryMarkup(choosing,unit);
+ assert.match(html,/quatro ofertas sorteadas/);assert.doesNotMatch(html,/data-bk-learn-skill/);assert.doesNotMatch(bonkUpgradeMarkup(choosing.offer),/data-bk-skills|Escolher outra habilidade/);
 });
 
 test('library action pauses movement and only dispatches learned active skills to replaceable shortcuts',()=>{
@@ -27,12 +28,18 @@ test('library action pauses movement and only dispatches learned active skills t
  ui.equipSkill('envenom',2);assert.equal(sent.length,0);ui.action('skills');ui.action('skill',0);assert.equal(sent.length,0);ui.equipSkill('envenom',0);ui.equipSkill('rollingcutter',2);ui.equipSkill('flee',2);ui.equipSkill('envenom',2);assert.deepEqual(sent,[{type:'bkEquipSkill',key:'envenom',slot:2}]);ui.action('skills');assert.deepEqual(pauses,[true,false]);ui.chooseSkill('sonicblow');assert.equal(sent.length,1);
 });
 
-test('alternate skill learning is guarded by current offer, maximum level and open library',()=>{
+test('library cannot be used to learn arbitrary skills during a level offer',()=>{
  const sent=[],state={options:{mode:'bonk'},players:{p:1},units:[unit],bonk:{...data,stage:'levelup',offer:{id:4,choices:[]}}},ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>sent.push(c)});
- ui.chooseSkill('sonicblow');ui.action('skills');ui.chooseSkill('unknown');ui.equipSkill('envenom',1);assert.equal(sent.length,0);ui.chooseSkill('sonicblow');assert.deepEqual(sent,[{type:'bkChooseSkill',key:'sonicblow'}]);ui.chooseSkill('envenom');assert.equal(sent.length,1);state.bonk.offer=null;ui.action('skills');ui.chooseSkill('envenom');assert.equal(sent.length,1);
+ ui.action('skills');ui.chooseSkill('sonicblow');ui.equipSkill('envenom',1);assert.deepEqual(sent,[]);
 });
 
+test('level offers retain all four complete choices without a free catalogue alternative',()=>{
+ const html=bonkUpgradeMarkup({id:9,choices:Array.from({length:4},(_,i)=>({id:'choice-'+i,name:'Skill '+i,kind:'weapon',level:i+1,description:'Complete description '+i,skill:'cleave'}))});assert.equal((html.match(/data-bk-choice=/g)||[]).length,4);assert.match(html,/<kbd>4<\/kbd>/);assert.match(html,/Complete description 3/);assert.doesNotMatch(html,/data-bk-skills/);
+});
 
-test('expanded offers retain all four complete choices and the explicit catalogue alternative',()=>{
- const html=bonkUpgradeMarkup({id:9,choices:Array.from({length:4},(_,i)=>({id:'choice-'+i,name:'Skill '+i,kind:'weapon',level:i+1,description:'Complete description '+i,skill:'cleave'}))});assert.equal((html.match(/data-bk-choice=/g)||[]).length,4);assert.match(html,/<kbd>4<\/kbd>/);assert.match(html,/Complete description 3/);assert.match(html,/data-bk-skills/);
+test('a learned skill remains identified and equipable when new offers exclude it',()=>{
+ const blocked={...data,skillCatalog:catalog.map(c=>({...c,available:false}))};
+ const html=roSkillLibraryMarkup(blocked,unit,{slot:2});
+ assert.match(html,/Aprendida · fora da barra/);assert.match(html,/Atalho 1/);assert.match(html,/data-bk-equip-skill="envenom"/);
+ assert.match(html,/Indisponível nas melhorias atuais/);assert.doesNotMatch(html,/Limite de habilidades aprendidas alcançado/);
 });

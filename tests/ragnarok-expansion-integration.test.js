@@ -47,7 +47,7 @@ test('MVP elemental art respects authoritative pattern cancellation and fixed re
  const scene=new T.Scene(),art=createMonsterAbilityArt({scene});try{
  const warnings=Object.values(MVP_BY_KEY).map((m,i)=>({...mvpWarning({x:i*10,z:0,ragnarokMvp:m.key},{x:i*10+4,z:0},i%4,0,100),id:i+100,source:i+1}));
  const effects=warnings.map(w=>({...w,id:w.id+1000,warningId:w.id,type:'bossDanger',duration:w.fireAt,time:0}));const state={options:{mode:'campaign'},bossWarnings:warnings,effects,units:[]};art.update(state,.4);assert.ok(art.stats().events>0);assert.ok(art.stats().threads<=B.threads&&art.stats().solids<=B.solids&&art.stats().glow<=B.glow);assert.equal(art.stats().drawCalls,3);
- art.update({...state,bossWarnings:[]},.6);assert.equal(art.stats().events,0);art.update({...state,effects:effects.map(e=>({...e,type:'bossImpact',duration:.8,time:1}))},1.3);assert.ok(art.stats().glow>0);assert.ok(art.stats().solids<=B.solids&&art.stats().glow<=B.glow);
+ art.update({...state,bossWarnings:[]},.6);assert.equal(art.stats().events,0);art.update({...state,effects:effects.map(e=>({...e,type:'bossImpact',duration:.8,time:1}))},1.3);assert.ok(art.stats().mvp.glow>0);assert.ok(art.stats().solids<=B.solids&&art.stats().glow<=B.glow);
  }finally{art.dispose();}
 });
 
@@ -61,6 +61,6 @@ test('Custom Hero and Frenesi spawn actual named MVP actors and expose their own
 
 test('MVP impact particles stay inside the actual cone, line and ring rather than drawing a misleading full circle',()=>{
  const scene=new T.Scene(),art=createMonsterAbilityArt({scene}),matrix=new T.Matrix4();try{for(const [i,shape]of ['cone','line','ring'].entries()){
- const e={...mvpWarning({x:0,z:0,ragnarokMvp:'ifrit'},{x:6,z:0},i,0,100),shape,element:'physical',id:i+1,type:'bossImpact',time:0,duration:.8};const state={options:{mode:'campaign'},dungeon:{map:{seed:i}},bossWarnings:[],effects:[e],units:[]};art.update(state,.2);const solids=art.root.children[1];assert.ok(solids.count>0);for(let n=0;n<solids.count;n++){solids.getMatrixAt(n,matrix);const v=new T.Vector3().setFromMatrixPosition(matrix);assert.ok(insideBossPattern({x:v.x,z:v.z},{...e,radius:e.radius+.001,width:e.width+.001,length:e.length+.001,inner:e.inner-.001}),shape);}
+ const e={...mvpWarning({x:0,z:0,ragnarokMvp:'ifrit'},{x:6,z:0},i,0,100),shape,element:'physical',id:i+1,type:'bossImpact',time:0,duration:.8};const state={options:{mode:'campaign'},dungeon:{map:{seed:i}},bossWarnings:[],effects:[e],units:[]};art.update(state,.2);const solids=scene.getObjectByName('mvp-ice-spikes-and-rocks');assert.ok(solids.count>0);for(let n=0;n<solids.count;n++){solids.getMatrixAt(n,matrix);const v=new T.Vector3().setFromMatrixPosition(matrix);assert.ok(insideBossPattern({x:v.x,z:v.z},{...e,radius:e.radius+.001,width:e.width+.001,length:e.length+.001,inner:e.inner-.001}),shape);}
  }}finally{art.dispose();}
 });

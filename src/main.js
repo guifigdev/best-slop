@@ -1,3 +1,4 @@
+import './ro-secret-merchant-ui.css';
 import {createLocalLobby} from '../shared/room-lobby.js';
 import './ro-equipment-bag.css';
 import {createConsumableDock} from './consumable-dock.js';

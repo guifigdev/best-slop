@@ -2688,11 +2688,6 @@ export const RO_SKILL_EXCLUSIONS=freeze({
   "sourceId": 2230,
   "reason": "Gerenciamento de subestado, cópia ou cancelamento do MMORPG que não existe no combate automático local."
  },
- "KN_RIDING": {
-  "name": "Peco Peco Riding",
-  "sourceId": 63,
-  "reason": "Gerenciamento de subestado, cópia ou cancelamento do MMORPG que não existe no combate automático local."
- },
  "KN_CAVALIERMASTERY": {
   "name": "Cavalier Mastery",
   "sourceId": 64,

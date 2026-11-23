@@ -1,13 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
-import {RO_ATMOSPHERE_BUDGET as B,roDaylight,createRoActorLighting,createRoAtmosphere} from '../src/ro-atmosphere.js';
+import {RO_ATMOSPHERE_BUDGET as B,RO_CELESTIAL_ART,roSolarVisibility,roDaylight,createRoActorLighting,createRoAtmosphere} from '../src/ro-atmosphere.js';
 import {createFoliageWindMaterial} from '../src/foliage-wind.js';
 
 const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freeze);Object.freeze(value);}return value;};
 const state=(elapsed=122.4,extra={})=>({options:{mode:'bonk'},time:elapsed,bonk:{totalElapsed:elapsed,warnings:[],...extra}});
 function fixture(){const scene=new T.Scene();scene.fog=new T.Fog(0x798e91,80,240);const sun=new T.DirectionalLight(),skyLight=new T.HemisphereLight(),actorLighting=createRoActorLighting(),camera=new T.PerspectiveCamera(65,1,.1,1000),renderer={toneMappingExposure:1};camera.position.set(0,12,22);camera.lookAt(0,1,0);camera.updateMatrixWorld();scene.add(sun,sun.target,skyLight);const atmosphere=createRoAtmosphere({scene,sun,skyLight,actorLighting});return{scene,sun,skyLight,actorLighting,camera,renderer,atmosphere};}
 const update=(f,s,dt=.016)=>f.atmosphere.update(s,s.time,f.camera,{target:new T.Vector3(0,1,0),renderer:f.renderer,dt});
+
+test('the sun disk and its halo vanish below the horizon while night keeps borrowed moonlight',()=>{
+ const f=fixture();try{const sky=f.atmosphere.root.children[0];for(let time=0;time<=720;time+=2){update(f,state(time));const u=sky.material.uniforms;if(u.sunDirection.value.y<=-.03||u.day.value===0)assert.equal(u.solarVisibility.value,0);assert.ok(u.solarVisibility.value>=0&&u.solarVisibility.value<=1);}update(f,state(482.4));assert.equal(sky.material.uniforms.solarVisibility.value,0);assert.ok(f.sun.intensity>=.68,'the directional fill is moonlight at night, not a second luminous sky disk');assert.equal(roSolarVisibility(-.04,1,1),0);assert.equal(roSolarVisibility(1,1,.4),0);assert.equal(roSolarVisibility(1,1,1),1);assert.ok(roSolarVisibility(0,1,1)<roSolarVisibility(.02,1,1));}finally{f.atmosphere.dispose();}
+});
+
+test('bright stars remain point-like relative to the single textured moon, with short rays and restrained bloom',()=>{
+ const f=fixture();try{update(f,state(482.4));const sky=f.atmosphere.root.children[0],art=RO_CELESTIAL_ART,starRadius=art.brightStarCellRadius/art.brightStarDensity*Math.PI*2;assert.ok(starRadius<art.moonAngularRadius*.04,'largest star core is less than 4% of moon radius');assert.ok(art.starBloomStrength<.04);assert.ok(art.starBloomSpread<=4);const shader=sky.material.fragmentShader;assert.ok(shader.includes('radius=layer==2?'+art.brightStarCellRadius));assert.ok(shader.includes('density=layer==0?180.0:layer==1?280.0:'+art.brightStarDensity+'.0'));assert.match(shader,/abs\(delta.x\)\*400.0-abs\(delta.y\)\*90.0/);assert.equal(shader.split('vec3 moonDir=').length-1,1);assert.equal(f.atmosphere.root.children.filter(m=>m.name==='ro-analytic-sky').length,1);assert.equal(f.atmosphere.stats().renderTargets,0);}finally{f.atmosphere.dispose();}
+});
 
 test('daylight is deterministic, periodic and keeps readable lighting at midnight and twilight',()=>{
  assert.equal(B.cycleSeconds,720);assert.deepEqual(roDaylight(0),roDaylight(-100));

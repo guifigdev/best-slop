@@ -15,8 +15,8 @@ test('Ragnarok skill cards use effective cooldown once and quick upgrades share 
  const g=new Game(57,{mode:'bonk',bonkLineage:'archmage'});g.addPlayer('p','mage');g.command('p',{type:'bkReady'});const u=g.player('p');u.bonkBuild.tomes.haste=3;
  let state=g.snapshotFor('p'),entry=state.bonk.weapons[1],details=equippedSkillDetails(state,u,'ro:'+entry.key);assert.equal(details.canUpgrade,false);
  const cooldown=details.rows.find(r=>r.label==='Recarga').current;assert.equal(cooldown,Number(entry.cooldown.toFixed(2)).toLocaleString('pt-BR')+' s');
- g.bonk.offer={id:1,choices:[]};g.bonk.stage='levelup';u.bonkPendingLevels=1;state=g.snapshotFor('p');details=equippedSkillDetails(state,u,'ro:'+entry.key);assert.equal(details.canUpgrade,true);
- const html=roSkillDockMarkup(state.bonk.weapons,{upgradeAvailable:true});assert.match(html,/data-bk-upgrade=/);assert.match(html,/data-skill-info/);
+ g.bonk.offer={id:1,choices:[]};g.bonk.stage='levelup';u.bonkPendingLevels=1;state=g.snapshotFor('p');details=equippedSkillDetails(state,u,'ro:'+entry.key);assert.equal(details.canUpgrade,false);assert.match(details.upgradeReason,/quatro ofertas/);g.bonk.offer.choices=[{id:'offered-skill',kind:'weapon',key:entry.key,level:2,name:entry.name,description:entry.description}];state=g.snapshotFor('p');details=equippedSkillDetails(state,u,'ro:'+entry.key);assert.equal(details.canUpgrade,true);
+ const html=roSkillDockMarkup(state.bonk.weapons,{upgradeAvailable:true,upgradeKeys:[entry.key]});assert.match(html,/data-bk-upgrade=/);assert.match(html,/data-skill-info/);
  assert.equal(g.command('p',{type:'bkChooseSkill',key:entry.key}),true);assert.equal(u.bonkPendingLevels,0);assert.equal(u.bonkBuild.weapons[entry.key],2);
  assert.equal(g.command('p',{type:'bkChooseSkill',key:entry.key}),false);
 });

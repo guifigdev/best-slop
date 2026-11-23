@@ -5,7 +5,7 @@ body.bonk-mode .layout{grid-template-columns:minmax(0,1fr)}body.bonk-mode .side,
 @media(max-height:560px){.bonk-goals{top:72px;width:210px}.bonk-goals ol{gap:4px}.bonk-goals li small{font-size:8px}.bonk-goals li>span{width:19px;height:19px}.bonk-goals li b{font-size:9px}.bonk-vitals{bottom:125px}.bonk-build{bottom:124px}.bonk-controls{bottom:170px}.bonk-choice-grid{margin-top:12px}.bonk-upgrade{min-height:200px;padding:12px}.bonk-upgrade>svg{width:48px;height:48px}.bonk-choice h2{font-size:23px}.bonk-xp>b{display:none}}
 @media(prefers-reduced-motion:reduce){.bonk-xp i,.bonk-vitals i{transition:none}}
 
-body.bonk-mode #camera-tools,body.bonk-mode .rts-camera,body.bonk-mode .controls,body.bonk-mode footer,body.bonk-mode #camera-toolbar{display:none!important}
+body.bonk-mode #camera-tools,body.bonk-mode .rts-camera,body.bonk-mode .controls,body.bonk-mode #app>footer,body.bonk-mode #camera-toolbar{display:none!important}
 
 body.bonk-mode .camera-tools{display:none!important}
 

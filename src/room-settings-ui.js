@@ -1,14 +1,13 @@
 import {MODES} from '../shared/modes.js';
 import {LOBBY_GAMES,lobbyGameKey} from '../shared/lobby-catalog.js';
 import {escapeHTML as esc} from './competition-ui.js';
-import {icon} from './art.js';
+import {gameIcon} from './game-icons.js';
 
-const gameArt={survival:'avatar',bonk:'fireball',dungeon:'blink',castlefight:'devotion',bloody:'cleave',linewars:'summon',treetag:'lifeaura',kodotag:'endurance',warlock:'chainlightning',phasekiller:'backstab'};
 const choices=(label,key,items,current,disabled)=>`<fieldset class="lobby-rule-group"><legend>${label}</legend><div class="lobby-rule-cards">${items.map(([value,name,description])=>`<button type="button" data-lobby-option="${key}" data-lobby-value="${esc(value)}" aria-pressed="${String(current)===String(value)}" ${disabled?'disabled':''}><b>${esc(name)}</b>${description?`<span>${esc(description)}</span>`:''}</button>`).join('')}</div></fieldset>`;
 export function roomSettingsMarkup(room){
  const o=room.options,gameKey=lobbyGameKey(o),disabled=!room.isHost||room.stage&&room.stage!=='waiting'||room.started;
  const games=disabled?LOBBY_GAMES.filter(g=>g.key===gameKey):LOBBY_GAMES;
- let html=`<section class="lobby-game-section"><header><small>JOGO DA SALA</small><h3>${disabled?'Regras do host':'O que vamos jogar?'}</h3></header><div class="lobby-game-cards">${games.map(g=>`<button type="button" data-room-game="${g.key}" aria-pressed="${gameKey===g.key}" ${disabled?'disabled':''}>${icon(gameArt[g.key])}<span><small>${esc(g.tag)}</small><b>${esc(g.name)}</b><em>${esc(g.description)}</em></span></button>`).join('')}</div></section>`;
+ let html=`<section class="lobby-game-section"><header><small>JOGO DA SALA</small><h3>${disabled?'Regras do host':'O que vamos jogar?'}</h3></header><div class="lobby-game-cards">${games.map(g=>`<button type="button" data-room-game="${g.key}" aria-pressed="${gameKey===g.key}" ${disabled?'disabled':''}>${gameIcon(g.key)}<span><small>${esc(g.tag)}</small><b>${esc(g.name)}</b><em>${esc(g.description)}</em></span></button>`).join('')}</div></section>`;
  if(gameKey==='survival')html+=choices('Modo de Custom Hero','mode',[
   ['campaign','Clássico','50 ondas e uma grande final.'],['tower','Cooperativo','Ondas sem fim; a equipe enfrenta os chefes.'],['best','Best of All','Provas e pontuação individuais.'],['war','Guerra de equipes','Provas em grupo e confrontos entre equipes.']
  ],o.mode,disabled)+'<p class="lobby-progress-note">Os cenários mudam conforme a expedição avança, a cada dez ondas.</p>';
