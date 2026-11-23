@@ -165,7 +165,7 @@ const shopGuide=createShopGuide({root:$('world'),getState:()=>session.snapshot,g
 const skillCardUI=createSkillHoverCard({root:$('world'),getDetails:token=>equippedSkillDetails(session.snapshot,me(),token)});
 const roomUI=createOnlineRoomUI({send,mountAccount:container=>roAccountUI.mount(container),onChooseHero:async key=>{
  if(session.snapshot?.options.mode==='bonk'){
-  roSelectedLineage=key;roAccountUI.selectActivity(session.snapshot.options.bonkActivity);roAccountUI.setLineage(key);await roAccountUI.loadReady();
+  roSelectedLineage=key;roAccountUI.selectActivity(session.snapshot.options.bonkActivity);roAccountUI.setLineage(key);await roAccountUI.loadReady();roAccountUI.setLineage(key);
   const result=send({type:'roomChooseHero',hero:key,ragnarok:roAccountUI.onlineSelection(key)});
   if(result&&localLobby){roAccountUI.prepareGame(localLobby.game);feedbackCheckpoint=null;send({type:'roomSelectionComplete'});}
   return result;

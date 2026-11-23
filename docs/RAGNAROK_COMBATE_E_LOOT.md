@@ -92,3 +92,28 @@ A compra é autoritativa: o servidor recalcula oferta e preço, verifica distân
 O campo opcional `merchantPurchases` do checkpoint guarda as ofertas esgotadas. Saves antigos continuam válidos; recarregar a mesma expedição mantém os itens já vendidos esgotados. Recomeçar uma atividade nova inicia uma nova expedição com estoque renovado. A lista tem limite e validação de formato/identidade.
 
 Armadilhas de área (`trap_*`) são colocadas a até **4 metros** do personagem. Bônus de área ampliam seu raio, mas não a distância de colocação. Disponibilidade, alvo real e card de detalhes usam a mesma regra; se o alvo sair do alcance durante a conjuração, a armadilha não é liberada e não cobra SP. Flechas e demais magias mantêm seus alcances anteriores.
+
+## Perigos opcionais na exploração
+
+Os 16 cenários da rota recebem até três pequenas zonas ambientais, determinadas pela semente e pela região. São desvios contornáveis, sem cobrir a largura dos caminhos, entradas, passagens, arena do MVP ou mercadores. O servidor e a arte compartilham a mesma elipse de colisão. A posição permanece fixa durante a visita, mesmo que objetos do cenário sejam removidos. A Torre sem Fim mantém suas regras anteriores. Mapas antigos sem região da rota não recebem as três zonas opcionais; o chão vulcânico e as placas de gelo usam a regra compartilhada do respectivo bioma.
+
+No Vulcão de Thor, lava exposta causa dano de fogo. Nas florestas há brejos venenosos. Em Lutie e na Caverna de Gelo, apenas bolsões de **neve profunda** acumulam frio: os primeiros três segundos avisam sem causar dano nem lentidão; depois a velocidade cai gradualmente de 90% até 65%. Sair do bolsão limpa essa exposição. As placas azuis de gelo são separadas: fazem deslizar, sem causar dano ambiental. Areia movediça e poeira no deserto, resíduos arcanos nas ruínas, solo profanado e mecanismos avariados completam os temas das demais regiões.
+
+Os rios e rachaduras de lava laranja que já existiam no chão de Thor também seguem a regra de fogo. A máscara é compartilhada entre a cor do chão e o dano, em células globais de 3,6 m; caminhos, pontos de chegada, arena e lojas retiram a célula inteira da lava. Esses canais usam o mesmo aviso e pulso das poças, sem duplicar dano ao cruzar uma delas.
+
+Os outros perigos avisam por 1,2 segundo antes de começar. Cada zona causa entre 2% e 3,5% da vida máxima por segundo, antes das proteções normais do personagem. Há no máximo um pulso por chamada, sem acumular dano atrasado após suspensão. Apenas heróis vivos são afetados; monstros e invocações não recebem esse dano. Pausas e escolhas de melhoria conservam a exposição sem avançá-la. O host controla o efeito no online. A exposição é temporária, não entra no checkpoint. Esses perigos e números são adaptações deste survivor, não uma reprodução das regras ambientais do Ragnarok original.
+
+
+A neve acumulada foi ampliada na Caverna de Gelo e em Lutie, preservando a paleta e o ciclo de dia/noite existentes. Sete placas azuis por mapa usam a mesma máscara no chão e na simulação. Há inércia curta ao soltar o movimento ou mudar de direção, sem ultrapassar a velocidade do personagem; neve comum recupera aderência imediata. Colisões, entradas e arenas são preservadas. Flocos de neve e névoa usam o sistema de clima limitado já existente.
+
+A Fábrica de Brinquedos substitui a decoração genérica da base Payon por presentes empilhados, trens, cavalinhos, biscoitos, Papai Noel, bengalas e soldadinhos. As silhuetas distantes também são natalinas. As novas peças cabem nas dimensões e colisões originais e reutilizam os lotes de instâncias do cenário; monstros e itens interativos continuam identificáveis e separados da decoração.
+
+No Ragnarok Survivors, o contato usa o círculo interno do corpo do monstro, sem asas ou armas decorativas. Um contato causa 60% do golpe físico normal, sujeito a defesa e esquiva, com intervalo global de 0,75 s por herói para limitar hordas sobrepostas. O contato bem-sucedido adia o golpe normal desse monstro para evitar dois acertos no mesmo instante. Pular evita o contato de monstros terrestres; monstros atordoados não causam contato. Golpes recebidos têm recuo visual direcional, compressão e um brilho avermelhado breve, sem deslocar a colisão ou cancelar os controles.
+
+## Ritmo de progressão na Torre
+
+A Torre e a Aventura usam o mesmo personagem, com os níveis base e de classe, atributos, habilidades, equipamentos e encantamentos já conquistados. Entrar na Torre com Base 9 e depois ver 14 eliminações não significa ter ganhado oito níveis nessas eliminações: o nível pode ter vindo da Aventura, enquanto o contador descreve a atividade atual. Trocar de atividade não rebaixa o personagem nem apaga melhorias já ganhas.
+
+A experiência nova da Torre tem orçamento próprio para suas salas densas e finitas. Monstros comuns dão 1 XP nos andares 1–25, 2 nos 26–50, 3 nos 51–75 e 4 nos 76–101. Elites dão quatro vezes esse valor, guardiões oito e MVPs dezoito. A mesma recompensa alimenta a experiência base e de classe; bônus de experiência continuam funcionando. As curvas, os pontos de atributo por nível e as recompensas de XP da Aventura não mudam.
+
+Sem bônus de XP e começando no nível 1, os 36 monstros do primeiro andar agora somam 36 XP: Base 2 com uma melhoria, em vez de Base 4 com três. Os cinco primeiros andares completos somam 201 XP, em vez de 709, levando à Base 6 em vez de 11. Quatorze monstros comuns do primeiro andar dão 14 XP, sem oferta de nível base. São ajustes locais de ritmo deste survivor; não reproduzem a tabela oficial de experiência dos monstros de Ragnarok.

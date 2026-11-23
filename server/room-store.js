@@ -2,6 +2,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,readFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
 import {Game} from '../shared/simulation.js';
+import {applyRoRoomPolicy} from '../shared/ro-room-policy.js';
 const VERSION=1;
 const encode=value=>JSON.stringify(value,(_key,v)=>v instanceof Map?{__roomType:'Map',entries:[...v]}:v instanceof Set?{__roomType:'Set',entries:[...v]}:v);
 const decode=value=>JSON.parse(value,(_key,v)=>v?.__roomType==='Map'?new Map(v.entries):v?.__roomType==='Set'?new Set(v.entries):v);
@@ -20,7 +21,7 @@ export class RoomStore{
  load({maxAgeMs=1800000,now=Date.now()}={}){const result=[];for(const row of this.db.prepare('SELECT * FROM game_rooms').all()){
   if(row.version!==VERSION||now-row.updated_at>maxAgeMs)continue;
   try{const saved=decode(row.state),game=new Game(saved.game.worldSeed,saved.game.options);for(const [key,value]of Object.entries(saved.game))if(!['__proto__','prototype','constructor'].includes(key)&&typeof game[key]!=='function')game[key]=value;
-   game.migratePhaseKillerScale?.();if(game.bonkOnline)for(const u of game.heroes()){u.bonkDisconnected=!u.roomBot;u.bonkMove={dx:0,dz:0};}result.push([row.code,{game,messages:saved.messages||[],host:saved.host,passwordLock:saved.passwordLock||null,lobbyVersion:saved.lobbyVersion||1,stage:saved.stage||(saved.started?'playing':'waiting'),started:!!saved.started,lastActivity:saved.lastActivity||row.updated_at,clients:new Map(),members:new Map(saved.members.map(m=>[m.id,{...m,disconnectedAt:m.disconnectedAt??row.updated_at}])),paused:true,restored:true}]);
+   applyRoRoomPolicy(game);game.migratePhaseKillerScale?.();if(game.bonkOnline)for(const u of game.heroes()){u.bonkDisconnected=!u.roomBot;u.bonkMove={dx:0,dz:0};}result.push([row.code,{game,messages:saved.messages||[],host:saved.host,passwordLock:saved.passwordLock||null,lobbyVersion:saved.lobbyVersion||1,stage:saved.stage||(saved.started?'playing':'waiting'),started:!!saved.started,lastActivity:saved.lastActivity||row.updated_at,clients:new Map(),members:new Map(saved.members.map(m=>[m.id,{...m,disconnectedAt:m.disconnectedAt??row.updated_at}])),paused:true,restored:true}]);
   }catch{/* An incompatible checkpoint is retained for manual recovery. */}
  }return result;}
  delete(code){this.db.prepare('DELETE FROM game_rooms WHERE code=?').run(code);}

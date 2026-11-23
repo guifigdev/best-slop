@@ -43,6 +43,23 @@ test('Existing developed characters restore into a fresh activity and keep their
  const original=game(),hero=original.player('p');hero.level=8;hero.gold=500;const checkpoint=createRoCheckpoint(original),account=empty();account.progress=saveRoCharacter(null,{id:'developed',name:'Veterano',lineage:'dragonknight',checkpoint,updatedAt:1});
  const ui=createRagnarokAccountUI({fetchImpl:backend(account).fetchImpl,storage:storage({token,account})});await ui.loadReady();const next=game();ui.prepareGame(next);assert.equal(next.player('p').level,8);assert.equal(next.player('p').gold,500);assert.equal(ui.selection().characterId,'developed');
 });
+
+test('Room rules override cached account preferences and admission never sends a save from another lineage',async()=>{
+ const original=game({bonkLineage:'imperialguard'}),account=empty();account.progress=saveRoCharacter(null,{id:'guard',name:'Guarda',lineage:'imperialguard',checkpoint:createRoCheckpoint(original),updatedAt:1});
+ let state={options:{mode:'bonk',bonkActivity:'tower',bonkSkillMode:'class'},onlineRoom:{stage:'selecting'}};
+ const ui=createRagnarokAccountUI({getState:()=>state,fetchImpl:backend(account).fetchImpl,storage:storage({token,account,activity:'adventure',skillMode:'mixed'})});await ui.loadReady();
+ assert.equal(ui.selection().activity,'tower');assert.equal(ui.selection().skillMode,'class');
+ assert.equal(ui.onlineSelection('meister').characterId,null,'a merchant card cannot submit the saved guard');
+ ui.setLineage('meister');assert.equal(ui.selection().lineage,'meister');assert.equal(ui.selection().character,null);assert.equal(ui.onlineSelection('meister').activity,'tower');
+ state=null;assert.equal(ui.selection().skillMode,'mixed','room rules do not overwrite personal solo preferences');
+});
+
+test('An explicit card choice survives late cloud selection even when it matches the cached default',async()=>{
+ const original=game({bonkLineage:'imperialguard'}),account=empty();account.progress=saveRoCharacter(null,{id:'guard',name:'Guarda',lineage:'imperialguard',checkpoint:createRoCheckpoint(original),updatedAt:1});
+ let complete;const ui=createRagnarokAccountUI({storage:storage(),fetchImpl:()=>new Promise(resolve=>complete=()=>resolve(Response.json({token,account})))});
+ const loading=ui.loadReady();ui.setLineage('dragonknight');complete();await loading;
+ assert.equal(ui.selection().lineage,'dragonknight');assert.equal(ui.onlineSelection('dragonknight').characterId,null);
+});
 test('Partial reward acknowledgements preserve unprocessed kills and never grant cards locally',async()=>{
  const service=backend(),toasts=[],ui=createRagnarokAccountUI({fetchImpl:service.fetchImpl,storage:storage(),toast:m=>toasts.push(m)});await ui.loadReady();const g=game();ui.prepareGame(g);await settle();await settle();g.bonk.rewardKills=[{id:'one',visual:'poring'},{id:'two',visual:'poring'}];ui.update(g);await settle();await settle();
  assert.deepEqual(g.bonk.rewardKills.map(k=>k.id),['two']);assert.deepEqual(ui.account().cards,['poring']);assert.ok(toasts.some(t=>t.includes('Permanente')));

@@ -3,6 +3,7 @@ import {modeOptions,capacity,MODES} from './modes.js';
 import {roomCharacterChoices} from './room-characters.js';
 import {ARENAS} from './arenas.js';
 import {roomRoster,waitingRoomProblem,ensureLobbyOpposition,prepareLobbyMarket} from './lobby-catalog.js';
+import {applyRoRoomPolicy} from './ro-room-policy.js';
 
 export const ROOM_OPTION_KEYS=Object.freeze(['game','mode','teamSize','teamCount','clashEvery','towerLimit','laneCount','lineTeams','dungeonPartySize','dungeonTeams','dungeonPvp','dungeonLimit','bloodyTeams','bonkWorld','bonkActivity','bonkSkillMode']);
 export function lobbyOptions(input={}){
@@ -21,7 +22,7 @@ export function createLocalLobby({seed,owner='local',options={mode:'campaign'}}=
  let game,stage='waiting',chosen=false,ready=false,messages=[];
  const rebuild=input=>{game=new Game(seed,lobbyOptions(input));game.addPlayer(owner,roomCharacterChoices(game.options.mode)[0].hero,'Você');chosen=false;ready=false;stage='waiting';};rebuild(options);
  const addBots=count=>{for(let i=0;i<count;i++){const index=game.heroes().length,choices=roomCharacterChoices(game.options.mode),choice=game.options.mode==='treetag'&&!game.heroes().some(u=>u.treeTagRole==='infernal')?choices.find(c=>c.role==='infernal')||choices[1]:choices[index%choices.length];game.addPlayer('bot-local-'+game.id(),choice.hero,'Bot '+(index+1),true,null,game.options.mode==='bonk'?{lineage:choice.key}:null);}};
- const activate=()=>{ensureLobbyOpposition(game);const problem=lobbyStartProblem(game,api.snapshot().onlineRoom.players);if(problem)throw Error(problem);if(game.options.mode==='bloody'){stage='recruiting';if(!game.player(owner)?.btRoster?.length)return true;}if(prepareLobbyMarket(game)){stage='playing';return true;}const type=game.options.mode==='bonk'?'bkReady':game.options.mode==='dungeon'?'dgReady':'ready';for(const u of game.heroes()){game.command(u.owner,{type});if(game.options.mode==='bonk')break;}stage='playing';return true;};
+ const activate=()=>{applyRoRoomPolicy(game);ensureLobbyOpposition(game);const problem=lobbyStartProblem(game,api.snapshot().onlineRoom.players);if(problem)throw Error(problem);if(game.options.mode==='bloody'){stage='recruiting';if(!game.player(owner)?.btRoster?.length)return true;}if(prepareLobbyMarket(game)){stage='playing';return true;}const type=game.options.mode==='bonk'?'bkReady':game.options.mode==='dungeon'?'dgReady':'ready';for(const u of game.heroes()){game.command(u.owner,{type});if(game.options.mode==='bonk')break;}stage='playing';return true;};
  const api={get game(){return game;},get started(){return stage==='playing';},get stage(){return stage;},snapshot(){const members=game.heroes().map(u=>({id:u.owner,name:u.owner===owner?'Você':u.name,heroChosen:u.bot||chosen,ready:u.bot||ready,bot:!!u.bot}));return{...game.snapshotFor(owner),onlineRoom:{code:'LOCAL',local:true,lobbyVersion:2,stage,isHost:true,host:owner,started:stage==='playing',protected:false,options:game.options,capacity:capacity(game.options),messages,players:roomRoster(game,members,owner)}};},command(c){
   if(c.type==='roomChat'){messages=[...messages,{name:game.player(owner)?.name||'Você',text:String(c.text||'').slice(0,240)}].slice(-40);return true;}
   if(stage==='playing')return game.command(owner,c);
@@ -31,7 +32,7 @@ export function createLocalLobby({seed,owner='local',options={mode:'campaign'}}=
   if(c.type==='roomChooseHero'){
    if(stage!=='selecting')throw Error('A escolha de personagem abre depois que o host inicia a sala.');
    const choice=roomCharacterChoices(game.options.mode).find(p=>p.key===c.hero);if(!choice)throw Error('Personagem inválido.');const bots=game.heroes().filter(u=>u.bot).map(u=>({hero:u.castleBuilderKey||u.treeTagCharacter||u.warlockCharacter||u.kodoTagCharacter||u.hero,name:u.name,lineage:u.roLineage}));
-   const opts=game.options;game=new Game(seed,{...opts,...(opts.mode==='bonk'?{bonkLineage:choice.key}:{})});game.addPlayer(owner,choice.hero,choice.name);for(const bot of bots)game.addPlayer('bot-local-'+game.id(),bot.hero,bot.name,true,null,bot.lineage?{lineage:bot.lineage}:null);chosen=true;return true;
+   const opts=game.options;game=new Game(seed,{...opts,...(opts.mode==='bonk'?{bonkLineage:choice.key}:{})});game.addPlayer(owner,choice.hero,choice.name,false,null,opts.mode==='bonk'?{lineage:choice.key}:null);for(const bot of bots)game.addPlayer('bot-local-'+game.id(),bot.hero,bot.name,true,null,bot.lineage?{lineage:bot.lineage}:null);chosen=true;return true;
   }
   if(c.type==='roomBots'){if(stage!=='waiting')throw Error('Configure bots antes de iniciar.');const free=capacity(game.options)-game.heroes().length,count=c.fill?free:c.count;if(!Number.isInteger(count)||count<1||count>free)throw Error('A sala está cheia.');addBots(count);ready=false;return true;}
   if(c.type==='roomKick'){if(stage!=='waiting')throw Error('Configure vagas antes de iniciar.');const unit=game.player(c.playerId);if(!unit?.bot)throw Error('Só é possível remover bots.');game.units=game.units.filter(u=>u.owner!==c.playerId);delete game.players[c.playerId];ready=false;return true;}

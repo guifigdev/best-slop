@@ -3,7 +3,7 @@ import {MODES} from './modes.js';
 export const LOBBY_GAMES=Object.freeze([
  {key:'survival',name:'Custom Hero',tag:'HERÓIS E COMBINAÇÕES',description:'Monte sua build e enfrente as provas dos Nove Reinos.',modes:['campaign','tower','best','war']},
  {key:'bonk',name:'Ragnarok Survivors',tag:'MIDGARD EM GRUPO',description:'Hordas, classes e equipamentos de Ragnarok. Aventura ou Torre sem Fim.',modes:['bonk']},
- ...['dungeon','castlefight','bloody','linewars','treetag','kodotag','warlock','phasekiller'].map(key=>({key,name:MODES[key].name,tag:MODES[key].tag,description:MODES[key].description,modes:[key]}))
+ ...['dungeon','castlefight','bloody','linewars','treetag','kodotag','warlock','phasekiller'].map(key=>({key,name:key==='linewars'?'Custom Hero · Line Wars':MODES[key].name,tag:MODES[key].tag,description:MODES[key].description,modes:[key]}))
 ]);
 export function lobbyGameKey(options){return LOBBY_GAMES.find(g=>g.modes.includes(options.mode))?.key||'survival';}
 export const LOBBY_COLORS=Object.freeze(['#71b4ff','#f18d83','#9dd183','#dab0f5','#f0d27d','#6dd2cf','#f1a4ca','#c1c8d2']);

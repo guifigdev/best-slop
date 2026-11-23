@@ -12,6 +12,7 @@ import {roomCharacterChoices} from '../shared/room-characters.js';
 import {addRoomBots,removeRoomBot} from './room-bots.js';
 import {lockRoom,canEnterRoom,roomPassword} from './room-access.js';
 import {ragnarokRoomProfile} from './ro-room-profile.js';
+import {applyRoRoomPolicy} from '../shared/ro-room-policy.js';
 import {ARENAS} from '../shared/arenas.js';
 import {Matchmaker} from './matchmaking.js';
 import {RoomStore} from './room-store.js';
@@ -36,10 +37,11 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
   activateRoom(room);
  }
  function activateRoom(room){
+  applyRoRoomPolicy(room.game);
   const initialMarket=room.lobbyVersion===2&&prepareLobbyMarket(room.game);const readyType=room.game.options.mode==='dungeon'?'dgReady':room.game.options.mode==='bonk'?'bkReady':'ready';for(const u of initialMarket?[]:room.game.heroes()){room.game.command(u.owner,{type:readyType});if(room.game.options.mode==='bonk')break;}room.started=true;room.stage='playing';room.selectionProblem=null;if(!initialMarket)room.game.timer=Math.min(3,room.game.timer);checkpoint(room);publishRoom(room);
  }
 
- function snapshot(room,id){const state={...room.game.snapshotFor(id),onlineRoom:roomInfo(room,id)},peer=room.clients.get(id);if(peer?.staticWorld&&state.dungeon){const key=room.code+':dg:'+state.dungeon.floor+':'+(state.dungeon.stage==='clash'?'clash':'floor')+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.dungeon={...state.dungeon};delete state.dungeon.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.staticWorld&&state.bonk){const key=room.code+':ro:'+room.game.worldSeed+':'+state.bonk.floor+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.bonk={...state.bonk};delete state.bonk.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.skillLibrary&&state.bonk){const u=room.game.player(id),key=JSON.stringify([u?.id,u?.bonkBuild?.weapons,u?.bonkSkillSlots]);state.bonk={...state.bonk,skillCatalogKey:key};if(peer.lastSkillCatalogKey===key){delete state.bonk.skillCatalog;delete state.bonk.learnedSkills;}else peer.lastSkillCatalogKey=key;}return state;}
+ function snapshot(room,id){applyRoRoomPolicy(room.game);const state={...room.game.snapshotFor(id),onlineRoom:roomInfo(room,id)},peer=room.clients.get(id);if(peer?.staticWorld&&state.dungeon){const key=room.code+':dg:'+state.dungeon.floor+':'+(state.dungeon.stage==='clash'?'clash':'floor')+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.dungeon={...state.dungeon};delete state.dungeon.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.staticWorld&&state.bonk){const key=room.code+':ro:'+room.game.worldSeed+':'+state.bonk.floor+':'+room.game.obstacleRevision;state.worldStaticKey=key;if(peer.lastStaticKey===key){state.bonk={...state.bonk};delete state.bonk.map;delete state.obstacles;}else peer.lastStaticKey=key;}if(peer?.skillLibrary&&state.bonk){const u=room.game.player(id),key=JSON.stringify([u?.id,u?.bonkBuild?.weapons,u?.bonkSkillSlots,u?.roLineage,u?.roSkillMode,u?.roTier]);state.bonk={...state.bonk,skillCatalogKey:key};if(peer.lastSkillCatalogKey===key){delete state.bonk.skillCatalog;delete state.bonk.learnedSkills;}else peer.lastSkillCatalogKey=key;}return state;}
  function startProblem(room){
   const players=room.game.heroes(),mode=room.game.options.mode;
   if([...room.members.values()].some(m=>!m.bot&&m.heroChosen===false))return 'Cada jogador precisa confirmar seu personagem no lobby.';
