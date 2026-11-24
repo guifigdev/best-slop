@@ -70,4 +70,6 @@ Combinações Warlock: uma bola de fogo que cruza uma parede do próprio dono re
 
 A parede de gelo de Warlock intercepta todos os projéteis móveis, incluindo os perfurantes, de controle e os orbes de retorno, pelo contato varrido com toda a extensão da barreira. O disparo é removido no ponto de contato sem destruir a parede. A lança glacial mantém a exceção da combinação: despedaça a parede e produz a faixa congelante. Paredes expiradas ou disparos fora das extremidades não bloqueiam.
 
+O contato com a parede de fogo dá um recuo de 0,85 m em cerca de 0,12 s, para o lado de entrada. Esse recuo breve tem distância limitada e prevalece sobre caminhada durante sua execução, sem acumular a velocidade de lançamento dos outros ataques. Pode repetir após 0,75 s de novo contato; aliados continuam seguros e a queimadura é preservada. Colisão com unidades e pilares continua válida durante o recuo.
+
 As esculturas da parede de gelo ficaram cerca de 20% mais altas. O vapor tem uma única emissão histórica compartilhada: partículas translúcidas nascem no corpo da barreira, saem em direções variadas, crescem e perdem opacidade durante 1,6 s. A emissão esparsa evita a antiga faixa branca condensada; câmera e fonte não arrastam as partículas já emitidas. Mantém o orçamento existente de dois lotes e nenhuma luz adicional.

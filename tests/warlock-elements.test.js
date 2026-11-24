@@ -16,7 +16,7 @@ test('rotated walls use swept physical contact, including a complete crossing be
 });
 
 test('fire wall pushes away from the entry side, applies burn and throttles repeated impulses; caster remains safe',()=>{
- const {g,p,q}=setup(['W_FIRE_WALL']);p.x=0;p.z=-10;q.x=2;q.z=0;assert.ok(g.command('p',{type:'wlCast',skill:'W_FIRE_WALL',x:0,z:0,angle:0}));const wall=g.warlock.fields[0];assert.equal(wall.family,'fireWall');g.tickWarlockFields(.025,new Map([[q.id,{x:-2,z:0}]]));near(q.wlVx,-7);assert.ok(q.wlMeteorBurnUntil>g.time);g.tickWarlockFields(.025,new Map([[q.id,{x:-2,z:0}]]));near(q.wlVx,-7);assert.equal(p.wlMeteorBurnUntil,0);assert.ok(combatStatuses(q,g.time).some(s=>s.key==='fire'));
+ const {g,p,q}=setup(['W_FIRE_WALL']);p.x=0;p.z=-10;q.x=2;q.z=0;assert.ok(g.command('p',{type:'wlCast',skill:'W_FIRE_WALL',x:0,z:0,angle:0}));const wall=g.warlock.fields[0];assert.equal(wall.family,'fireWall');g.tickWarlockFields(.025,new Map([[q.id,{x:-2,z:0}]]));near(q.wlWallPush.dx,-1);near(q.wlWallPush.remaining,.85);assert.ok(q.wlMeteorBurnUntil>g.time);g.tickWarlockFields(.025,new Map([[q.id,{x:-2,z:0}]]));near(q.wlWallPush.dx,-1);near(q.wlWallPush.remaining,.85);assert.equal(p.wlMeteorBurnUntil,0);assert.ok(combatStatuses(q,g.time).some(s=>s.key==='fire'));
 });
 
 test('ice wall slows actual locomotion by forty percent and wears off after leaving, without freezing movement',()=>{
@@ -34,3 +34,15 @@ test('element effects reset across rounds and extension ranks expose honest cost
 test('wall length begins forty percent shorter and reaches full length at the maximum base rank',()=>{for(const key of ['W_FIRE_WALL','W_ICE_WALL'])for(const [i,length]of [4.2,4.9,5.6,6.3,7,7,7].entries())near(wlSkillAt(key,i+1).wallLength,length);});
 
 test('a new cold effect does not inherit the strength of an already expired slow',()=>{const u={wlFrostUntil:1,wlFrostSlow:.8};applyWarlockFrost(u,2,2,.4);near(warlockFrostFactor(u,2),.6);});
+
+
+test('fire wall knockback is a short finite recoil even against a move order, and cannot stack into a launch',()=>{
+ const {g,p,q}=setup(['W_FIRE_WALL']);p.x=-8;q.x=-.6;q.z=0;
+ assert.ok(g.command('p',{type:'wlCast',skill:'W_FIRE_WALL',x:0,z:0,angle:0}));
+ g.tickWarlockFields(.025);assert.ok(q.wlWallPush);const start=q.x;
+ q.destination={x:8,z:0};advance(g,.1);assert.ok(q.x<start-.6,'contact visibly overrides forward walking during the short recoil');
+ q.destination=null;advance(g,.1);near(start-q.x,.85);assert.equal(q.wlWallPush,null);near(q.wlVx,0);near(q.wlVz,0);
+ const stopped=q.x;advance(g,.4);near(q.x,stopped);assert.ok(q.wlMeteorBurnUntil>g.time);
+ q.x=-.6;g.time+=.8;g.tickWarlockFields(.025);assert.ok(q.wlWallPush,'later contact may trigger another short recoil');
+ g.finishWarlockRound();assert.equal(q.wlWallPush,null);
+});
