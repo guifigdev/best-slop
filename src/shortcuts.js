@@ -13,6 +13,7 @@ export function useShortcuts({target=window,context,onAction}){
  const editable=event=>event.target?.matches?.('input,textarea,select,[contenteditable=true]');
  function down(e){if(editable(e))return;const c=context(),key=e.key.toUpperCase();
   if(key==='ESCAPE'){e.preventDefault();onAction('escape');return;}
+  if(key==='P'&&c.playing&&!c.bonkOffer){e.preventDefault();if(!e.repeat)onAction('pause');return;}
   if(key==='F2'||e.key==='?'){e.preventDefault();if(!e.repeat)onAction('help');return;}
   if(c.modal)return;
   if(c.dialog){if(e.key==='Enter'||e.code==='Space'){e.preventDefault();if(!e.repeat)onAction('dialogNext');}return;}

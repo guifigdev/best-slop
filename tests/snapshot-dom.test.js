@@ -6,6 +6,8 @@ import {patchChildren} from '../src/snapshot-dom.js';
 class Node {
  constructor(name,attributes={},children=[]){this.nodeType=name==='#text'?3:1;this.nodeName=name;this.attrs={...attributes};this.childNodes=[];this.parentNode=null;this.nodeValue=attributes.text||null;for(const child of children)this.insertBefore(child,null);}
  get attributes(){return Object.entries(this.attrs).map(([name,value])=>({name,value}));}
+ get classList(){const node=this;return {contains:value=>(node.attrs.class||'').split(/\s+/).includes(value),add(value){node.attrs.class=[...new Set((node.attrs.class||'').split(/\s+/).filter(Boolean).concat(value))].join(' ');},[Symbol.iterator]:function*(){yield* (node.attrs.class||'').split(/\s+/).filter(Boolean);}};}
+ get style(){const node=this,entries=()=>Object.fromEntries((node.attrs.style||'').split(';').filter(s=>s.includes(':')).map(s=>{const [key,...value]=s.split(':');return [key.trim(),value.join(':').trim()];}));return {getPropertyValue:key=>(entries()[key]||'').replace(/\s*!important$/,''),getPropertyPriority:key=>entries()[key]?.endsWith('!important')?'important':'',setProperty(key,value,priority){const next=entries();next[key]=value+(priority?' !'+priority:'');node.attrs.style=Object.entries(next).map(([k,v])=>k+':'+v).join(';');}};}
  hasAttribute(name){return Object.hasOwn(this.attrs,name);}
  getAttribute(name){return this.attrs[name]??null;}
  setAttribute(name,value){this.attrs[name]=value;}
@@ -40,4 +42,13 @@ test('disclosures retain player state and switching control identity does not re
  const details=new Node('DETAILS',{open:''},[new Node('SUMMARY',{},[text('Equipe')])]),old=button('a','A'),root=new Node('DIV',{},[details,old]);
  patchChildren(root,new Node('DIV',{},[new Node('DETAILS',{},[new Node('SUMMARY',{},[text('Equipes')])]),button('b','B')]),keys);
  assert.equal(root.childNodes[0],details);assert.equal(details.hasAttribute('open'),true);assert.notEqual(root.childNodes[1],old);assert.equal(old.parentNode,null);
+});
+
+test('live snapshots preserve player layout, handle identity and skill buttons while game values update',()=>{
+ const handle=new Node('SPAN',{class:'hud-drag-handle'}),cast=button('spell','Usar'),panel=new Node('SECTION',{'data-ui-key':'skills','data-hud-layout':'ro-skills',class:'ro-skill-dock hud-draggable hud-positioned',style:'position:fixed !important;left:120px !important;top:88px !important;width:230px !important'},[handle,cast]),root=new Node('DIV',{},[panel]);
+ for(let i=1;i<=8;i++){
+  patchChildren(root,new Node('DIV',{},[new Node('SECTION',{'data-ui-key':'skills',class:'ro-skill-dock cooling',style:'opacity:.8'},[button('spell','Recarga '+i)])]),['data-ui-key','data-cf-build']);
+  assert.equal(root.childNodes[0],panel);assert.equal(panel.childNodes[0],handle);assert.equal(panel.childNodes[1],cast);assert.equal(panel.getAttribute('data-hud-layout'),'ro-skills');assert.equal(panel.classList.contains('hud-positioned'),true);assert.equal(panel.classList.contains('cooling'),true);assert.equal(panel.style.getPropertyValue('left'),'120px');assert.equal(panel.style.getPropertyPriority('left'),'important');assert.equal(panel.style.getPropertyValue('opacity'),'.8');
+ }
+ assert.equal(cast.childNodes[0].nodeValue,'Recarga 8');
 });

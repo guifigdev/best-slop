@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import {createRoomSocket} from '../src/room-socket.js';
 class FakeSocket{static instances=[];constructor(url){this.url=url;this.readyState=0;this.sent=[];FakeSocket.instances.push(this);}send(value){this.sent.push(JSON.parse(value));}open(){this.readyState=1;this.onopen?.();}message(value){this.onmessage?.({data:JSON.stringify(value)});}close(code=1000){this.readyState=3;this.onclose?.({code});}}
 const storage=()=>{const values=new Map();return{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};};
+test('sequenced inputs are negotiated, sampled separately from authoritative state and cleared on close',()=>{
+ FakeSocket.instances=[];let clock=0;const client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',room:'TEST'},storage:storage(),WebSocketClass:FakeSocket,now:()=>clock});
+ try{const socket=FakeSocket.instances[0];socket.open();assert.ok(socket.sent[0].features.includes('movement-rollback-v1'));socket.message({type:'joined',id:'p',room:'TEST',state:{options:{mode:'campaign'},network:{movementReplay:1,ack:0},players:{p:1},phase:'wave',arena:'forest',time:1,bounds:50,units:[{id:1,alive:true,x:0,z:0,speed:6,order:'stop'}],obstacles:[]}});client.send(JSON.stringify({type:'command',command:{type:'move',x:10,z:0}}));assert.equal(socket.sent.at(-1).sequence,1);clock=100;assert.ok(client.sampleState().units[0].x>.5);client.close();assert.equal(client.sampleState(),null);}finally{client.close();}
+});
 test('creating Castle Fight never resumes a saved Custom Hero session with the same room code',()=>{
  FakeSocket.instances=[];const saved=storage();saved.setItem('custom-hero-room:ws://localhost/ws:BOSQUE',JSON.stringify({id:'old-thor',token:'old-capability'}));
  const client=createRoomSocket({url:'ws://localhost/ws',payload:{type:'join',intent:'create',room:'BOSQUE',options:{game:'castlefight',mode:'castlefight'}},storage:saved,WebSocketClass:FakeSocket});
