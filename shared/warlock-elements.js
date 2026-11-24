@@ -2,7 +2,7 @@
 const make=(key,name,column,family,description,{damage=0,cooldown=13,duration=4,slowDuration=1.25}={})=>Object.freeze({key,id:key,name,column,hotkey:column,family,kind:'active',target:'ground',maxLevel:5,maxRingLevel:7,learnCost:12,upgradeCost:6,costIncrement:1,browserExtension:true,wallLength:7,wallThickness:.7,slow:.4,slowDuration,description,ranks:Array.from({length:7},(_,i)=>({level:i+1,wallLength:7*Math.min(1,.6+i*.1),damage:damage?damage+i*.7:0,damageMax:damage?damage+i*.7:0,cooldown:Math.max(5,cooldown-i*.6),range:14*64,radius:.35*64,speed:12*64,duration:duration+i*.25,missiles:1})),provenance:{confirmed:[],adapted:['Browser extension requested by player; original balancing and voxel art']}});
 export const WARLOCK_ELEMENT_SKILLS=Object.freeze({
  W_FIRE_WALL:make('W_FIRE_WALL','Parede de fogo','E','fireWall','Parede de chamas rotacionável. Empurra inimigos e aplica queimadura. Suas bolas de fogo que atravessam a parede ganham alcance renovado, tamanho e +20% de dano.',{duration:4,cooldown:14}),
- W_ICE_WALL:make('W_ICE_WALL','Parede de gelo','T','iceWall','Parede de gelo rotacionável. Aplica 40% de lentidão. Uma lança glacial despedaça a parede e deixa uma faixa que congela após exposição.',{duration:5,cooldown:15}),
+ W_ICE_WALL:make('W_ICE_WALL','Parede de gelo','T','iceWall','Parede de gelo rotacionável. Bloqueia projéteis e aplica 40% de lentidão. Uma lança glacial despedaça a parede e deixa uma faixa que congela após exposição.',{duration:5,cooldown:15}),
  W_FROST_BOLT:make('W_FROST_BOLT','Lança glacial','D','frostBolt','Dispara uma lança de gelo que causa dano e aplica 40% de lentidão por 2,5s.',{damage:6,duration:2.5,cooldown:8})
 });
 export const isWarlockWall=family=>family==='fireWall'||family==='iceWall';
