@@ -1,8 +1,15 @@
+import {RO_MIDGARD_MODELS,roMidgardLandmarkParts} from './ro-midgard-landmarks.js';
 import {roExpansionSceneryParts} from './ro-expansion-scenery.js';
 import {bonkSceneryParts,bonkMonumentParts} from './bonk-prop-art.js';
 
 const freeze=o=>Object.freeze(o);
 export const RO_ROUTE_PALETTES=freeze({
+ 'alberta-harbor':freeze({soil:0xa9b99c,grass:0x9db782,dark:0x405f67,stone:0xd4d5bb,wood:0x977551,sky:0x9fc9d4,glow:0xf5d590,path:0xc8c8ae}),
+ 'turtle-island':freeze({soil:0xbcbb8b,grass:0x86a66c,dark:0x426b64,stone:0x9cad92,wood:0x877457,sky:0x9ccbc9,glow:0xc7eac4,path:0xd4c8a1}),
+ 'amatsu-sakura':freeze({soil:0x8e9b70,grass:0xb3bc8d,dark:0x425d57,stone:0xc8c2af,wood:0x89664b,sky:0xc3cbd0,glow:0xf4d2aa,path:0xc5b697}),
+ 'comodo-beach':freeze({soil:0xc1b78c,grass:0xa7ad73,dark:0x4e6864,stone:0xa2a998,wood:0x9b7a53,sky:0x95b9cb,glow:0xf3c889,path:0xdacba1}),
+ 'umbala-canopy':freeze({soil:0x61764c,grass:0x86a35d,dark:0x324e3a,stone:0x8c9775,wood:0x795437,sky:0x93b7a1,glow:0xf1c57d,path:0xa18c5e}),
+ 'niflheim-hollows':freeze({soil:0x696274,grass:0x8a748b,dark:0x383345,stone:0x9f8e9e,wood:0x6e5366,sky:0x7e8199,glow:0xf5ba6c,path:0x8e7d8c}),
  'snow-village':freeze({soil:0xd9e3df,grass:0xecf0e8,dark:0x456879,stone:0xb5cbce,wood:0x805c49,sky:0xacc9dc,glow:0xffd68b,path:0x9daeb1}),
  'toy-factory':freeze({soil:0x7f6354,grass:0xa99270,dark:0x423b43,stone:0xb6a883,wood:0x8a6046,sky:0x76859b,glow:0xffd77e,path:0xc1a781}),
  clockwork:freeze({soil:0x77725d,grass:0x9c987c,dark:0x41484e,stone:0xb8ad86,wood:0x785b44,sky:0x919eae,glow:0xf8ce78,path:0xb5a283}),
@@ -27,6 +34,7 @@ const MODELS=freeze({pastoral:['prontera-house','prontera-fountain','prontera-ga
 // The same lateral sites have different architectural silhouettes by region.
 // All dimensions fit their existing 11m pocket; the 18m central road stays open.
 export function roRouteSceneryParts(style,index,p){
+ const midgard=RO_MIDGARD_MODELS[style];if(midgard)return roMidgardLandmarkParts(midgard[index%midgard.length],p,index);
  const expansion=roExpansionSceneryParts(style,p,index);if(expansion)return expansion;
  const models=MODELS[style];if(!models)return null;const model=models[index%models.length];if(!['tomb-obelisk','rachel-temple','rachel-aqueduct','juno-observatory','juno-orrery','valkyrie-throne','valkyrie-colonnade','valkyrie-arch'].includes(model))return bonkSceneryParts(model,p,index);
  const parts=[],b=(x,y,z,w,h,d,c=p.stone,a=0,lit=false)=>parts.push([x,y,z,w,h,d,c,a,lit]),column=(x,z,h=6)=>{b(x,.25,z,1.7,.5,1.7,p.dark);for(let i=0;i<7;i++)b(x,.7+i*(h-.8)/7,z,.9,(h-.8)/7*.95,.9,i%3?p.stone:p.dark);b(x,h,z,1.6,.4,1.6);};

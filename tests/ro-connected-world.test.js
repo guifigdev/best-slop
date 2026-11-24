@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
-import {RO_WORLD_ROUTE} from '../shared/ro-world-route.js';
+import {RO_WORLD_ROUTE,RO_LEGACY_ROUTE_SIZE} from '../shared/ro-world-route.js';
 import {createRoCheckpoint} from '../shared/ragnarok-save.js';
 import {roMvpPatterns} from '../shared/ro-mvp-encounters.js';
 import {insideBossPattern} from '../shared/boss-patterns.js';
@@ -25,8 +25,8 @@ test('saving an opened passage resumes the same region without respawning or rew
  const g=start(),u=defeat(g),cp=createRoCheckpoint(g);assert.ok(cp);assert.equal(cp.routeIndex,0);assert.equal(cp.routeBossDefeated,true);const next=new Game(999,{mode:'bonk'});next.addPlayer('p','knight');assert.ok(next.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(next.bonk.routeVersion,1);assert.equal(next.bonk.exitGate.open,true);const gold=next.player('p').gold;Object.assign(next.player('p'),{x:0,z:-62});next.tick(.1);assert.ok(!next.units.some(e=>e.alive&&e.bonkBoss));assert.equal(next.player('p').gold,gold);assert.equal(u.roLineage,next.player('p').roLineage);
 });
 
-test('all twelve route regions can be entered and saved with native waves, their iconic guardian and a matching physical exit',()=>{
- for(const [index,region]of RO_WORLD_ROUTE.entries()){
+test('all legacy linear route regions can be entered and saved with native waves, their iconic guardian and a matching physical exit',()=>{
+ for(const [index,region]of RO_WORLD_ROUTE.slice(0,RO_LEGACY_ROUTE_SIZE).entries()){
   const g=start(),cp=createRoCheckpoint(g);Object.assign(cp,{routeIndex:index,floor:index+1,stageKey:region.scene,clearedStages:RO_WORLD_ROUTE.slice(0,index).map(r=>r.key)});const next=new Game(2,{mode:'bonk'});next.addPlayer('p','knight');assert.ok(next.command('p',{type:'bkRestore',checkpoint:cp}),region.key);assert.equal(next.bonk.route.key,region.key);assert.equal(next.bonk.encounter.boss,region.mvp);assert.ok(createRoCheckpoint(next));const html=bonkObjectiveMarkup(next.snapshotBonk(),next.player('p'));assert.ok(html.includes(region.name));assert.ok(!html.includes('Volte ao templo central'));assert.equal(next.bonk.exitGate?.nextKey||null,region.nextKey);
  }
 });

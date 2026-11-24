@@ -12,8 +12,10 @@ export function warlockProjectileCombo(game,p,from,dt){
    const normalRange=p.range||17.1875;p.life=Math.max(.01,normalRange/Math.max(.01,p.speed)-dt*(1-contact.fraction));
    game.fx('warlockFireWallBoost',from.x+(p.x-from.x)*contact.fraction,from.z+(p.z-from.z)*contact.fraction,{source:p.source,element:'fire',duration:.25});
   }else if(p.family!=='frostBolt'){
-   p.x=from.x+(p.x-from.x)*contact.fraction;p.z=from.z+(p.z-from.z)*contact.fraction;
-   game.fx('warlockIceWallBlock',p.x,p.z,{source:p.source,wall:f.id,element:'ice',radius:.45,duration:.35});return true;
+   const nx=contact.reflectNx??contact.nx,nz=contact.reflectNz??contact.nz,dot=p.dx*nx+p.dz*nz;
+   p.x=from.x+(p.x-from.x)*contact.fraction+nx*.04;p.z=from.z+(p.z-from.z)*contact.fraction+nz*.04;p.dx-=2*dot*nx;p.dz-=2*dot*nz;p.hitIds=[];
+   if(p.family==='drain_return')p.wlReflectedReturn=true;else if(!['link','splitter'].includes(p.family)){p.source=f.source;p.owner=f.owner;p.team=f.team;}
+   game.fx('warlockIceWallReflect',p.x,p.z,{source:f.source,wall:f.id,element:'ice',radius:.45,duration:.35});return 'reflected';
   }else{
    f.until=game.time;f.shattered=true;game.warlock.fields.push({id:game.id(),key:p.key,skill:p.skill,family:'frostField',source:p.source,owner:p.owner,team:p.team,x:f.x,z:f.z,angle:f.angle,length:f.length,thickness:WARLOCK_COMBOS.iceWidth,started:game.time,until:game.time+WARLOCK_COMBOS.iceDuration,exposure:{},frozenIds:[]});
    game.fx('warlockIceWallShatter',f.x,f.z,{source:p.source,element:'ice',angle:f.angle,length:f.length,thickness:WARLOCK_COMBOS.iceWidth,radius:f.length/2,duration:.8});return true;

@@ -1,9 +1,11 @@
+import {roMidgardLandmarkParts} from './ro-midgard-landmarks.js';
 import {roExpansionSceneryParts} from './ro-expansion-scenery.js';
 // Authored voxel miniatures, cached per palette/model/variant. They are merged
 // into the existing world batches rather than becoming individual draw calls.
 import {RO_REGION_PROP_BUDGET} from '../shared/ro-regional-props.js';
 const cache=new Map();
 export function roRegionalPropParts(type,p,variant=0){
+ const midgard=roMidgardLandmarkParts(type,p,variant);if(midgard)return midgard;
  const expansion=roExpansionSceneryParts(type,p,variant);if(expansion)return expansion;
  const key=[type,p.stone,p.dark,p.wood,p.grass,p.glow,variant%3].join(':');if(cache.has(key))return cache.get(key);const parts=[],b=(x,y,z,w,h,d,c=p.stone,a=0,lit=false)=>parts.push([x,y,z,w,h,d,c,a,lit]),wood=p.wood||0x79593d,dark=p.dark||0x3b463d,stone=p.stone||0xaaa38b,grass=p.grass||0x849953,gold=0xc4a05e,roof=0x8f5142;
  const beam=(x,y,z,w,h,d,c=wood,a=0)=>b(x,y,z,w,h,d,c,a),planks=(x,y,z,w=4,d=3,c=wood)=>{for(let j=0;j<6;j++)b(x+(j-2.5)*w/6,y,z,w/6*.95,.18,d,c);};

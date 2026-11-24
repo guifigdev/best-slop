@@ -1,0 +1,4 @@
+Local Ragnarok LATAM client; original audio and ACT data © Gravity
+Files extracted read-only from data.grf / BGM. Original bytes are retained; SHA-256 hashes are recorded.
+The software licenses of parsers do not license the game audio.
+MIDI files are automatically transcribed approximations, not official MIDI arrangements.

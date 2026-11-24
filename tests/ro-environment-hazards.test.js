@@ -15,7 +15,7 @@ function setup(key='thor-volcano'){
 }
 
 test('all 16 regions have seeded optional clearings, safe roads, gates, arenas and reachable footprints',()=>{
- assert.equal(Object.keys(RO_ENVIRONMENT_THEMES).length,16);
+ assert.equal(Object.keys(RO_ENVIRONMENT_THEMES).length,22);
  for(const seed of [1,29,73,124])for(const region of RO_WORLD_ROUTE){
   const map=mapFor(region.key,seed),merchants=generateRoSecretMerchants(map);map.objects.push(...merchants);const before=JSON.stringify(map),zones=roEnvironmentHazards(map);
   assert.ok(zones.length>=2&&zones.length<=3,region.key+' seed '+seed);

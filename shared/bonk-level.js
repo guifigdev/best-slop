@@ -30,7 +30,7 @@ export function generateBonkLevel(seed=1,stageKey='grove',habitat=null,route=nul
  // Small recognizable scenes occupy seeded lateral pockets. They have real
  // colliders but leave generous shoulders along every objective/spawn/gate road.
  const pool=roRegionPropPool(stageKey,route?.style),propPaths=route?.graph?[...route.spokes,{from:route.entry,to:route.bossArena,width:12}]:route?[{from:route.entry,to:route.bossArena,width:18}]:landmarks.map(l=>({from:{x:0,z:0},to:l,width:12}));
- let regionalCount=0;for(let attempt=0;attempt<360&&regionalCount<RO_REGION_PROP_BUDGET.perMap;attempt++){
+ let regionalCount=0;for(let attempt=0;attempt<1080&&regionalCount<RO_REGION_PROP_BUDGET.perMap;attempt++){
   const x=(hash(seed+attempt*17.31+812)-.5)*196,z=(hash(seed+attempt*31.77+433)-.5)*196,model=pool.models[regionalCount%pool.models.length],p={x,z},radius=Math.hypot(pool.w,pool.d)*.5;
   if(clear(p)||propPaths.some(path=>nearSpoke(p,path,(path.width||12)*.5+radius+4))||obstacles.some(o=>Math.abs(x-o.x)<o.w*.5+pool.w*.5+2&&Math.abs(z-o.z)<o.d*.5+pool.d*.5+2)||decorations.some(o=>o.type==='regional-prop'&&distance(o,p)<17))continue;
   const yaw=(Math.floor(hash(seed+attempt*3.1)*4)*Math.PI/2),o={id:'bonk-region-prop-'+regionalCount,type:'regional-prop',model,x,z,w:Math.max(pool.w,pool.d),d:Math.max(pool.w,pool.d),h:pool.h,yaw,variant:regionalCount%3,solid:false};decorations.push(o);

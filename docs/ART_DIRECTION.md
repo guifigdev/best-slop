@@ -131,3 +131,7 @@ O estudo usa a silhueta do [Knight oficial](https://ragnarokonline.gungho.jp/gam
 A espada prepara acima do ombro, desce rapidamente e recupera com inclinação do tronco. O Bash acrescenta um clarão no alvo, separado do rastro. Ambos continuam legíveis com câmera alta; o impacto fica centralizado e deslocado para a frente da superfície do alvo para evitar desaparecer dentro dele. A mudança é visual. Alcance, acerto, dano e recarga continuam na simulação. O limite permanece 64 eventos e oito lotes de desenho; os buffers comportam até 128 quads para os pares de corte e impacto e um atlas adicional de 192 KiB.
 
 A revisão seguinte segue a referência de Bowling Bash enviada pelo usuário: faixa preenchida azul-clara/lilás, borda branca e ponta afiada, com varredura de 120° do alto do ombro até perto do chão. Bash e Bowling Bash compartilham esse rastro; ele espelha para o lado do alvo na tela e continua visível com a câmera alta. O clarão de acerto é menor para deixar a faixa legível. Reutiliza a mesma linha do atlas e o mesmo lote de espada.
+
+## Referências nativas de Ragnarok
+
+Antes de criar ou revisar uma animação de Ragnarok, consultar os sprites e ações SPR/ACT originais e seus tempos; adaptar a coreografia à geometria voxel, preservando a identidade visual. As mortes e sons importados estão documentados em `RAGNAROK_MIDGARD_AUDIO.md`. O gelo facetado e seu vapor compartilhado continuam sendo o padrão de todos os modos.

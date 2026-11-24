@@ -2,6 +2,12 @@
 // Used by generation and art so footprints and declared budgets stay in sync.
 const spec=(w,d,h,models)=>Object.freeze({w,d,h,models:Object.freeze(models)});
 export const RO_REGION_PROP_POOLS=Object.freeze({
+ 'alberta-harbor':spec(10,9,10,['alberta-ship','alberta-crane','alberta-lighthouse','alberta-warehouse']),
+ 'turtle-island':spec(9,8,7,['turtle-shell-shrine','turtle-nest','coral-arch','island-mooring']),
+ 'amatsu-sakura':spec(10,9,10,['amatsu-castle','amatsu-torii','sakura-garden','amatsu-bridge']),
+ 'comodo-beach':spec(10,9,8,['comodo-cavemouth','comodo-shell-stage','comodo-stilt-house','comodo-drum-circle']),
+ 'umbala-canopy':spec(10,9,11,['umbala-treehouse','umbala-mask-gate','wootan-drums','umbala-root-shrine']),
+ 'niflheim-hollows':spec(10,9,10,['niflheim-house','pumpkin-cart','ghost-bell-tower','niflheim-dead-arch']),
  'snow-village':spec(9,7,8,['snow-village','snowed-sled','frost-rune-arch','snow-festival-tree']),
  'toy-factory':spec(10,7,7,['toy-factory','toy-train','toy-gifts','mine-wagon']),
  clockwork:spec(10,7,11,['clockwork','clock-gears','juno-telescope','runic-engine']),

@@ -1,0 +1,44 @@
+// Imports data only from the user's installed client. Run the MIDI converter
+// afterwards; production URLs always point to packaged files on our asset CDN.
+import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {openRoArchive} from './ro-client-archive.mjs';
+import {RAGNAROK_VOXEL_REFERENCES} from '../shared/monster-visual-references.js';
+import {RO_NATIVE_EFFECT_MANIFEST} from '../src/ro-native-effect-assets.js';
+const client=process.argv[2]||'C:/Gravity/Ragnarok',out='src/assets/ro-audio',archive=openRoArchive(path.join(client,'data.grf')),hash=b=>createHash('sha256').update(b).digest('hex'),normal=s=>s.toLowerCase().replace(/[^a-z0-9]/g,''),write=async(p,b)=>{await mkdir(path.dirname(p),{recursive:true});await writeFile(p,b);};
+export function parseAct(data){
+ if(data.toString('ascii',0,2)!=='AC')throw Error('Not ACT');const version=data[3]+data[2]/10,clipCount=data.readUInt16LE(4);if(version<2||version>2.5||clipCount>200)throw Error('Unsupported ACT');let at=16;const clips=[];
+ for(let c=0;c<clipCount;c++){const count=data.readUInt32LE(at);at+=4;if(count>2000)throw Error('ACT frame budget');const frames=[];
+  for(let f=0;f<count;f++){at+=32;const n=data.readUInt32LE(at);at+=4;if(n>100)throw Error('ACT layer budget');const layers=[];
+   for(let l=0;l<n;l++){const x=data.readInt32LE(at),y=data.readInt32LE(at+4),sprite=data.readInt32LE(at+8),alpha=data[at+19]/255,sx=data.readFloatLE(at+20),sy=version>=2.4?data.readFloatLE(at+24):sx,rotation=data.readInt32LE(at+(version>=2.4?28:24)),type=data.readInt32LE(at+(version>=2.4?32:28));layers.push({x,y,sprite,alpha,sx,sy,rotation,type});at+=version>=2.5?44:version>=2.4?36:32;}
+   const event=data.readInt32LE(at);at+=4;if(version>=2.3){const anchors=data.readUInt32LE(at);if(anchors>100)throw Error('ACT anchor budget');at+=4+anchors*16;}frames.push({layers,event});
+  }clips.push({frames});
+ }
+ const sounds=[];if(version>=2.1){const n=data.readUInt32LE(at);at+=4;if(n>2048)throw Error('ACT sound budget');for(let i=0;i<n;i++){sounds.push(new TextDecoder('euc-kr').decode(data.subarray(at,at+40)).split('\0')[0]);at+=40;}}
+ for(const c of clips){c.delay=version>=2.2?data.readFloatLE(at)*.024:.15;if(version>=2.2)at+=4;if(!(c.delay>0&&c.delay<10))throw Error('ACT invalid timing');}return {version,clips,sounds};
+}
+function spriteDimensions(data){const version=data[3]+data[2]/10,indexed=data.readUInt16LE(4),truecolor=version>=2?data.readUInt16LE(6):0,result=[[],[]];let at=version>=2?8:6;
+ for(let i=0;i<indexed;i++){const w=data.readUInt16LE(at),h=data.readUInt16LE(at+2);at+=4;result[0].push([w,h]);if(version>=2.1){const n=data.readUInt16LE(at);at+=2+n;}else at+=w*h;}
+ for(let i=0;i<truecolor;i++){const w=data.readUInt16LE(at),h=data.readUInt16LE(at+2);at+=4+w*h*4;result[1].push([w,h]);}return result;
+}
+function bounds(frame,dims){const layers=frame.layers.filter(l=>l.sprite>=0&&l.alpha>.04).map(l=>{const [w,h]=dims[l.type]?.[l.sprite]||[1,1],r=l.rotation*Math.PI/180,ww=Math.abs(w*l.sx*Math.cos(r))+Math.abs(h*l.sy*Math.sin(r)),hh=Math.abs(w*l.sx*Math.sin(r))+Math.abs(h*l.sy*Math.cos(r));return {x:l.x,y:l.y,w:ww,h:hh,alpha:l.alpha};});if(!layers.length)return [0,0,0,0,0];const minX=Math.min(...layers.map(l=>l.x-l.w/2)),maxX=Math.max(...layers.map(l=>l.x+l.w/2)),minY=Math.min(...layers.map(l=>l.y-l.h/2)),maxY=Math.max(...layers.map(l=>l.y+l.h/2));return[maxX-minX,maxY-minY,(maxX+minX)/2,(maxY+minY)/2,Math.max(...layers.map(l=>l.alpha))];}
+const media={version:1,source:'Local Ragnarok LATAM client; original audio and ACT data © Gravity',sounds:{},monsters:{},skills:{},basics:{},music:{},unavailable:[]},animations={version:1,source:'Original client SPR/ACT, death action 32 (south), timing in 24 ms ticks',monsters:{}},audioFiles=new Map(),entries=[...archive.entries.keys()],acts=new Map(entries.filter(n=>n.includes('/몬스터/')&&n.endsWith('.act')).sort((a,b)=>b.length-a.length).map(n=>[normal(path.posix.basename(n,'.act')),n]));
+const aliases={familiar:'farmiliar',gtb:'golden_bug',icetitan:'ice_titan',elderwillow:'elder_wilow',willow:'wilow',pecopeco:'pecopeco',phreeoni:'phreeoni',valkyrierandgris:'randgris',abyssknight:'knight_of_abyss',stormyknight:'stormy_knight',hatii:'garm',fallenbishop:'fallen_bishop',steelchonchon:'steel_chonchon',highorc:'high_orc',savagebabe:'savage_babe',archerskeleton:'archer_skeleton',soldierskeleton:'soldier_skeleton',raydricarcher:'raydric_archer',moonlightflower:'moonlight'};
+async function sound(name){name=String(name).replaceAll('\\','/').replace(/^data\/wav\//i,'').replace(/\.wav$/i,'').toLowerCase();if(!name||name==='atk'||name.includes('..'))return null;if(media.sounds[name])return name;const bytes=archive.read('data/wav/'+name+'.wav');if(!bytes||bytes.toString('ascii',0,4)!=='RIFF'){media.unavailable.push(name);return null;}const sha256=hash(bytes),file='original/'+sha256.slice(0,24)+'.wav';await write(path.join(out,file),bytes);media.sounds[name]={file,sha256,bytes:bytes.length,midi:'midi/'+sha256.slice(0,24)+'.mid'};audioFiles.set(file,true);return name;}
+async function clipSounds(act,index){const clip=act.clips[index];if(!clip)return[];const result=[];for(const [i,f]of clip.frames.entries()){const name=act.sounds[f.event];if(name?.toLowerCase().endsWith('.wav')){const key=await sound(name);if(key)result.push({key,at:Number((i*clip.delay).toFixed(4))});}}return result;}
+try{
+ for(const ref of Object.values(RAGNAROK_VOXEL_REFERENCES)){
+  const candidates=[aliases[ref.key],aliases[normal(ref.sourceName)],ref.key,ref.sourceName].filter(Boolean),name=candidates.map(normal).map(n=>acts.get(n)).find(Boolean);if(!name)continue;
+  try{const act=parseAct(archive.read(name)),dims=spriteDimensions(archive.read(name.replace(/\.act$/,'.spr'))),death=act.clips[32];if(!death?.frames.length)continue;const base=bounds(act.clips[0].frames[0],dims),frames=death.frames.map(f=>bounds(f,dims).map((n,i)=>Number((i<4?n/Math.max(1,base[i<2?i:1]):n).toFixed(4))));animations.monsters[ref.key]={source:name,delay:death.delay,base:[base[0],base[1]],frames};const attack=await clipSounds(act,16),deathSounds=await clipSounds(act,32);media.monsters[ref.key]={attack,death:deathSounds};
+  }catch(e){media.unavailable.push(ref.key+': '+e.message);}
+ }
+ for(const [key,row]of Object.entries(RO_NATIVE_EFFECT_MANIFEST.skills)){const names=[...new Set(Object.values(row.phases).flat().map(p=>p.wav).filter(n=>typeof n==='string'&&!n.includes('%')))];const keys=(await Promise.all(names.map(sound))).filter(Boolean);if(keys.length)media.skills[key]=keys;}
+ for(const key of ['sword','axe','bow','dagger','katar','mace','rod','spear','book']){const id=await sound('_attack_'+key);if(id)media.basics[key]=id;}
+ const mapTable=new Map();for(const line of archive.read('data/mp3nametable.txt').toString('latin1').split(/\r?\n/)){if(line.trim().startsWith('//'))continue;const m=/^([^#]+)\.rsw#bgm[\\/]+([^#]+\.mp3)#/i.exec(line.trim());if(m)mapTable.set(m[1],m[2]);}
+ const maps={prontera:'prt_fild08','payon-forest':'pay_fild01','payon-cave':'pay_dun00',morroc:'moc_fild01','morroc-pyramid':'moc_pryd01',rachel:'ra_fild01',juno:'yuno','ice-cavern':'ice_dun01','thor-volcano':'thor_v01',geffen:'geffen','glast-heim':'glast_01',valhalla:'odin_tem01',lutie:'xmas','toy-factory':'xmas_dun01','clock-tower':'c_tower1','thanatos-tower':'tha_t01',alberta:'alberta','turtle-island':'tur_dun01',amatsu:'amatsu',comodo:'comodo',umbala:'umbala',niflheim:'niflheim',tower:'e_tower'};
+ for(const [region,map]of Object.entries(maps)){const track=mapTable.get(map);if(!track){media.unavailable.push('music:'+region);continue;}try{const bytes=await readFile(path.join(client,'BGM',track)),sha256=hash(bytes),file='original/'+sha256.slice(0,24)+'.mp3';await write(path.join(out,file),bytes);media.music[region]={file,midi:'midi/'+sha256.slice(0,24)+'.mid',sha256,bytes:bytes.length,clientMap:map,clientTrack:track};audioFiles.set(file,true);}catch{media.unavailable.push('music:'+region+': '+track);}}
+ await write(path.join(out,'manifest.json'),JSON.stringify(media));await write('src/ro-native-death-data.js','// Generated from original SPR/ACT files by import-ro-client-media.mjs.\nexport const RO_NATIVE_DEATH_DATA='+JSON.stringify(animations)+';\n');
+ await write(path.join(out,'PROVENANCE.txt'),media.source+'\nFiles extracted read-only from data.grf / BGM. Original bytes are retained; SHA-256 hashes are recorded.\nThe software licenses of parsers do not license the game audio.\nMIDI files are automatically transcribed approximations, not official MIDI arrangements.\n');
+ console.log(JSON.stringify({monsterClips:Object.keys(animations.monsters).length,sounds:Object.keys(media.sounds).length,music:Object.keys(media.music).length,uniqueFiles:audioFiles.size,unavailable:media.unavailable.length}));
+}finally{archive.close();}

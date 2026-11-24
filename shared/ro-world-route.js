@@ -21,16 +21,23 @@ const regions=[
  {key:'toy-factory',name:'Fábrica de Brinquedos',scene:'payon',habitat:'arcane',mvp:'stormyknight',style:'toy-factory',description:'Galpões de brinquedos, esteiras, caixas coloridas e autômatos de madeira.',landmarks:['Linha de montagem','Depósito dos presentes','Salão do Cavaleiro da Nevasca'],featured:['marionette','rideword','alarm','clock'],transition:'Os portões da fábrica se abrem novamente para a neve de Lutie.'},
  {key:'clock-tower',name:'Torre do Relógio',scene:'geffen',habitat:'arcane',mvp:'tower_1957',style:'clockwork',description:'Grandes relógios, engrenagens de bronze, mecanismos e escadarias antigas.',landmarks:['Pátio dos pêndulos','Sala das engrenagens','Coração do relógio'],featured:['clock','alarm','tower_1270','rideword'],transition:'A escadaria de bronze retorna aos caminhos de Geffen.',adaptation:'O guardião Entweihen é uma adaptação desta expedição, não um spawn oficial da Torre do Relógio.'},
  {key:'thanatos-tower',name:'Torre de Thanatos',scene:'crypt',habitat:'haunted',mvp:'fallenbishop',style:'thanatos',description:'Torres partidas, arcos suspensos, pilares rúnicos e plataformas nas alturas.',landmarks:['Escadaria da agonia','Galeria das memórias','Catedral despedaçada'],featured:['tower_1704','tower_1705','tower_1706','tower_1707','wraith'],transition:'Uma ponte de pedra antiga retorna aos campos de Juno.',adaptation:'O Bispo Caído guarda esta adaptação; não substitui a identidade de Memória de Thanatos.'}
+ ,{key:'alberta',name:'Porto de Alberta',scene:'coast',habitat:'coast',mvp:'drake',style:'alberta-harbor',description:'Cais de pedra clara, navios mercantes de velas creme e armazéns de telhados azuis.',landmarks:['Navio do porto','Guindaste dos mercadores','Farol de Alberta'],featured:['hydra','vadon','kukre','plankton','marina'],transition:'Barcos deixam o porto rumo à Ilha das Tartarugas e a Amatsu.',adaptation:'Drake e os naufrágios são reunidos ao porto nesta rota survivor; não representam seu spawn oficial.'},
+ {key:'turtle-island',name:'Ilha das Tartarugas',scene:'coast',habitat:'coast',mvp:'tower_1312',style:'turtle-island',description:'Praias tropicais, carapaças monumentais, ruínas aquáticas e ninhos entre palmeiras.',landmarks:['Santuário da carapaça','Ninho da costa','Ruínas do general'],featured:['solider','permeter','freezer','heater','assaulter'],transition:'O atracadouro retorna aos navios de Alberta.'},
+ {key:'amatsu',name:'Amatsu · Castelo das Cerejeiras',scene:'grove',habitat:'haunted',mvp:'tower_1492',style:'amatsu-sakura',description:'Muralhas brancas, telhados sobrepostos, portais vermelhos e cerejeiras rosadas.',landmarks:['Castelo de Amatsu','Portal das lanternas','Jardim das cerejeiras'],featured:['miyabidoll','firelock','shinobi','tengu','karakasa'],transition:'A doca das cerejeiras leva de volta a Alberta.'},
+ {key:'comodo',name:'Comodo · Praia e Grutas',scene:'coast',habitat:'coast',mvp:'tower_1312',style:'comodo-beach',description:'Cabanas sobre palafitas, tochas, conchas gigantes e a boca escura de uma gruta costeira.',landmarks:['Gruta da praia','Palco das conchas','Aldeia das palafitas'],featured:['alligator','medusa','crab','shellfish','cornutus'],transition:'As praias dão lugar às raízes gigantes de Umbala.',adaptation:'O General Tartaruga é um guardião adaptado desta gruta; não representa Tao Gunka ou seu spawn oficial.'},
+ {key:'umbala',name:'Umbala · Árvore dos Wootan',scene:'grove',habitat:'forest',mvp:'baphomet',style:'umbala-canopy',description:'Árvores gigantes com casas elevadas, máscaras de madeira, cordas e tambores Wootan.',landmarks:['Árvore da aldeia','Ponte das máscaras','Tambores dos Wootan'],featured:['wootanshooter','wootanfighter','stoneshooter','woodengolem','dryad'],transition:'As raízes escurecem na passagem para Niflheim.',adaptation:'Baphomet é o guardião desta ligação survivor; não é apresentado como MVP oficial de Umbala.'},
+ {key:'niflheim',name:'Niflheim · Cidade dos Mortos',scene:'crypt',habitat:'haunted',mvp:'fallenbishop',style:'niflheim-hollows',description:'Casas tortas, abóboras iluminadas, cercas retorcidas e uma torre assombrada.',landmarks:['Casa dos mortos','Jardim das abóboras','Campanário fantasma'],featured:['dullahan','loliruri','heirozoist','disguise','gibbet'],transition:'A passagem entre raízes retorna a Umbala.',adaptation:'O Bispo Caído é um guardião adaptado; não substitui a identidade do Lord of Death.'}
 
 ];
 
-export const RO_WORLD_ROUTE=freeze(regions.map((region,index)=>({...region,index,entry:{x:0,z:96},exit:{x:0,z:-101},corridor:{width:18,length:28},bossArena:{x:0,z:-64,radius:28},previousKey:regions[index-1]?.key||null,nextKey:regions[index+1]?.key||null})));
+export const RO_LEGACY_ROUTE_SIZE=16;
+export const RO_WORLD_ROUTE=freeze(regions.map((region,index)=>({...region,index,entry:{x:0,z:96},exit:{x:0,z:-101},corridor:{width:18,length:28},bossArena:{x:0,z:-64,radius:28},previousKey:index<RO_LEGACY_ROUTE_SIZE?regions[index-1]?.key||null:null,nextKey:index<RO_LEGACY_ROUTE_SIZE-1?regions[index+1]?.key||null:null})));
 export const RO_WORLD_ROUTE_BY_KEY=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>[region.key,region])));
 export const RO_WORLD_ROUTE_SOURCES=freeze({official:'https://ro3global.com/home',developerDiary:'https://www.youtube.com/watch?v=Ewy1ge0a57M',gravity:'https://img.gravity.co.kr/GravityUpload/0000/2026/02/13/Gravity%20IR%20Presentation_2025_4Q_EN.pdf',spawnIdentity:'https://github.com/rathena/rathena/tree/master/npc/pre-re/mobs',policy:'Original connected survivor route inspired by Midgard; not a verified reproduction of the complete RO3 connection graph.'});
 
 export function roRouteIndex(value=0){if(Number.isInteger(value))return value>=0&&value<RO_WORLD_ROUTE.length?value:-1;const key=typeof value==='string'?value:value?.key;return typeof key==='string'&&Object.hasOwn(RO_WORLD_ROUTE_BY_KEY,key)?RO_WORLD_ROUTE_BY_KEY[key].index:-1;}
 export function roRouteStage(value=0){const index=roRouteIndex(value);return index<0?null:RO_WORLD_ROUTE[index];}
-export function roRouteNext(value=0){const index=roRouteIndex(value);return index<0?null:RO_WORLD_ROUTE[index+1]||null;}
+export function roRouteNext(value=0){const index=roRouteIndex(value);return index<0||index>=RO_LEGACY_ROUTE_SIZE-1?null:RO_WORLD_ROUTE[index+1]||null;}
 export const roRouteRegion=roRouteStage,nextRoRegion=roRouteNext;
 const hash=(seed,key)=>{let n=Number(seed)>>>0;for(const c of key)n=Math.imul(n^c.charCodeAt(0),16777619)>>>0;return n;};
 export function roRouteEncounter(value=0,seed=1){
@@ -53,7 +60,7 @@ export const RO_WORLD_GEOGRAPHY=freeze({
  'thor-volcano':{x:0,z:0},
  'glast-heim':{x:1,z:1},geffen:{x:2,z:1},'payon-cave':{x:3,z:2},'payon-forest':{x:3,z:3},prontera:{x:4,z:4},
  morroc:{x:-1,z:0},'morroc-pyramid':{x:-2,z:-1},rachel:{x:-3,z:-1},
- juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3},lutie:{x:-1,z:-2},'toy-factory':{x:-2,z:-2},'clock-tower':{x:2,z:0},'thanatos-tower':{x:1,z:-1}
+ juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3},lutie:{x:-1,z:-2},'toy-factory':{x:-2,z:-2},'clock-tower':{x:2,z:0},'thanatos-tower':{x:1,z:-1},alberta:{x:5,z:4},'turtle-island':{x:5,z:5},amatsu:{x:6,z:4},comodo:{x:-1,z:1},umbala:{x:-1,z:2},niflheim:{x:-1,z:3}
 });
 export const RO_WORLD_LINKS=freeze([
  {a:'prontera',b:'payon-forest'},
@@ -70,7 +77,13 @@ export const RO_WORLD_LINKS=freeze([
  {a:'ice-cavern',b:'lutie'},
  {a:'lutie',b:'toy-factory'},
  {a:'geffen',b:'clock-tower'},
- {a:'juno',b:'thanatos-tower'}
+ {a:'juno',b:'thanatos-tower'},
+ {a:'prontera',b:'alberta'},
+ {a:'alberta',b:'turtle-island'},
+ {a:'alberta',b:'amatsu'},
+ {a:'morroc',b:'comodo'},
+ {a:'comodo',b:'umbala'},
+ {a:'umbala',b:'niflheim'}
 ]);
 const emptyNeighbors=freeze([]),neighbors=freeze(Object.fromEntries(RO_WORLD_ROUTE.map(region=>[region.key,RO_WORLD_LINKS.flatMap(link=>link.a===region.key?[link.b]:link.b===region.key?[link.a]:[])])));
 export function roWorldNeighbors(value=0){const region=roRouteStage(value);return region?neighbors[region.key]:emptyNeighbors;}

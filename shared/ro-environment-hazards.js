@@ -6,6 +6,12 @@ import {roMerchantReachableCells} from './ro-secret-merchants.js';
 // The same immutable ellipses are supplied to the host and the ground renderer.
 export const RO_ENVIRONMENT_HAZARD_RULES=Object.freeze({maxZones:3,interval:1,maxDt:.25,coldGrace:3});
 const themes={
+ alberta:['poison','Carga derramada',0x73966c,'poison',.02,.88],
+ 'turtle-island':['poison','Lagoa salobra',0x759765,'poison',.025,.8],
+ amatsu:['dark','Selo amaldiçoado',0x927e9f,'dark',.025,.9],
+ comodo:['poison','Poça da gruta',0x719c81,'poison',.02,.85],
+ umbala:['poison','Brejo das raízes',0x769644,'poison',.025,.78],
+ niflheim:['dark','Bruma dos mortos',0x94789e,'dark',.03,.86],
  prontera:['poison','Brejo venenoso',0x658f35,'poison',.02,.86],
  'payon-forest':['poison','Pântano venenoso',0x738536,'poison',.025,.84],
  'payon-cave':['poison','Lodo tóxico',0x697c43,'poison',.025,.86],

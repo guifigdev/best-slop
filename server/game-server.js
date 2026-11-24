@@ -23,7 +23,7 @@ const hash=token=>createHash('sha256').update(String(token)).digest('hex');
 const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json=(res,status,data,headers={})=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers});res.end(JSON.stringify(data));};
 const READY=new Set(['ready','ttReady','ktReady','wlReady','pkReady','dgReady','btReady']);
-const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.ico':'image/x-icon','.json':'application/json','.woff2':'font/woff2','.md':'text/plain; charset=utf-8','.txt':'text/plain; charset=utf-8'};
+const MIME={'.wav':'audio/wav','.mp3':'audio/mpeg','.mid':'audio/midi','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.ico':'image/x-icon','.json':'application/json','.woff2':'font/woff2','.md':'text/plain; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 export function createGameServer({config=runtimeConfig(),store=new RoomStore(config.dataDir),clock=()=>Date.now()}={}){
  const rooms=new Map(store.load({maxAgeMs:config.idleSeconds*1000,now:clock()})),peers=new Map(),ipBudgets=new Map();
  const phaseHandler=createPhaseHandler({allowedOrigins:[...config.allowedOrigins]});let draining=false,closed=false,frame=0,lastSave=0,drainTimer,tickWorstMs=0;
