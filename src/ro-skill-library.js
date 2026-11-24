@@ -3,7 +3,7 @@ import {escapeHTML as esc} from './competition-ui.js';
 import {RO_ACTIVE_SLOT_COUNT,RO_LEARNED_SKILL_LIMIT} from '../shared/ro-skill-loadout.js';
 
 const normal=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
-const roleLabel={heal:'Cura',buff:'Suporte',passive:'Passiva',zone:'Área persistente',summon:'Invocação',dash:'Mobilidade',projectile:'Projétil',slash:'Corpo a corpo',pulse:'Área',chain:'Corrente',orbit:'Proteção'};
+const roleLabel={mount:'Montaria',heal:'Cura',buff:'Suporte',passive:'Passiva',zone:'Área persistente',summon:'Invocação',dash:'Mobilidade',projectile:'Projétil',slash:'Corpo a corpo',pulse:'Área',chain:'Corrente',orbit:'Proteção'};
 export function roSkillLibraryEntries(data={},unit={},options={}){
  const known=new Map((data.learnedSkills||data.weapons||[]).filter(Boolean).map(entry=>[entry.key,entry]));
  const source=data.skillCatalog?.length?data.skillCatalog:[...known.values()],seen=new Set(),query=normal(options.query),filter=options.filter||'all';

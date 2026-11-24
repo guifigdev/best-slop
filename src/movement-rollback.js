@@ -61,7 +61,7 @@ export function createMovementRollback({now=()=>Date.now()}={}){
    if(!state?.network?.movementReplay||!movementPredictionSupported(state)||blockedUntil>ack)return state;
    const at=now(),age=at-receivedAt;if(age<0||age>MOVEMENT_ROLLBACK_LIMITS.windowMs)return state;
    const original=state.units.find(u=>u.id===state.players?.[owner]);if(!original?.alive)return state;
-   const u={...original,bonkMove:original.bonkMove&&{...original.bonkMove},roIceMotion:original.roIceMotion&&{...original.roIceMotion},roEnvironmentExposure:original.roEnvironmentExposure&&{...original.roEnvironmentExposure}};
+   const u={...original,bonkMove:original.bonkMove&&{...original.bonkMove},roContactPush:original.roContactPush&&{...original.roContactPush},roIceMotion:original.roIceMotion&&{...original.roIceMotion},roEnvironmentExposure:original.roEnvironmentExposure&&{...original.roEnvironmentExposure}};
    const start=receivedAt-oneWay,end=Math.min(at,start+MOVEMENT_ROLLBACK_LIMITS.leadMs);let cursor=start,index=0;
    while(cursor<end-.001){while(index<history.length&&history[index].at<=cursor+.001){applyPredictedMove(state,u,history[index].command,(state.bonk?.elapsed||0)+(cursor-start)/1000);index++;}
     const boundary=index<history.length?Math.max(cursor,history[index].at):end,dt=Math.min(MOVEMENT_ROLLBACK_LIMITS.step,(end-cursor)/1000,(boundary-cursor)/1000);

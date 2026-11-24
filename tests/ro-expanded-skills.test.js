@@ -7,7 +7,7 @@ import {RO_EXPANDED_SKILLS,RO_LINEAGE_SKILL_KEYS,RO_LINEAGE_SKILL_TIERS,RO_SKILL
 import {Game} from '../shared/simulation.js';
 import {bonkStats} from '../shared/bonk.js';
 
-const allowedKinds=new Set(['slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash']);
+const allowedKinds=new Set(['slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash','mount']);
 const modifierKeys=new Set(['damage','haste','area','crit','armor','magicDefense','evasion','regen','speed','manaRegen','damageReduction','lifeSteal','accuracy','critDamage','xp','magnet','amount','maxHp']);
 const statusKeys=new Set(['slow','stun','root','poison','burn','armorBreak','blind']);
 const mechanicKeys=new Set(['allyRadius','modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance','companion','companionMastery']);
@@ -80,7 +80,9 @@ test('every included active executes through the dispatcher and passives change 
   if(s.kind==='passive'){
    const stats=bonkStats(u);assert.ok(Object.values(stats).filter(v=>typeof v==='number').every(Number.isFinite),s.key);if(s.mechanics.companion||s.mechanics.companionMastery){const training=s.mechanics.companion?s.key:s.mechanics.companionMastery==='falcon'?'ht_falcon':'ra_wugmastery';u.bonkBuild.weapons[training]=1;tickRoSkillEffects(g,u,.1);assert.ok(g.bonk.roSkillSummons.some(p=>p.persistent&&p.source===u.id&&p.companion===(s.mechanics.companion||s.mechanics.companionMastery)),s.key);}else assert.ok(s.mechanics.proc||s.mechanics.status||Object.keys(s.mechanics.modifiers||{}).length,s.key);continue;
   }
+  if(s.kind==='mount'){u.roMountSkill=s.key;u.roMountKnown=[s.key];}
   assert.equal(g.command('p',{type:'bkCast',key:s.key}),true,`${s.sourceAegis} (${s.kind}) failed: ${g.commandFailureReason}`);
+  if(s.kind==='mount'){assert.equal(u.roMountSkill,null);assert.equal(u.mana,5000);continue;}
   if(u.roCasting){const finish=u.roCasting.finishAt;for(let i=0;i<310&&g.bonk.elapsed<finish+.1;i++)g.tick(.1);}
   assert.ok(u.bonkWeaponAt[s.key]>10,`${s.key} starts a real cooldown`);
   assert.ok(u.mana<5000||s.mechanics?.manaPercent,`${s.key} pays real SP`);

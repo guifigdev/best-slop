@@ -680,7 +680,7 @@ const gameplay=deepFreeze({
  severerainstorm:{kind:'zone',element:'physical',skill:'roArrowRainFall',role:'arrow_rain',description:'Mantém cinco rajadas de flechas caindo na área escolhida durante 5s. Cada aterrissagem causa uma parte do dano total.',mechanics:{duration:5,interval:1,radius:4.5}},
  ht_steelcrow:{role:'companion_mastery',description:'Fortalece somente os ataques do seu falcão aliado. Aprenda Adestrar Falcão para ter a ave; não aumenta o dano do personagem.',mechanics:{modifiers:{},companionMastery:'falcon'}},
  ra_toothofwug:{role:'companion_mastery',description:'Fortalece somente as mordidas do seu Worg aliado. Requer Adestrar Worg para ter o companheiro; não aumenta o dano do personagem.',mechanics:{modifiers:{},companionMastery:'worg'}},
- ra_wugrider:{kind:'buff',role:'mount_unavailable',description:'Adaptação de movimento para habilidades antigas: aumenta a corrida por 10s, sem montar no Worg nem criar um segundo animal. Para ter um companheiro que ataca, aprenda Adestrar Worg.',damage:0,range:0,mechanics:{duration:10,modifiers:{speed:.12}}},
+
  lg_earthdrive:{description:'Golpe de escudo causa um terremoto circular ao seu redor, abrindo rachaduras e levantando pedras. Enfraquece os inimigos atingidos.',kind:'pulse',element:'earth',range:6,mechanics:{status:{armorBreak:.15,slow:.20},duration:4}},
  sm_magnum:{description:'Explosão de fogo em área que empurra inimigos comuns até 4,2 m e provoca queimadura. MVPs resistem ao empurrão.',mechanics:{knockback:4.2,status:{burn:2}}},
  al_blessing:{description:'Abençoa aliados próximos por 20s, reforçando poder e cadência. Bênçãos iguais não acumulam.',mechanics:{duration:20,allyRadius:9,modifiers:{damage:.10,haste:.08}}},

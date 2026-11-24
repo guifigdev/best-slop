@@ -1,7 +1,8 @@
 import * as T from 'three';
 import {ragnarokMonsterSpec} from './ragnarok-monster-art.js';
 export const RO_COMPANION_ART_BUDGET=Object.freeze({visible:16,parts:4096,drawCalls:1,lights:0,distance:64});
-const cache=new Map();
+const cache=new Map(),mountedCache=new Map();
+function mountedParts(kind){if(!mountedCache.has(kind)){const saddle=[{box:[0,1.29,-.18,.82,.20,.66,0x8b5939]},{box:[0,1.44,-.2,.52,.15,.44,0x563b2d]}];for(const side of [-1,1])saddle.push({box:[side*.48,1.08,-.18,.07,.40,.6,0x456977]});mountedCache.set(kind,[...roCompanionParts(kind),...saddle]);}return mountedCache.get(kind);}
 function falconParts(){
  const parts=[],box=(x,y,z,w,h,d,c,wing=0)=>parts.push({box:[x,y,z,w,h,d,c],wing});
  box(0,.3,0,.36,.38,.65,0x796148);box(0,.58,.30,.32,.3,.31,0x8f7758);box(0,.53,.49,.17,.13,.23,0xc7a551);box(0,.33,.22,.26,.30,.20,0xe1cf9c);box(0,.20,-.45,.20,.10,.39,0x4e463b);
@@ -29,9 +30,9 @@ export function createRoCompanionArt({scene,material}={}){
    const ground=groundAt(pet.x,pet.z),fly=pet.companion==='falcon',height=Number.isFinite(ground)?ground:0;
    sphere.center.set(pet.x,height+1.7,pet.z);
    if(camera&&(Math.hypot(pet.x-camera.position.x,pet.z-camera.position.z)>RO_COMPANION_ART_BUDGET.distance||!frustum.intersectsSphere(sphere))){culled++;continue;}
-   const attack=Math.max(0,1-(elapsed-(pet.attackAt??-100))/.35),scale=fly?1.05:pet.companion==='dragon'?.85:.9;
-   root.position.set(pet.x,height+(fly?2.7+Math.sin(time*4)*.15-attack*.55:.03),pet.z);root.rotation.set(0,pet.facing||0,0);root.scale.setScalar(scale);root.updateMatrix();
-   for(const p of roCompanionParts(pet.companion)){
+   const attack=Math.max(0,1-(elapsed-(pet.attackAt??-100))/.35),scale=fly?1.05:pet.companion==='dragon'?.85:pet.mounted&&pet.companion==='peco'?.8:.9;
+   root.position.set(pet.x,height+(pet.mounted?(state.units.find(u=>u.id===pet.source)?.bonkJumpHeight||0):0)+(fly?2.7+Math.sin(time*4)*.15-attack*.55:.03),pet.z);root.rotation.set(0,pet.facing||0,0);root.scale.setScalar(scale);root.updateMatrix();
+   for(const p of pet.mounted?mountedParts(pet.companion):roCompanionParts(pet.companion)){
     if(mesh.count>=RO_COMPANION_ART_BUDGET.parts)break;const[x,y,z,w,h,d,hex]=p.box;
     part.position.set(x,y,z+(p.leg&&pet.moving?Math.sin(time*14+(p.leg%2)*Math.PI)*.09:0));part.rotation.set(0,0,p.wing?Math.sin(time*9)*.40*p.wing:0);part.scale.set(w,h,d);part.updateMatrix();matrix.multiplyMatrices(root.matrix,part.matrix);mesh.setMatrixAt(mesh.count,matrix);mesh.setColorAt(mesh.count,color.setHex(hex));mesh.count++;
    }

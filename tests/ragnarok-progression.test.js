@@ -37,6 +37,6 @@ test('checkpoint resumes at a valid entrance and separate activities share lates
  const resumed=game();assert.ok(resumed.g.command('p',{type:'bkRestore',checkpoint:t.checkpoint,activity:'tower'}));assert.equal(resumed.g.bonk.floor,46);assert.equal(resumed.u.level,21);assert.equal(resumed.u.bonkJob,'runeknight');assert.equal(resumed.u.attributes.str,25);
  const corrupt=structuredClone(tower);corrupt.hero.attributes.str=Infinity;assert.equal(validateRoCheckpoint(corrupt),null);corrupt.hero.attributes.str=999;assert.equal(validateRoCheckpoint(corrupt),null);assert.equal(validateRoCheckpoint({...tower,floor:102}),null);
 });
-test('inventory markup escapes gear IDs and exposes usable equip, drop, attributes and database links',()=>{
- const {g,u}=game();const html=bonkEquipmentMarkup(g.snapshotBonk(),u);assert.match(html,/data-bk-equip/);assert.match(html,/data-bk-drop/);assert.match(html,/data-bk-attribute/);assert.match(html,/divine-pride/);assert.ok(Object.values(RO_EQUIPMENT).every(d=>Number.isInteger(d.sourceId)&&d.source.includes(String(d.sourceId))));
+test('inventory markup escapes gear IDs and exposes usable equip, drop and database links, with attributes in their own panel',()=>{
+ const {g,u}=game();const html=bonkEquipmentMarkup(g.snapshotBonk(),u);assert.match(html,/data-bk-equip/);assert.match(html,/data-bk-drop/);assert.doesNotMatch(html,/data-bk-attribute/);assert.match(html,/divine-pride/);assert.ok(Object.values(RO_EQUIPMENT).every(d=>Number.isInteger(d.sourceId)&&d.source.includes(String(d.sourceId))));
 });

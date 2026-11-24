@@ -1,0 +1,3 @@
+import {roMountedKind} from '../shared/ro-mounts.js';
+export function roMountSeat(u,time=0){const kind=roMountedKind(u);return kind?({peco:.75,dragon:.65,worg:.4}[kind])+(u.moving?Math.sin(Math.floor(time*8)*1.6)*.035:0):0;}
+export function applyRoMountPose(actor,u,time){const height=roMountSeat(u,time);if(height)actor.body.position.y+=height;for(const [i,leg]of actor.legs.entries()){leg.userData.roMountRestY??=leg.position.y;if(u.alive){leg.position.y=leg.userData.roMountRestY+height;leg.rotation.z=height?(i%2?.2:-.2):0;if(height)leg.rotation.x=-.7;}}if(actor.hp){actor.hp.userData.roMountRestY??=actor.hp.position.y;actor.hp.position.y=actor.hp.userData.roMountRestY+height;}return height;}

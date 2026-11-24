@@ -12,7 +12,7 @@ Referências dos formatos: [SPR](https://ragnarokresearchlab.github.io/file-form
 
 ## Original e MIDI
 
-São 543 arquivos originais únicos, associados a 523 nomes de efeitos e 23 entradas de música (22 regiões e Torre). Cada original tem uma transcrição `.mid`, hash SHA-256 e procedência no manifesto. WAV/MP3 são preservados byte a byte. MIDI é uma aproximação automática de notas, com perda de timbre, vozes e ruídos; não é uma trilha MIDI oficial.
+São 545 arquivos originais únicos, associados a 525 nomes de efeitos e 23 entradas de música (22 regiões e Torre). Cada original tem uma transcrição `.mid`, hash SHA-256 e procedência no manifesto. WAV/MP3 são preservados byte a byte. MIDI é uma aproximação automática de notas, com perda de timbre, vozes e ruídos; não é uma trilha MIDI oficial.
 
 Menu de pausa → Configurações permite escolher Original ou MIDI, ativar áudio, ajustar música/efeitos separadamente e ouvir um exemplo. Preferências ficam neste navegador. Uma interação libera o áudio do navegador. Ataques e mortes usam eventos reais, música acompanha região/Torre. O runtime é específico de Ragnarok Survivors. Eventos distantes, repetidos ou antigos não criam uma fila atrasada. Cache e vozes têm limites.
 
@@ -33,4 +33,6 @@ O importador reescreve o manifesto: execute a conversão depois. `src/assets/ro-
 
 Vite emite arquivos reais, sem data URLs. `scripts/ro-audio-release.mjs` confere SHA de cada original e MIDI e cria `ro-audio-catalog-<hash>.json` com ambas as URLs. O deploy sincroniza `dist/client/assets` no Cloudflare R2 antes de ativar o servidor. O JavaScript também inclui os 24 novos modelos. Arquivos antigos permanecem para clientes já abertos.
 
-Validação: integridade dos 543 pares, parsing e contagem de notas de cada MIDI, preferências persistidas, eventos de morte sem repetição, passagens/colisões dos mapas e revisão no renderer real dos seis cenários e das duas opções de áudio.
+Validação: integridade dos 545 pares, parsing e contagem de notas de cada MIDI, preferências persistidas, eventos de morte sem repetição, passagens/colisões dos mapas e revisão no renderer real dos seis cenários e das duas opções de áudio.
+
+O evento base `levelup` usa `data/wav/levelup.wav`; `jobLevelup` usa `data/wav/effect/st_job_level_up.wav`. Esses anúncios podem tocar durante a escolha de melhoria. Música MIDI continua sendo agendada durante pausa; o exemplo tem um canal independente, respeitando ativação e volume de efeitos. A reprodução preserva programas MIDI e usa harmônicos por instrumento com compressor no master, em volume maior que a primeira versão de ondas simples. A aproximação das transcrições permanece explícita.

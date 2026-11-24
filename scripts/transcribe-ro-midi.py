@@ -78,8 +78,16 @@ if __name__ == '__main__':
     manifest = json.loads(MANIFEST.read_text(encoding='utf8'))
     sounds = {v['file']:False for v in manifest['sounds'].values()}
     sounds.update({v['file']:True for v in manifest['music'].values()})
+    special={manifest['sounds'][key]['file'] for key in manifest.get('events',{}).values() if key in manifest['sounds']}
+    for file in special: sounds[file]=True
+    existing={}
+    for row in list(manifest['sounds'].values())+list(manifest['music'].values()):
+        target=OUT/row.get('midi','missing')
+        if row.get('midiSha256') and target.is_file() and hashlib.sha256(target.read_bytes()).hexdigest()==row['midiSha256']:
+            existing[row['file']]={key:row[key] for key in ['midi','midiSha256','duration','midiNotes','transcription']}
+    missing=[pair for pair in sorted(sounds.items()) if pair[0] not in existing]
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        results = dict(pool.map(convert, sorted(sounds.items())))
+        results = {**existing,**dict(pool.map(convert, missing))}
     for row in list(manifest['sounds'].values())+list(manifest['music'].values()): row.update(results[row['file']])
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=True, separators=(',',':')),encoding='utf8')
     files = sorted({row[k] for row in list(manifest['sounds'].values())+list(manifest['music'].values()) for k in ['file','midi']})

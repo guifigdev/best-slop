@@ -52,7 +52,7 @@ test('projectile speed, lifesteal and knockback alter actual attacks and gold/XP
 });
 
 test('barriers absorb real attacks after regeneration and thorns harm the actual attacker',()=>{
- const {g,u}=game();u.bonkBuild.weapons={};wear(u,{shield:4,thorns:3});const target=enemy(g,u,{x:u.x+.6,bonkNextAttack:Infinity});g.units.push(target);for(let i=0;i<105;i++)g.tick(.05);assert.ok(u.roEnchantShield>70);const hp=u.hp,enemyHp=target.hp;target.bonkNextAttack=0;g.random=()=>.99;g.tick(.05);assert.equal(u.hp,hp);assert.ok(u.roEnchantShield<80);assert.ok(target.hp<enemyHp);roUnequip(u,'weapon');g.tick(.05);assert.equal(u.roEnchantShield,0);
+ const {g,u}=game();u.bonkBuild.weapons={};wear(u,{shield:4,thorns:3});const target=enemy(g,u,{x:u.x+2,bonkNextAttack:Infinity});g.units.push(target);for(let i=0;i<105;i++)g.tick(.05);assert.ok(u.roEnchantShield>70);const hp=u.hp,enemyHp=target.hp;target.x=u.x+.6;target.bonkNextAttack=0;g.random=()=>.99;g.tick(.05);assert.equal(u.hp,hp);assert.ok(u.roEnchantShield<80);assert.ok(target.hp<enemyHp);roUnequip(u,'weapon');g.tick(.05);assert.equal(u.roEnchantShield,0);
 });
 
 test('enchants survive a real JSON checkpoint round trip bound to their physical piece',()=>{
