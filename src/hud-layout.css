@@ -35,3 +35,7 @@ body.hud-revamp.kodotag .kt-build-card>.kt-build-badge:empty{visibility:hidden}
 @media(pointer:coarse){body.hud-revamp .hud-drag-handle{height:24px;min-height:24px;top:-22px;width:44px;left:calc(50% - 22px)}body.hud-revamp .hud-launcher>.hud-drag-handle{top:-22px}body.hud-revamp .camera-tools>.hud-drag-handle{top:-23px}}
 @media(max-width:600px){body.hud-revamp .hud-launcher{left:8px;top:42%;padding:4px;gap:3px;border-radius:11px}body.hud-revamp .hud-launcher>button{min-width:95px;min-height:40px;gap:6px;padding:7px;font-size:10px}body.hud-revamp .hud-launcher>button>svg{width:19px;height:19px}body.hud-revamp .hud-resources{gap:9px}body.hud-revamp .hud-resources>.hud-drag-handle{width:20px}}
 @media(max-height:500px){body.hud-revamp .hud-launcher{top:38%;flex-direction:row}body.hud-revamp .hud-launcher>button{flex-direction:column;gap:2px;min-width:58px;min-height:45px;padding:4px;font-size:9px}body.hud-revamp .hud-launcher>button>svg{width:19px;height:19px}}
+
+body.hud-revamp .hud-launcher[hidden],body.hud-revamp .hud-launcher>button[hidden],body.hud-revamp .mobile-hud-tools[hidden],body.hud-revamp .mobile-hud-tools>button[hidden]{display:none!important}
+
+body.hud-revamp.hud-no-inventory .inventory-dock{display:none!important}

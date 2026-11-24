@@ -5,3 +5,14 @@ export function hudResourceMarkup(state,unit){return hudResources(state,unit).ma
 export function hudPanelTitle(state){return({castlefight:'Construções',treetag:'Seu acampamento',kodotag:'Seu acampamento',warlock:'Grimório',bloody:'Exército',phasekiller:'Investigação',bonk:'Personagem'})[state?.options?.mode]||'Seu herói';}
 
 export const hudGameName=state=>({bonk:'RAGNAROK',castlefight:'CASTLE FIGHT',treetag:'TREE TAG',kodotag:'KODO TAG',warlock:'WARLOCK',bloody:'BLOODY TOURNAMENT',linewars:'GUERRA DAS LINHAS',dungeon:'DUNGEON',phasekiller:'PHASE KILLER'})[state?.options?.mode]||'CUSTOM HERO';
+
+// Expose capabilities, not a universal menu. An empty bag remains useful in
+// equipment modes, but games with no inventory must not advertise one.
+export function hudLauncherActions(state,unit){
+ if(!state||!unit)return[];
+ const mode=state.options?.mode||'campaign',actions=[{action:'character',label:({bloody:'Exército',kodotag:'Unidades',castlefight:'Unidades',phasekiller:'Investigação',warlock:'Grimório'})[mode]||'Personagem',art:'panel'}];
+ const canBuild=mode==='castlefight'||mode==='kodotag'&&unit.alive!==false&&!unit.kodoTagCaptured||mode==='treetag'&&unit.treeTagRole!=='infernal'&&unit.alive!==false&&!unit.treeTagCaptured;
+ if(canBuild)actions.push({action:'build',label:'Construir',art:'build'});
+ if(!['kodotag','bloody'].includes(mode))actions.push({action:'inventory',label:'Mochila',art:'bag'});
+ return actions;
+}

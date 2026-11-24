@@ -374,7 +374,7 @@ function hudAction(action){
  if(action==='character'||action==='inventory'||action==='skills'||action==='build'){
   if(mode==='bonk'){bonkUI.openPanel(action==='skills'?'skills':'build');return true;}
   if(action==='build'){const ui=mode==='castlefight'?castleUI:mode==='kodotag'?kodoUI:mode==='treetag'?legacyUI:null;if(ui){ui.openPage('build');hudShell.open();return true;}}
-  if(action==='character'){if(isLegacyMode(mode)){activeLegacyUI().openPage?.(mode==='kodotag'?'units':'character');}else if(mode==='castlefight'){castleUI.openPage('field');}else{document.querySelector('[data-tab="attributes"]')?.click();}hudShell.open();return true;}
+  if(action==='character'){if(mode==='bloody'){bloodyUI.shortcut('legacySkill','army');bloodyUI.render();}else if(isLegacyMode(mode)){activeLegacyUI().openPage?.(mode==='kodotag'?'units':'character');}else if(mode==='castlefight'){castleUI.openPage('field');}else{document.querySelector('[data-tab="attributes"]')?.click();}hudShell.open();return true;}
   if(action==='skills'){document.querySelector('[data-tab="skills"]')?.click();hudShell.open();return true;}
  }
  return false;
