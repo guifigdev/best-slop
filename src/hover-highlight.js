@@ -29,12 +29,12 @@ export function createHoverHighlight({root,body,legs=[],ringGeometry}){
  material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed += normal * 0.055;');};
  material.customProgramCacheKey=()=> 'animal-hover-outline-v1';
  const outlines=sources.map(source=>{const mesh=new T.Mesh(source.geometry,material);mesh.userData.hoverOutline=true;mesh.visible=false;mesh.renderOrder=2;source.add(mesh);return mesh;});
- const ringMaterial=new T.MeshBasicMaterial({color:HOVER_COLORS.enemy,transparent:true,opacity:.95,side:T.DoubleSide,depthTest:true,depthWrite:false,toneMapped:false});
- const ownedGeometry=!ringGeometry,geometry=ringGeometry||new T.RingGeometry(.85,1,40),ring=new T.Mesh(geometry,ringMaterial);ring.rotation.x=-Math.PI/2;ring.scale.setScalar(1.22);ring.position.y=.245;ring.visible=false;root.add(ring);
+ const ringMaterial=new T.MeshBasicMaterial({color:HOVER_COLORS.enemy,transparent:true,opacity:.95,side:T.DoubleSide,depthTest:false,depthWrite:false,toneMapped:false});
+ const ownedGeometry=!ringGeometry,geometry=ringGeometry||new T.RingGeometry(.85,1,40),ring=new T.Mesh(geometry,ringMaterial);ring.rotation.x=-Math.PI/2;ring.scale.setScalar(1.22);ring.position.y=.245;ring.renderOrder=6;ring.visible=false;root.add(ring);
  let disposed=false;
  return{
   meshes:sources,
-  update({visible=false,relation='enemy',groundY=.245}={}){if(disposed)return;const color=HOVER_COLORS[relation]??HOVER_COLORS.enemy;material.color.setHex(color);ringMaterial.color.setHex(color);ring.position.y=groundY;ring.visible=visible;for(const outline of outlines)outline.visible=visible;},
+  update({visible=false,relation='enemy',groundY=.245,radius=1.22,showRing=true}={}){if(disposed)return;const color=HOVER_COLORS[relation]??HOVER_COLORS.enemy;material.color.setHex(color);ringMaterial.color.setHex(color);ring.position.y=groundY;ring.scale.setScalar(Number.isFinite(radius)&&radius>0?radius:1.22);ring.visible=visible&&showRing;for(const outline of outlines)outline.visible=visible;},
   dispose(){if(disposed)return;disposed=true;for(const outline of outlines)outline.removeFromParent();ring.removeFromParent();material.dispose();ringMaterial.dispose();if(ownedGeometry)geometry.dispose();}
  };
 }

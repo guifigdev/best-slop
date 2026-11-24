@@ -1,3 +1,4 @@
+import {unitFootprintRadius} from '../shared/unit-footprint.js';
 import * as T from 'three';
 import {hoverRelation} from './hover-highlight.js';
 import {previewPolygon} from './skill-preview.js';
@@ -56,14 +57,17 @@ export function createRtsTargetFeedback({scene}={}){
   if(disposed)return policy;const visible=u=>{if(!actors)return true;const actor=actors.get?.(u.id)||actors[u.id];return !!actor&&actor.root?.visible!==false;};
   policy=rtsTargetFeedbackPolicy(state,owner,{preview,selectedIds,isVisible:visible});root.visible=policy.enabled&&Number.isFinite(time);for(const mesh of [rings,brackets,arrows])mesh.count=0;moveVisible=false;if(!root.visible)return policy;
   const pulse=.5+.5*Math.sin(time*6.5),units=new Map((state.units||[]).map(u=>[u.id,u]));
-  for(const id of policy.targetIds){const u=units.get(id),actor=actors?.get?.(id)||actors?.[id],position=actor?.root?.position||u,x=position.x,z=position.z,y=heightAt(x,z)+.095,size=Math.max(.45,Math.min(7,(u.size||1)*(u.radius||u.collisionRadius||.65))),r=size+.32,attack=policy.attackIds.has(id),hex=attack?RTS_FEEDBACK_COLORS.attack:RTS_FEEDBACK_COLORS.area;
-   ring(x,y,z,r*(1+pulse*.035),hex);if(attack)ring(x,y+.012,z,r*1.17,hex);
+  for(const id of policy.attackIds){const u=units.get(id),actor=actors?.get?.(id)||actors?.[id],position=actor?.root?.position||u,x=position.x,z=position.z,y=heightAt(x,z)+.095,r=unitFootprintRadius(u,{mode:state.options?.mode}),attack=policy.attackIds.has(id),hex=attack?RTS_FEEDBACK_COLORS.attack:RTS_FEEDBACK_COLORS.area;
+   ring(x,y,z,r,hex);if(attack)ring(x,y+.012,z,r*1.17,hex);
    // Four solid L corners read clearly against voxel grass, ice and paving.
    for(const sx of [-1,1])for(const sz of [-1,1]){const px=x+sx*r*.88,pz=z+sz*r*.88;put(brackets,px-sx*r*.16,y+.025,pz,r*.38,.065,.11,hex);put(brackets,px,y+.025,pz-sz*r*.16,.11,.065,r*.38,hex);}
-   if(attack){const h=(actor?.modelHeight||2.6)*(u.size||1),top=(actor?.root?.position?.y??heightAt(x,z))+h+.55+pulse*.15;put(arrows,x,top,z,.8,.8,1,hex,{quaternion:camera?.quaternion||null});}
+   if(attack&&arrows.count<RTS_FEEDBACK_BUDGET.arrows-3){const h=(actor?.modelHeight||2.6)*(u.size||1),top=(actor?.root?.position?.y??heightAt(x,z))+h+.55+pulse*.15;put(arrows,x,top,z,.8,.8,1,hex,{quaternion:camera?.quaternion||null});}
   }
   const marker=move&&finitePoint(move)&&Number.isFinite(move.startedAt)?move:destination,age=marker?time-marker.startedAt:Infinity;
-  if(marker&&age>=0&&age<RTS_FEEDBACK_BUDGET.moveSeconds){moveVisible=true;const x=marker.x,z=marker.z,y=heightAt(x,z)+.115,phase=age/RTS_FEEDBACK_BUDGET.moveSeconds,hex=RTS_FEEDBACK_COLORS.move,scale=1.15-phase*.18;ring(x,y,z,scale,hex);ring(x,y+.01,z,.4+fract(age*1.8)*1.15,hex);for(let i=0;i<3;i++)put(arrows,x,y+.035+i*.025,z+(i-1)*.46,.65,.65,1,hex,{ground:true});for(const sx of [-1,1])for(const sz of [-1,1])put(brackets,x+sx*.95,y+.025,z+sz*.95,.24,.07,.24,hex);}
+  if(marker&&age>=0&&age<RTS_FEEDBACK_BUDGET.moveSeconds){moveVisible=true;const x=marker.x,z=marker.z,y=heightAt(x,z)+.115,phase=age/RTS_FEEDBACK_BUDGET.moveSeconds,hex=RTS_FEEDBACK_COLORS.move,scale=1.15-phase*.18,yaw=camera?.position?Math.atan2(camera.position.x-x,camera.position.z-z):0,drop=.22*(1-fract(age*1.8));ring(x,y,z,scale,hex);ring(x,y+.01,z,.4+fract(age*1.8)*1.15,hex);
+   // Vertical world-Y pointers land on one X/Z point. Yaw faces the RTS camera
+   // while preserving down toward the ground, regardless of viewing angle.
+   put(brackets,x,y+.7,z,.075,1.25,.075,hex);for(let i=0;i<3;i++)put(arrows,x,y+.65+i*.43+drop,z,.8,.8,1,hex,{yaw});for(const sx of [-1,1])for(const sz of [-1,1])put(brackets,x+sx*.95,y+.025,z+sz*.95,.24,.07,.24,hex);}
   for(const mesh of [rings,brackets,arrows])finish(mesh);return policy;
  },ids(){return policy.targetIds;},stats(){return{enabled:root.visible,attackTargets:policy.attackIds.size,areaTargets:policy.aoeIds.size,targets:policy.targetIds.size,moveVisible,rings:rings.count,brackets:brackets.count,arrows:arrows.count,drawCalls:root.visible?root.children.filter(m=>m.count>0).length:0};},dispose(){if(disposed)return;reset();disposed=true;root.removeFromParent();for(const mesh of [rings,brackets,arrows])mesh.dispose();ringGeometry.dispose();boxGeometry.dispose();chevronGeometry.dispose();material.dispose();arrowMaterial.dispose();root.clear();}};
 }

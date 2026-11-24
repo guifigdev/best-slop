@@ -1,11 +1,12 @@
 // Navigation state is deliberately outside snapshots: troop path arrays and
 // collision grids are caches, not authoritative game data sent to clients.
+import {unitFootprintRadius,unitContactFraction} from './unit-footprint.js';
 const contexts=new WeakMap(),unitPaths=new WeakMap(),unitGoals=new WeakMap();
 const CELL=.75,BUCKET=4,EPS=.00001,MAX_EXPANSIONS=16000,MAX_SHARED_PATHS=96;
 const hypot=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const finitePoint=p=>Number.isFinite(p?.x)&&Number.isFinite(p?.z);
-export function castleNavigationRadius(u){return clamp(Number.isFinite(u?.collisionRadius)?u.collisionRadius:(u?.size||1)*.45,.2,2);}
+export function castleNavigationRadius(u){return unitFootprintRadius(u,{profile:'castle'});}
 function bounds(cf){const m=cf.map||{};return{minX:m.minX??-(m.width||48)/2,maxX:m.maxX??(m.width||48)/2,minZ:m.minZ??-(m.depth||32)/2,maxZ:m.maxZ??(m.depth||32)/2};}
 function inside(b,p,r){return finitePoint(p)&&p.x>=b.minX+r-EPS&&p.x<=b.maxX-r+EPS&&p.z>=b.minZ+r-EPS&&p.z<=b.maxZ-r+EPS;}
 function shape(o){return o&&o.alive!==false&&finitePoint(o)&&Number.isFinite(o.w)&&Number.isFinite(o.d)&&o.w>0&&o.d>0;}
@@ -104,7 +105,7 @@ export function moveCastleUnit(cf,u,destination,dt){
   // Smooth only through verified clear segments; never cut an inflated corner.
   for(let next=Math.min(path.length-1,index+14);next>index;next--)if(clear(c,u,path[next],r)){index=next;break;}record.index=index;following=record;indexBase=index;path=path.slice(index);
  }
- let budget=u.speed*dt;for(let waypointIndex=0;waypointIndex<path.length;waypointIndex++){const point=path[waypointIndex];if(budget<=EPS)break;const d=hypot(u,point);if(d<EPS)continue;const step=Math.min(d,budget),next={x:u.x+(point.x-u.x)/d*step,z:u.z+(point.z-u.z)/d*step};if(!clear(c,u,next,r,flying)){unitPaths.delete(u);u.castleNavigationBlocked=true;return false;}const dx=next.x-u.x,dz=next.z-u.z;u.x=next.x;u.z=next.z;u.facing=Math.atan2(dx,dz);u.moving=true;budget-=step;if(step<d)break;if(following)following.index=Math.min(following.path.length-1,indexBase+waypointIndex+1);}
+ let budget=u.speed*dt;for(let waypointIndex=0;waypointIndex<path.length;waypointIndex++){const point=path[waypointIndex];if(budget<=EPS)break;const d=hypot(u,point);if(d<EPS)continue;const step=Math.min(d,budget),next={x:u.x+(point.x-u.x)/d*step,z:u.z+(point.z-u.z)/d*step},contact=unitContactFraction(u,u,next,cf.units,castleNavigationRadius);if(contact<1){next.x=u.x+(next.x-u.x)*contact;next.z=u.z+(next.z-u.z)*contact;}if(!clear(c,u,next,r,flying)){unitPaths.delete(u);u.castleNavigationBlocked=true;return false;}const dx=next.x-u.x,dz=next.z-u.z;u.x=next.x;u.z=next.z;if(Math.hypot(dx,dz)>EPS){u.facing=Math.atan2(dx,dz);u.moving=true;}budget-=step;if(contact<1){u.castleNavigationBlocked=true;return false;}if(step<d)break;if(following)following.index=Math.min(following.path.length-1,indexBase+waypointIndex+1);}
  u.castleNavigationBlocked=false;return hypot(u,goal)<.16;
 }
 

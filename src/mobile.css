@@ -46,7 +46,7 @@
  .mobile-move-control{display:block;pointer-events:auto;flex:0 0 44px;width:44px;min-height:46px;padding:4px;background:#264b3eef;color:#f0e8c8;border:1px solid #adbd8b;border-radius:6px;font-size:11px}.legacy-game .mobile-move-control,.castlefight .mobile-move-control,.bloody .mobile-move-control,.bonk-mode .mobile-move-control{display:none}
  body .worldbottom .abilities{flex:1;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;gap:4px;max-width:100%;padding:2px 0;scrollbar-width:none;pointer-events:auto;touch-action:pan-x}
  body .worldbottom .ability,body.phasekiller #abilities .ability{width:44px;height:46px;min-width:44px;min-height:44px;flex:0 0 44px;border-radius:6px}
- body .worldbottom .ability.empty{display:none}.worldbottom .ability em{font-size:8px}.worldbottom .ability small{font-size:8px}.worldbottom .order-status{display:none}
+ .worldbottom .ability em{font-size:8px}.worldbottom .ability small{font-size:8px}.worldbottom .order-status{display:none}
  body:not(.mobile-inventory-open) .inventory-dock.inventory-panel{display:none!important;}
  body .inventory-dock.inventory-panel{display:none;position:absolute;right:0;bottom:114px;width:min(240px,calc(100vw - 16px));padding:8px;grid-column:auto;grid-row:auto;z-index:12}
  body.mobile-inventory-open .inventory-dock.inventory-panel{display:block!important;width:min(240px,calc(100vw - 16px));max-width:none}

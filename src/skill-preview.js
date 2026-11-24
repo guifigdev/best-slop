@@ -36,7 +36,7 @@ export function skillPreview({key,skill:s,hero,point,target,mode='hover',state={
   shapes.push({type:'cone',x:u.x,z:u.z,radius:s.radius,angle,halfAngle:s.cone||.7,role:'effect'});notes.push('Cone '+Math.round((s.cone||.7)*360/Math.PI)+'° · obstáculos bloqueiam');
  }else if(['blink','dash','stormdive','hornrush'].includes(key)){
   const length=Math.min(d,s.distance),requested={x:u.x+dx*length,z:u.z+dz*length};shapes.push(circle(u,s.distance,'movement'));
-  const moved={...u,x:u.x,z:u.z};if(key==='blink'){anchor=limitPoint(game,u,requested);if(blocked(anchor,game.obstacles||[])||terrainBlocked(state.voxelMap,u,anchor,unitRadius(u)))reject('Destino bloqueado');}else{moveUnit(game,moved,requested);anchor={x:moved.x,z:moved.z};}
+  const moved={...u,x:u.x,z:u.z};if(key==='blink'){anchor=limitPoint(game,u,requested);if(blocked(anchor,game.obstacles||[])||terrainBlocked(state.voxelMap,u,anchor,unitRadius(u)))reject('Destino bloqueado');}else{moveUnit(game,moved,requested,{ignoreUnits:true});anchor={x:moved.x,z:moved.z};}
   if(['blink','dash'].includes(key)&&unitBlocked(game,u,cursor))reject('Destino ocupado ou bloqueado');
   shapes.push({type:'corridor',x:u.x,z:u.z,length:distance(u,anchor),radius:key==='hornrush'?s.radius:.16,angle,role:key==='hornrush'?'effect':'path',start:key==='hornrush'?-.5:0,end:key==='hornrush'?.8:0});
   shapes.push(circle(anchor,key==='dash'?2.2:key==='stormdive'?s.radius:unitRadius(u),'landing'));

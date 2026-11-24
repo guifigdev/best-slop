@@ -1,3 +1,4 @@
+import {elementImpactRequest} from './element-skill-visuals.js';
 // Visual references were inspected before authoring. These are faithful
 // silhouettes/choreography adaptations, not extracted Warcraft III models.
 export const CUSTOMHERO_SKILL_REFERENCES=Object.freeze({
@@ -20,6 +21,8 @@ export const isCustomHeroSkillMode=state=>modes.has(state?.options?.mode||'campa
 export function customHeroSkillVisual(event,state){
  if(!event||!isCustomHeroSkillMode(state)||event.bonk||event.basicAttack||event.enemy||event.skillKey?.startsWith('ro_'))return null;
  const skill=event.skill||event.skillKey,type=event.type;
+ if(elementImpactRequest(event,state,state?.time??event.time))return null;
+ if(event.element==='water'||['waterball','splash','watersurge','earthspike','rockfall','earthquake'].includes(type))return null; // Coupled fluid/earth renderer owns these.
  if(type==='cast')return null; // The launch cue must not duplicate the contact.
  if(type==='bolt')return{family:skill==='bolt'?'stormbolt':'chain',duration:skill==='bolt'?.65:.44};
  if(type==='abilityPulse'){

@@ -11,8 +11,6 @@ export const hudGameName=state=>({bonk:'RAGNAROK',castlefight:'CASTLE FIGHT',tre
 export function hudLauncherActions(state,unit){
  if(!state||!unit)return[];
  const mode=state.options?.mode||'campaign',actions=[{action:'character',label:({bloody:'Exército',kodotag:'Unidades',castlefight:'Unidades',phasekiller:'Investigação',warlock:'Grimório'})[mode]||'Personagem',art:'panel'}];
- const canBuild=mode==='castlefight'||mode==='kodotag'&&unit.alive!==false&&!unit.kodoTagCaptured||mode==='treetag'&&unit.treeTagRole!=='infernal'&&unit.alive!==false&&!unit.treeTagCaptured;
- if(canBuild)actions.push({action:'build',label:'Construir',art:'build'});
  if(!['kodotag','bloody'].includes(mode))actions.push({action:'inventory',label:'Mochila',art:'bag'});
  return actions;
 }

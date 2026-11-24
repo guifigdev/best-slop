@@ -18,3 +18,8 @@ test('fire sparks rise from lava zones or the outer channel, while rain and snow
 test('weather hides for expanded scenes and returns without disposing borrowed assets or leaking materials',()=>{
  const base=new T.BoxGeometry(),parent=new T.Group(),art=createColiseumWeather({base});parent.add(art.root);art.update('tempest',1);assert.equal(art.root.visible,true);art.setVisible(false);art.update('tempest',2);assert.equal(art.root.visible,false);art.setVisible(true);assert.equal(art.root.visible,true);let borrowed=0,materials=0;base.addEventListener('dispose',()=>borrowed++);for(const m of art.root.children)m.material.addEventListener('dispose',()=>materials++);art.dispose();art.dispose();assert.equal(borrowed,0);assert.equal(materials,2);assert.equal(parent.children.length,0);base.dispose();
 });
+
+
+test('seasonal dry fronts suppress both legacy coliseum precipitation batches and resume within a paused frame',()=>{
+ const art=createColiseumWeather();for(const theme of ['forest','tempest','glacier']){art.update(theme,50,[],{climate:{kind:'none',precipitation:0}});art.setVisible(true);assert.equal(art.root.visible,false);assert.equal(art.root.children[0].count,0);assert.equal(art.root.children[1].count,0);art.update(theme,50,[],{climate:{kind:'rain',precipitation:.5}});assert.equal(art.root.visible,true);assert.equal(art.root.children[0].count,105);assert.equal(art.root.children[1].count,31);}art.update('volcano',50,[],{climate:{kind:'none',precipitation:0}});assert.equal(art.root.children[0].count,COLISEUM_WEATHER.volcano.count,'ambient lava embers remain during dry weather');art.dispose();
+});

@@ -9,7 +9,7 @@ import {lineMarkup} from '../src/line-war-ui.js';
 import {npcShopMarkup} from '../src/npc-shop-ui.js';
 import {sceneState} from '../src/scene-state.js';
 import {hoverRelation} from '../src/hover-highlight.js';
-import {resolveUnitCollisions,unitRadius} from '../shared/unit-collision.js';
+import {resolveUnitCollisions,unitRadius,unitBlocked} from '../shared/unit-collision.js';
 
 function setup(start=true){const g=new Game(7381,{mode:'linewars',lineTeams:true});for(let i=0;i<4;i++)g.addPlayer('p'+i,['knight','ranger','mage','owl'][i],'P'+i,i!==0);if(start)assert.equal(g.initLineWars(),true);return g;}
 function shop(g,u){const p=merchantPosition(u,'equipment');u.x=p.x;u.z=p.z;u.shopInteraction='equipment';u.gold=100000;u.inventory=[];}
@@ -22,8 +22,8 @@ test('each team starts with its own complete stock; partners share it and enemie
 test('allied camera focus keeps both defenders, own drops and only their shared field visible',()=>{
  const g=setup();g.drops=[{id:999,owner:'p0',x:0,z:0,expires:999,skill:'critical'}];const s=g.snapshot(),ours=sceneState(s,'p1','p0'),enemy=sceneState(s,'p2','p0');assert.equal(ours.origin.x,0);assert.deepEqual(ours.state.units.filter(u=>u.hero).map(u=>u.owner),['p0','p1']);assert.equal(ours.state.drops[0].owner,'p0');assert.equal(ours.state.lineWars.buildings.length,32);assert.equal(enemy.state.lineWars.buildings.length,32);assert.deepEqual(enemy.state.units.filter(u=>u.hero).map(u=>u.owner),['p2','p3']);assert.equal(lineAllies(s,'p0','p1'),true);assert.equal(canRecruitAgainst(s,'p0','p1'),false);assert.equal(canRecruitAgainst(s,'p0','p2'),true);assert.equal((lineMarkup(s,'p0',{army:true,inspectedOwner:'p1'}).match(/data-line-queue=/g)||[]).length,0);assert.equal((lineMarkup(s,'p0',{army:true,inspectedOwner:'p2'}).match(/data-line-queue=/g)||[]).length,16);
 });
-test('allied armies have green hover and collide with their teammate across lane identifiers',()=>{
- const g=setup(),a=g.player('p0'),ally=g.player('p1');a.x=ally.x=0;a.z=ally.z=-7;a.order=ally.order='stop';assert.equal(a.cell,ally.cell);resolveUnitCollisions(g,1/30);assert.ok(Math.hypot(a.x-ally.x,a.z-ally.z)>=unitRadius(a)+unitRadius(ally)-.001);assert.equal(hoverRelation({owner:'line-creep:p1',lineAttacker:'p1',lineCreep:true,team:11},'p0',g.snapshot()),'ally');assert.equal(hoverRelation({owner:'line-creep:p2',lineAttacker:'p2',lineCreep:true,team:12},'p0',g.snapshot()),'enemy');
+test('allied defenders phase through teammates while hostile bodies still block their shared field',()=>{
+ const g=setup(),a=g.player('p0'),ally=g.player('p1');a.x=ally.x=0;a.z=ally.z=-7;a.order=ally.order='stop';assert.equal(a.cell,ally.cell);resolveUnitCollisions(g,1/30);assert.equal(Math.hypot(a.x-ally.x,a.z-ally.z),0);assert.equal(unitBlocked(g,a,ally),false);const hostile={...a,id:g.id(),owner:'line-creep:p2',team:g.player('p2').team,lineCreep:true};g.units.push(hostile);assert.equal(unitBlocked(g,a,hostile),true);resolveUnitCollisions(g,1/30);for(const defender of [a,ally])assert.ok(Math.hypot(defender.x-hostile.x,defender.z-hostile.z)>=unitRadius(defender)+unitRadius(hostile)-.001);assert.equal(hoverRelation({owner:'line-creep:p1',lineAttacker:'p1',lineCreep:true,team:11},'p0',g.snapshot()),'ally');assert.equal(hoverRelation({owner:'line-creep:p2',lineAttacker:'p2',lineCreep:true,team:12},'p0',g.snapshot()),'enemy');
 });
 test('a partial team room waits for four real defenders without a negative preparation clock',()=>{
  const g=new Game(7,{mode:'linewars',lineTeams:true});g.addPlayer('a');g.addPlayer('b');g.command('a',{type:'ready'});g.command('b',{type:'ready'});for(let i=0;i<400;i++)g.tick(1/30);assert.equal(g.phase,'preparation');assert.ok(g.timer>=2.99);assert.match(g.message,/Aguardando/);assert.equal(g.addPlayer('c'),true);assert.equal(g.addPlayer('d'),true);for(const id of ['c','d'])g.command(id,{type:'ready'});for(let i=0;i<100&&!g.lineWars;i++)g.tick(1/30);assert.ok(g.lineWars);

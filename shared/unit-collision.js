@@ -1,14 +1,15 @@
 import {ARENA_BOUNDS} from './arena-size.js';
+import {unitFootprintRadius,unitsPhysicallyCollide,unitHasPhysicalBody} from './unit-footprint.js';
 
 const EPS=.0001;
 const geometryCache=new WeakMap(),motions=new WeakMap();
 const BUCKET=4;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
-export function unitRadius(u){return clamp(Number.isFinite(u?.collisionRadius)?u.collisionRadius:.48*(Number.isFinite(u?.size)?u.size:1),.2,1.6);}
+export const unitRadius=unitFootprintRadius;
 const space=u=>u.cell?`cell:${u.cell.x}:${u.cell.z}:${u.cell.r}`:u.lineLane!==undefined?`line:${u.lineLane}`:u.challenge?`trial:${u.challenge}`:'world';
 const layer=u=>u.flying?'air':'ground';
 const compatible=(a,b)=>space(a)===space(b)&&layer(a)===layer(b);
-const live=u=>u.alive&&!u.noCollision&&Number.isFinite(u.x)&&Number.isFinite(u.z);
+const live=u=>u.alive&&unitHasPhysicalBody(u)&&Number.isFinite(u.x)&&Number.isFinite(u.z);
 const order=(a,b)=>typeof a.id==='number'&&typeof b.id==='number'?a.id-b.id:String(a.id).localeCompare(String(b.id));
 
 function bounded(game,u,p){const r=unitRadius(u),b=game.bounds||ARENA_BOUNDS,c=u.cell,half=c?.r||b,cx=c?.x||0,cz=c?.z||0;
@@ -28,7 +29,7 @@ const ignored=(id,ignore)=>Array.isArray(ignore)?ignore.includes(id):ignore inst
 
 export function unitBlocked(game,u,point,ignoreId){
  if(solidBlocked(game,u,point))return true;const radius=unitRadius(u);
- return (game.units||[]).some(other=>other!==u&&!(u.id!==undefined&&other.id===u.id)&&!ignored(other.id,ignoreId)&&live(other)&&compatible(u,other)&&Math.hypot(point.x-other.x,point.z-other.z)<radius+unitRadius(other)-EPS);
+ return (game.units||[]).some(other=>!ignored(other.id,ignoreId)&&live(other)&&compatible(u,other)&&unitsPhysicallyCollide(u,other)&&Math.hypot(point.x-other.x,point.z-other.z)<radius+unitRadius(other)-EPS);
 }
 
 function bucketKey(u,x=u.x,z=u.z){return`${space(u)}|${layer(u)}|${Math.floor(x/BUCKET)},${Math.floor(z/BUCKET)}`;}
@@ -42,13 +43,13 @@ function recoverSolid(game,u){const limit=bounded(game,u,u);u.x=limit.x;u.z=limi
 
 export function resolveUnitCollisions(game,dt){
  if(!Number.isFinite(dt)||dt<=0)return{pairs:0,passes:0,unresolved:0};const units=(game.units||[]).filter(live).sort(order);for(const unit of units)recoverSolid(game,unit);let pairs=0,passes=0;
- for(let pass=0;pass<12;pass++){const hash=spatial(units);let penetration=0;passes++;for(const a of units)for(const b of nearby(hash,a)){if(order(a,b)>=0)continue;const ra=unitRadius(a),rb=unitRadius(b),dx=a.x-b.x,dz=a.z-b.z,d=Math.hypot(dx,dz),required=ra+rb-d;if(required<=EPS)continue;pairs++;penetration=Math.max(penetration,required);const angle=d>EPS?0:idAngle(a,b),nx=d>EPS?dx/d:Math.cos(angle),nz=d>EPS?dz/d:Math.sin(angle),massA=ra*ra*(a.hero?2:1),massB=rb*rb*(b.hero?2:1),weightA=massB/(massA+massB),oldA={x:a.x,z:a.z},oldB={x:b.x,z:b.z},push=required+EPS;
+ for(let pass=0;pass<12;pass++){const hash=spatial(units);let penetration=0;passes++;for(const a of units)for(const b of nearby(hash,a)){if(order(a,b)>=0||!unitsPhysicallyCollide(a,b))continue;const ra=unitRadius(a),rb=unitRadius(b),dx=a.x-b.x,dz=a.z-b.z,d=Math.hypot(dx,dz),required=ra+rb-d;if(required<=EPS)continue;pairs++;penetration=Math.max(penetration,required);const angle=d>EPS?0:idAngle(a,b),nx=d>EPS?dx/d:Math.cos(angle),nz=d>EPS?dz/d:Math.sin(angle),massA=ra*ra*(a.hero?2:1),massB=rb*rb*(b.hero?2:1),weightA=massB/(massA+massB),oldA={x:a.x,z:a.z},oldB={x:b.x,z:b.z},push=required+EPS;
     slide(game,a,{x:a.x+nx*push*weightA,z:a.z+nz*push*weightA});slide(game,b,{x:b.x-nx*push*(1-weightA),z:b.z-nz*push*(1-weightA)});
     const moved=(a.x-oldA.x)*nx+(a.z-oldA.z)*nz-(b.x-oldB.x)*nx-(b.z-oldB.z)*nz,left=Math.max(0,push-moved);if(left>EPS){slide(game,b,{x:b.x-nx*left,z:b.z-nz*left});const again=Math.max(0,ra+rb-Math.hypot(a.x-b.x,a.z-b.z)+EPS);if(again>EPS)slide(game,a,{x:a.x+nx*again,z:a.z+nz*again});}a.collisionAt=b.collisionAt=game.time;
    }if(penetration<=EPS)break;}
  // Recover coincident/legacy spawns that were already invalid. Candidates stay
  // in the same cell and require a solid-free path; walls are never tunneled.
- const maxDistance=Math.min(12,Math.max(3,Math.sqrt(units.length)*.8));let recoveryHash=spatial(units);for(const unit of units){const overlaps=nearby(recoveryHash,unit).some(other=>other!==unit&&Math.hypot(other.x-unit.x,other.z-unit.z)<unitRadius(other)+unitRadius(unit)-EPS);if(!wallBlocked(game,unit,unit)&&!overlaps)continue;if(!unitBlocked(game,unit,unit))continue;const origin={x:unit.x,z:unit.z},step=Math.max(.25,unitRadius(unit)*.6);let found=null;for(let radius=step;radius<=maxDistance&&!found;radius+=step){const count=Math.max(12,Math.ceil(Math.PI*2*radius/step));for(let i=0;i<count;i++){const angle=i/count*Math.PI*2,p=bounded(game,unit,{x:origin.x+Math.cos(angle)*radius,z:origin.z+Math.sin(angle)*radius});if(!unitBlocked(game,unit,p)&&clearPath(game,unit,p)){found=p;break;}}}if(found){unit.x=found.x;unit.z=found.z;recoveryHash=spatial(units);}}
+ const maxRadius=units.reduce((r,u)=>Math.max(r,unitRadius(u)),.4),recoveryScale=game.options?.mode==='bonk'?.8:Math.max(.8,maxRadius*2),maxDistance=Math.min(12,Math.max(3,Math.sqrt(units.length)*recoveryScale));let recoveryHash=spatial(units);for(const unit of units){const overlaps=nearby(recoveryHash,unit).some(other=>unitsPhysicallyCollide(unit,other)&&Math.hypot(other.x-unit.x,other.z-unit.z)<unitRadius(other)+unitRadius(unit)-EPS);if(!wallBlocked(game,unit,unit)&&!overlaps)continue;if(!unitBlocked(game,unit,unit))continue;const origin={x:unit.x,z:unit.z},step=Math.max(.25,unitRadius(unit)*.6);let found=null;for(let radius=step;radius<=maxDistance&&!found;radius+=step){const count=Math.max(12,Math.ceil(Math.PI*2*radius/step));for(let i=0;i<count;i++){const angle=i/count*Math.PI*2,p=bounded(game,unit,{x:origin.x+Math.cos(angle)*radius,z:origin.z+Math.sin(angle)*radius});if(!unitBlocked(game,unit,p)&&clearPath(game,unit,p)){found=p;break;}}}if(found){unit.x=found.x;unit.z=found.z;recoveryHash=spatial(units);}}
  for(const unit of units)finalizeMotion(game,unit);
- const hash=spatial(units);let unresolved=0;for(const a of units)for(const b of nearby(hash,a))if(order(a,b)<0&&Math.hypot(a.x-b.x,a.z-b.z)<unitRadius(a)+unitRadius(b)-EPS)unresolved++;return{pairs,passes,unresolved};
+ const hash=spatial(units);let unresolved=0;for(const a of units)for(const b of nearby(hash,a))if(order(a,b)<0&&unitsPhysicallyCollide(a,b)&&Math.hypot(a.x-b.x,a.z-b.z)<unitRadius(a)+unitRadius(b)-EPS)unresolved++;return{pairs,passes,unresolved};
 }

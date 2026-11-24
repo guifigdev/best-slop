@@ -1,6 +1,7 @@
 import {createFoliageWindMaterial,updateFoliageWind} from './foliage-wind.js';
 import {createWarlockSpellVisuals} from './warlock-spell-visuals.js';
 import {createWarlockTethers} from './warlock-tethers.js';
+import {createWarlockEnvironmentArt} from './warlock-environment-art.js';
 import {voxelTagPortrait} from './tag-character-art.js';
 import {createMoltenLavaMaterial} from './lava-material.js';
 import * as T from 'three';
@@ -8,6 +9,8 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {TREE_TAG_BUILDINGS,TREE_TAG_FOREST,TREE_TAG_RULES} from '../shared/tree-tag-catalog.js';
 import {treeTagBuildCheck} from '../shared/tree-tag.js';
 import {WARLOCK_SKILLS} from '../shared/warlock-catalog.js';
+import {warlockIslandContains} from '../shared/warlock-ground.js';
+import {createPixelTerrainMaterial,pixelTerrainInstanceKinds,pixelTerrainSurfaceIndex} from './pixel-terrain.js';
 
 const finite=(v,f=0)=>Number.isFinite(v)?v:f,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=value=>{let n=2166136261;for(const c of String(value??''))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;};
@@ -69,12 +72,13 @@ export function createLegacyWorld({scene}){
  const canopyWind=createFoliageWindMaterial({strength:.14});
  const root=new T.Group(),treeRoot=new T.Group(),warRoot=new T.Group(),forest=new T.Group(),structures=new T.Group();root.name='legacy-world';treeRoot.name='tree-tag-world';warRoot.name='warlock-world';forest.name='tree-tag-forest';structures.name='tree-tag-structures';treeRoot.add(forest,structures);root.add(treeRoot,warRoot);scene.add(root);
  const boxGeometry=new T.BoxGeometry(1,1,1),ringGeometry=new T.RingGeometry(.965,1,96),mat=new T.MeshLambertMaterial(),vertexMat=new T.MeshLambertMaterial({vertexColors:true}),glowMat=new T.MeshBasicMaterial({vertexColors:true,toneMapped:false}),ringMat=new T.MeshBasicMaterial({transparent:true,opacity:.65,side:T.DoubleSide,depthWrite:false,toneMapped:false}),barMat=new T.MeshBasicMaterial({toneMapped:false});
+ const treeGroundPixels=createPixelTerrainMaterial({material:new T.MeshLambertMaterial(),surface:'grass',perVertexSurface:true}),warGroundPixels=createPixelTerrainMaterial({material:new T.MeshLambertMaterial(),surface:'basalt'});
  const matrix=new T.Object3D(),colour=new T.Color(),batches=new Map(),buildings=new Map(),geometryCache=new Map();let disposed=false,treeFloorKey='',forestKey='',forestPose=-1,warRadius=-1,currentTree=null,buildKey=null,buildOwner=null,buildWorker=null,cursor=null;
  let selectedStructure=new Set(),hoveredStructure=null;
  const selectionMaterial=new T.MeshBasicMaterial({color:0x83dfa0,transparent:true,opacity:.9,side:T.DoubleSide,depthWrite:false,toneMapped:false}),hoverMaterial=selectionMaterial.clone(),hoverRing=new T.Mesh(ringGeometry,hoverMaterial);hoverRing.name='tree-tag-building-hover';for(const m of [hoverRing]){m.rotation.x=-Math.PI/2;m.visible=false;m.renderOrder=7;treeRoot.add(m);}
  const initialBackground=scene.background,initialFog=scene.fog?.color.clone(),forestBackground=new T.Color(0x61794e),lavaBackground=new T.Color(0x2d1d1b),prepTree={map:{...TREE_TAG_RULES.map,prison:TREE_TAG_RULES.prison},trees:TREE_TAG_FOREST,buildings:[]},prepWar={arenaRadius:24,fields:[],projectiles:[],pillars:[]};
- const tethers=createWarlockTethers({parent:warRoot}),spellPolish=createWarlockSpellVisuals({parent:warRoot});
- const meshes=new Set(),ownedGeometries=new Set([boxGeometry,ringGeometry]);
+ const tethers=createWarlockTethers({parent:warRoot}),spellPolish=createWarlockSpellVisuals({parent:warRoot}),warlockEnvironment=createWarlockEnvironmentArt({parent:warRoot,groundMaterial:warGroundPixels.material});
+ const treeGroundGeometry=boxGeometry.clone(),meshes=new Set(),ownedGeometries=new Set([boxGeometry,ringGeometry,treeGroundGeometry]);
  function ensure(name,parent,capacity,geometry=boxGeometry,material=mat){
   let entry=batches.get(name);if(entry&&entry.capacity>=capacity)return entry.mesh;
   if(entry){entry.mesh.removeFromParent();entry.mesh.dispose();meshes.delete(entry.mesh);}
@@ -84,8 +88,8 @@ export function createLegacyWorld({scene}){
  function finish(mesh,count){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
  function compile(key,parts){if(geometryCache.has(key))return geometryCache.get(key);const chunks=parts.map(([x,y,z,w,h,d,hex])=>{const g=boxGeometry.clone();g.scale(w,h,d);g.translate(x,y,z);const c=new T.Color(hex),colours=new Float32Array(g.attributes.position.count*3);for(let i=0;i<colours.length;i+=3){colours[i]=c.r;colours[i+1]=c.g;colours[i+2]=c.b;}g.setAttribute('color',new T.BufferAttribute(colours,3));return g;}),geometry=mergeGeometries(chunks);for(const g of chunks)g.dispose();geometry.computeBoundingSphere();geometryCache.set(key,geometry);ownedGeometries.add(geometry);return geometry;}
  function treeFloor(map){
-  const width=finite(map.width,94),depth=finite(map.depth,94),key=width+':'+depth;if(key===treeFloorKey)return;treeFloorKey=key;const tile=2,cols=Math.ceil((width+36)/tile),rows=Math.ceil((depth+36)/tile),mesh=ensure('tree-tag-ground',treeRoot,cols*rows);let n=0;
-  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){const x=(col-(cols-1)/2)*tile,z=(row-(rows-1)/2)*tile,seed=hash(col+':'+row),center=Math.hypot(x,z)<4.3,road=!center&&(Math.abs(x)<1.7||Math.abs(z)<1.7)&&Math.hypot(x,z)<width*.47,inside=Math.abs(x)<width/2&&Math.abs(z)<depth/2,shade=center?[0x939a7c,0xa5aa88,0x858d72]:road?[0x9a9866,0x8b8f5b]:inside?[0x718b4a,0x7e9752,0x6d874b,0x849f5a]:[0x526d43,0x5e7947,0x617b48];put(mesh,n++,x,-.2,z,tile+.01,.65+(seed%3)*.035,tile+.01,shade[seed%shade.length]);}finish(mesh,n);
+  const width=finite(map.width,94),depth=finite(map.depth,94),key=width+':'+depth;if(key===treeFloorKey)return;treeFloorKey=key;const tile=2,cols=Math.ceil((width+36)/tile),rows=Math.ceil((depth+36)/tile),mesh=ensure('tree-tag-ground',treeRoot,cols*rows,treeGroundGeometry,treeGroundPixels.material);mesh.castShadow=mesh.receiveShadow=true;const kinds=pixelTerrainInstanceKinds(treeGroundGeometry,mesh.instanceMatrix.count);let n=0;
+  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){const x=(col-(cols-1)/2)*tile,z=(row-(rows-1)/2)*tile,seed=hash(col+':'+row),center=Math.hypot(x,z)<4.3,road=!center&&(Math.abs(x)<1.7||Math.abs(z)<1.7)&&Math.hypot(x,z)<width*.47,inside=Math.abs(x)<width/2&&Math.abs(z)<depth/2,shade=center?[0x939a7c,0xa5aa88,0x858d72]:road?[0x9a9866,0x8b8f5b]:inside?[0x718b4a,0x7e9752,0x6d874b,0x849f5a]:[0x526d43,0x5e7947,0x617b48];kinds[n]=pixelTerrainSurfaceIndex(center?'stone':road?'earth':'grass');put(mesh,n++,x,-.2,z,tile+.01,.65+(seed%3)*.035,tile+.01,shade[seed%shade.length]);}finish(mesh,n);
  }
  function updateForest(trees,time){
   updateFoliageWind(canopyWind,time);
@@ -119,10 +123,10 @@ export function createLegacyWorld({scene}){
  const lavaMaterial=createMoltenLavaMaterial();
  const lava=new T.Mesh(boxGeometry,lavaMaterial);lava.name='warlock-lava';lava.position.y=-.82;lava.scale.set(220,.65,220);lava.receiveShadow=false;warRoot.add(lava);
  const boundary=new T.Mesh(ringGeometry,new T.MeshBasicMaterial({color:0xffc882,transparent:true,opacity:.72,side:T.DoubleSide,depthWrite:false,toneMapped:false}));boundary.name='warlock-arena-boundary';boundary.rotation.x=-Math.PI/2;boundary.position.y=.16;warRoot.add(boundary);
- function updateArena(radius,time){
-  radius=clamp(finite(radius,20),3,64);boundary.scale.setScalar(radius);lavaMaterial.uniforms.uTime.value=Math.floor(time*8)/8;if(Math.abs(radius-warRadius)<.03)return;warRadius=radius;const step=1.35,n=Math.ceil(radius/step),count=(n*2+1)**2,tiles=ensure('warlock-arena-stone',warRoot,count);let i=0;
+ function updateArena(radius,time,islands=[]){
+  radius=clamp(finite(radius,20),3,64);boundary.scale.setScalar(radius);lavaMaterial.uniforms.uTime.value=Math.floor(time*8)/8;const arenaKey=radius.toFixed(2)+':'+JSON.stringify(islands);if(arenaKey===warRadius)return;warRadius=arenaKey;const step=1.35,n=Math.ceil(radius/step),count=(n*2+1)**2,tiles=ensure('warlock-arena-stone',warRoot,count,boxGeometry,warGroundPixels.material);tiles.castShadow=tiles.receiveShadow=true;let i=0;
   for(let row=-n;row<=n;row++)for(let col=-n;col<=n;col++){const x=col*step,z=row*step,r=Math.hypot(x,z);if(r>radius-.3)continue;const seed=hash(col+':'+row),edge=r>radius-1.7,crack=(col*3+row*5)%17===0,c=edge?0x50515c:crack?0x696c70:[0x777e7b,0x858b81,0x707875,0x8c9083][seed%4];put(tiles,i++,x,-.12-(edge?.03:0),z,step*.988,.49+(seed%3)*.025,step*.988,c);}finish(tiles,i);
-  const rocks=ensure('warlock-outer-basalt',warRoot,36);for(let j=0;j<36;j++){const a=j/36*Math.PI*2,r=radius+4+(j%5)*1.4;put(rocks,j,Math.sin(a)*r,-.05+(j%3)*.13,Math.cos(a)*r,1.1+(j%3)*.25,.9+(j%4)*.4,1.3+(j%2)*.3,j%2?0x45464d:0x54515a,a);}finish(rocks,36);
+  const rocks=ensure('warlock-outer-basalt',warRoot,36);let rockCount=0;for(let j=0;j<36;j++){const a=j/36*Math.PI*2,r=radius+4+(j%5)*1.4,p={x:Math.sin(a)*r,z:Math.cos(a)*r};if(islands.some(island=>warlockIslandContains({arenaRadius:radius},island,p,-1.5)))continue;put(rocks,rockCount++,p.x,-.05+(j%3)*.13,p.z,1.1+(j%3)*.25,.9+(j%4)*.4,1.3+(j%2)*.3,j%2?0x45464d:0x54515a,a);}finish(rocks,rockCount);
  }
  const projectileGeometry=new Map();
  function missileGeometry(family){
@@ -157,10 +161,10 @@ export function createLegacyWorld({scene}){
   update(snapshot,time,owner){if(disposed)return;const now=parseTime(snapshot,time),mode=snapshot?.options?.mode,tree=mode==='treetag'?(snapshot.treeTag||prepTree):null,war=mode==='warlock'?(snapshot.warlock||prepWar):null;treeRoot.visible=mode==='treetag';warRoot.visible=mode==='warlock';root.visible=treeRoot.visible||warRoot.visible;currentTree=treeRoot.visible?tree:null;if(root.visible){scene.background=treeRoot.visible?forestBackground:lavaBackground;if(scene.fog)scene.fog.color.copy(scene.background);}else if(scene.background===forestBackground||scene.background===lavaBackground){scene.background=initialBackground;if(scene.fog&&initialFog)scene.fog.color.copy(initialFog);}
    if(treeRoot.visible){treeFloor(tree.map||{});updateForest(tree.trees,now);updateTreeBuildings(tree.buildings,now);updateBuildGhost(snapshot);updateAshes(snapshot);const prison=tree.map?.prison||tree.prison||{x:0,z:0,radius:2};prisonRing.position.set(finite(prison.x),.18,finite(prison.z));prisonRing.scale.setScalar(finite(prison.radius,2));prisonRing.material.opacity=.67+Math.sin(Math.floor(now*8)*.16)*.13;prisonStones.position.set(finite(prison.x),0,finite(prison.z));}
    const selected=(tree?.buildings||[]).filter(b=>selectedStructure.has(b.id)&&b.alive!==false),selectionRing=ensure('tree-tag-building-selection',treeRoot,selected.length,ringGeometry,selectionMaterial);selectionRing.visible=selected.length>0;let selectedCount=0;const viewer=snapshot?.units?.find(u=>u.id===snapshot.players?.[owner]);for(const b of selected){selectionMaterial.color.setHex(b.owner===owner||viewer&&viewer.team===b.team?0x83dfa0:0xf18475);put(selectionRing,selectedCount++,b.x,.2,b.z,(b.w||2)*.67,(b.d||2)*.67,1,0xffffff,0,-Math.PI/2);}finish(selectionRing,selectedCount);for(const [marker,id]of [[hoverRing,hoveredStructure]]){const b=tree?.buildings?.find(b=>b.id===id&&b.alive!==false);marker.visible=!!b;if(b){const viewer=snapshot?.units?.find(u=>u.id===snapshot.players?.[owner]),ally=b.owner===owner||viewer&&viewer.team===b.team;marker.position.set(b.x,.2,b.z);marker.scale.set((b.w||2)*.67,(b.d||2)*.67,1);marker.material.color.setHex(ally?0x83dfa0:0xf18475);}}
-   tethers.update(snapshot,now);spellPolish.update(snapshot,now);if(warRoot.visible){updateArena(war.arenaRadius??war.radius??20,now);updateWarEffects(war,now,snapshot.units||[]);}
+   tethers.update(snapshot,now);spellPolish.update(snapshot,now);warlockEnvironment.update(war,now,{enabled:warRoot.visible});if(warRoot.visible){updateArena(war.arenaRadius??war.radius??20,now,war.islands||[]);updateWarEffects(war,now,snapshot.units||[]);}
   },
   pick(point){if(!currentTree||!Number.isFinite(point?.x)||!Number.isFinite(point?.z))return null;const b=(currentTree.buildings||[]).filter(b=>b.alive!==false&&Math.abs(point.x-b.x)<=(b.w||TREE_TAG_BUILDINGS[b.key]?.w||2)/2&&Math.abs(point.z-b.z)<=(b.d||TREE_TAG_BUILDINGS[b.key]?.d||2)/2).sort((a,b)=>Math.hypot(point.x-a.x,point.z-a.z)-Math.hypot(point.x-b.x,point.z-b.z))[0];if(b)return{legacyBuilding:b.id};const tree=(currentTree.trees||[]).find(t=>t.alive!==false&&Math.hypot(point.x-t.x,point.z-t.z)<Math.max(.65,(t.w||.8)/2));return tree?{legacyTree:tree.id}:null;},
-  dispose(){if(disposed)return;disposed=true;canopyWind.dispose();tethers.dispose();spellPolish.dispose();for(const mesh of meshes)mesh.dispose();for(const geometry of ownedGeometries)geometry.dispose();for(const material of [mat,vertexMat,glowMat,ringMat,barMat,lavaMaterial,boundary.material,prisonRing.material,ghostMaterial,ghostEdgeMaterial,selectionMaterial,hoverMaterial])material.dispose();buildings.clear();batches.clear();geometryCache.clear();root.removeFromParent();if(scene.background===forestBackground||scene.background===lavaBackground){scene.background=initialBackground;if(scene.fog&&initialFog)scene.fog.color.copy(initialFog);}}
+  dispose(){if(disposed)return;disposed=true;warlockEnvironment.dispose();treeGroundPixels.dispose();warGroundPixels.dispose();canopyWind.dispose();tethers.dispose();spellPolish.dispose();for(const mesh of meshes)mesh.dispose();for(const geometry of ownedGeometries)geometry.dispose();for(const material of [mat,vertexMat,glowMat,ringMat,barMat,lavaMaterial,boundary.material,prisonRing.material,ghostMaterial,ghostEdgeMaterial,selectionMaterial,hoverMaterial])material.dispose();buildings.clear();batches.clear();geometryCache.clear();root.removeFromParent();if(scene.background===forestBackground||scene.background===lavaBackground){scene.background=initialBackground;if(scene.fog&&initialFog)scene.fog.color.copy(initialFog);}}
  };
 }
 

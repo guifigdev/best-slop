@@ -10,7 +10,7 @@ const active=g=>g.phase==='wave'&&g.treeTag&&!g.treeTag.finished;
 const actors=g=>g.units.filter(u=>u.treeTagCharacter);
 const live=u=>u?.alive&&!u.treeTagCaptured&&!u.treeTagWaiting&&!u.treeTagReviveAt;
 const structureReady=(g,b)=>b.alive&&b.workRemaining<=0;
-const nav=g=>{const tt=g.treeTag;tt.navigation.map=tt.map;tt.navigation.elapsed=tt.elapsed;tt.navigation.buildings=tt.buildings;tt.navigation.obstacles=tt.trees;tt.navigation.navigationRevision=tt.navigationRevision;return tt.navigation;};
+const nav=g=>{const tt=g.treeTag;tt.navigation.map=tt.map;tt.navigation.elapsed=tt.elapsed;tt.navigation.buildings=tt.buildings;tt.navigation.obstacles=tt.trees;tt.navigation.units=g.units;tt.navigation.navigationRevision=tt.navigationRevision;return tt.navigation;};
 const point=(g,p)=>finitePoint(p)&&p.x>=g.treeTag.map.minX+.5&&p.x<=g.treeTag.map.maxX-.5&&p.z>=g.treeTag.map.minZ+.5&&p.z<=g.treeTag.map.maxZ-.5?{x:p.x,z:p.z}:null;
 const fail=(g,text)=>{g.commandFailureReason=text;return false;};
 const fx=(g,type,u,extra={})=>g.fx(type,u.x,u.z,{source:u.id,treeTag:true,...extra});

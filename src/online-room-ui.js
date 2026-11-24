@@ -18,7 +18,7 @@ export function createOnlineRoomUI({getState,getOwner,send,onChooseHero=key=>sen
   if(lastStage!==stage){minimized=false;pickerOpen=false;host.open=!active;lastStage=stage;}
   host.classList.toggle('room-waiting',(waiting||selecting)&&!minimized);host.classList.toggle('room-selecting',selecting);host.classList.toggle('room-live',active||recruiting);if((waiting||selecting)&&!minimized)host.open=true;
   const title=(room.local?'Sala local':'Sala '+room.code)+(room.protected?' · com senha':'');
-  host.querySelector('summary').textContent=title+(room.isHost?' · host':'');
+  const summary=host.querySelector('summary'),summaryTitle=title+(room.isHost?' · host':'');if(summary.textContent!==summaryTitle)summary.textContent=summaryTitle;
   if(room.messages)chat=room.messages;
   const allReady=room.players.every(p=>p.bot||p.ready&&p.connected),emptySeats=Math.max(0,room.capacity-room.players.length),game=LOBBY_GAMES.find(g=>g.key===lobbyGameKey(room.options));
   const header=!active?`<header class="lobby-heading"><div><small>${selecting?'ESCOLHA DE PERSONAGEM':recruiting?'PREPARAÇÃO DO EXÉRCITO':room.isHost?'VOCÊ É O HOST':'SALA DE ESPERA'}</small><h2>${esc(selecting?'A aventura vai começar':game?.name||'Sua sala')}</h2><p>${selecting?'Cada pessoa escolhe o próprio personagem. O jogo aguarda todas as confirmações.':recruiting?'Recrute seu exército no campo. O host inicia o combate quando todos tiverem tropas.':'Configure a partida, convide seus amigos e marque Pronto. Os personagens serão escolhidos depois de iniciar.'}</p></div>${room.local?'':`<button type="button" data-room-copy>Copiar código <b>${esc(room.code)}</b></button>`}</header>`:'';

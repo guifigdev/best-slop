@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {KODO_TAG_UNITS as U,KODO_TAG_RULES as R} from '../shared/kodo-tag-catalog.js';
 import {castlePassable,castleNavigationRadius,constructionDisplacements} from '../shared/castle-navigation.js';
+import {unitsPhysicallyCollide} from '../shared/unit-footprint.js';
 import {useShortcuts} from '../src/shortcuts.js';
 import {ownKodoSelection,kodoUnitType} from '../src/rts-selection.js';
 const setup=()=>{const g=new Game(16,{mode:'kodotag'});g.addPlayer('p','runner');g.addPlayer('q','runner');g.initKodoTag();Object.assign(g.kodoTag,{released:true,escalationIndex:R.escalation.length,obstacles:[],mines:[]});g.kodoTag.navigationRevision++;const p=g.player('p'),q=g.player('q');Object.assign(p,{x:8,z:8,gold:10000,lumber:10000});Object.assign(q,{x:-20,z:-20});return {g,p,q};};
@@ -53,6 +54,7 @@ test('Tree Tag and Castle Fight also push characters out of a new foundation wit
  }
 });
 
-test('Kodo bodies separate at their physical radius without passing through walls or structures',()=>{
- const {g,p,q}=setup();Object.assign(p,{x:-20,z:-20});Object.assign(q,{x:-20,z:-18});const mobs=[];for(let i=0;i<5;i++){const d=U.oC06,u={...d,id:g.id(),unitKey:'oC06',collisionRadius:d.size*.82,owner:'kodos',team:2,x:8,z:8,maxHp:d.hp,hp:d.hp,maxMana:0,mana:0,alive:true,kodoTagUnit:true,kodoTagKodo:true,cd:0,stun:0,order:'auto'};g.units.push(u);mobs.push(u);}g.kodoTag.obstacles=[{id:'cliff',x:10,z:8,w:1,d:6,alive:true}];g.kodoTag.navigationRevision++;tick(g,1);for(let i=0;i<mobs.length;i++){const a=mobs[i];assert.equal(castlePassable(g.kodoTag.navigation,a,a.collisionRadius),true);for(const b of mobs.slice(i+1))assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>=a.collisionRadius+b.collisionRadius-.03);}
+test('allied Kodos can overlap while walls and hostile Runner bodies remain solid',()=>{
+ const {g,p,q}=setup();Object.assign(p,{x:-20,z:-20});Object.assign(q,{x:-20,z:-18});const mobs=[];for(let i=0;i<5;i++){const d=U.oC06,u={...d,id:g.id(),unitKey:'oC06',collisionRadius:d.size*.82,owner:'kodos',team:2,x:8,z:8,maxHp:d.hp,hp:d.hp,maxMana:0,mana:0,alive:true,kodoTagUnit:true,kodoTagKodo:true,cd:0,stun:0,order:'auto'};g.units.push(u);mobs.push(u);}g.kodoTag.obstacles=[{id:'cliff',x:10,z:8,w:1,d:6,alive:true}];g.kodoTag.navigationRevision++;tick(g,1);for(let i=0;i<mobs.length;i++){const a=mobs[i];assert.equal(castlePassable(g.kodoTag.navigation,a,a.collisionRadius),true);for(const b of mobs.slice(i+1))assert.equal(unitsPhysicallyCollide(a,b),false);}
+ Object.assign(p,{x:mobs[0].x,z:mobs[0].z,hp:100000,maxHp:100000,damage:0,order:'stop'});for(const mob of mobs)mob.damage=0;g.tick(.05);for(const mob of mobs){assert.equal(unitsPhysicallyCollide(p,mob),true);assert.ok(Math.hypot(p.x-mob.x,p.z-mob.z)>=castleNavigationRadius(p)+castleNavigationRadius(mob)-.03);assert.equal(castlePassable(g.kodoTag.navigation,mob,castleNavigationRadius(mob)),true);}
 });

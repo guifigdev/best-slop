@@ -1,5 +1,6 @@
 import {unitRadius,unitMovementBounds,limitUnitPoint,unitSolidBlocked,unitSegmentClear,unitBlocked,beginUnitMotion} from './unit-collision.js';
 import {ARENA_BOUNDS,WAR_BOUNDS} from './arena-size.js';
+import {unitContactFraction} from './unit-footprint.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function generateField(seed=1){let s=seed>>>0;const random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};const obstacles=[],zones=[];
  // Keep the central crossing and outer spawn ring open; obstacle pairs leave gaps.
@@ -9,9 +10,9 @@ export function generateField(seed=1){let s=seed>>>0;const random=()=>{s=(Math.i
 }
 export function blocked(point,obstacles,padding=.4){return obstacles.some(o=>Math.abs(point.x-o.x)<o.w/2+padding&&Math.abs(point.z-o.z)<o.d/2+padding);}
 export function limitPoint(game,u,p){const b=game.bounds||ARENA_BOUNDS,cell=u.cell;const point={x:clamp(p.x,cell?Math.max(-b,cell.x+(cell.minX??-cell.r)):-b,cell?Math.min(b,cell.x+(cell.maxX??cell.r)):b),z:clamp(p.z,cell?Math.max(-b,cell.z+(cell.minZ??-cell.r)):-b,cell?Math.min(b,cell.z+(cell.maxZ??cell.r)):b)};const center=cell||{x:0,z:0},radius=(cell?.r||b)+2.5,dx=point.x-center.x,dz=point.z-center.z,d=Math.hypot(dx,dz);if(game.options?.mode!=='linewars'&&(cell||b===ARENA_BOUNDS)&&d>radius){point.x=center.x+dx*radius/d;point.z=center.z+dz*radius/d;}return point;}
-export function moveUnit(game,u,p){
+export function moveUnit(game,u,p,{ignoreUnits=false}={}){
  if(!Number.isFinite(p?.x)||!Number.isFinite(p?.z))return false;const start={x:u.x,z:u.z};p=limitUnitPoint(game,u,p);const dx=p.x-u.x,dz=p.z-u.z;beginUnitMotion(game,u,Math.hypot(dx,dz)>.002);const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.2));
- for(let i=0;i<steps;i++){const next=limitUnitPoint(game,u,{x:u.x+dx/steps,z:u.z+dz/steps});if(unitSegmentClear(game,u,u,next)){u.x=next.x;u.z=next.z;continue;}const x={x:next.x,z:u.z},z={x:u.x,z:next.z};if(Math.abs(dx)>1e-9&&unitSegmentClear(game,u,u,x))u.x=x.x;else if(Math.abs(dz)>1e-9&&unitSegmentClear(game,u,u,z))u.z=z.z;else break;}
+ for(let i=0;i<steps;i++){const next=limitUnitPoint(game,u,{x:u.x+dx/steps,z:u.z+dz/steps}),contact=ignoreUnits?1:unitContactFraction(u,u,next,game.units);if(contact<1){next.x=u.x+(next.x-u.x)*contact;next.z=u.z+(next.z-u.z)*contact;}if(unitSegmentClear(game,u,u,next)){u.x=next.x;u.z=next.z;if(contact<1)break;continue;}const x={x:next.x,z:u.z},z={x:u.x,z:next.z};if(Math.abs(dx)>1e-9&&unitSegmentClear(game,u,u,x)&&(ignoreUnits||unitContactFraction(u,u,x,game.units)===1))u.x=x.x;else if(Math.abs(dz)>1e-9&&unitSegmentClear(game,u,u,z)&&(ignoreUnits||unitContactFraction(u,u,z,game.units)===1))u.z=z.z;else break;}
  u.moving=Math.hypot(u.x-start.x,u.z-start.z)>.002;return u.moving;
 }
 
@@ -32,7 +33,7 @@ function findPath(game,u,goal){
  while(open.data.length&&expanded<Math.min(40000,total)){const{id}=open.pop();if(closed[id])continue;closed[id]=1;expanded++;if(id===end){found=true;break;}const x=id%nx,z=Math.floor(id/nx),from=point(id);for(const[dx,dz]of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const xx=x+dx,zz=z+dz;if(xx<0||xx>=nx||zz<0||zz>=nz)continue;const next=zz*nx+xx;if(closed[next]||!valid(next))continue;const p=point(next);if(!unitSegmentClear(game,u,from,p))continue;const cost=costs[id]+CELL*(dx&&dz?Math.SQRT2:1);if(cost>=costs[next])continue;costs[next]=cost;previous[next]=id;open.push({id:next,f:cost+distance(p,goal)});}}
  const info=diagnostics.get(u)||{};info.expanded=expanded;info.searches=(info.searches||0)+1;diagnostics.set(u,info);if(!found)return null;const path=[];for(let id=end;id!==-1;id=previous[id])path.push(point(id));path.reverse();path.push({...goal});return path;
 }
-function avoidCrowd(game,u,waypoint){const d=distance(u,waypoint);if(d<.02)return waypoint;const step=Math.min(d,.5),dx=(waypoint.x-u.x)/d,dz=(waypoint.z-u.z)/d,next={x:u.x+dx*step,z:u.z+dz*step};if(!unitBlocked(game,u,next))return waypoint;const angle=Math.atan2(dx,dz);for(const offset of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2]){const p={x:u.x+Math.sin(angle+offset)*.65,z:u.z+Math.cos(angle+offset)*.65};if(!unitBlocked(game,u,p)&&unitSegmentClear(game,u,u,p))return p;}return{x:u.x,z:u.z};}
+function avoidCrowd(game,u,waypoint){const d=distance(u,waypoint);if(d<.02)return waypoint;const step=Math.min(d,.5),dx=(waypoint.x-u.x)/d,dz=(waypoint.z-u.z)/d,next={x:u.x+dx*step,z:u.z+dz*step};if(!unitBlocked(game,u,next))return waypoint;const angle=Math.atan2(dx,dz);for(const offset of [Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2]){const p={x:u.x+Math.sin(angle+offset)*.65,z:u.z+Math.cos(angle+offset)*.65};if(!unitBlocked(game,u,p)&&unitSegmentClear(game,u,u,p)&&unitContactFraction(u,u,p,game.units)===1)return p;}return{x:u.x,z:u.z};}
 // Fixed-radius sweeps, A* edges and actual movement share the same clearance.
 // Paths live in WeakMaps, not replicated unit snapshots.
 export function navigation(game,u,dest){

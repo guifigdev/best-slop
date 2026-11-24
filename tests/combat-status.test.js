@@ -16,3 +16,8 @@ test('rage, shield and reflection do not count as negative effects',()=>{const p
 test('effects expire at their deadline and only remaining category tints the body',()=>{const u={frostUntil:11,dots:{burn:{until:10},poison:{until:12}}};assert.equal(negativeTint(u,10),null);assert.equal(negativeTint(u,11).key,'poison');assert.equal(negativeTint(u,12),null);assert.equal(negativeTint({stun:0},10),null);});
 test('an active source remains after another source of the same category expires',()=>{assert.equal(negativeTint({dots:{burn:{until:9},lava:{until:11}},solarUntil:8},10).key,'fire');assert.equal(negativeTint({frostUntil:9,dots:{frost:{until:8}},abilitySlowUntil:11},10).key,'frost');});
 test('hue calculation is read-only and absent effects are neutral',()=>{const u={dots:{burn:{until:12}},rageUntil:14},before=JSON.stringify(u);negativeTint(u,10);assert.equal(JSON.stringify(u),before);assert.equal(negativeTint({},10),null);assert.equal(negativeTint(null,10),null);});
+
+
+test('Warlock lava contact is visible fire while Lava Treads immunity alone is not a burn',()=>{
+ assert.deepEqual(combatStatuses({wlLavaContactUntil:10.25},10).map(s=>s.key),['fire']);assert.equal(combatStatuses({wlLavaContactUntil:10.25},10.25).length,0);assert.equal(combatStatuses({wlLavaUntil:20},10).length,0);assert.equal(combatStatuses({wlLavaContactUntil:11,dots:{burn:{until:12}}},10).filter(s=>s.key==='fire').length,1);
+});

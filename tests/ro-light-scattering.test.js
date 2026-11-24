@@ -99,8 +99,13 @@ test('original pixel plus ink preserves the approved four-tap contour exactly an
   const ink=readFileSync(new URL('./fixtures/ro-ink-73261ea.glsl',import.meta.url),'utf8').trim();
   assert.equal(f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:true}),true);
   const uniforms=draws(f).at(-1).material.uniforms,shader=draws(f).at(-1).material.fragmentShader;
-  assert.equal(uniforms.outlines.value,1);assert.equal(uniforms.artStyle.value,0);assert.equal(uniforms.pixelGrid.value.x,400);assert.equal(uniforms.scattering.value,.2);
-  assert.ok(shader.includes('if(outlines>0.5){'+ink+'}'));assert.ok(shader.indexOf(ink)<shader.indexOf('#include <tonemapping_fragment>'));assert.ok(shader.includes('if(artStyle<0.5)return c;'));
+  assert.equal(uniforms.outlines.value,1);assert.equal(uniforms.outlineStrength.value,1);assert.equal(uniforms.artStyle.value,0);assert.equal(uniforms.pixelGrid.value.x,400);assert.equal(uniforms.scattering.value,.2);
+  assert.ok(shader.includes('if(outlines>0.5&&outlineStrength==1.0){'+ink+'}'));assert.ok(shader.indexOf(ink)<shader.indexOf('#include <tonemapping_fragment>'));assert.ok(shader.includes('if(artStyle<0.5)return c;'));
   const target=draws(f)[0].target;f.calls.length=0;f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:false});assert.equal(draws(f).at(-1).material.uniforms.outlines.value,0);assert.equal(draws(f)[0].target,target);assert.deepEqual(f.state,before);assert.equal(f.effect.stats().renderTargets,2);
  }finally{f.effect.dispose();}
+});
+
+
+test('contour strength scales without additional passes and clamps invalid values to the approved baseline',()=>{
+ const f=fixture();try{const before=structuredClone(f.state);for(const [value,expected] of [[0,0],[.5,.5],[1,1],[2,2],[3,2],[-1,0],[NaN,1]]){f.effect.render(f.state,1,{...f.options,outlineStrength:value});assert.equal(draws(f).at(-1).material.uniforms.outlineStrength.value,expected);assert.equal(f.effect.stats().extraDrawCalls,2);}assert.deepEqual(f.state,before);assert.match(draws(f).at(-1).material.fragmentShader,/min\(0.96,0.65\*outlineStrength\)/);}finally{f.effect.dispose();}
 });

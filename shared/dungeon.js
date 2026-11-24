@@ -1,7 +1,7 @@
 import {mvpForBiome} from './ragnarok-expansion.js';
 import {HEROES,SKILLS,ITEMS,levelOf,ITEM_MAX_LEVEL} from './catalog.js';
 import {canLearnSkill} from './skill-access.js';
-import {unitSolidBlocked,unitSegmentClear} from './unit-collision.js';
+import {unitSolidBlocked,unitSegmentClear,unitRadius} from './unit-collision.js';
 import {LOOT_RARITIES} from './rarity.js';
 import {ENCHANTMENTS,canEnchant} from './enchantments.js';
 import {DUNGEON_RULES as R,DUNGEON_BIOMES as BIOMES,DUNGEON_SPECIES as SPECIES} from './dungeon-catalog.js';
@@ -110,7 +110,7 @@ function payloadLabel(item){return item.type==='fragment'?SKILLS[item.skill]?.na
 function revive(g,u,point,fraction=.45){const position=nearbyFree(g,point,u.collisionRadius||.6)||g.dungeon.map.start;u.lootRolled=false;u.alive=true;u.stageDone=false;u.target=null;u.destination=null;u.order='auto';u.stun=0;u.dots={};u.shield=0;u.shieldUntil=0;u.hp=1;g.refresh(u);u.hp=Math.max(1,Math.round(u.maxHp*fraction));u.mana=Math.max(u.mana,u.maxMana*.35);Object.assign(u,position);g.fx('heal',u.x,u.z,{source:u.id,amount:u.hp});}
 function teamRows(g){const teams=[...new Set(g.heroes().map(teamOf))];return teams.map(team=>{const units=g.heroes().filter(u=>teamOf(u)===team);return{team,alive:units.filter(u=>u.alive).length,members:units.map(u=>({owner:u.owner,name:u.name,hero:u.hero,alive:u.alive,hp:u.hp,maxHp:u.maxHp})),eliminated:g.dungeon.eliminatedTeams.includes(team),ready:g.dungeon.exitVotes.includes(team),kills:units.reduce((n,u)=>n+(u.dungeonKills||0),0),gold:units.reduce((n,u)=>n+u.gold,0)};});}
 function advance(g){const d=g.dungeon;if(d.stage==='intermission'||d.stage==='clashCountdown')return;d.stage=d.limit===50&&d.floor>=50?'clashCountdown':'intermission';g.phase='intermission';g.timer=R.intermissionSeconds;g.message=d.stage==='clashCountdown'?'O quinquagésimo andar foi vencido. As equipes se preparam para o confronto final.':'A equipe alcançou a passagem. Próximo andar em 7 segundos.';d.revivals=[];for(const h of heroes(g)){h.target=h.destination=null;h.order='stop';h.ready=false;}}
-function interactionPoint(u,o){if(!o.collider)return{x:o.x,z:o.z};const dx=u.x-o.x,dz=u.z-o.z,length=Math.hypot(dx,dz)||1,nx=length===1&&!dx&&!dz?0:dx/length,nz=length===1&&!dx&&!dz?1:dz/length,edge=Math.min(nx?o.collider.w/2/Math.abs(nx):Infinity,nz?o.collider.d/2/Math.abs(nz):Infinity),padding=(u.collisionRadius??(u.size||1)*.48)+.2;return{x:o.x+nx*(edge+padding),z:o.z+nz*(edge+padding)};}
+function interactionPoint(u,o){if(!o.collider)return{x:o.x,z:o.z};const dx=u.x-o.x,dz=u.z-o.z,length=Math.hypot(dx,dz)||1,nx=length===1&&!dx&&!dz?0:dx/length,nz=length===1&&!dx&&!dz?1:dz/length,r=unitRadius(u),edge=Math.min(nx?(o.collider.w/2+r)/Math.abs(nx):Infinity,nz?(o.collider.d/2+r)/Math.abs(nz):Infinity)+.2;return{x:o.x+nx*edge,z:o.z+nz*edge};}
 function interactionClear(g,u,o){return unitSegmentClear(g,u,u,interactionPoint(u,o));}
 function approach(g,u,o,action,c){if(distance(u,o)<=R.interactionRange&&interactionClear(g,u,o))return false;const goal=interactionPoint(u,o);g.prioritizeCommand(u);u.order='move';u.target=null;u.destination={...goal};u.dungeonPending={id:o.id,action,slot:c.slot,goal};return true;}
 

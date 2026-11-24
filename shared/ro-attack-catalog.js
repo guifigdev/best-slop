@@ -1,8 +1,9 @@
 import {RO_SKILLS} from './ragnarok-jobs.js';
+import {isLiquidWaterSkill} from './element-skill-visuals.js';
 // Cosmetic attack timing and shape only. Authoritative damage stays in simulation.
 const frozen=v=>Object.freeze(v),profile=(family,duration,tint=0xc8ced2,extra={})=>frozen({family,duration,tint,...extra});
 export const RO_ATTACK_FAMILIES=frozen(['blade','dagger','fist','arrow','impact','cast','music','flask']);
-export const RO_ATTACK_BUDGET=frozen({active:64,instances:128,families:8,drawCalls:8,frames:12,frameSize:64,atlasBytes:12*64*64*4,maxAtlasBytes:26*12*64*64*4});
+export const RO_ATTACK_BUDGET=frozen({active:64,instances:128,families:8,drawCalls:8,frames:12,frameSize:64,atlasBytes:12*64*64*4,maxAtlasBytes:28*12*64*64*4});
 export const RO_ATTACK_LINEAGES=frozen({
  dragonknight:profile('blade',0.54,0xffffff,{motion:'overhead',opacity:.94}),imperialguard:profile('blade',0.43,0xc6cdd0,{narrow:.8}),
  archmage:profile('cast',0.51,0xc1aee7),elementalmaster:profile('cast',0.51,0xa9d9d5),
@@ -28,12 +29,12 @@ const JOB_LINEAGES={swordsman:'dragonknight',knight:'dragonknight',runeknight:'d
 const NORDIC=frozen({knight:profile('impact',0.45,0xd2d8da),mage:profile('cast',0.51,0xbfb2d6),ranger:profile('arrow',0.40,0xb4d8df,{travelSpeed:30}),turtle:profile('impact',0.46,0xc4cecd),owl:profile('cast',0.48,0xe1d6aa),raccoon:profile('dagger',0.48,0xffffff,{motion:'daggerStreaks',opacity:.94}),fenrir:profile('dagger',0.38,0xd4dbdd)});
 const ELEMENTS={fire:0xffb783,ice:0xb6e2eb,frost:0xb6e2eb,water:0x9cd9e4,lightning:0xe3dfa1,holy:0xf1e5bb,dark:0xbdacd8,poison:0xbdd49b,earth:0xc1aa88,wind:0xb7d9d1,arcane:0xc2b0e2};
 
-const elementMotion=element=>({fire:'fireorb',ice:'icecrystal',frost:'icecrystal',water:'icecrystal',lightning:'lightning',holy:'holy',earth:'earth',poison:'poison',dark:'dark',wind:'rune',arcane:'rune'})[element]||'rune';
+const elementMotion=element=>({fire:'fireorb',ice:'icecrystal',frost:'icecrystal',water:'waterorb',lightning:'lightning',holy:'holy',earth:'earth',poison:'poison',dark:'dark',wind:'rune',arcane:'rune'})[element]||'rune';
 const modernProfile=skill=>{
- const m=skill.mechanics||{},element=skill.element||'physical',tint=ELEMENTS[element]||0xc8ced2,kind=skill.kind;
+ const m=skill.mechanics||{},element=isLiquidWaterSkill(skill.key)?'water':skill.element||'physical',tint=ELEMENTS[element]||0xc8ced2,kind=skill.kind;
  if(kind==='heal')return profile('cast',.72,0xbce7a5,{motion:'heal',plane:'vertical',stationary:true,centered:true,utility:true,opacity:.86});
  if(kind==='buff')return profile('cast',.72,m.shieldPercent||m.modifiers?.damageReduction?0x9bdfce:0xf0d7a1,{motion:m.shieldPercent||m.modifiers?.armor||m.modifiers?.damageReduction?'shield':'rune',plane:'vertical',stationary:true,centered:true,utility:true,opacity:.8});
- if(kind==='zone')return profile('cast',.70,tint,{motion:element==='fire'?'firefield':element==='ice'||element==='water'?'icefield':'runezone',anchor:'target',stationary:true,centered:true,utility:true,opacity:.8});
+ if(kind==='zone')return profile('cast',.70,tint,{motion:element==='fire'?'firefield':element==='water'?'waterfield':element==='ice'?'icefield':'runezone',anchor:'target',stationary:true,centered:true,utility:true,opacity:.8});
  if(kind==='summon')return profile('cast',.72,tint,{motion:'summon',stationary:true,centered:true,utility:true,opacity:.82});
  if(kind==='passive')return profile('cast',.48,tint,{motion:'rune',stationary:true,centered:true,utility:true});
  if(skill.key==='lg_earthdrive')return profile('cast',.8,0xb89d7b,{motion:'earth',stationary:true,centered:true,utility:true,opacity:0});

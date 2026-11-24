@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {roHazardContains} from '../shared/ro-environment-hazards.js';
 import {createVoxelFire,VOXEL_FIRE_BUDGET} from './voxel-fire.js';
+import {MOLTEN_LAVA_GLSL} from './lava-material.js';
 
 export const RO_ENVIRONMENT_HAZARD_ART_BUDGET=Object.freeze({zones:3,vertices:24576,fireSites:16,fireInstances:16*(VOXEL_FIRE_BUDGET.flames+VOXEL_FIRE_BUDGET.embers),particles:96,drawCalls:3,lights:0,renderTargets:0,grid:1.8});
 const B=RO_ENVIRONMENT_HAZARD_ART_BUDGET,types=['lava','cold','poison','dust','dark','arcane','machinery'],finite=(n,f=0)=>Number.isFinite(n)?n:f,clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
@@ -22,10 +23,11 @@ export function roEnvironmentHazardSites(zone,count,inset=.76){const c=Math.cos(
 
 const surfaceVertex=`attribute float hazardIndex;varying vec2 vGround;varying float vHazard;void main(){vGround=position.xz;vHazard=hazardIndex;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 const surfaceFragment=`uniform float hazardTime;uniform vec4 hazardOrigin[3];uniform vec4 hazardStyle[3];varying vec2 vGround;varying float vHazard;
+${MOLTEN_LAVA_GLSL}
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+1.),f.x),f.y);}
 float cracks(vec2 p){vec2 i=floor(p),f=fract(p);float first=9.,second=9.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 b=vec2(float(x),float(y)),v=b+vec2(hash(i+b),hash(i+b+13.))-f;float d=dot(v,v);if(d<first){second=first;first=d;}else second=min(second,d);}return 1.-smoothstep(.015,.10,second-first);}
 void main(){int i=int(vHazard+.5);vec4 o=hazardOrigin[i],s=hazardStyle[i];vec2 d=vGround-o.xy;vec2 q=vec2(d.x*s.x+d.y*s.y,-d.x*s.y+d.y*s.x)/o.zw;float mask=dot(q,q);if(mask>1.)discard;float edge=(1.-sqrt(mask))*min(o.z,o.w);float grain=noise(vGround*3.1+s.w),wave=noise(vGround*.7+vec2(hazardTime*.06,s.w));vec3 col;float alpha=.93;
-if(s.z<.5){float vein=cracks(vGround*.72+vec2(hazardTime*.018,0.));float heat=.65+.35*sin(hazardTime*.65+vGround.x*.51+vGround.y*.38);col=mix(vec3(.11,.075,.055)+grain*.035,mix(vec3(.87,.18,.025),vec3(1.,.64,.12),heat),vein);col*=mix(.58,1.,smoothstep(0.,.30,edge));}
+if(s.z<.5){col=pixelLavaColour(vGround,hazardTime);col*=mix(.58,1.,smoothstep(0.,.30,edge));alpha=1.;}
 else if(s.z<1.5){float drift=.5+.5*sin(d.x*.75+sin(d.y*.61)*1.7);col=mix(vec3(.44,.65,.76),vec3(.91,.94,.90),.45+.45*drift+grain*.1);col=mix(vec3(.49,.69,.78),col,smoothstep(0.,.5,edge));alpha=.94;}
 else if(s.z<2.5){float patches=smoothstep(.4,.73,wave);col=mix(vec3(.10,.20,.105),vec3(.34,.47,.13),patches);col+=vec3(.06,.10,.01)*grain;float shimmer=pow(max(0.,sin(d.x*2.1+d.y*1.9+hazardTime*.8)),16.);col+=vec3(.12,.18,.04)*shimmer;col*=mix(.65,1.,smoothstep(0.,.25,edge));alpha=.90;}
 else if(s.z<3.5){float ridges=pow(.5+.5*sin(d.x*3.+sin(d.y*.55)*2.),4.);col=mix(vec3(.50,.36,.18),vec3(.75,.59,.32),ridges*.5+grain*.4);col=mix(vec3(.44,.32,.17),col,smoothstep(0.,.4,edge));}

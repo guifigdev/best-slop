@@ -20,3 +20,8 @@ test('persistent statuses use volumetric fire while preserving independent frost
   fx.update(unit,13);assert.equal(fire.visible,false);assert.ok(frost.visible&&poison.visible);fx.update(unit,15);assert.ok(frost.visible);assert.equal(poison.visible,false);fx.update(unit,17);assert.equal(group.visible,false);fx.update(unit,10,false);assert.equal(group.visible,false);
  }finally{fx.dispose();other.dispose();}assert.equal(a.children.length,0);assert.equal(b.children.length,0);
 });
+
+
+test('lava contact wraps the actor in approved volumetric fire and fades on safe ground without changing ordinary burns',()=>{
+ const root=new T.Group(),fx=createStatusEffects(root),unit={alive:true,wlLavaContactUntil:10.25};try{fx.update(unit,10);const fire=root.getObjectByName('voxel-fire');assert.equal(fire.visible,true);assert.equal(fire.children[0].count,VOXEL_FIRE_BUDGET.flames);assert.equal(fire.scale.x,1.2);fx.update(unit,10.3);assert.equal(fire.visible,false);fx.update({alive:true,dots:{burn:{until:12}}},11);assert.equal(fire.visible,true);assert.equal(fire.scale.x,.55);}finally{fx.dispose();}
+});

@@ -5,19 +5,22 @@ body.hud-revamp .hud-launcher>button{display:flex;align-items:center;gap:9px;pad
 body.hud-revamp .mobile-panel-toggle{display:none!important}
 /* Only these handles drag a panel. Its buttons and the joystick retain their input. */
 .hud-draggable.hud-static-origin{position:relative}
-body.hud-revamp .hud-drag-handle{position:absolute;top:-16px;left:calc(50% - 20px);display:grid;place-items:center;width:40px;height:18px;min-height:18px;border:1px solid #b9c69770;border-radius:7px 7px 3px 3px;background:#173d34f2;color:#e8d899;box-shadow:0 -2px 6px #0f241c20;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:auto;z-index:5;line-height:1}
+body.hud-revamp .hud-drag-handle{position:absolute;top:-16px;left:calc(50% - 20px);display:grid;place-items:center;width:40px;height:18px;min-height:18px;border:1px solid #b9c69770;border-radius:7px 7px 3px 3px;background:#173d34f2;color:#e8d899;box-shadow:0 -2px 6px #0f241c20;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none;opacity:0;z-index:5;line-height:1}
+body.hud-revamp .hud-drag-handle[hidden]{display:none!important}
+@media(hover:hover) and (pointer:fine){body.hud-revamp:not(.hud-compact) .hud-draggable:hover>.hud-drag-handle,body.hud-revamp:not(.hud-compact) .hud-draggable:focus-within>.hud-drag-handle,body.hud-revamp:not(.hud-compact) .hud-draggable:hover>summary>.hud-drag-handle,body.hud-revamp:not(.hud-compact) .hud-draggable:focus-within>summary>.hud-drag-handle{opacity:1;pointer-events:auto}}
+body.hud-revamp.hud-layout-editing .hud-drag-handle,body.hud-revamp .hud-is-dragging .hud-drag-handle{opacity:1;pointer-events:auto}
 body.hud-revamp .hud-drag-handle svg{display:block;width:21px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;pointer-events:none}
 body.hud-revamp .hud-drag-handle:hover,body.hud-revamp .hud-drag-handle:focus-visible{background:#476548;outline:2px solid #e6c883;outline-offset:1px}
 body.hud-revamp .hud-positioned{z-index:89!important;box-sizing:border-box}
 body.hud-revamp .hud-is-dragging{z-index:140!important;opacity:.92;outline:2px dashed #efd28c;outline-offset:3px;transition:none!important}
 body.hud-layout-dragging,body.hud-layout-dragging *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
-body.hud-revamp .hud-resources>.hud-drag-handle{position:relative;top:auto;left:auto;flex-shrink:0;width:24px;height:24px;min-height:24px;border-radius:6px;transform:none}
-body.hud-revamp .hud-resources{overflow:visible;padding-top:0;gap:14px}
-body.hud-revamp .hud-resources.hud-positioned{padding:7px;border:1px solid #b9c69770;border-radius:9px;background:#173d34f2;flex-wrap:wrap;overflow:visible}
+body.hud-revamp .hud-resources{overflow:hidden;padding-top:0;gap:14px}
 body.hud-revamp .hud-launcher>.hud-drag-handle{top:-16px}
 body.hud-revamp .bonk-xp>.hud-drag-handle{top:1px}
-body.hud-revamp .ro-mobile-player>.hud-drag-handle{left:auto;right:0;top:0;width:24px}
 body.hud-revamp .camera-tools>.hud-drag-handle{top:-17px}
+body.hud-revamp .mobile-hud-tools{width:max-content;max-width:calc(100% - 16px);flex:0 0 auto}
+body.hud-revamp .online-room-panel>summary,body.hud-revamp .exploration-minimap>summary{position:relative;padding-right:38px}
+body.hud-revamp .online-room-panel>summary>.hud-drag-handle,body.hud-revamp .exploration-minimap>summary>.hud-drag-handle{left:auto;right:0;top:0;width:32px;height:22px;min-height:22px;border-radius:5px}
 .hud-layout-status{position:fixed;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;pointer-events:none}
 /* Mode dialogs own the screen while open, including above a saved HUD. */
 body.hud-revamp .bonk-hud-content:has([role=dialog]) .hud-draggable:not([role=dialog]),body.hud-revamp .bonk-hud:has([role=dialog]) .bonk-touch .hud-draggable,body.hud-revamp .world:has(.bonk-hud [role=dialog])>.hud-launcher{visibility:hidden}
@@ -39,3 +42,10 @@ body.hud-revamp.kodotag .kt-build-card>.kt-build-badge:empty{visibility:hidden}
 body.hud-revamp .hud-launcher[hidden],body.hud-revamp .hud-launcher>button[hidden],body.hud-revamp .mobile-hud-tools[hidden],body.hud-revamp .mobile-hud-tools>button[hidden]{display:none!important}
 
 body.hud-revamp.hud-no-inventory .inventory-dock{display:none!important}
+/* Dragging detaches this grid child from its 168px/290px bottom-HUD track.
+   Keep both the panel and its SVG-containing slots bounded in normal flow,
+   restored layouts and the floating state, including stale old placements. */
+body.hud-revamp .inventory-dock.inventory-panel{min-width:0;max-width:290px;box-sizing:border-box}
+body.hud-revamp .inventory-dock .inventory{min-width:0;width:100%}
+body.hud-revamp .inventory-dock .inventory-slot{width:100%;max-width:72px;max-height:72px;box-sizing:border-box}
+body.hud-revamp .inventory-dock .inventory-slot>svg{max-width:64px;max-height:64px}

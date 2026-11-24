@@ -7,7 +7,7 @@ export {RO_ATTACK_BUDGET};
 const atlases=new Map(),N=RO_ATTACK_BUDGET.frameSize,F=RO_ATTACK_BUDGET.frames,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const segment=(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-ax-dx*t,y-ay-dy*t);};
 const gray=(v,alpha)=>[v,v,v,clamp(Math.round(alpha),0,255)];
-const variants=Object.freeze({impact:Object.freeze(['standard','axeSlam']),blade:Object.freeze(['standard','overhead','bashImpact']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield'])});
+const variants=Object.freeze({impact:Object.freeze(['standard','axeSlam']),blade:Object.freeze(['standard','overhead','bashImpact']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield','waterorb','waterfield'])});
 // Tiny software rasterizer: every family has twelve pre-baked nearest-filtered
 // frames. Data is read-only by convention; descriptors and frame bounds freeze.
 export function roAttackFrames(value='blade'){
@@ -31,6 +31,10 @@ export function roAttackFrames(value='blade'){
      if(ball<radius+.035)pixel=ink(ball>radius?56:ball>radius*.73?164:ball>radius*.38?225:255,ball>radius?160:250);
      for(let j=0;j<4;j++){const side=(j-1.5)*.135,base=.40-(j%2)*.03,tail=.13+Math.sin(phase+j)*.025;line(side*.6,base,side+Math.sin(phase+j)*.035,tail,.027,150+j*22,190);}
      for(let j=0;j<4;j++)dot(Math.sin(j*2.4+phase)*.42,.35+(j%3)*.14,.026,238,150);
+    }else if(motion==='waterorb'){
+     const ball=Math.hypot(sx,(z-.53)*1.8),radius=.30+Math.sin(phase)*.025;if(ball<radius)pixel=ink(ball>radius*.78?230:ball<radius*.55?175:211,ball>radius*.78?230:150);for(let j=0;j<3;j++){const a=j*2.1+phase*.26;line(Math.sin(a)*radius*.7,.53+Math.cos(a)*radius*.33,Math.sin(a+.6)*radius*.7,.53+Math.cos(a+.6)*radius*.33,.018,255,220);}for(let j=0;j<6;j++)dot(Math.sin(j*2.4+phase*.12)*(.36+j*.025),.22+j*.08,.026,246,175);
+    }else if(motion==='waterfield'){
+     const wave=.30+(p*.9)% .40;ring(wave,.025,222,160);ring(wave+.22,.018,246,120);for(let j=0;j<8;j++){const a=j*Math.PI/4+phase*.04;dot(Math.sin(a)*.62,.5+Math.cos(a)*.28,.025,255,210);}
     }else if(motion==='icecrystal'){
      const gem=Math.abs(sx)*1.1+Math.abs(yy)*2.2;
      if(gem<.60)pixel=ink(gem>.53?55:sx<-.06?193:sx>.06?232:255,245);

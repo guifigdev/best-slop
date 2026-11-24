@@ -1,3 +1,4 @@
+import {earthImpactPieces} from './element-impact-art.js';
 import * as T from 'three';
 import {CUSTOMHERO_SKILL_BUDGET as B,customHeroSkillVisual,customHeroSkillEventKey,isCustomHeroSkillMode} from '../shared/customhero-skill-visuals.js';
 import {CUSTOMHERO_SKILL_SPRITES} from './customhero-skill-assets.js';
@@ -8,7 +9,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const mix=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t));
 // Reserve each complete choreography before suppressing its fallback. The
 // renderer never admits a spell whose geometry would disappear at the cap.
-const cost={chain:[100,6],stormbolt:[184,16],blizzard:[270,15],heal:[78,8],summon:[768,52],stomp:[272,14],frost:[288,11],fire:[184,24],shockwave:[152,7],force:[152,7],thunder:[444,23],blink:[352,44],shield:[288,13],avatar:[288,13],hook:[266,0],drain:[148,15],cleave:[40,0],howl:[168,0],gravity:[280,46],poison:[144,24],field:[144,18],breath:[224,28],dash:[160,10]};
+const cost={chain:[100,6],stormbolt:[184,16],blizzard:[270,15],heal:[78,8],summon:[768,52],stomp:[600,1],frost:[288,11],fire:[184,24],shockwave:[600,0],force:[152,7],thunder:[444,23],blink:[352,44],shield:[288,13],avatar:[288,13],hook:[266,0],drain:[148,15],cleave:[40,0],howl:[168,0],gravity:[280,46],poison:[144,24],field:[144,18],breath:[224,28],dash:[160,10]};
 const gold=[1,.83,.36],white=[.88,.96,1],blue=[.24,.58,1],ice=[.48,.76,1],earth=[.65,.49,.30],fire=[1,.36,.06],purple=[.59,.34,.9];
 const vertexShader='attribute vec4 effectColor;varying vec4 vColor;varying vec2 vUv;void main(){vColor=effectColor;vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
 function batch(maxVertices,textured,texture){
@@ -47,6 +48,7 @@ export function createCustomHeroSkillArt({scene,loadPixels=pixels}={}){
  function ring(x,y,z,r,width,color,alpha=1,start=0,arc=TAU,segments=32){for(let i=0;i<segments;i++){const a=start+i/segments*arc,b=start+(i+1)/segments*arc;quad([x+Math.sin(a)*r,y,z+Math.cos(a)*r],[x+Math.sin(a)*(r-width),y,z+Math.cos(a)*(r-width)],[x+Math.sin(b)*(r-width),y,z+Math.cos(b)*(r-width)],[x+Math.sin(b)*r,y,z+Math.cos(b)*r],color,alpha);}}
  function crystal(x,y,z,w,h,color,alpha=1,lean=0){const tip=[x+lean,y+h,z],bottom=[x,y-h*.18,z],p=[[x-w,y,z],[x,y,z-w],[x+w,y,z],[x,y,z+w]];for(let i=0;i<4;i++){tri(p[i],p[(i+1)%4],tip,color.map(v=>v*(.7+i*.1)),alpha);tri(p[(i+1)%4],p[i],bottom,color,alpha);}}
  function box(x,y,z,w,h,d,color,alpha=1,angle=0){const c=Math.cos(angle),s=Math.sin(angle),p=[];for(const [px,py,pz]of [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]])p.push([x+(px*w*c-py*h*s)*.5,y+(px*w*s+py*h*c)*.5,z+pz*d*.5]);for(const [a,b,c,d]of [[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[3,2,6,7],[4,5,1,0]])quad(p[a],p[b],p[c],p[d],color,alpha);}
+ function earthComposition(event,time,heightAt){const pieces=earthImpactPieces({...event,key:'hero-earth:'+event.id,duration:.85},time,heightAt);for(const p of pieces.rocks){const tint=new T.Color(p.color).toArray();crystal(p.x,p.y,p.z,p.sx,p.sy,tint,p.opacity,p.sx*.25);}for(const p of pieces.fractures){const dx=Math.sin(p.angle)*p.length*.5,dz=Math.cos(p.angle)*p.length*.5,sx=Math.cos(p.angle)*p.width*.5,sz=-Math.sin(p.angle)*p.width*.5;quad([p.x-dx-sx,p.y,p.z-dz-sz],[p.x-dx+sx,p.y,p.z-dz+sz],[p.x+dx+sx,p.y,p.z+dz+sz],[p.x+dx-sx,p.y,p.z+dz-sz],[.10,.15,.12],p.opacity);}}
  function anchor(id,x,z,heightAt,actors){const u=units.get(id),a=actors?.get?.(id),px=a?.root?.position.x??u?.x??x,pz=a?.root?.position.z??u?.z??z,ground=finite(heightAt(px,pz)),size=clamp(finite(u?.size,1),.3,3),y=a?.root?finite(a.root.position.y)+finite(a.eyeLine,a.modelHeight*.62||1.3)*finite(a.root.scale?.y,1):ground+1.2*size+(u?.flying?finite(u.altitude,1.5):0);return{x:px,z:pz,y,ground,size};}
  function burst(x,y,z,t,color,fade,count=16,radius=1){for(let i=0;i<count;i++){const a=i*2.39996,r=radius*(.15+t)*(.4+noise(i)*.6),py=y+Math.max(0,Math.sin(t*Math.PI)*(.3+noise(i+9)*1.6));crystal(x+Math.sin(a)*r,py,z+Math.cos(a)*r,.035,.1,color,fade);sprite('spark',[x+Math.sin(a)*r,py,z+Math.cos(a)*r],.25,.25,color,fade*.65);}}
  function lightning(from,to,seed,t,fade,width=.09){const count=14,points=[];for(let i=0;i<=count;i++){const f=i/count,p=mix(from,to,f),j=i===0||i===count?0:(noise(seed+i+Math.floor(t*18)*3)-.5)*.55;points.push([p[0]+j,p[1]+j*.6,p[2]-j*.4]);}for(let i=0;i<count;i++){ribbon(points[i],points[i+1],width*3,blue,fade*.24);ribbon(points[i],points[i+1],width,white,fade);if(i===5||i===9){const end=points[i].map((v,j)=>v+(noise(seed+i+j)-.5)*.7);ribbon(points[i],end,width*.45,ice,fade*.65);}}}
@@ -86,15 +88,14 @@ export function createCustomHeroSkillArt({scene,loadPixels=pixels}={}){
     }
    }
   }else if(v.family==='stomp'){
-   const r=radius*Math.min(1,life*1.7);ring(x,g+.075,z,r,.12*(1-life)+.025,gold,fade*.85);sprite('blast',[x,g+.2,z],2.5*(1-life),1.5*(1-life),gold,(1-life)*.75);
-   for(let i=0;i<26;i++){const a=i/26*TAU,rr=Math.min(radius,r)*(.65+noise(i)*.3),px=x+Math.sin(a)*rr,pz=z+Math.cos(a)*rr,py=g+Math.max(.04,Math.sin(life*Math.PI)*(.2+noise(i+3)*.6));crystal(px,py,pz,.07+noise(i)*.08,.12,earth,fade);if(i%2===0)sprite('smoke',[px,g+.2+life*.45,pz],.5+life*.6,.5+life*.3,earth,fade*.35);}
+   const r=radius*Math.min(1,life*1.7);ring(x,g+.075,z,r,.09*(1-life)+.025,gold,fade*.65);earthComposition(e,time,heightAt);
   }else if(v.family==='frost'){
    for(let i=0;i<28;i++){const a=i/28*TAU,r=radius*Math.min(1,life*2)*(.75+noise(i)*.23),px=x+Math.sin(a)*r,pz=z+Math.cos(a)*r;crystal(px,g+.07,pz,.10,.3+Math.sin(life*Math.PI)*(.5+noise(i)*.8),i%3?ice:purple,fade,Math.sin(a)*.2);if(i%3===0)sprite('ice',[px,g+.3,pz],.7,.7,white,fade*.5);}
    sprite('snow',[x,g+.25,z],radius*1.5,radius*.6,ice,fade*.45);ring(x,g+.06,z,radius*Math.min(1,life*2),.045,ice,fade*.6);
   }else if(v.family==='fire'){
    sprite('blast',[x,g+.7+life*.3,z],radius*(.7+life),radius*(.7+life),white,fade*(1-life));for(let i=0;i<23;i++){const a=i*2.39996,r=radius*Math.sqrt(noise(i+7))*life,py=g+.15+Math.sin(life*Math.PI)*(noise(i)*2+.4),px=x+Math.sin(a)*r,pz=z+Math.cos(a)*r;sprite(i%3?'flame':'smoke',[px,py,pz],.7-life*.3,1.2-life*.6,i%3?fire:earth,fade*(i%3?.65:.25),a*.2);crystal(px,py,pz,.045,.16,gold,fade);}
   }else if(v.family==='shockwave'||v.family==='force'){
-   const dx=finite(e.tx,x)-x,dz=finite(e.tz,z+1)-z,len=Math.hypot(dx,dz)||1,nx=dx/len,nz=dz/len,d=life*12,px=x+nx*d,pz=z+nz*d,angle=Math.atan2(nx,nz);for(let i=0;i<14;i++){const side=(i/13-.5)*radius*2,xx=px+nz*side,zz=pz-nx*side,yy=finite(heightAt(xx,zz));crystal(xx,yy+.12,zz,.10,.3+Math.sin(i/13*Math.PI)*.5,v.family==='force'?ice:gold,fade);if(i%2===0)sprite('smoke',[xx,yy+.25,zz],.65,.7,earth,fade*.4);}ring(px,finite(heightAt(px,pz))+.1,pz,radius,.12,v.family==='force'?ice:gold,fade,angle-Math.PI*.5,Math.PI,20);
+   const dx=finite(e.tx,x)-x,dz=finite(e.tz,z+1)-z,len=Math.hypot(dx,dz)||1,nx=dx/len,nz=dz/len,d=life*12,px=x+nx*d,pz=z+nz*d,angle=Math.atan2(nx,nz);if(v.family==='shockwave')earthComposition({...e,x:px,z:pz,radius:Math.min(2,radius)},time,heightAt);else for(let i=0;i<14;i++){const side=(i/13-.5)*radius*2,xx=px+nz*side,zz=pz-nx*side,yy=finite(heightAt(xx,zz));crystal(xx,yy+.12,zz,.10,.3+Math.sin(i/13*Math.PI)*.5,ice,fade);}ring(px,finite(heightAt(px,pz))+.1,pz,radius,.10,v.family==='force'?ice:gold,fade,angle-Math.PI*.5,Math.PI,20);
   }else if(v.family==='thunder'){
    for(let i=0;i<5;i++){const a=i/5*TAU,r=i?radius*.7:0,px=x+Math.sin(a)*r,pz=z+Math.cos(a)*r;lightning([px,g+4.5,pz],[px,g+.1,pz],seed+i,t,fade*(1-life),.075);sprite('lightning',[px,g+.3,pz],1.1,1.1,white,fade*.7);}burst(x,g+.1,z,life,gold,fade,18,radius);
   }else if(v.family==='blink'){

@@ -6,10 +6,12 @@ import {webcrypto} from 'node:crypto';
 import {createPhaseHandler,PHASE_ROOM_LIMITS} from '../server/phase-rooms.js';
 
 // Executes the actual schema and handler SQL. The asynchronous adapter mimics
-// D1 and can return stale reads deliberately to exercise optimistic retries.
+// D1. A one-shot read barrier holds captured rows until every competing request
+// has read the same revision, forcing real CAS retries without timer races.
 class D1Sqlite{
- constructor(){this.db=new DatabaseSync(':memory:');this.db.exec(readFileSync(new URL('../drizzle/0000_phase_rooms.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));this.delayReads=false;this.conflicts=0;}
- prepare(sql){const self=this;return{bind(...args){return{async first(){const row=self.db.prepare(sql).get(...args);if(self.delayReads)await new Promise(resolve=>setTimeout(resolve,2));return row||null;},async run(){const result=self.db.prepare(sql).run(...args);if(sql.startsWith('UPDATE')&&!result.changes)self.conflicts++;return{meta:{changes:Number(result.changes)}};}};}};}
+ constructor(){this.db=new DatabaseSync(':memory:');this.db.exec(readFileSync(new URL('../drizzle/0000_phase_rooms.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));this.readBarrier=null;this.conflicts=0;}
+ synchronizeReads(parties){assert.ok(Number.isInteger(parties)&&parties>1);assert.equal(this.readBarrier,null);const barrier={parties,revisions:[],release:null};barrier.ready=new Promise(resolve=>barrier.release=resolve);this.readBarrier=barrier;return barrier;}
+ prepare(sql){const self=this;return{bind(...args){return{async first(){const row=self.db.prepare(sql).get(...args),barrier=self.readBarrier;if(barrier){barrier.revisions.push(row?.revision);if(barrier.revisions.length===barrier.parties){self.readBarrier=null;barrier.release();}await barrier.ready;}return row||null;},async run(){const result=self.db.prepare(sql).run(...args);if(sql.startsWith('UPDATE')&&!result.changes)self.conflicts++;return{meta:{changes:Number(result.changes)}};}};}};}
  room(code='ALDEIA'){const row=this.db.prepare('SELECT * FROM phase_rooms WHERE room_id = ?').get(code);return row?{...row,data:JSON.parse(row.data)}:null;}
  mutate(mutator,code='ALDEIA'){const row=this.room(code);mutator(row.data);this.db.prepare('UPDATE phase_rooms SET data = ? WHERE room_id = ?').run(JSON.stringify(row.data),code);}
  close(){this.db.close();}
@@ -37,9 +39,9 @@ test('lobby waits for friends, then role assignment is hidden in each authentica
 });
 
 test('concurrent chat survives CAS conflicts, binds authors to tokens and retries idempotently',async t=>{
- const ctx=setup(t),{a,b}=await pair(ctx);await start(ctx,a,b);ctx.advance(1000);ctx.DB.delayReads=true;
+ const ctx=setup(t),{a,b}=await pair(ctx);await start(ctx,a,b);ctx.advance(1000);const barrier=ctx.DB.synchronizeReads(2);
  const results=await Promise.all([ctx.request('/api/phase/ALDEIA/command',{command:{type:'pkChat',text:'Eu vi um vulto.',owner:b.id,name:'Beto'},requestId:'chat_ana_01'},a.token),ctx.request('/api/phase/ALDEIA/command',{command:{type:'pkChat',text:'Estou na praça.'},requestId:'chat_beto_01'},b.token)]);
- assert.ok(results.every(r=>r.status===200&&r.body.accepted));assert.ok(ctx.DB.conflicts>0);const messages=ctx.DB.room().data.game.phaseKiller.messages;assert.ok(messages.some(m=>m.text==='Eu vi um vulto.'&&m.name==='Ana'));assert.ok(messages.some(m=>m.text==='Estou na praça.'&&m.name==='Beto'));
+ assert.equal(barrier.revisions.length,2);assert.equal(new Set(barrier.revisions).size,1);assert.ok(results.every(r=>r.status===200&&r.body.accepted));assert.ok(ctx.DB.conflicts>0);const messages=ctx.DB.room().data.game.phaseKiller.messages;assert.ok(messages.some(m=>m.text==='Eu vi um vulto.'&&m.name==='Ana'));assert.ok(messages.some(m=>m.text==='Estou na praça.'&&m.name==='Beto'));
  ctx.advance(1000);const before=messages.length,retry=await ctx.request('/api/phase/ALDEIA/command',{command:{type:'pkChat',text:'Eu vi um vulto.'},requestId:'chat_ana_01'},a.token);assert.equal(retry.body.accepted,true);assert.equal(retry.body.duplicate,true);assert.equal(ctx.DB.room().data.game.phaseKiller.messages.length,before);
 });
 
@@ -59,7 +61,7 @@ test('HTTP transport rejects foreign origins, malformed commands, oversize chat,
 });
 
 test('concurrent joins retain every new player and the hard twelve-player cap is enforced',async t=>{
- const ctx=setup(t);await ctx.request('/api/phase/create',{room:'ALDEIA',name:'Host'});ctx.DB.delayReads=true;
- const joined=await Promise.all(Array.from({length:5},(_,i)=>ctx.request('/api/phase/join',{room:'ALDEIA',name:'Player '+i})));assert.ok(joined.every(r=>r.status===201));assert.equal(ctx.DB.room().data.members.length,6);assert.equal(ctx.DB.room().data.game.units.length,6);assert.ok(ctx.DB.conflicts>0);
- ctx.DB.delayReads=false;for(let i=6;i<12;i++)assert.equal((await ctx.request('/api/phase/join',{room:'ALDEIA',name:'Player '+i})).status,201);assert.equal((await ctx.request('/api/phase/join',{room:'ALDEIA',name:'Extra'})).status,409);assert.equal(ctx.DB.room().data.members.length,12);
+ const ctx=setup(t);await ctx.request('/api/phase/create',{room:'ALDEIA',name:'Host'});const barrier=ctx.DB.synchronizeReads(5);
+ const joined=await Promise.all(Array.from({length:5},(_,i)=>ctx.request('/api/phase/join',{room:'ALDEIA',name:'Player '+i})));assert.equal(barrier.revisions.length,5);assert.equal(new Set(barrier.revisions).size,1);assert.ok(joined.every(r=>r.status===201));assert.equal(ctx.DB.room().data.members.length,6);assert.equal(ctx.DB.room().data.game.units.length,6);assert.ok(ctx.DB.conflicts>0);
+ for(let i=6;i<12;i++)assert.equal((await ctx.request('/api/phase/join',{room:'ALDEIA',name:'Player '+i})).status,201);assert.equal((await ctx.request('/api/phase/join',{room:'ALDEIA',name:'Extra'})).status,409);assert.equal(ctx.DB.room().data.members.length,12);
 });

@@ -110,7 +110,7 @@ export function createStatusEffects(root,_baseGeometry){
   update(unit,time,enabled=true){
    if(disposed)return;
    const active=enabled&&unit?.alive!==false&&Number.isFinite(time);
-   fire.update(time,{enabled:!!active&&(activeDot(unit,'burn',time)||activeDot(unit,'lava',time)||(unit?.solarUntil||0)>time)});
+   fire.root.scale.setScalar((unit?.wlLavaContactUntil||0)>time?1.2:.55);fire.update(time,{enabled:!!active&&(activeDot(unit,'burn',time)||activeDot(unit,'lava',time)||(unit?.solarUntil||0)>time||(unit?.wlLavaContactUntil||0)>time)});
    frost.visible=!!active&&(Math.max(unit?.frostUntil||0,(unit?.webbedUntil||0)>time?0:unit?.abilitySlowUntil||0)>time||activeDot(unit,'frost',time));
    poison.visible=!!active&&activeDot(unit,'poison',time);
    group.visible=fire.root.visible||frost.visible||poison.visible;

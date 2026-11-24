@@ -1,6 +1,8 @@
 import {WARLOCK_POLISH as POLISH,explodeWarlockFireball} from './warlock-polish.js';
 import {WARLOCK_BEHAVIOR as BEHAVIOR,warlockLinkAction,breakWarlockLinks,recallWarlockLink,bindWarlockLink,tickWarlockLinks,warlockControlledAim,triggerWarlockVector,reflectWarlockDomeProjectile,reflectWarlockDomeDash,tickWarlockGravity,warlockDomeEntry} from './warlock-behavior.js';
 import {WARLOCK_REFERENCE as REF,WARLOCK_CHARACTERS,WARLOCK_SKILLS,WARLOCK_ITEMS,WARLOCK_COLUMNS,wlSkillAt,wlSkillPrice,wlMasteryLevel,wlMasteryPrice} from './warlock-catalog.js';
+import {unitFootprintRadius,unitContactFraction} from './unit-footprint.js';
+import {generateWarlockIslands,warlockSafeGround,warlockNearestGround} from './warlock-ground.js';
 
 const SCALE=REF.worldScale,TAU=Math.PI*2,dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),own=(o,k)=>typeof k==='string'&&Object.hasOwn(o,k);
 const itemLevel=(u,key)=>u.inventory?.find(i=>i?.key===key)?.level||0;
@@ -21,9 +23,9 @@ function applyItems(u){
  u.wlRangeMultiplier=1+.12*(wlMasteryLevel(u,'range')-helm);u.hp=Math.min(u.hp,u.maxHp);
  const sword=itemLevel(u,'blood_sword'),character=WARLOCK_CHARACTERS[u.warlockCharacter];u.skillLevels[character.skill]=1+sword;
 }
-function movePoint(game,u,p){
- const limit=game.warlock.mapRadius-.55,x=clamp(p.x,-limit,limit),z=clamp(p.z,-limit,limit);
- for(const pillar of game.warlock.pillars.filter(v=>v.alive)){const radius=pillar.radius+.47,dx=x-pillar.x,dz=z-pillar.z,d=Math.hypot(dx,dz);if(d<radius){const length=d||1;u.x=pillar.x+dx/length*radius;u.z=pillar.z+dz/length*radius;return;}}
+function movePoint(game,u,p,sweepBodies=false){
+ const body=unitFootprintRadius(u,{profile:'warlock'}),limit=game.warlock.mapRadius-Math.max(.55,body),requested={x:clamp(p.x,-limit,limit),z:clamp(p.z,-limit,limit)},fraction=sweepBodies?unitContactFraction(u,u,requested,game.units,actor=>unitFootprintRadius(actor,{profile:'warlock'})):1,x=u.x+(requested.x-u.x)*fraction,z=u.z+(requested.z-u.z)*fraction;
+ for(const pillar of game.warlock.pillars.filter(v=>v.alive)){const radius=pillar.radius+body,dx=x-pillar.x,dz=z-pillar.z,d=Math.hypot(dx,dz);if(d<radius){const length=d||1;u.x=pillar.x+dx/length*radius;u.z=pillar.z+dz/length*radius;return;}}
  u.x=x;u.z=z;
 }
 function hit(game,source,target,amount,dx=0,dz=0,knock=1){
@@ -49,13 +51,13 @@ function launch(game,u,s,point,extra={}){
  const p={id:game.id(),key:s.key,skill:s.key,family:s.family,source:u.id,owner:u.owner,team:u.team,x:u.x+d.dx*.6,z:u.z+d.dz*.6,dx:d.dx,dz:d.dz,speed,radius:s.family==='link'?s.radius||BEHAVIOR.link.radius:s.family==='control'?BEHAVIOR.control.radius:Math.max(.16,Math.min(.8,s.radius||.4)),damage:itemLevel(u,'staff')&&s.family==='fireball'?5.8+.4*s.level:s.damage,damageMax:s.damageMax,blastRadius:s.blastRadius||0,effectRadius:s.radius,pullRadius:s.pullRadius,damageRadius:s.damageRadius,projectileRadius:s.projectileRadius,visualRadius:s.family==='gravity'?POLISH.gravity.bodyRadius:undefined,duration:s.duration,life,age:0,level:s.level,hitIds:[],...extra};game.warlock.projectiles.push(p);game.fx('cast',u.x,u.z,{source:u.id,element:['fireball','spray','burn','meteor'].includes(s.family)?'fire':'arcane',duration:.2,warlock:true,skill:s.key});return p;
 }
 function castMelee(game,u,s){
- const w=game.warlock;for(const link of [...w.links||[]])if(link.targetKind==='caster'&&link.target===u.id){const enemy=game.units.find(v=>v.id===link.source&&v.alive&&v.team!==u.team);if(enemy&&dist(enemy,{x:0,z:0})>w.arenaRadius){breakWarlockLinks(game,{sourceId:enemy.id});hit(game,u,enemy,5+Math.max(0,s.level-1),0,0,0);}}u.hp=Math.max(0,u.hp-10);if(u.hp<=0){u.alive=false;u.died=game.time;}
+ const w=game.warlock;for(const link of [...w.links||[]])if(link.targetKind==='caster'&&link.target===u.id){const enemy=game.units.find(v=>v.id===link.source&&v.alive&&v.team!==u.team);if(enemy&&!warlockSafeGround(w,enemy)){breakWarlockLinks(game,{sourceId:enemy.id});hit(game,u,enemy,5+Math.max(0,s.level-1),0,0,0);}}u.hp=Math.max(0,u.hp-10);if(u.hp<=0){u.alive=false;u.died=game.time;}
  for(const target of opponents(game,u).filter(v=>dist(v,u)<=250*SCALE)){const d=direction(u,target);const dealt=hit(game,u,target,s.damage,d.dx,d.dz,1-dist(u,target)/(1000*SCALE));if(itemLevel(u,'mask')){u.hp=Math.min(u.maxHp,u.hp+dealt*.2);u.damagePoints=Math.max(0,u.damagePoints-dealt*.1);}
   if(s.family==='redemption'){const x=target.x,z=target.z;movePoint(game,target,{x:u.x-(x-u.x),z:u.z-(z-u.z)});target.wlVx*=-1;target.wlVz*=-1;}
   if(s.family==='bane')field(game,u,s.key,'bane',{x:(u.x+target.x)/2,z:(u.z+target.z)/2},.65,4,{damage:3+1.5*(s.level-1)});
  }
  if(s.family==='ritual')field(game,u,s.key,'mist',u,250*SCALE,4,{heal:1+s.level});
- if(itemLevel(u,'lava_treads')&&dist(u,{x:0,z:0})>w.arenaRadius&&(u.wlLavaReady||0)<=game.time){u.wlLavaUntil=game.time+2+itemLevel(u,'lava_treads');u.wlLavaReady=game.time+28;u.hp=Math.max(u.hp,10);}
+ if(itemLevel(u,'lava_treads')&&!warlockSafeGround(w,u)&&(u.wlLavaReady||0)<=game.time){u.wlLavaUntil=game.time+2+itemLevel(u,'lava_treads');u.wlLavaReady=game.time+28;u.hp=Math.max(u.hp,10);}
  if(itemLevel(u,'aegis'))u.wlAegisUntil=game.time+3;
  game.fx('stomp',u.x,u.z,{source:u.id,radius:250*SCALE,warlock:true});
 }
@@ -98,7 +100,7 @@ export const WarlockMethods={
  initWarlock(){
   if(this.warlock)return this.warlock;const players=casters(this);if(players.length<2)return false;
   this.warlock={phase:'shop',round:0,maxRounds:REF.rounds,arenaRadius:POLISH.arena.radius,mapRadius:POLISH.arena.mapRadius,remaining:30,projectiles:[],fields:[],links:[],results:[],pillars:[{id:this.id(),x:-8,z:-2,radius:.8,hp:25,maxHp:25,alive:true},{id:this.id(),x:8,z:2,radius:.8,hp:25,maxHp:25,alive:true}],adaptedArena:true};
-  this.phase='preparation';this.bounds=POLISH.arena.mapRadius;this.arena='fire';this.zones=[];this.obstacles=[];this.message='Warlock: escolha magias por coluna e equipamentos. Bola de fogo e sua magia pessoal já estão disponíveis.';
+  this.warlock.islands=generateWarlockIslands(this.worldSeed??this.seed,0);this.phase='preparation';this.bounds=POLISH.arena.mapRadius;this.arena='fire';this.zones=[];this.obstacles=[];this.message='Warlock: escolha magias por coluna e equipamentos. Bola de fogo e sua magia pessoal já estão disponíveis.';
   for(const [i,u]of players.entries()){u.x=(i-(players.length-1)/2)*3;u.z=0;u.ready=!!u.bot;}return this.warlock;
  },
  warlockCommand(u,c){
@@ -142,8 +144,8 @@ export const WarlockMethods={
   u.gold-=s.cost;if(existing)existing.level++;else u.inventory.push({key:c.item,level:1,charges:1});if(c.item==='jordan')u.wlJordanPending=true;applyItems(u);return true;
  },
  startWarlockRound(){
-  const w=this.warlock;if(!w||w.phase!=='shop')return false;w.round++;this.wave=w.round;w.phase='battle';w.remaining=POLISH.arena.roundDuration;w.arenaRadius=POLISH.arena.radius;w.projectiles=[];w.fields=[];w.links=[];this.phase='wave';
-  for(const [i,u]of casters(this).entries()){const a=i/casters(this).length*TAU;applyItems(u);Object.assign(u,{x:Math.sin(a)*12,z:Math.cos(a)*12,hp:u.maxHp,mana:u.maxMana,alive:true,damagePoints:0,wlVx:0,wlVz:0,destination:null,channel:null,wlDash:null,wlSpray:null,wlLink:null,wlControl:null,wlDrainSpeed:null,wlMoveVx:0,wlMoveVz:0,wlShieldUntil:0,shieldUntil:0,shield:0,wlTimeShift:null,wlVector:null,wlWindUntil:0});for(const key of u.skills)u.cooldowns[key]=0;}
+  const w=this.warlock;if(!w||w.phase!=='shop')return false;w.round++;this.wave=w.round;w.phase='battle';w.remaining=POLISH.arena.roundDuration;w.arenaRadius=POLISH.arena.radius;w.islands=generateWarlockIslands(this.worldSeed??this.seed,w.round);w.projectiles=[];w.fields=[];w.links=[];this.phase='wave';
+  for(const [i,u]of casters(this).entries()){const a=i/casters(this).length*TAU;applyItems(u);Object.assign(u,{x:Math.sin(a)*12,z:Math.cos(a)*12,hp:u.maxHp,mana:u.maxMana,alive:true,damagePoints:0,wlVx:0,wlVz:0,destination:null,channel:null,wlDash:null,wlSpray:null,wlLink:null,wlControl:null,wlDrainSpeed:null,wlMoveVx:0,wlMoveVz:0,wlShieldUntil:0,shieldUntil:0,shield:0,wlTimeShift:null,wlVector:null,wlWindUntil:0,wlLavaContactUntil:0});for(const key of u.skills)u.cooldowns[key]=0;}
   this.units=this.units.filter(u=>!u.wlGhost);this.message='Mantenha-se na pedra. Acerte projéteis, acumule impulso e empurre os rivais para a lava.';return true;
  },
  finishWarlockRound(){
@@ -171,11 +173,11 @@ export const WarlockMethods={
    if(u.wlSpray&&this.time>=u.wlSpray.nextAt){const spray=u.wlSpray,s=wlSkillAt(spray.key,u.skillLevels[spray.key]);launch(this,u,{...s,family:'fireball',duration:1},spray.point,{family:'spray',knock:.6});spray.remaining--;spray.nextAt=this.time+.15;if(spray.remaining<=0)u.wlSpray=null;}
    const before={x:u.x,z:u.z};u.wlMoveVx=0;u.wlMoveVz=0;
    if(u.wlDash){const dash=u.wlDash,step=Math.min(dash.remaining,dash.speed*dt);movePoint(this,u,{x:u.x+dash.dx*step,z:u.z+dash.dz*step});dash.remaining-=step;reflectWarlockDomeDash(this,u,before,dash);const target=opponents(this,u).find(t=>segmentDistance(t,before,u)<.95);if(target){hit(this,u,target,dash.damage,dash.dx,dash.dz);u.wlDash=null;}else if(dash.remaining<=0)u.wlDash=null;}
-   else if(u.destination&&!u.channel&&(u.wlDisableUntil||0)<=this.time){const d=direction(u,u.destination),distance=dist(u,u.destination),speed=Math.max(0,u.speed+(u.wlDrainSpeed?.until>this.time?u.wlDrainSpeed.delta:0))+((u.wlWindUntil||0)>this.time?u.wlWindSpeed||0:0)+((u.wlRushUntil||0)>this.time?u.wlRushSpeed||0:0),step=Math.min(distance,speed*dt);movePoint(this,u,{x:u.x+d.dx*step,z:u.z+d.dz*step});u.wlMoveVx=d.dx*step/dt;u.wlMoveVz=d.dz*step/dt;u.facing=Math.atan2(d.dx,d.dz);if(distance<=step+.01)u.destination=null;}
-   movePoint(this,u,{x:u.x+(u.wlVx||0)*dt,z:u.z+(u.wlVz||0)*dt});const damping=Math.pow(.96,dt/.03);u.wlVx*=damping;u.wlVz*=damping;u.moving=dist(u,before)>.001;
+   else if(u.destination&&!u.channel&&(u.wlDisableUntil||0)<=this.time){const d=direction(u,u.destination),distance=dist(u,u.destination),speed=Math.max(0,u.speed+(u.wlDrainSpeed?.until>this.time?u.wlDrainSpeed.delta:0))+((u.wlWindUntil||0)>this.time?u.wlWindSpeed||0:0)+((u.wlRushUntil||0)>this.time?u.wlRushSpeed||0:0),step=Math.min(distance,speed*dt);movePoint(this,u,{x:u.x+d.dx*step,z:u.z+d.dz*step},true);u.wlMoveVx=d.dx*step/dt;u.wlMoveVz=d.dz*step/dt;u.facing=Math.atan2(d.dx,d.dz);if(distance<=step+.01)u.destination=null;}
+   movePoint(this,u,{x:u.x+(u.wlVx||0)*dt,z:u.z+(u.wlVz||0)*dt},true);const damping=Math.pow(.96,dt/.03);u.wlVx*=damping;u.wlVz*=damping;u.moving=dist(u,before)>.001;
    if((u.wlWindUntil||0)>this.time){const enemy=opponents(this,u).find(t=>dist(u,t)<1);if(enemy){const d=direction(u,enemy);hit(this,u,enemy,u.wlWindDamage,d.dx,d.dz);u.wlWindUntil=0;}}
 
-   if(dist(u,{x:0,z:0})>w.arenaRadius){u.fireUntil=this.time+.3;if((u.wlLavaUntil||0)<=this.time)hit(this,null,u,REF.lavaDamagePerSecond*dt,0,0,0);}else u.hp=Math.min(u.maxHp,u.hp+u.wlRegen*dt);
+   if(!warlockSafeGround(w,u)){u.fireUntil=this.time+.3;u.wlLavaContactUntil=this.time+.25;if((u.wlLavaUntil||0)<=this.time)hit(this,null,u,REF.lavaDamagePerSecond*dt,0,0,0);}else u.hp=Math.min(u.maxHp,u.hp+u.wlRegen*dt);
   }
   tickWarlockLinks(this,dt,hit);this.tickWarlockProjectiles(dt);this.tickWarlockFields(dt);
   for(const ghost of this.units.filter(u=>u.wlGhost)){const source=this.units.find(v=>v.id===ghost.wlGhostOf);if(source){ghost.x=source.x+ghost.wlGhostSide*1.5;ghost.z=source.z;ghost.facing=source.facing;ghost.alive=source.alive&&ghost.until>this.time;}}
@@ -233,8 +235,8 @@ export const WarlockMethods={
  },
  warlockBotThink(u){
   if((u.wlNextThink||0)>this.time)return;u.wlNextThink=this.time+.35;const enemies=opponents(this,u).sort((a,b)=>dist(u,a)-dist(u,b)),target=enemies[0];if(!target)return;
-  const radius=Math.hypot(u.x,u.z),center={x:0,z:0};if(radius>this.warlock.arenaRadius-3)u.destination=center;else{const a=this.time*.7+u.seat*2;u.destination={x:Math.sin(a)*Math.min(9,this.warlock.arenaRadius-4),z:Math.cos(a)*Math.min(9,this.warlock.arenaRadius-4)};}
-  const choices=u.skills.filter(k=>!(u.cooldowns[k]>0));for(const key of choices){const s=wlSkillAt(key,u.skillLevels[key]);if(s.column==='F'&&dist(u,target)>3)continue;if(s.family==='teleport'&&radius<this.warlock.arenaRadius-2)continue;if(s.column==='C'&&Math.hypot(u.wlVx,u.wlVz)<3)continue;this.warlockCommand(u,{type:'wlCast',skill:key,x:s.family==='teleport'?0:target.x,z:s.family==='teleport'?0:target.z});break;}
+  const radius=Math.hypot(u.x,u.z),center={x:0,z:0};if(!warlockSafeGround(this.warlock,u,1))u.destination=warlockNearestGround(this.warlock,u,1);else if(radius>this.warlock.arenaRadius-3)u.destination=warlockNearestGround(this.warlock,u,1);else{const a=this.time*.7+u.seat*2;u.destination={x:Math.sin(a)*Math.min(9,this.warlock.arenaRadius-4),z:Math.cos(a)*Math.min(9,this.warlock.arenaRadius-4)};}
+  const choices=u.skills.filter(k=>!(u.cooldowns[k]>0));for(const key of choices){const s=wlSkillAt(key,u.skillLevels[key]);if(s.column==='F'&&dist(u,target)>3)continue;if(s.family==='teleport'&&warlockSafeGround(this.warlock,u,1))continue;if(s.column==='C'&&Math.hypot(u.wlVx,u.wlVz)<3)continue;const safe=s.family==='teleport'?warlockNearestGround(this.warlock,u,1):target;this.warlockCommand(u,{type:'wlCast',skill:key,x:safe.x,z:safe.z});break;}
  },
  snapshotWarlock(){return this.warlock?{...this.warlock,reference:REF.version}:null;}
 };

@@ -2,9 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hudLauncherActions} from '../src/rts-hud.js';
 const actions=(mode,u={alive:true})=>hudLauncherActions({options:{mode}},u).map(a=>a.action);
-test('build is offered only in construction games, never in Custom Hero or Ragnarok',()=>{
- for(const mode of ['campaign','tower','best','war','linewars','dungeon','bonk','bloody','warlock','phasekiller'])assert.ok(!actions(mode).includes('build'),mode);
- for(const mode of ['castlefight','treetag','kodotag'])assert.ok(actions(mode).includes('build'),mode);
+test('construction belongs to the character command bar and never the side launcher',()=>{
+ for(const mode of ['campaign','tower','best','war','linewars','dungeon','bonk','bloody','warlock','phasekiller','castlefight','treetag','kodotag'])assert.ok(!actions(mode).includes('build'),mode);
 });
 test('roles and capture state remove unavailable building actions',()=>{
  assert.ok(!actions('treetag',{alive:true,treeTagRole:'infernal'}).includes('build'));

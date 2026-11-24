@@ -10,6 +10,7 @@ import {advanceCastleRoute} from './castle-marching.js';
 import {castleBuildCheck,castleUpgradeAvailability} from './castle-build-rules.js';
 import {constructionDisplacements,applyConstructionDisplacements,castlePassable,moveCastleUnit,castleNavigationRadius,castleSegmentClear} from './castle-navigation.js';
 import {castleBuilderFor} from './castle-builders.js';
+import {unitsPhysicallyCollide} from './unit-footprint.js';
 import {sceneryObstacles} from './scenery.js';
 import {CASTLE_RACES,CASTLE_BUILDINGS,CASTLE_UNITS,CASTLE_ITEMS,CASTLE_ECONOMY_REFERENCE,castleDamageMultiplier} from './castle-catalog.js';
 import {castleReferenceScenery,castleMap,castlePoint,castleBuildPosition,castleBuildPlacement,castleOverlap} from './castle-map.js';
@@ -185,7 +186,7 @@ export const CastleFightMethods={
    else{unit.target=null;const destination=unit.route[Math.min(unit.pathIndex,unit.route.length-1)],speed=unit.speed;unit.speed*=(1+(unit.castleSpeedBonus||0)+((unit.hasteUntil||0)>cf.elapsed?unit.hasteMoveSpeed||0:0))*(unit.castleSupportMoveFactor??1);if(move(cf,unit,destination,dt)&&unit.pathIndex<unit.route.length-1)unit.pathIndex++;advanceCastleRoute(cf,unit);unit.speed=speed;}
   }
   // Keep ground and air formations separate without consuming game RNG.
-  const units=cf.units.filter(u=>u.alive);for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){const a=units[i],b=units[j];if(a.flying!==b.flying)continue;const min=radius(a)+radius(b),d=distance(a,b);if(d>=min)continue;const dx=d?(b.x-a.x)/d:(a.id<b.id?1:-1),dz=d?(b.z-a.z)/d:0,push=(min-d)*.5;for(const [u,sign]of [[a,-1],[b,1]]){const point=castlePoint(cf.map,{x:u.x+dx*push*sign,z:u.z+dz*push*sign});if(passable(cf,point,radius(u),{flying:u.flying})&&castleSegmentClear(cf,u,point,radius(u),{flying:u.flying})){u.x=point.x;u.z=point.z;}}}
+  const units=cf.units.filter(u=>u.alive);for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){const a=units[i],b=units[j];if(!unitsPhysicallyCollide(a,b))continue;const min=radius(a)+radius(b),d=distance(a,b);if(d>=min)continue;const dx=d?(b.x-a.x)/d:(a.id<b.id?1:-1),dz=d?(b.z-a.z)/d:0,push=(min-d)*.5;for(const [u,sign]of [[a,-1],[b,1]]){const point=castlePoint(cf.map,{x:u.x+dx*push*sign,z:u.z+dz*push*sign});if(passable(cf,point,radius(u),{flying:u.flying})&&castleSegmentClear(cf,u,point,radius(u),{flying:u.flying})){u.x=point.x;u.z=point.z;}}}
   cf.units=cf.units.filter(u=>u.alive||this.time-(u.died||0)<1.2);cf.buildings=cf.buildings.filter(b=>b.alive||this.time-(b.died||0)<1.2);
   const surviving=cf.teams.filter(t=>t.alive);if(surviving.length<2){cf.finished=true;cf.winnerTeam=surviving[0]?.team||null;this.winningOwners=Object.values(cf.players).filter(p=>p.team===cf.winnerTeam).map(p=>p.owner);this.winner=this.winningOwners[0]||null;this.phase='victory';this.message=cf.winnerTeam?`A equipe ${cf.winnerTeam} destruiu o castelo inimigo!`:'Os dois castelos ruíram. Empate.';}
  },

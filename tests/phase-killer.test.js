@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {phaseKillerUnitSkills,PHASE_KILLER_IMPLEMENTED_FAMILIES} from '../shared/phase-killer.js';
 import {PHASE_KILLER_ITEMS as I,PHASE_KILLER_SKILLS as S,PHASE_KILLER_RECIPES as R,PHASE_KILLER_WORLD_RECIPES as W,PHASE_KILLER_BLOOD_FORGE as FORGE,PHASE_KILLER_DISGUISES as D,PHASE_KILLER_ACTORS as A,PHASE_KILLER_MAP as MAP} from '../shared/phase-killer-catalog.js';
+import {castlePassable,castleNavigationRadius} from '../shared/castle-navigation.js';
+import {phaseKillerNavigation} from '../shared/phase-killer-navigation.js';
 import {phaseKillerWorldPoint} from '../shared/phase-killer-world.js';
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
 const cast=(g,u,skill,extra={})=>g.command(u.owner,{type:'pkCast',skill,...extra});
@@ -93,8 +95,8 @@ test('storage preserves charges, enforces proximity and three slots, and rejects
  const{g,u}=setup();Object.assign(u,MAP.spawn);u.skills.push('A05D');assert.equal(cast(g,u,'A05D',{x:u.x+.7,z:u.z}),true);const cube=g.phaseKiller.fields.find(f=>f.family==='storageCube');give(u,'I01N');give(u,'I039');assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),true);assert.equal(cube.inventory[0].charges,2);assert.equal(g.command(u.owner,{type:'pkStore',fieldId:cube.id,slot:0}),false);assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),true);assert.equal(u.inventory.at(-1).key,'I01N');u.x+=10;assert.equal(g.command(u.owner,{type:'pkTake',fieldId:cube.id,slot:0}),false);
 });
 
-test('lobby and live collision positions are distinct and cannot push a character through a house',()=>{
- const g=new Game(5,{mode:'phasekiller'});for(let i=0;i<6;i++)g.addPlayer('a'+i,'townsperson');const positions=g.units.map(u=>u.x+':'+u.z);assert.equal(new Set(positions).size,6);g.initPhaseKiller();const a=g.units[0],b=g.units[1];Object.assign(a,{x:10,z:-20});Object.assign(b,{x:10,z:-20});g.tick(.05);assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>=.599);
+test('lobby spawns stay distinct but allied civilians can overlap without crossing solid houses',()=>{
+ const g=new Game(5,{mode:'phasekiller'});for(let i=0;i<6;i++)g.addPlayer('a'+i,'townsperson');const positions=g.units.map(u=>u.x+':'+u.z);assert.equal(new Set(positions).size,6);g.initPhaseKiller();const a=g.units[0],b=g.units[1];Object.assign(a,{x:10,z:-20});Object.assign(b,{x:10,z:-20});g.tick(.05);assert.equal(Math.hypot(a.x-b.x,a.z-b.z),0);const house={id:g.id(),x:13,z:-20,w:2,d:4,hp:100,alive:true,dimension:'normal'};g.phaseKiller.buildings.push(house);assert.equal(g.command(a.owner,{type:'pkMove',x:16,z:-20}),true);for(let i=0;i<220;i++){g.tick(.05);assert.equal(castlePassable(phaseKillerNavigation(g,a),a,castleNavigationRadius(a)),true,'movement must go around the house');}assert.ok(a.x>14,'the destination remains reachable around solid geometry');
 });
 
 test('gathering deaths cannot turn a ghost into the killer when identities are assigned',()=>{

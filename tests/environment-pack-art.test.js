@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import {createEnvironmentPackArt,environmentProfile,environmentPlacement,environmentPropParts,ENVIRONMENT_PROP_THEMES,ENVIRONMENT_PACK_BUDGET as B} from '../src/environment-pack-art.js';
-import {createVoxelWeather,voxelWeatherForState,VOXEL_WEATHER_BUDGET} from '../src/voxel-weather.js';
+import {createVoxelWeather,voxelWeatherForState,voxelClimateForState,VOXEL_WEATHER_BUDGET} from '../src/voxel-weather.js';
 
 const modes=['campaign','tower','best','war','linewars','castlefight','bonk','dungeon','bloody','phasekiller','treetag','kodotag','warlock'];
 const frozen=value=>{if(value&&typeof value==='object'){Object.freeze(value);for(const v of Object.values(value))frozen(v);}return value;};
@@ -32,8 +32,8 @@ test('batch resources stay cached, motion is sampled at eight poses, and every m
 });
 
 test('weather selects local themes in every mode, supports rain/storm/wind and allocates no new scene objects',()=>{
- for(const mode of modes)assert.notEqual(voxelWeatherForState({options:{mode},arena:'forest'}),'none',mode);
- assert.equal(voxelWeatherForState(null),'none');assert.equal(voxelWeatherForState({options:{mode:'dungeon'},dungeon:{biome:'frost'}}),'snow');assert.equal(voxelWeatherForState({options:{mode:'campaign'},arena:'volcano'}),'sparks');assert.equal(environmentProfile({options:{mode:'campaign'},arena:'glacier'}).theme,'frost');
+ for(const mode of modes)assert.equal(voxelClimateForState({options:{mode},arena:'forest',time:0}).precipitation,0,mode+': opens dry');
+ assert.equal(voxelWeatherForState(null),'none');assert.ok(Array.from({length:90},(_,time)=>voxelWeatherForState({options:{mode:'dungeon'},dungeon:{biome:'frost'},time})).includes('snow'));assert.equal(voxelWeatherForState({options:{mode:'campaign'},arena:'volcano'}),'sparks');assert.equal(environmentProfile({options:{mode:'campaign'},arena:'glacier'}).theme,'frost');
  const weather=createVoxelWeather(new T.Scene());try{const resources=weather.root.children.map(m=>m.geometry);for(const kind of ['rain','storm','wind','snow','mist','sparks']){weather.update(5,{kind,heightAt:()=>7,center:{x:8,z:9}});assert.equal(weather.root.children.length,3);const particle=weather.root.children[0];assert.ok(particle.count<=VOXEL_WEATHER_BUDGET.particles);assert.ok(particle.instanceMatrix.array.every(Number.isFinite));assert.deepEqual(weather.root.children.map(m=>m.geometry),resources);const before=Array.from(particle.instanceMatrix.array);weather.update(5,{kind,heightAt:()=>7,center:{x:8,z:9}});assert.deepEqual(Array.from(particle.instanceMatrix.array),before);if(kind==='rain'||kind==='storm'){const m=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),scale=new T.Vector3();particle.getMatrixAt(0,m);m.decompose(p,q,scale);assert.ok(scale.y>.6);assert.equal(weather.root.children[1].count,12);}}}finally{weather.dispose();}
 });
 

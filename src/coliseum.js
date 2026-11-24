@@ -1,3 +1,4 @@
+import {voxelClimateForState} from './voxel-weather.js';
 import {pixelTerrainForArena} from './pixel-terrain.js';
 import {createColiseumFire} from './coliseum-fire.js';
 import {ARENA_BOUNDS,ARENA_TILE_HALF} from '../shared/arena-size.js';
@@ -38,7 +39,7 @@ export function createColiseum(scene,tiles,environment,sun,base,material,groundD
   hazards.update(state?.zones||a.zones.map((zone,i)=>({...zone,id:key+i})),time);
   fire.update(time,{enabled:key==='volcano'&&!expanded,zones:state?.zones||a.zones,seed:state?.worldSeed||1937});
   if(moat.root.visible)moat.update(time);
-  if(!expanded)weather.update(key,time,state?.zones||a.zones);visibility();
+  if(!expanded)weather.update(key,time,state?.zones||a.zones,{climate:voxelClimateForState(state||{arena:key,time})});visibility();
  }
  return{update,setExpanded(value){expanded=!!value;visibility();},setPreview(key){if(Object.hasOwn(ARENAS,key)){preview=key;if(eligible)theme(key);}},cheer(){cheerUntil=Math.max(cheerUntil,lastTime+2);},dispose(){if(disposed)return;disposed=true;architecture.dispose();boundary.dispose();hazards.dispose();moat.dispose();weather.dispose();fire.dispose();audience.removeFromParent();for(const mesh of Object.values(parts))mesh.dispose();crowdMaterial.dispose();groundDetail?.dispose();if(environment?.material===environmentMaterial)environment.material=originalEnvironmentMaterial;environmentMaterial?.dispose();},architecture:architecture.root,boundary:boundary.root,hazards:hazards.root,moat:moat.root,weather:weather.root,fire:fire.root,audience};
 }

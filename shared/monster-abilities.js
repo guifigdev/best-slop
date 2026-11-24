@@ -106,12 +106,12 @@ export const monsterMethods={
    this.specials||=[];this.specials.push({id:this.id(),type:'cloud',source:sourceData(u),x:point.x,z:point.z,radius:s.radius,damage:this.spellDamage(u,s.damage,'poison',key),expires:this.time+s.duration,next:this.time+.25,phase:this.phase,wave:this.wave});this.fx('venomcloud',point.x,point.z,{source:u.id,radius:s.radius,duration:s.duration});return true;
   }
   if(key==='stormdive'){
-   const d=distance(u,point)||1,length=Math.min(d,s.distance);moveUnit(this,u,limitPoint(this,u,{x:u.x+dir.x*length,z:u.z+dir.z*length}));u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;
+   const d=distance(u,point)||1,length=Math.min(d,s.distance);moveUnit(this,u,limitPoint(this,u,{x:u.x+dir.x*length,z:u.z+dir.z*length}),{ignoreUnits:true});u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;
    for(const enemy of this.enemies(u,s.radius)){this.hit(enemy,this.spellDamage(u,s.damage,'lightning',key),u,true,false,false,false,'lightning');if((enemy.avatar||0)<=this.time){enemy.stun=Math.max(enemy.stun||0,enemy.hero?s.heroStun||s.stun:s.stun);this.cancelChannel(enemy);}}
    this.fx('stormdive',u.x,u.z,{source:u.id,tx:origin.x,tz:origin.z,radius:s.radius});return true;
   }
   if(key==='hornrush'){
-   const length=Math.min(distance(u,point),s.distance);moveUnit(this,u,limitPoint(this,u,{x:u.x+dir.x*length,z:u.z+dir.z*length}));const actual=distance(origin,u);u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;
+   const length=Math.min(distance(u,point),s.distance);moveUnit(this,u,limitPoint(this,u,{x:u.x+dir.x*length,z:u.z+dir.z*length}),{ignoreUnits:true});const actual=distance(origin,u);u.destination=null;u.target=null;u.order='auto';u.vx=u.vz=0;
    for(const enemy of this.enemies(u)){const dx=enemy.x-origin.x,dz=enemy.z-origin.z,proj=dx*dir.x+dz*dir.z,perp=Math.abs(dx*dir.z-dz*dir.x);if(proj<-.5||proj>actual+.8||perp>s.radius||!lineClear(this,origin,enemy))continue;this.hit(enemy,physicalSkillDamage(u,s.damage,s.atkCoefficient),u);if((enemy.avatar||0)<=this.time){this.displace(enemy,dir.x*s.push,dir.z*s.push);enemy.stun=Math.max(enemy.stun||0,enemy.hero?s.heroStun||s.stun:s.stun);this.cancelChannel(enemy);}}
    this.fx('hornrush',origin.x,origin.z,{source:u.id,tx:u.x,tz:u.z,radius:s.radius});return true;
   }

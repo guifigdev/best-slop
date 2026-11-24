@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {CASTLE_BUILDINGS} from '../shared/castle-catalog.js';
 import {advanceCastleRoute} from '../shared/castle-marching.js';
+import {unitsPhysicallyCollide} from '../shared/unit-footprint.js';
 import {castlePassable,castleNavigationRadius} from '../shared/castle-navigation.js';
 const serpent=Object.keys(CASTLE_BUILDINGS).find(k=>CASTLE_BUILDINGS[k].unit==='n00H');
 function setup(){const g=new Game(94,{mode:'castlefight'});g.addPlayer('a');g.addPlayer('b');g.initCastleFight();g.castleDefenseTick=()=>{};return g;}
@@ -14,7 +15,8 @@ test('sixty slow flying serpents traverse either lane in either direction instea
   for(let i=0;i<1800;i++)g.tick(1/30);
   assert.equal(cf.units.length,60);assert.ok(cf.units.every(u=>u.pathIndex===u.route.length-1),`team ${team}/lane ${lane}: every troop clears the gate`);
   assert.ok(cf.units.every(u=>direction*u.x>34),'army proceeds into the opposing base');
-  for(let i=0;i<cf.units.length;i++)for(let j=i+1;j<cf.units.length;j++)assert.ok(Math.hypot(cf.units[i].x-cf.units[j].x,cf.units[i].z-cf.units[j].z)>=.85,'bodies remain separated');
+  assert.equal(unitsPhysicallyCollide(cf.units[0],cf.units[1]),false,'allied formations may share space');
+  assert.ok(cf.units.every(u=>castlePassable(cf,u,castleNavigationRadius(u),{flying:true})),'flying armies remain inside physical map bounds');
  }
 });
 
@@ -23,6 +25,12 @@ test('ground troops retain collision-safe pathing through the lane gate',()=>{
  for(let i=0;i<30;i++){const u=g.castleSpawn(b);assert.ok(u);u.x=-20+(i%6)*.5;u.z=9+Math.floor(i/6)*.4;u.baseDamage=u.damage=0;}
  for(let i=0;i<1500;i++)g.tick(1/30);
  assert.ok(cf.units.every(u=>u.pathIndex===u.route.length-1));assert.ok(cf.units.every(u=>castlePassable(cf,u,castleNavigationRadius(u))));
+});
+
+test('hostile flying armies still separate at their actual footprints',()=>{
+ const g=setup(),cf=g.castleFight,units=[1,2].map(team=>g.castleSpawn({id:900+team,key:serpent,team,owner:team===1?'a':'b',lane:0,spawnCount:0,x:team===1?-32:32,z:-9,w:2,d:2}));
+ units.forEach((u,i)=>Object.assign(u,{x:i*.1,z:0,damage:0,baseDamage:0}));g.tick(1/30);
+ assert.equal(unitsPhysicallyCollide(units[0],units[1]),true);assert.ok(Math.hypot(units[0].x-units[1].x,units[0].z-units[1].z)>=castleNavigationRadius(units[0])+castleNavigationRadius(units[1])-.001);
 });
 
 test('a gate does not skip the corridor from the wrong side, the other lane or a distant corner',()=>{
