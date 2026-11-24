@@ -36,3 +36,6 @@ Vite emite arquivos reais, sem data URLs. `scripts/ro-audio-release.mjs` confere
 Validação: integridade dos 545 pares, parsing e contagem de notas de cada MIDI, preferências persistidas, eventos de morte sem repetição, passagens/colisões dos mapas e revisão no renderer real dos seis cenários e das duas opções de áudio.
 
 O evento base `levelup` usa `data/wav/levelup.wav`; `jobLevelup` usa `data/wav/effect/st_job_level_up.wav`. Esses anúncios podem tocar durante a escolha de melhoria. Música MIDI continua sendo agendada durante pausa; o exemplo tem um canal independente, respeitando ativação e volume de efeitos. A reprodução preserva programas MIDI e usa harmônicos por instrumento com compressor no master, em volume maior que a primeira versão de ondas simples. A aproximação das transcrições permanece explícita.
+
+
+Em Amatsu, até 128 pétalas rosadas partem de oito copas próximas, com emissão escalonada, queda lenta, arrasto, rotação e assentamento no terreno. Suas trajetórias pertencem às árvores no mundo e não à câmera. As copas recebem oscilação mais forte com rajadas, sem mudar colisões nem mover os troncos. Outras regiões conservam a queda esparsa de folhas anterior.

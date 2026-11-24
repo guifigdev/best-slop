@@ -44,3 +44,10 @@ Impacto Explosivo agora pode usar os dois cilindros e texturas descritos no efei
 A composição em HDR preserva o alfa do destino opaco original para evitar retângulos brancos em camadas luminosas. Cilindros de Impacto Explosivo e a grade de Coluna de Pedra ajustam a escala à área real; o anel acompanha o relevo e cada pilar mantém sua forma sobre o terreno. As demais auras e projéteis não recebem essa adaptação geométrica.
 
 A revisão visual local comparou Martelo de Thor lado a lado com o vídeo original e verificou a integração real de Martelo, Nevasca, Coluna de Pedra, Impacto Explosivo e Lanças de Fogo. A prova do martelo fica em `outputs/martelo-original-comparacao-final.jpg` (artefato local de revisão). Os testes cobrem os dados importados, a política de fases, o playback STR, os limites de recursos, o blend HDR, as primitivas e a identidade dos acertos de projéteis.
+
+
+## Volume voxel e congelamento
+
+Os pixels dos atlas STR também formam cubos instanciados, amostrados nos mesmos quadros, pivôs e posições do playback original. A composição preserva uma camada da imagem para os detalhes finos e a luz. O limite adicional é de 4096 cubos, até 28 amostras por eixo e dois batches, sem luzes extras; o orçamento é dividido entre os clipes admitidos. Primitivas e sprites auxiliares de Custom Hero usam amostragem discreta, mantendo suas geometrias e coreografias. Isso não representa uma reconstrução volumétrica completa de cada habilidade.
+
+Congelamento completo envolve o corpo da unidade num bloco chanfrado, translúcido e de faces planas, dimensionado pela pegada e altura do personagem, incluindo montarias. A neblina usa o mesmo sistema de gelo compartilhado. O bloco desaparece ao acabar o congelamento ou morrer; lentidão de gelo sozinha não prende o alvo num bloco. Até 32 unidades são mostradas nesse batch.
