@@ -166,6 +166,9 @@ Object.assign(survivalItems,{
 });
 
 const warlockSkills={
+ fireWall:['fire',P('m6 46 12-6 15 5 19-8 7 7-20 14-15-5-15 6z','shade')+G(flame(),-5,5,.48)+G(flame(),13,-5,.57)+G(flame(),32,-8,.48)+L('m5 55 13-8 15 5 22-9','bright',3)],
+ iceWall:['ice',P('m7 48 1-21 8-15 7 18 9-24 8 20 12-16 6 21-4 21-17 8-15-5-14 5z','accent')+P('m8 27 8-15 1 33-10 3zm15 3 9-24-1 43-10 7zm17-4 12-16-4 36-10 12z','light')+L('m12 39 5-9m10 10 5-15m11 10 6-12','bright',3)],
+ frostBolt:['ice',P('m13 51 12-30 28-17-10 28z','accent')+P('m25 21 28-17-23 30-17 17z','bright')+P('m30 34 23-30-10 28-30 19z','light')+L('m3 48 12-6M9 60l11-14M2 34l16-3','accent',3)+G(snow(),-4,-6,.34)],
  fireball:['fire',G(flame(),14,4,.75)+L('m6 13 11 10M3 29l13 5M7 46l11-2','bright',4)],
  lightning:['storm',ray(0,0)+C(15,45,5,'accent')],
  homing:['arcane',L('m10 45-3-14 7-15 19-7 16 8','accent',6)+P('m41 9 17 13-18 9z','light')+G(eye(),13,19,.54)],

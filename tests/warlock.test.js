@@ -15,7 +15,7 @@ test('official Warlock1.02 identity and all four original caster stats are pinne
 });
 
 test('native primary spell ranks, costs and column exclusivity are available to authoritative purchases',()=>{
- assert.equal(Object.keys(WARLOCK_SKILLS).length,30);assert.equal(wlSkillAt('S000',1).damage,7);assert.equal(wlSkillAt('S000',1).cooldown,4.8);assert.equal(wlSkillAt('S000',1).missiles,1);assert.equal(wlSkillAt('S000',10).damage,11.5);assert.equal(wlSkillAt('S011',3).range,910/64);assert.equal(wlSkillAt('S002',1).damage,7);assert.equal(wlSkillAt('S002',1).cooldown,16.5);
+ assert.equal(Object.values(WARLOCK_SKILLS).filter(s=>!s.browserExtension).length,30);assert.equal(Object.keys(WARLOCK_SKILLS).length,33);assert.equal(wlSkillAt('S000',1).damage,7);assert.equal(wlSkillAt('S000',1).cooldown,4.8);assert.equal(wlSkillAt('S000',1).missiles,1);assert.equal(wlSkillAt('S000',10).damage,11.5);assert.equal(wlSkillAt('S011',3).range,910/64);assert.equal(wlSkillAt('S002',1).damage,7);assert.equal(wlSkillAt('S002',1).cooldown,16.5);
  const {g,p}=setup();p.gold=100;assert.equal(g.command('p',{type:'wlBuy',skill:'S002'}),true);const gold=p.gold;assert.equal(g.command('p',{type:'wlBuy',skill:'S004'}),false);assert.equal(p.gold,gold);const price=wlSkillPrice(p,'S002');assert.equal(g.command('p',{type:'wlBuy',skill:'S002'}),true);assert.equal(p.gold,gold-price);assert.equal(p.skillLevels.S002,2);assert.equal(g.command('p',{type:'wlBuy',skill:'__proto__'}),false);
 });
 
@@ -29,7 +29,7 @@ test('Shield reflects a real missile back at its original caster instead of mere
 });
 
 test('Meteor announces its area before impact, while Teleport uses its exact 770-native range and reduces momentum by twenty percent',()=>{
- const {g,p}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S008'});g.command('p',{type:'wlBuy',skill:'S011'});const {q}=battle(g);g.command('p',{type:'wlCast',skill:'S008',x:5,z:0});assert.equal(g.warlock.fields[0].warning,true);advance(g,.8);assert.equal(q.hp,100);q.z=6;advance(g,.21);assert.equal(q.hp,100);assert.equal(g.warlock.fields.length,0);
+ const {g,p}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S008'});g.command('p',{type:'wlBuy',skill:'S011'});const {q}=battle(g);g.command('p',{type:'wlCast',skill:'S008',x:5,z:0});assert.equal(g.warlock.fields[0].warning,true);advance(g,.8);assert.equal(q.hp,100);q.z=6;advance(g,.21);assert.equal(q.hp,100);assert.equal(g.warlock.fields.filter(f=>f.family==='meteor').length,0);assert.equal(g.warlock.fields.filter(f=>f.family==='meteorFire').length,1);
  Object.assign(p,{x:0,z:0,wlVx:10,wlVz:0});assert.equal(g.command('p',{type:'wlCast',skill:'S011',x:29,z:0}),true);near(p.x,770/64);near(p.wlVx,8);
 });
 

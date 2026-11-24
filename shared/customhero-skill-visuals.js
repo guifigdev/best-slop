@@ -22,6 +22,7 @@ export function customHeroSkillVisual(event,state){
  if(!event||!isCustomHeroSkillMode(state)||event.bonk||event.basicAttack||event.enemy||event.skillKey?.startsWith('ro_'))return null;
  const skill=event.skill||event.skillKey,type=event.type;
  if(elementImpactRequest(event,state,state?.time??event.time))return null;
+ if(event.type==='frostnova')return null; // Shared approved ice and historical vapor.
  if(event.element==='water'||['waterball','splash','watersurge','earthspike','rockfall','earthquake'].includes(type))return null; // Coupled fluid/earth renderer owns these.
  if(type==='cast')return null; // The launch cue must not duplicate the contact.
  if(type==='bolt')return{family:skill==='bolt'?'stormbolt':'chain',duration:skill==='bolt'?.65:.44};

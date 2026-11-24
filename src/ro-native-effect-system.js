@@ -6,7 +6,7 @@ import {roNativeEventRequests,roNativeRequestsForState} from '../shared/ro-nativ
 import {roNativeLegacyState,roNativePrefetchKeys,roNativePrefetchFiles,roNativeBuffDeadlines} from './ro-native-effect-routing.js';
 
 const primitiveTypes=['2D','3D','CYLINDER','QuadHorn'];
-export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrArt,primitiveFactory=createRoNativePrimitiveArt}={}){
+export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrArt,primitiveFactory=createRoNativePrimitiveArt,replaceGroundZone=()=>false}={}){
  let context=null,warmKey='',primitiveZones=new Set();
  const active=()=>context?.options?.mode==='bonk';
  const primitiveOptions={types:primitiveTypes,hasAsset:row=>!!RO_NATIVE_PRIMITIVE_MANIFEST.parts[row.primitiveId]};
@@ -15,7 +15,7 @@ export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrAr
   const result=roNativeEventRequests(event,unit,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,{state:context,...(primitive?primitiveOptions:{})});
   return primitive?result.map(r=>({...r,scale:roNativePrimitiveAreaScale(r.part,event,{baseScale:r.scale}),conformGround:true})):roNativeBuffDeadlines(result,unit,context,RO_NATIVE_EFFECT_ASSETS);
  };
- const zoneRequests=(state,primitive=false)=>state?.options?.mode==='bonk'?roNativeRequestsForState(state,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,primitive?primitiveOptions:{}):[];
+ const zoneRequests=(state,primitive=false)=>state?.options?.mode==='bonk'?roNativeRequestsForState(state,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,primitive?primitiveOptions:{}).filter(r=>{const zone=(state.bonk?.roSkillZones||[]).find(z=>z.id===r.zoneId);return !zone||zone.key!=='mg_firewall'||!replaceGroundZone(zone,state);}):[];
  const str=strFactory({scene,assets:RO_NATIVE_EFFECT_ASSETS,requestsForEvent:(e,u)=>requests(e,u),requestsForState:state=>zoneRequests(state)});
  const primitive=primitiveFactory({scene,manifest:RO_NATIVE_PRIMITIVE_MANIFEST,assets:RO_NATIVE_PRIMITIVE_ASSETS,requestsForEvent:(e,u)=>requests(e,u,true),requestsForState:state=>zoneRequests(state,true)});
  const api={
@@ -24,6 +24,7 @@ export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrAr
    const files=roNativePrefetchFiles(state,RO_NATIVE_EFFECT_MANIFEST),parts=new Set();
    for(const key of roNativePrefetchKeys(state))for(const rows of Object.values(RO_NATIVE_PRIMITIVE_MANIFEST.skills[key]?.phases||{}))for(const row of rows)if(RO_NATIVE_PRIMITIVE_MANIFEST.parts[row.primitiveId])parts.add(row.primitiveId);
    const signature=JSON.stringify([files,[...parts]]);if(signature!==warmKey){warmKey=signature;void str.preload(files);void primitive.preload([...parts]);}
+   for(const zone of state?.bonk?.roSkillZones||[])if(zone.key==='mg_firewall'&&replaceGroundZone(zone,state))str.cancelZone?.(zone.id);
    str.prepare(state,time);primitive.prepare(state,time);
    const groups=new Map();for(const request of zoneRequests(state,true)){const list=groups.get(request.zoneId)||[];list.push(request);groups.set(request.zoneId,list);}
    for(const [id,list]of groups)if(list.every(r=>primitive.isReady(r.primitiveId||r.file))&&list.map(r=>primitive.handlesRequest(r)).every(Boolean))primitiveZones.add(id);

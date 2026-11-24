@@ -181,6 +181,7 @@ const roomUI=createOnlineRoomUI({send,mountAccount:container=>roAccountUI.mount(
 },getState:()=>session.snapshot,getOwner:()=>session.playerId});
 const setupUI=createSetupUI({onToggle:open=>{session.paused=open;}});setupUI.mount();setupUI.load();
 function activeLegacyUI(){return session.snapshot?.options?.mode==='phasekiller'?phaseUI:session.snapshot?.options?.mode==='kodotag'?kodoUI:legacyUI;}
+view.setAimRotationHandler(steps=>!session.paused&&$('startmodal').classList.contains('hidden')&&!$('overlay-modal')&&session.snapshot?.options?.mode==='warlock'&&(legacyUI.rotateAim?.(steps)||false));
 const waveResults=createWaveResultsUI({host:document.body,onFocusGame:()=>view.canvas.focus({preventScroll:true})});
 function openRecruitment({building,unitKey,target}){const b=session.snapshot?.lineWars?.buildings.find(b=>b.id===building);if(!b||lineAllies(session.snapshot,b.owner,session.playerId))return;lineContext='recruitment';attackTarget=target||b.owner;if(session.snapshot.options.lineTeams)view.watchPlayer(b.owner);selectedRecruit=building;view.setRecruitment(building);document.querySelector('[data-tab=line]').click();shopSig='';renderShop();}
 function navigateLine(zone,owner=null){

@@ -52,8 +52,9 @@ function statusOf(state,u){
  if(u.stun>0)status.push('Atordoado · '+n(u.stun)+'s');
  if(u.rootUntil>time||u.treeTagRootUntil>elapsed)status.push('Imobilizado');
  if(u.webbedUntil>time)status.push('Preso em teia');
- if(u.frostUntil>time||u.abilitySlowUntil>time)status.push('Lento');
- if(Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0,u.wlLavaContactUntil||0)>time)status.push('Queimando');
+ if(u.wlFrozenUntil>time)status.push('Congelado');
+ if(u.wlFrostUntil>time||u.frostUntil>time||u.abilitySlowUntil>time)status.push('Lento');
+ if(Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0,u.wlLavaContactUntil||0,u.wlMeteorBurnUntil||0)>time)status.push('Queimando');
  if(u.dots?.poison?.until>time)status.push('Envenenado');
  if(u.shield>0&&u.shieldUntil>time)status.push('Barreira · '+n(u.shield));
  return status;

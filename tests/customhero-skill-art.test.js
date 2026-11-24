@@ -20,7 +20,7 @@ test('presentation routing preserves basic attacks, approved techniques, warning
 });
 
 test('signature skills have finite distinct choreography with at most two draw calls',async()=>{
- const a=art();await a.preload();const types=['bolt','stomp','heal','summon','blizzard','fireball','frostnova','shockwave','forcepush','drain','hook','blink','shield','avatar','cleave','thunder','gravity','flamebreath','venomcloud','dash'];
+ const a=art();await a.preload();const types=['bolt','stomp','heal','summon','blizzard','fireball','shockwave','forcepush','drain','hook','blink','shield','avatar','cleave','thunder','gravity','flamebreath','venomcloud','dash'];
  for(const [i,type]of types.entries()){
   const e=cast(type,i,{tx:4,tz:3,radius:3,skill:type==='bolt'?'bolt':type,...(type==='blizzard'?{owner:'hero',pulses:5,duration:7}:{})}),s=state([e]);s.units[0].channel='blizzard';a.update(s,1.12,()=>.5);finiteGeometry(a);const stats=a.stats();assert.ok(stats.triangles>0,type+' geometric silhouette');assert.ok(stats.drawCalls<=B.drawCalls);assert.ok(stats.quads<=B.quads);assert.ok(stats.triangles<=B.triangles);a.reset();
  }
@@ -37,11 +37,11 @@ test('Blizzard stops on authoritative cancellation and never mutates pulses or c
 });
 
 test('admission limits preserve cosmetic fallback and keep combat feedback in source state',()=>{
- const a=art(),events=Array.from({length:B.effects+5},(_,i)=>cast('frostnova',i));events.push(cast('damage',100,{amount:50}),cast('slash',101,{basicAttack:true}),cast('monsterWarning',102));const s=state(events);a.prepare(s,1.1);const filtered=a.legacyState(s);assert.equal(a.stats().effects,Math.floor(B.triangles/288));assert.equal(filtered.effects.filter(e=>e.type==='frostnova').length,events.length-3-a.stats().effects);assert.ok(filtered.effects.some(e=>e.type==='damage'));assert.ok(filtered.effects.some(e=>e.type==='slash'));assert.ok(filtered.effects.some(e=>e.type==='monsterWarning'));assert.equal(s.effects.length,B.effects+8);a.dispose();
+ const a=art(),events=Array.from({length:B.effects+5},(_,i)=>cast('shield',i));events.push(cast('damage',100,{amount:50}),cast('slash',101,{basicAttack:true}),cast('monsterWarning',102));const s=state(events);a.prepare(s,1.1);const filtered=a.legacyState(s);assert.equal(a.stats().effects,Math.floor(B.triangles/288));assert.equal(filtered.effects.filter(e=>e.type==='shield').length,events.length-3-a.stats().effects);assert.ok(filtered.effects.some(e=>e.type==='damage'));assert.ok(filtered.effects.some(e=>e.type==='slash'));assert.ok(filtered.effects.some(e=>e.type==='monsterWarning'));assert.equal(s.effects.length,B.effects+8);a.dispose();
 });
 
 test('late or failed texture loading retains geometric spell coverage; reset and disposal release batches',async()=>{
- const scene=new T.Scene(),a=createCustomHeroSkillArt({scene,loadPixels:async()=>{throw Error('offline');}});await a.preload();a.update(state([cast('frostnova')]),1.2);assert.ok(a.stats().triangles>0);assert.equal(a.stats().quads,0);assert.equal(Object.keys(a.stats().failures).length,8);a.reset();assert.equal(a.stats().effects,0);assert.equal(a.stats().drawCalls,0);a.dispose();a.dispose();assert.equal(scene.children.length,0);assert.equal(a.stats().disposed,true);
+ const scene=new T.Scene(),a=createCustomHeroSkillArt({scene,loadPixels:async()=>{throw Error('offline');}});await a.preload();a.update(state([cast('shield')]),1.2);assert.ok(a.stats().triangles>0);assert.equal(a.stats().quads,0);assert.equal(Object.keys(a.stats().failures).length,8);a.reset();assert.equal(a.stats().effects,0);assert.equal(a.stats().drawCalls,0);a.dispose();a.dispose();assert.equal(scene.children.length,0);assert.equal(a.stats().disposed,true);
 });
 
 test('both VFX batches preserve destination alpha in RGBA HDR targets',()=>{

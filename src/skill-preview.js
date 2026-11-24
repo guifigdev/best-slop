@@ -11,6 +11,13 @@ const finite=(n,fallback=0)=>Number.isFinite(n)?n:fallback;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const circle=(p,radius,role='effect')=>({type:'circle',x:p.x,z:p.z,radius,role});
 const rect=(p,width,depth,angle=0,role='effect')=>({type:'rect',x:p.x,z:p.z,width,depth,angle,role});
+export const AIM_ROTATION_STEP=Math.PI/12;
+export function rotateAimAngle(angle,steps){return ((finite(angle)+finite(steps)*AIM_ROTATION_STEP)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);}
+// Returns true only when the active placement consumes this wheel event.
+export function consumeAimRotation(event,handler){
+ if(!Number.isFinite(event?.deltaY)||event.deltaY===0||typeof handler!=='function'||!handler(Math.sign(event.deltaY)))return false;
+ event.preventDefault?.();event.stopPropagation?.();return true;
+}
 const terrainBlocked=(map,u,p,r=0,from=u)=>{if(!map)return false;if(u.flying)return !mapTileAt(map,p.x,p.z);const here=mapTileAt(map,from.x,from.z);return [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.7,r*.7],[-r*.7,r*.7],[r*.7,-r*.7],[-r*.7,-r*.7]].some(([dx,dz])=>{const tile=mapTileAt(map,p.x+dx,p.z+dz);return !tile||!tile.walkable||here&&Math.abs(tile.height-here.height)>1.2;});};
 
 // This builds read-only geometry descriptors. Movement previews operate on a
@@ -25,9 +32,15 @@ export function skillPreview({key,skill:s,hero,point,target,mode='hover',state={
  let valid=true,reason='',anchor={...u};
  const reject=text=>{if(valid){valid=false;reason=text;}};
  const effectTarget=target?.alive?target:{x:u.x+forward.x*Math.max(1.7,Math.min(finite(u.range,1.7),8)),z:u.z+forward.z*Math.max(1.7,Math.min(finite(u.range,1.7),8))};
- if(isGround){const castRange=finite(s.castRange,PREVIEW_RANGES.ground);shapes.push(circle(u,castRange,'range'));if(d>castRange+.001){if(s.directionOnly)notes.push('Alcance '+castRange.toLocaleString('pt-BR',{maximumFractionDigits:1})+' m');else if(s.moveIntoRange)notes.push('O construtor se aproxima para conjurar');else reject('Fora do alcance de lançamento');}const nativeMap=(state.options?.mode==='phasekiller'?PHASE_KILLER_MAP[state.phaseKiller?.dimension||'normal']:null)||state.treeTag?.map||(state.warlock?{minX:-state.warlock.mapRadius,maxX:state.warlock.mapRadius,minZ:-state.warlock.mapRadius,maxZ:state.warlock.mapRadius}:null),bounded=nativeMap?{x:Math.max(nativeMap.minX,Math.min(nativeMap.maxX,cursor.x)),z:Math.max(nativeMap.minZ,Math.min(nativeMap.maxZ,cursor.z))}:state.castleFight?.map?castlePoint(state.castleFight.map,cursor):limitPoint(game,u,cursor);if(!s.directionOnly&&(!bounded||distance(cursor,bounded)>.01))reject('Fora dos limites da arena');}
+ if(isGround){const castRange=finite(s.castRange,PREVIEW_RANGES.ground);shapes.push(circle(u,castRange,'range'));if(d>castRange+.001){if(s.previewShape==='wall')notes.push('Posição limitada ao alcance');else if(s.directionOnly)notes.push('Alcance '+castRange.toLocaleString('pt-BR',{maximumFractionDigits:1})+' m');else if(s.moveIntoRange)notes.push('O construtor se aproxima para conjurar');else reject('Fora do alcance de lançamento');}const nativeMap=(state.options?.mode==='phasekiller'?PHASE_KILLER_MAP[state.phaseKiller?.dimension||'normal']:null)||state.treeTag?.map||(state.warlock?{minX:-state.warlock.mapRadius,maxX:state.warlock.mapRadius,minZ:-state.warlock.mapRadius,maxZ:state.warlock.mapRadius}:null),bounded=nativeMap?{x:Math.max(nativeMap.minX,Math.min(nativeMap.maxX,cursor.x)),z:Math.max(nativeMap.minZ,Math.min(nativeMap.maxZ,cursor.z))}:state.castleFight?.map?castlePoint(state.castleFight.map,cursor):limitPoint(game,u,cursor);if(!s.directionOnly&&(!bounded||distance(cursor,bounded)>.01))reject('Fora dos limites da arena');}
  if(isTarget){shapes.push(circle(u,s.castRange??PREVIEW_RANGES.unit,'range'));anchor=mode==='aim'&&target?target:effectTarget;if(mode==='aim'&&(!target||!target.alive||target.id===u.id))reject('Escolha um alvo');if(target&&distance(u,target)>(s.castRange??PREVIEW_RANGES.unit))reject('Alvo fora do alcance');if(s.target==='enemy'&&target&&target.team===u.team)reject('Escolha um inimigo');shapes.push(circle(anchor,unitRadius(target||{})+.22,'target'));if(key==='chain'){shapes.push(circle(anchor,PREVIEW_RANGES.chain,'secondary'));notes.push('Saltos de até 6 m');}}
- if(s.previewShape==='line'){shapes.push({type:'corridor',x:u.x,z:u.z,length:finite(s.distance,finite(s.castRange,14)),radius:finite(s.radius,.35),angle,role:'effect'});}
+ if(s.previewShape==='wall'){
+  const reach=Math.min(d,finite(s.castRange,14));anchor={x:u.x+dx*reach,z:u.z+dz*reach};const length=finite(s.wallLength,7),thickness=finite(s.wallThickness,.7),wallAngle=finite(s.placementAngle);
+  // Rect width is perpendicular to facing; depth follows the wall tangent.
+  shapes.push(rect(anchor,thickness,length,wallAngle));
+  notes.push('Roda do mouse / botões: girar 15° · clique: conjurar · Esc: cancelar');
+ }
+ else if(s.previewShape==='line'){shapes.push({type:'corridor',x:u.x,z:u.z,length:finite(s.distance,finite(s.castRange,14)),radius:finite(s.radius,.35),angle,role:'effect'});}
  else if(['shockwave','forcepush','gungnir'].includes(key)){
   shapes.push({type:'corridor',x:u.x,z:u.z,length:key==='gungnir'?s.distance:12,radius:s.radius,angle,radial:true,role:'effect'});notes.push('Largura '+(s.radius*2).toLocaleString('pt-BR')+' m');
  }else if(['warlockfire','warlockfrost'].includes(key)){
