@@ -50,7 +50,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
  const url=new URL(request.url);if(!url.pathname.startsWith(PREFIX))return null;
  const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)return error(403,'Origin not allowed');
  const route=url.pathname.slice(PREFIX.length),method=request.method;
- const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST'};
+ const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST','characters/delete':'POST'};
  if(!own(methods,route))return error(404,'Unknown account route');if(method!==methods[route])return response({error:'Method not allowed'},405);
  if(!env?.DB?.prepare)return error(503,'Cloud account storage unavailable');const db=env.DB;
  try{
@@ -70,7 +70,12 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
    if(route==='account')return response({account:publicAccount(state,linked)});
    let extra={};
    if(route==='presets'){const next=presets(input.presets,state.cards);if(!next||!next.some(p=>p.id===input.activePreset))return error(400,'Invalid or locked card preset');state.presets=next;state.activePreset=input.activePreset;}
-   if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify(progress.warehouse.items)!==JSON.stringify(prior.items)))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=progress;}
+   if(route==='characters/delete'){
+    if(typeof input.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(input.id))return error(400,'Invalid character');
+    const progress=validateRoAccountProgress(state.progress||{version:1,characters:[]}),deleted=new Set(progress?.deletedCharacters||[]);if(!progress)return error(400,'Invalid account progress');deleted.add(input.id);
+    const next=validateRoAccountProgress({...progress,characters:progress.characters.filter(c=>c.id!==input.id),deletedCharacters:[...deleted]});if(!next)return error(400,'Character deletion history exceeds account limit');state.progress=next;
+   }
+   if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify(progress.warehouse.items)!==JSON.stringify(prior.items)))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=validateRoAccountProgress({...progress,deletedCharacters:[...new Set([...(state.progress?.deletedCharacters||[]),...(progress.deletedCharacters||[])])]});if(!state.progress)return error(400,'Character deletion history exceeds account limit');}
    if(route==='run'){if(input.activity!==undefined&&!['adventure','tower'].includes(input.activity))return error(400,'Invalid activity');state.run={id:crypto.randomUUID(),activity:input.activity==='tower'?'tower':'adventure',started:stamp,processed:[],count:0};extra.runId=state.run.id;}
    if(route==='rewards'){
     if(!Array.isArray(input.kills)||input.kills.length>40||input.kills.some(k=>!validKill(k)))return error(400,'Invalid monster reports');

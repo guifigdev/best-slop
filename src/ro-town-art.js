@@ -1,12 +1,28 @@
 import {RO_TOWN_SERVICE_TYPES} from '../shared/ro-town-services.js';
+import {RO_TOWN_NPC_MODELS} from './ro-town-npc-models.js';
 export const isRoTownNpc=o=>RO_TOWN_SERVICE_TYPES.includes(o?.type);
+const cache=new Map();
+// The people retain the actual client SPR silhouettes, costumes and palette.
+// Stalls are separate scenery, placed behind them so faces and clothing stay visible.
 export function roTownNpcParts(o){
- const parts=[],add=(x,y,z,w,h,d,c,a=0)=>parts.push([x,y,z,w,h,d,c,a]),kafra=o.type==='kafra',healer=o.type==='healer',smith=o.type==='blacksmith',coat=kafra?0x3e6696:healer?0xe5e7ce:smith?0x73533e:0x607b5b;
- add(0,.07,0,2.5,.14,2.3,0xb8aa80);add(-.18,.4,0,.27,.65,.35,0x4d413b);add(.18,.4,0,.27,.65,.35,0x4d413b);add(0,1.05,0,.75,.85,.5,coat);add(0,1.66,0,.48,.5,.45,0xe1b68d);add(0,1.94,.02,.55,.18,.49,kafra?0xd8d0b6:0x694c32);add(-.48,1.12,0,.22,.65,.3,coat);add(.48,1.12,0,.22,.65,.3,coat);
- if(kafra||healer){add(0,1.02,.28,.48,.75,.05,0xf0eed6);add(0,1.95,.02,.65,.11,.53,0xf5f0d6);add(0,1.45,.3,.18,.14,.08,0xb64f51);}
- if(kafra){for(const x of [-.55,.55])add(x,.5,-.7,.9,.7,.6,0x97723f);add(0,.85,-.7,1.9,.12,.7,0xc0a266);}
- else if(smith){add(.75,.65,.9,.7,.8,.65,0x504f52);add(.75,1.1,.9,1.1,.2,.55,0x8b8d8c);add(.75,1.05,.57,.35,.25,.3,0x727d80);add(-.75,.5,.7,.5,.7,.5,0x795d40);add(-.75,.87,.7,.36,.15,.37,0xf1ac49);}
- else if(!healer){add(0,.72,1.05,2.4,1.1,.65,0x806447);add(0,1.32,1.05,2.6,.15,.85,0xc2a570);for(const x of [-1.1,1.1])add(x,1.8,.2,.12,2.8,.12,0x745b3a);for(let i=0;i<6;i++)add(-1.05+i*.42,3.1,.4,.42,.15,2.5,i%2?0xddd1a5:o.type==='potionShop'?0x657d9b:0x956955);if(o.type==='potionShop')for(let i=0;i<5;i++){const x=-.9+i*.45;add(x,1.57,1.1,.22,.38,.22,i%2?0x74aebc:0xc16f65);add(x,1.81,1.1,.13,.12,.13,0xd9c59b);}else{add(-.6,1.56,1.1,.8,.18,.22,0xb9cbd0,-.5);add(.5,1.65,1.1,.6,.65,.18,0x889a9f);}}
- else{add(.65,1.3,.2,.18,1.7,.18,0xd3b56e);add(.65,1.94,.2,.5,.16,.18,0xece8b8);}
- return parts;
+ if(!isRoTownNpc(o))return [];if(cache.has(o.type))return cache.get(o.type);
+ const parts=RO_TOWN_NPC_MODELS[o.type].map(p=>[...p]),add=(x,y,z,w,h,d,c,a=0)=>parts.push([x,y,z,w,h,d,c,a]);
+ const wood=0x714d35,light=0xb28b59,dark=0x443b35;
+ if(o.type==='kafra'){
+  for(const x of [-.75,.75]){add(x,.3,-.75,.65,.55,.52,wood);add(x,.61,-.75,.7,.1,.57,light);for(const dx of [-.22,.22])add(x+dx,.3,-.75,.07,.6,.55,0x9c987c);add(x,.37,-.45,.14,.16,.04,0xc9b472);}
+  add(0,.6,-1.1,1.9,.12,.5,wood);
+ }else if(o.type==='blacksmith'){
+  add(.95,.24,.15,.5,.48,.48,dark);add(.95,.59,.15,.3,.45,.3,0x64636a);add(.95,.86,.15,.9,.18,.42,0xa5a4ab);add(1.5,.84,.15,.3,.13,.27,0x83838b);
+  add(-.75,.2,-.9,.75,.4,.6,wood);for(let i=0;i<3;i++)add(-1+i*.25,.48,-.9,.2,.13,.38,0x8d9da2);
+ }else if(o.type==='healer'){
+  add(.82,.08,-.45,.65,.16,.65,0x8d8c84);add(.82,.57,-.45,.28,.9,.28,0xb5b8af);add(.82,1.05,-.45,.7,.15,.7,0xd7d8ca);add(.82,1.13,-.45,.5,.06,.5,0x769eac);
+ }else{
+  const red=o.type==='potionShop'?0x687f9a:0x995f4f;
+  add(0,.67,-.94,2.3,1.18,.65,wood);add(0,1.3,-.94,2.5,.14,.86,light);
+  for(const x of [-1.12,1.12])add(x,1.6,-1.45,.11,3.2,.11,wood);
+  for(let i=0;i<8;i++){const x=-1.16+i*.33;add(x,3.18,-1,.33,.12,1.6,i%2?0xe8dec2:red);add(x,3.04,-.19,.33,.23,.08,i%2?0xe8dec2:red);}
+  if(o.type==='potionShop')for(let i=0;i<5;i++){const x=-.8+i*.4;add(x,1.53,-.94,.18,.29,.18,i%2?0x70b4d3:0xc55755);add(x,1.72,-.94,.1,.11,.1,0xcdb58a);}
+  else{add(-.6,1.51,-.94,.12,.55,.11,0xc0c6bf,-.65);add(-.6,1.39,-.9,.46,.07,.12,0xd9bf83);add(.5,1.6,-.94,.42,.52,.14,0x708b92);add(.5,1.6,-.85,.05,.36,.03,0xc8bc85);}
+ }
+ const frozen=Object.freeze(parts.map(p=>Object.freeze(p)));cache.set(o.type,frozen);return frozen;
 }

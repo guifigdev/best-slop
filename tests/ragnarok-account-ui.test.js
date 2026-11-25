@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {BonkMethods} from '../shared/bonk.js';
 import {createRoCheckpoint} from '../shared/ragnarok-save.js';
-import {createRagnarokAccountUI,normalizeRoAccount,mergeRoProgress,roAccountSelection,saveRoCharacter,RO_ACCOUNT_STORAGE_KEY} from '../src/ragnarok-account-ui.js';
+import {createRagnarokAccountUI,normalizeRoAccount,mergeRoProgress,roAccountSelection,saveRoCharacter,deleteRoCharacter,roCharacterGallery,RO_ACCOUNT_STORAGE_KEY} from '../src/ragnarok-account-ui.js';
 Object.assign(Game.prototype,BonkMethods);
 const token='ro_'+'a'.repeat(64),otherToken='ro_'+'b'.repeat(64);
 const empty=()=>({id:'cloud-a',cards:[],presets:[{id:'default',name:'Padrão',cards:{}}],activePreset:'default',progress:{version:1,characters:[],selectedCharacter:null}});
@@ -76,4 +76,21 @@ test('Tower reward batching requests the canonical activity and drains at 250ms 
    g.bonk.rewardKills=[{id:'one',visual:'poring'},{id:'two',visual:'poring'}];ui.update(g);await settle();await settle();assert.equal(service.calls.filter(c=>c.path==='rewards').length,1);stamp+=249;ui.update(g);await settle();assert.equal(service.calls.filter(c=>c.path==='rewards').length,1);stamp+=1;ui.update(g);await settle();await settle();assert.equal(service.calls.filter(c=>c.path==='rewards').length,activity==='tower'?2:1);
    assert.ok(service.calls.filter(c=>c.path==='rewards').every(c=>c.body.kills.length<=40));stamp+=2000;
   }}finally{Date.now=originalNow;}
+});
+
+
+test('Deleting a character frees a slot, preserves shared possessions and cannot be resurrected by a stale device',()=>{
+ const checkpoint=createRoCheckpoint(game());let full=null;for(let i=0;i<12;i++)full=saveRoCharacter(full,{id:'char-'+i,name:i===0?'Rune <b>':'Rune '+i,lineage:'dragonknight',checkpoint,updatedAt:i});
+ full.warehouse={version:1,revision:3,items:[]};const removed=deleteRoCharacter(full,'char-0');assert.equal(removed.characters.length,11);assert.deepEqual(removed.warehouse,full.warehouse);assert.equal(deleteRoCharacter(removed,'missing'),null);
+ for(const merged of [mergeRoProgress(full,removed),mergeRoProgress(removed,full)]){assert.equal(merged.characters.length,11);assert.ok(!merged.characters.some(c=>c.id==='char-0'));assert.deepEqual(merged.deletedCharacters,['char-0']);}
+ const newer=structuredClone(full);newer.characters[0].updatedAt=Date.now();assert.ok(!mergeRoProgress(removed,newer).characters.some(c=>c.id==='char-0'),'deletion also overrides a newer stale autosave');
+ assert.equal(saveRoCharacter(removed,{id:'char-0',lineage:'dragonknight',checkpoint}),null);const replacement=saveRoCharacter(removed,{id:'replacement',lineage:'dragonknight',checkpoint});assert.equal(replacement.characters.length,12);assert.deepEqual(replacement.deletedCharacters,['char-0']);
+ const account=normalizeRoAccount({cards:['poring'],progress:removed});assert.deepEqual(account.cards,['poring']);assert.deepEqual(account.progress.warehouse,full.warehouse);
+ const markup=roCharacterGallery(full,'char-0');assert.ok(markup.includes('Rune &lt;b&gt;'));assert.ok(markup.includes('data-ro-delete="char-0"'));assert.ok(markup.includes('Cavaleiro'));assert.ok(!markup.includes('<select'));assert.equal((markup.match(/data-ro-choose=/g)||[]).length,12);
+});
+
+
+test('A character deleted on another device is deselected and a new run receives a fresh savable ID',async()=>{
+ const g=game(),checkpoint=createRoCheckpoint(g),cached=empty();cached.progress=saveRoCharacter(null,{id:'deleted-elsewhere',lineage:'dragonknight',checkpoint});const cloud=structuredClone(cached);cloud.progress=deleteRoCharacter(cloud.progress,'deleted-elsewhere');
+ const ui=createRagnarokAccountUI({storage:storage({token,account:cached}),fetchImpl:backend(cloud).fetchImpl});await ui.loadReady();assert.equal(ui.selection().character,null);assert.notEqual(ui.selection().characterId,'deleted-elsewhere');const next=game();ui.prepareGame(next);assert.ok(await ui.save(next));assert.equal(ui.account().progress.characters.length,1);assert.ok(!ui.account().progress.characters.some(c=>c.id==='deleted-elsewhere'));
 });

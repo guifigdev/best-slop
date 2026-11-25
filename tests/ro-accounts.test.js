@@ -1,3 +1,6 @@
+import {Game} from '../shared/simulation.js';
+import {createRoCheckpoint} from '../shared/ragnarok-save.js';
+import {saveRoCharacter,deleteRoCharacter} from '../src/ragnarok-account-ui.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -113,5 +116,22 @@ test('shared Kafra revisions reject stale or conflicting saves without overwriti
   for(const warehouse of [{version:1,revision:0,items:[]},{version:1,revision:1,items:[]}])assert.equal((await f.request('progress',{token,body:{checkpoint:{...progress,warehouse}}})).status,409);
   const current=await(await f.request('account',{method:'GET',token})).json();assert.equal(current.account.progress.warehouse.items[0].refine,3);assert.equal(current.account.progress.warehouse.items.length,1);
   assert.equal((await f.request('progress',{token,body:{checkpoint:{...progress,warehouse:{version:1,revision:2,items:[]}}}})).status,200);
+ }finally{f.sqlite.close();}
+});
+
+
+test('character deletion survives stale and concurrent saves while retaining the shared warehouse and account cards',async()=>{
+ const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');const checkpoint=createRoCheckpoint(g),lineage=checkpoint.lineage;
+ const original=saveRoCharacter(null,{id:'departed',name:'Old',lineage,checkpoint});original.warehouse={version:1,revision:1,items:[{id:'kafra:gift',key:'knife',cards:[],refine:3,enchants:{damage:2}}]};const removed=deleteRoCharacter(original,'departed');
+ const f=fixture();try{const {token}=await account(f);assert.equal((await f.request('progress',{token,body:{checkpoint:original}})).status,200);f.conflict(1);assert.equal((await f.request('progress',{token,body:{checkpoint:removed}})).status,200);
+  const stale=await f.request('progress',{token,body:{checkpoint:original}});assert.equal(stale.status,200);const current=(await stale.json()).account;assert.deepEqual(current.progress.characters,[]);assert.deepEqual(current.progress.deletedCharacters,['departed']);assert.deepEqual(current.progress.warehouse,original.warehouse);assert.deepEqual(current.cards,[]);
+  assert.equal((await f.request('progress',{token,body:{checkpoint:{...removed,deletedCharacters:['../bad']}}})).status,400);
+ }finally{f.sqlite.close();}
+});
+
+
+test('explicit character deletion is idempotent and retains a cloud character missing from an older device',async()=>{
+ const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');const checkpoint=createRoCheckpoint(g),lineage=checkpoint.lineage;let progress=saveRoCharacter(null,{id:'old',lineage,checkpoint});progress=saveRoCharacter(progress,{id:'new-cloud-character',lineage,checkpoint});
+ const f=fixture();try{const {token}=await account(f);assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);for(let i=0;i<2;i++){const result=await f.request('characters/delete',{token,body:{id:'old'}});assert.equal(result.status,200);const state=(await result.json()).account;assert.deepEqual(state.progress.characters.map(c=>c.id),['new-cloud-character']);assert.deepEqual(state.progress.deletedCharacters,['old']);}assert.equal((await f.request('characters/delete',{token,body:{id:'../invalid'}})).status,400);
  }finally{f.sqlite.close();}
 });

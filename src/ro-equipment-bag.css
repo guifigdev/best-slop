@@ -41,3 +41,5 @@
 .ro-gear-element-bonuses{padding:0 0 0 13px;display:grid;gap:6px;font-size:11px;line-height:1.4;color:#c5dcc1}
 
 .ro-town-backdrop{padding:64px 16px 20px;box-sizing:border-box}.ro-town-window{max-height:calc(100dvh - 90px)}.ro-town-window button{background:#315448;color:#f2e6c7;border:1px solid #91aa80;border-radius:6px;font-family:inherit}.ro-town-window button:hover:not(:disabled){background:#48664b;border-color:#d8c080}.ro-town-window button:disabled{opacity:.5}.ro-town-stock .ro-town-item button,.ro-town-actions button{background:#ddc17c;color:#17392c;border-color:#eed49d}.ro-town-window>header{position:sticky;top:-14px;background:#15382e;z-index:3;padding-top:8px}.ro-town-window>header small{font-size:10px;letter-spacing:.07em;color:#d1bc85}body.hud-revamp .ro-town-window>.hud-drag-handle{top:7px;z-index:5}
+
+.ro-town-identity{display:flex;align-items:center;gap:16px;min-width:0}.ro-town-portrait{object-fit:contain;image-rendering:pixelated;flex:0 0 64px;max-height:80px}

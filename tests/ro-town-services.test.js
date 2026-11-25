@@ -1,3 +1,5 @@
+import {roTownNpcParts} from '../src/ro-town-art.js';
+import {RO_TOWN_NPC_MODELS} from '../src/ro-town-npc-models.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {createRoEquipment,roBagUsage,roEquipmentBonuses} from '../shared/ragnarok-equipment.js';
@@ -35,4 +37,9 @@ test('Sand Attack produces a bounded forward dust fan, stays world fixed and fad
 });
 test('real equipment cells use original client sprites; empty slots retain silhouettes',()=>{
  const item=createRoEquipment('knife','knife'),html=roEquipmentBagMarkup({roInventory:[item],roEquipment:{}});assert.match(html,/data-ro-item-icon="1201"/);assert.match(html,/ro-equipment-icons\/1201\.png/);assert.match(html,/data-bag-cell="29"/);
+});
+
+
+test('Town NPCs retain five distinct original sprite silhouettes as finite cached solid voxel models',()=>{
+ const silhouettes=new Set();for(const type of RO_TOWN_SERVICE_TYPES){const body=RO_TOWN_NPC_MODELS[type],parts=roTownNpcParts({type});assert.ok(body.length>800&&parts.length<1700);assert.equal(parts,roTownNpcParts({type}),'static NPC geometry is cached');assert.ok(parts.every(p=>p.slice(0,7).every(Number.isFinite)&&p.slice(3,6).every(n=>n>0)));assert.ok(Math.abs(Math.max(...body.map(p=>p[1]+p[4]/2))-2.5)<.001);silhouettes.add(JSON.stringify(body));}assert.equal(silhouettes.size,5);assert.deepEqual(roTownNpcParts({type:'chest'}),[]);
 });
