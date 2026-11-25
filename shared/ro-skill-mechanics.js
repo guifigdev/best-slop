@@ -47,8 +47,8 @@ export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
  const kind=roNativeZonePlan(weapon)?'zone':weapon?.kind,m=weapon?.mechanics||{},time=now(game);if(kind==='dash'&&m.retreat)return{ready:true,reasonCode:'ready',readyReason:'Pronta'};
  if(kind==='passive')return{ready:false,reasonCode:'passive',readyReason:'Passiva permanente'};
  if(kind==='heal'){
-  const health=unit.hp<unit.maxHp-.5,mana=m.manaPercent>0&&unit.mana<unit.maxMana-.5,ailment=m.cleanse&&((unit.bonkPoisonTicks||0)>0||unit.bonkWebUntil>time);
-  return health||mana||ailment?{ready:true,reasonCode:'ready',readyReason:'Pronta'}:{ready:false,reasonCode:'healthy',readyReason:'Vida e SP completos'};
+  const health=(m.healPercent>0||m.healFlat>0)&&unit.hp<unit.maxHp-.5,mana=m.manaPercent>0&&unit.mana<unit.maxMana-.5,ailment=m.cleanse&&((unit.bonkPoisonTicks||0)>0||(unit.bonkPoisonUntil||0)>time||m.cleanse!=='poison'&&unit.bonkWebUntil>time);
+  return health||mana||ailment?{ready:true,reasonCode:'ready',readyReason:'Pronta'}:{ready:false,reasonCode:'healthy',readyReason:m.cleanse==='poison'?'Você não está envenenado':'Vida e SP completos'};
  }
  if(kind==='buff'){
   if((unit.roSkillBuffs||[]).some(b=>b.key===weapon.key&&b.until>time))return{ready:false,reasonCode:'active',readyReason:'Efeito ativo'};
@@ -64,7 +64,7 @@ export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
  return null;
 }
 
-function cleanse(unit,time){unit.bonkPoisonTicks=0;unit.bonkPoisonUntil=time;unit.bonkWebUntil=time;unit.webbedUntil=0;}
+function cleanse(unit,time,kind){unit.bonkPoisonTicks=0;unit.bonkPoisonUntil=time;if(unit.dots?.poison)delete unit.dots.poison;if(kind!=='poison'){unit.bonkWebUntil=time;unit.webbedUntil=0;}}
 
 /** Returns null for ordinary attacks. SP and cooldown are owned by the caller. */
 export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
@@ -74,7 +74,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
  if(kind==='heal'){
   unit.hp=Math.min(unit.maxHp,unit.hp+Math.max(0,finite(m.healFlat))*scale+unit.maxHp*clamp(m.healPercent,0,.5)*scale);
   if(m.manaPercent)unit.mana=Math.min(unit.maxMana,unit.mana+unit.maxMana*clamp(m.manaPercent,0,.35)*scale);
-  if(m.cleanse)cleanse(unit,time);
+  if(m.cleanse)cleanse(unit,time,m.cleanse);
   emit(api,'heal',unit,{source:unit.id,target:unit.id,radius:2,duration:.65,skillKey:weapon.key});return true;
  }
  if(kind==='buff'){
@@ -83,7 +83,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   if(unit.roSkillBuffs.length>=RO_SKILL_EFFECT_LIMITS.buffs)unit.roSkillBuffs.shift();
   unit.roSkillBuffs.push({key:weapon.key,until:time+duration,level,modifiers,...(m.status||m.proc?{weapon,level}: {})});
   if(m.shieldPercent){const amount=unit.maxHp*clamp(m.shieldPercent*scale,0,.45);unit.roSkillShield={value:Math.max(unit.roSkillShield?.until>time?unit.roSkillShield.value:0,amount),until:time+duration};}
-  if(m.cleanse)cleanse(unit,time);
+  if(m.cleanse)cleanse(unit,time,m.cleanse);
   if(m.healPercent||m.healFlat)unit.hp=Math.min(unit.maxHp,unit.hp+unit.maxHp*clamp(m.healPercent,0,.25)+Math.max(0,finite(m.healFlat)));
   if(m.manaPercent)unit.mana=Math.min(unit.maxMana,unit.mana+unit.maxMana*clamp(m.manaPercent,0,.35));
   if(m.allyRadius)for(const ally of game.units||[])if(ally!==unit&&ally.bonkHero&&ally.alive&&ally.team===unit.team&&distance(unit,ally)<=m.allyRadius){
@@ -148,7 +148,7 @@ export function applyRoSkillHit(game,unit,enemy,weapon,level,api={}){
    if(m.proc){const element=m.proc.element||'arcane';api.damage?.(enemy,Math.max(0,finite(m.proc.damage))*factor(buff.level),element,true);emit(api,element==='fire'?'fireball':element==='ice'?'frostnova':'bolt',enemy,{source:unit.id,target:enemy.id,radius:1.5,duration:.35,skillKey:buff.key});}
   }
   let count=0;for(const [key,learned]of Object.entries(unit.bonkBuild?.weapons||{})){
-   const passive=RO_SKILLS[key],p=passive?.mechanics;if(passive?.kind!=='passive'||!p||!p.status&&!p.proc||count++>=8)continue;
+   const passive=RO_SKILLS[key],p=passive?.mechanics;if(passive?.kind!=='passive'||!p||p.proc?.type==='doubleAttack'||!p.status&&!p.proc||count++>=8)continue;
    const ready=(unit.roPassiveProcAt||={});if((ready[key]||0)>time)continue;
    const chance=clamp(p.proc?.chance??p.chance??.15,0,.45);if((game.random?.()??.5)>=chance)continue;
    ready[key]=time+clamp(p.proc?.cooldown||p.procCooldown||1.5,1,8);

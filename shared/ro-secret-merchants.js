@@ -1,3 +1,4 @@
+import {roHasSecretMerchant} from './ro-region-services.js';
 import {RO_BUILD_EQUIPMENT} from './ro-build-equipment.js';
 import {RO_BAG_CAPACITY,roBagUsage,createRoEquipment,roReceiveEquipment} from './ragnarok-equipment.js';
 import {bonkBlocked} from './bonk-level.js';
@@ -20,7 +21,7 @@ export function roMerchantReachableCells(map){
  return queue.map(point);
 }
 export function generateRoSecretMerchants(map){
- if(!map||map.tower)return[];const seed=map.seed>>>0,cells=roMerchantReachableCells(map);
+ if(!map||map.tower||!roHasSecretMerchant(map))return[];const seed=map.seed>>>0,cells=roMerchantReachableCells(map);
  const candidates=cells.filter(p=>distance(p,map.spawn)>32&&!bonkBlocked(map,p,3.1)&&!(map.objects||[]).some(o=>distance(o,p)<8)&&(map.paths||[]).every(path=>pathDistance(p,path)>Math.max(14,(path.width||12)/2+7)));
  candidates.sort((a,b)=>hash(seed,Math.round(a.x+111)*89+Math.round(a.z+111))-hash(seed,Math.round(b.x+111)*89+Math.round(b.z+111)));
  const p=candidates[0];if(!p)return[];

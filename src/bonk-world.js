@@ -8,6 +8,7 @@ import {roTowerArchitectureParts,RO_TOWER_PALETTE} from './ro-tower-art.js';
 import {createPixelTerrainMaterial,pixelTerrainForRegion,PIXEL_TERRAIN_SURFACES} from './pixel-terrain.js';
 import {createRoNatureArt} from './ro-nature-art.js';
 import {roRegionPropPool} from '../shared/ro-regional-props.js';
+import {roMvpDomainParts} from './ro-mvp-domain-art.js';
 import {createRoGroundAreaArt} from './ro-ground-area-art.js';
 import {roProjectileParts,RO_PROJECTILE_ART_BUDGET} from './ro-projectile-art.js';
 import {bonkEquipmentPickupParts,bonkEquipmentGlints} from './bonk-equipment-art.js';
@@ -54,6 +55,7 @@ export function createBonkWorld({scene,coatMaterial=material=>material}){
   const toyModels=architecture.userData.toyFactoryModels={};
   let foliageAnchor=null;const box=(x,y,z,w,h,depth,c,angle=0)=>put(architecture,a++,x,bonkHeightAt(map,x,z)+y,z,w,h,depth,c,angle),leaf=(x,y,z,w,h,depth,c)=>{const index=l++,ground=bonkHeightAt(map,x,z),anchor=foliageAnchor||[x,z,ground,Math.max(1,y)];put(leaves,index,x,ground+y,z,w,h,depth,c);leaves.geometry.attributes.foliageRoot.setXYZW(index,...anchor);},detail=(x,y,z,w,h,depth,c,angle=0)=>put(details,d++,x,bonkHeightAt(map,x,z)+y,z,w,h,depth,c,angle);
   for(const [i,o]of map.decorations.entries()){foliageAnchor=['tree','palm'].includes(o.type)?[o.x,o.z,bonkHeightAt(map,o.x,o.z)+o.h*.35,o.h*.85]:null;if(o.type==='tree')treeEmitters.push({id:o.id||'tree-'+i,radius:Math.max(.8,(o.scale||1)*1.3),x:o.x,z:o.z,y:bonkHeightAt(map,o.x,o.z)+o.h*.9,height:o.h*.9,seed:i+map.seed});
+   if(o.type==='mvp-domain-prop'){const ground=bonkHeightAt(map,o.x,o.z),yaw=o.yaw||0,cos=Math.cos(yaw),sin=Math.sin(yaw);for(const [dx,y,dz,w,h,depth,c,angle=0,lit]of roMvpDomainParts(o.domain,o.variant)){const x=o.x+dx*cos+dz*sin,z=o.z-dx*sin+dz*cos;if(lit)put(lights,k++,x,ground+y,z,w,h,depth,c,angle+yaw);else put(architecture,a++,x,ground+y,z,w,h,depth,c,angle+yaw);}continue;}
    if(style==='toy-factory'){const toy=roToyFactoryParts(o,i);if(toy){const ground=bonkHeightAt(map,o.x,o.z),yaw=o.yaw||0,cos=Math.cos(yaw),sin=Math.sin(yaw);toyModels[toy.kind]=(toyModels[toy.kind]||0)+1;for(const [dx,y,dz,w,h,depth,c,angle=0,lit]of toy.parts){const x=o.x+dx*cos+dz*sin,z=o.z-dx*sin+dz*cos;if(lit)put(lights,k++,x,ground+y,z,w,h,depth,c,angle+yaw);else put(architecture,a++,x,ground+y,z,w,h,depth,c,angle+yaw);}continue;}}
    if(o.type==='scenery'){
     const ground=bonkHeightAt(map,o.x,o.z);for(const [dx,y,dz,w,h,depth,c,angle,lit]of (roRouteSceneryParts(style,Number(o.id?.split('-').at(-1))||0,p)||bonkSceneryParts(o.model,p,i))){if(lit)put(lights,k++,o.x+dx,ground+y,o.z+dz,w,h,depth,c,angle);else put(architecture,a++,o.x+dx,ground+y,o.z+dz,w,h,depth,c,angle);}

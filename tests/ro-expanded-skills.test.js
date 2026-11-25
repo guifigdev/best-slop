@@ -80,6 +80,7 @@ test('every included active executes through the dispatcher and passives change 
   if(s.kind==='passive'){
    const stats=bonkStats(u);assert.ok(Object.values(stats).filter(v=>typeof v==='number').every(Number.isFinite),s.key);if(s.mechanics.companion||s.mechanics.companionMastery){const training=s.mechanics.companion?s.key:s.mechanics.companionMastery==='falcon'?'ht_falcon':'ra_wugmastery';u.bonkBuild.weapons[training]=1;tickRoSkillEffects(g,u,.1);assert.ok(g.bonk.roSkillSummons.some(p=>p.persistent&&p.source===u.id&&p.companion===(s.mechanics.companion||s.mechanics.companionMastery)),s.key);}else assert.ok(s.mechanics.proc||s.mechanics.status||Object.keys(s.mechanics.modifiers||{}).length,s.key);continue;
   }
+  if(s.mechanics?.cleanse==='poison')u.bonkPoisonUntil=g.bonk.elapsed+10;
   if(s.kind==='mount'){u.roMountSkill=s.key;u.roMountKnown=[s.key];}
   assert.equal(g.command('p',{type:'bkCast',key:s.key}),true,`${s.sourceAegis} (${s.kind}) failed: ${g.commandFailureReason}`);
   if(s.kind==='mount'){assert.equal(u.roMountSkill,null);assert.equal(u.mana,5000);continue;}

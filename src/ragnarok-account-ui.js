@@ -52,7 +52,7 @@ export function saveRoCharacter(progress,{id,name,lineage,checkpoint,warehouse,u
 export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getState=()=>null,toast=()=>{},onCardDrop=()=>{},onConfirmCharacter=()=>false,onChange=()=>{},fetchImpl=globalThis.fetch?.bind(globalThis),storage}={}){
  if(storage===undefined){try{storage=globalThis.localStorage;}catch{storage=null;}}
  let cache={};try{cache=JSON.parse(storage?.getItem(RO_ACCOUNT_STORAGE_KEY)||'{}')||{};}catch{}
- let token=typeof cache.token==='string'&&/^ro_[a-f0-9]{64}$/.test(cache.token)?cache.token:null,account=normalizeRoAccount(cache.account),host=null,ready=null,status='loading',notice='',epoch=0,queue=Promise.resolve(),selectedId=account.progress.selectedCharacter||uuid(),lineage='dragonknight',characterName='',activity=cache.activity==='tower'?'tower':'adventure',skillMode=cache.skillMode==='class'?'class':'mixed',difficulty=roDifficulty(cache.difficulty).key,resume=false,recoveryVisible=false,presetDirty=!!cache.presetDirty,selectionTouched=false,running=null,rewardBusy=false,lastRewardAt=0,lastSaveAt=0,lastFloor='',lastRoute='',lastLevel=0,lastDeath=0,pendingSave=false,nextReconnectAt=0;
+ let token=typeof cache.token==='string'&&/^ro_[a-f0-9]{64}$/.test(cache.token)?cache.token:null,account=normalizeRoAccount(cache.account),host=null,ready=null,status='loading',notice='',epoch=0,queue=Promise.resolve(),selectedId=account.progress.selectedCharacter||uuid(),lineage='dragonknight',characterName='',activity=cache.activity==='tower'?'tower':'adventure',skillMode=cache.skillMode==='class'?'class':'mixed',difficulty=roDifficulty(cache.difficulty).key,resume=false,recoveryVisible=false,presetDirty=!!cache.presetDirty,selectionTouched=false,running=null,rewardBusy=false,lastRewardAt=0,lastSaveAt=0,lastFloor='',lastRoute='',lastLevel=0,lastDeath=0,lastRefine=null,lastBlessingDrop=null,pendingSave=false,nextReconnectAt=0;
  const stored=()=>{try{storage?.setItem(RO_ACCOUNT_STORAGE_KEY,JSON.stringify({token,account,activity,skillMode,difficulty,presetDirty}));}catch{notice='Armazenamento local indisponível neste navegador.';}};
  let deleteCandidate=null,deleting=false,confirming=false;
  async function confirmDelete(){if(deleting||!deleteCandidate)return false;const id=deleteCandidate,next=deleteRoCharacter(account.progress,id);if(!next)return false;const version=epoch;deleting=true;deleteCandidate=null;account.progress=next;if(running?.characterId===id)running=null;if(selectedId===id){selectedId=next.selectedCharacter||uuid();const c=selectedCharacter();if(c){lineage=c.lineage;characterName=c.name;}else characterName='';resume=false;}selectionTouched=true;notify();let synced=false;
@@ -95,7 +95,7 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   if(!online)hero.roWarehouse=clone(account.progress.warehouse||{version:1,revision:0,items:[]});
   if(!online)hero.roSkillMode=game.options.bonkSkillMode==='class'?'class':'mixed';
   if(!online)localCommand(game,{type:'bkCards',cards:clone(preset().cards)});
-  const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastDeath=hero.roDeathCount||0;lastFloor='';lastRoute='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
+  const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastBlessingDrop=hero.roBlessingDropId??null;lastRefine=hero.roRefineResult?.id??null;lastDeath=hero.roDeathCount||0;lastFloor='';lastRoute='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
   void loadReady().then(()=>startRun(run));
   return true;
  }
@@ -113,9 +113,11 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   if(!running||running.game!==game||!game?.bonk)return;const hero=game.units.find(u=>u.bonkHero),floor=`${game.bonk.activity}:${game.bonk.clearedStages.length}:${game.bonk.stage}`;
   const route=game.bonk.routeVersion>=1?`${game.bonk.routeIndex}:${Number(game.bonk.routeBossDefeated)}`:'';const routeChanged=!!route&&route!==lastRoute;lastRoute=route;
   if(hero&&(floor!==lastFloor||hero.level!==lastLevel||routeChanged)){pendingSave=true;lastFloor=floor;lastLevel=hero.level;}
+  const blessingChanged=hero?.roBlessingDropId!=null&&hero.roBlessingDropId!==lastBlessingDrop;if(blessingChanged){lastBlessingDrop=hero.roBlessingDropId;pendingSave=true;toast('Bênção do Ferreiro +1 recebida do MVP. Use no refino ou guarde na Kafra.');}
+  const refineChanged=hero?.roRefineResult?.id!=null&&hero.roRefineResult.id!==lastRefine;if(refineChanged){lastRefine=hero.roRefineResult.id;pendingSave=true;}
   const deathChanged=!!hero&&(hero.roDeathCount||0)!==lastDeath;if(deathChanged){lastDeath=hero.roDeathCount||0;pendingSave=true;toast('Você morreu: os itens da mochila foram perdidos. Equipamentos vestidos e armazém preservados.');}
   const warehouseRevision=hero?.roWarehouse?.revision||0;if(warehouseRevision!==(account.progress.warehouse?.revision||0))pendingSave=true;
-  if(deathChanged||warehouseRevision!==(account.progress.warehouse?.revision||0)||routeChanged||time-lastSaveAt>=15000)void save(game);
+  if(blessingChanged||refineChanged||deathChanged||warehouseRevision!==(account.progress.warehouse?.revision||0)||routeChanged||time-lastSaveAt>=15000)void save(game);
   if(status==='cloud'&&!running.id)void startRun(running);
   if(status!=='cloud'||!running.id||rewardBusy||time-lastRewardAt<(running.activity==='tower'?250:1000))return;const kills=(game.bonk.rewardKills||[]).slice(0,40).map(k=>({id:String(k.id),visual:k.visual,boss:!!k.boss}));if(!kills.length)return;
   const rewardPoints=new Map((game.bonk.rewardKills||[]).map(k=>[String(k.id),{x:k.x,z:k.z}])),run=running,version=epoch;rewardBusy=true;lastRewardAt=time;

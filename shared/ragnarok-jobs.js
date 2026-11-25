@@ -26,7 +26,7 @@ export const RO_LINEAGES=Object.freeze(Object.fromEntries([
 export const roLineage=key=>typeof key==='string'&&Object.hasOwn(RO_LINEAGES,key)?RO_LINEAGES[key]:RO_LINEAGES.dragonknight;
 export const roJob=(lineage,tier=0)=>{const p=roLineage(lineage),i=Math.max(0,Math.min(3,Math.floor(tier)||0));return {key:p.jobs[i],name:p.names[i],tier:i,lineage:p.key,next:p.names[i+1]||null};};
 const spell=(key,name,tier,skill,description,profile)=>Object.freeze({key,name,tier,skill,description,...profile});
-export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...RO_COMPANION_SKILLS,tf_double:RO_DOUBLE_ATTACK_SKILL,...Object.fromEntries([
+export const RO_SKILLS=localizeRoSkills({...RO_NATURE_SKILLS,...RO_EXPANDED_SKILLS,...RO_COMPANION_SKILLS,tf_double:RO_DOUBLE_ATTACK_SKILL,tf_detoxify:{...RO_EXPANDED_SKILLS.tf_detoxify,description:'Remove o envenenamento. Não recupera vida nem remove lentidão.',mechanics:{cleanse:'poison'}},...Object.fromEntries([
  spell('bash','Bash',0,'cleave','Golpe concentrado à frente.',attack('slash','physical',35,1.5,6)),
  spell('bowlingbash','Bowling Bash',1,'shockwave','Impacto amplo que abre espaço na horda.',attack('pulse','physical',42,2.8,7)),
  spell('dragonbreath','Dragon Breath',2,'fireball','Sopro ardente com explosão e queimadura.',attack('projectile','fire',40,2.2,25,{speed:19,radius:4.5,pierce:3})),
