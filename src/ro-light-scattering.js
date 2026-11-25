@@ -33,13 +33,30 @@ void main(){if(fireCount>0){float depth=texture2D(tDepth,vUv).x;vec4 viewEnd=inv
 const compositeFragment=`uniform sampler2D tScene;uniform sampler2D tRays;uniform sampler2D tDepth;uniform vec2 sunUv;uniform vec2 aspectScale;uniform vec2 pixelGrid;uniform float pixelStrength;uniform vec3 sunColor;uniform float scattering;uniform float halo;uniform float cinematic;uniform float smoothing;uniform float outlines;uniform float outlineStrength;uniform vec2 texelSize;varying vec2 vUv;
 ${RO_ATLAS_GRADE_GLSL}
 
+// Reconstruct only ink coverage. Scene color keeps its own pixel sampling.
+float inkMask(vec2 at,float radius){float center=texture2D(tDepth,at).r;float edge=0.0;for(int j=0;j<4;j++){vec2 dir=j==0?vec2(1.0,0.0):j==1?vec2(-1.0,0.0):j==2?vec2(0.0,1.0):vec2(0.0,-1.0);float d=texture2D(tDepth,at+dir*texelSize*radius).r;edge=max(edge,abs(d-center)/max(0.00003,1.0-center));}return smoothstep(0.025,0.10,edge);}
+float inkCoverage(vec2 at,float radius){
+ float center=texture2D(tDepth,at).r;vec4 contrast;float reach=radius+0.75;
+ contrast.x=abs(texture2D(tDepth,at+vec2(texelSize.x*reach,0.0)).r-center);
+ contrast.y=abs(texture2D(tDepth,at-vec2(texelSize.x*reach,0.0)).r-center);
+ contrast.z=abs(texture2D(tDepth,at+vec2(0.0,texelSize.y*reach)).r-center);
+ contrast.w=abs(texture2D(tDepth,at-vec2(0.0,texelSize.y*reach)).r-center);
+ contrast=clamp(contrast/max(0.00003,1.0-center),0.0,1.0);
+ // Flat regions use five depth reads, as before. Only a narrow contour band
+ // needs the two subpixel masks; the complete frame is never supersampled.
+ if(max(max(contrast.x,contrast.y),max(contrast.z,contrast.w))<0.025)return 0.0;
+ vec2 normal=vec2(contrast.x-contrast.y,contrast.z-contrast.w);float magnitude=length(normal);
+ normal=magnitude>0.001?normal/magnitude:vec2(0.70710678);
+ vec2 offset=normal*texelSize*0.42;
+ return 0.5*(inkMask(at-offset,radius)+inkMask(at+offset,radius));
+}
+
 void main(){vec2 uv=pixelGrid.x>0.0?(floor(vUv*pixelGrid)+0.5)/pixelGrid:vUv;vec4 base=texture2D(tScene,uv);vec3 color=base.rgb;
 if(smoothing>0.0){vec3 n=texture2D(tScene,uv+vec2(0.0,texelSize.y)).rgb;vec3 s=texture2D(tScene,uv-vec2(0.0,texelSize.y)).rgb;vec3 e=texture2D(tScene,uv+vec2(texelSize.x,0.0)).rgb;vec3 w=texture2D(tScene,uv-vec2(texelSize.x,0.0)).rgb;vec3 luma=vec3(0.299,0.587,0.114);float ln=dot(n,luma),ls=dot(s,luma),le=dot(e,luma),lw=dot(w,luma);float contrast=max(max(ln,ls),max(le,lw))-min(min(ln,ls),min(le,lw));float edge=smoothstep(0.035,0.16,contrast);vec3 neighbours=abs(ln-ls)>abs(le-lw)?(e+w)*0.5:(n+s)*0.5;color=mix(color,neighbours,edge*0.35);}
 
 if(scattering>0.0){float shafts=texture2D(tRays,uv).r;vec2 delta=(uv-sunUv)*aspectScale;float visible=step(0.99997,texture2D(tDepth,uv).x);float glow=exp(-dot(delta,delta)*125.0)*visible;float foreground=mix(0.34,1.0,visible);color+=sunColor*(shafts*scattering*foreground+glow*halo);}
 if(cinematic>0.0){color=(color-0.18)*(1.0+0.025*cinematic)+0.18;float vignette=smoothstep(0.24,0.78,length((vUv-0.5)*vec2(1.0,0.86)));color*=1.0-vignette*0.055*cinematic;}
-if(outlines>0.5&&outlineStrength==1.0){float center=texture2D(tDepth,uv).r;float edge=0.0;for(int j=0;j<4;j++){vec2 dir=j==0?vec2(1.0,0.0):j==1?vec2(-1.0,0.0):j==2?vec2(0.0,1.0):vec2(0.0,-1.0);float d=texture2D(tDepth,uv+dir*texelSize*1.5).r;edge=max(edge,abs(d-center)/max(0.00003,1.0-center));}color*=1.0-smoothstep(0.025,0.10,edge)*0.65;}
-else if(outlines>0.5&&outlineStrength>0.0){float center=texture2D(tDepth,uv).r;float edge=0.0;for(int j=0;j<4;j++){vec2 dir=j==0?vec2(1.0,0.0):j==1?vec2(-1.0,0.0):j==2?vec2(0.0,1.0):vec2(0.0,-1.0);float d=texture2D(tDepth,uv+dir*texelSize*1.5*clamp(outlineStrength,0.5,2.0)).r;edge=max(edge,abs(d-center)/max(0.00003,1.0-center));}color*=1.0-smoothstep(0.025,0.10,edge)*min(0.96,0.65*outlineStrength);}
+if(outlines>0.5&&outlineStrength>0.0){float coverage=inkCoverage(vUv,1.5*clamp(outlineStrength,0.5,2.0));color*=1.0-coverage*min(0.96,0.65*outlineStrength);}
 
 gl_FragColor=vec4(max(color,vec3(0.0)),base.a);
 #include <tonemapping_fragment>
@@ -79,7 +96,7 @@ export function createRoLightScattering({renderer,scene,camera}){
    if(volumetric){const shadow=options.shadowLight.shadow;rayUniforms.tShadow.value=shadow.map?.texture||null;rayUniforms.lightMatrix.value.copy(shadow.matrix);if(!rayUniforms.tShadow.value){raysActive=false;compositeUniforms.scattering.value=0;reason='shadow-unavailable';}}
    if(raysActive){quad.material=rayMaterial;renderer.setRenderTarget(rayTarget);renderer.render(postScene,postCamera);}
    quad.material=compositeMaterial;renderer.setRenderTarget(previousTarget,previousFace,previousMip);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(previousScissorTest);renderer.render(postScene,postCamera);
-   report={active:true,raysActive,preset,reason,quality:low?'low':'high',samples:raysActive?rayUniforms.sampleCount.value:0,renderTargets:2,extraDrawCalls:raysActive?2:1,sceneDrawCalls,estimatedBytes:dimensions.width*dimensions.height*(12+msaa*12)+dimensions.rayWidth*dimensions.rayHeight*4,...dimensions,sunUv:rayUniforms.sunUv.value.toArray(),intensity:raysActive?intensity:0,pixelStrength,pixelGrid:compositeUniforms.pixelGrid.value.toArray(),nativeResolution:dimensions.width===size.x&&dimensions.height===size.y,msaa};return true;
+   report={active:true,raysActive,preset,reason,quality:low?'low':'high',samples:raysActive?rayUniforms.sampleCount.value:0,renderTargets:2,extraDrawCalls:raysActive?2:1,sceneDrawCalls,estimatedBytes:dimensions.width*dimensions.height*(12+msaa*12)+dimensions.rayWidth*dimensions.rayHeight*4,...dimensions,sunUv:rayUniforms.sunUv.value.toArray(),intensity:raysActive?intensity:0,pixelStrength,pixelGrid:compositeUniforms.pixelGrid.value.toArray(),nativeResolution:dimensions.width===size.x&&dimensions.height===size.y,outlineAA:compositeUniforms.outlines.value>0.5&&compositeUniforms.outlineStrength.value>0?'coverage-2x':'off',msaa};return true;
   }catch{failed=true;return inactive('render-error',preset);}finally{renderer.setRenderTarget(previousTarget,previousFace,previousMip);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(previousScissorTest);renderer.autoClear=previousAutoClear;renderer.toneMapping=previousTone;renderer.toneMappingExposure=previousExposure;renderer.outputColorSpace=previousOutput;if(renderer.info)renderer.info.autoReset=infoAutoReset;}
  },stats(){return{...report,sunUv:[...report.sunUv]};},dispose(){if(disposed)return;disposed=true;colorTarget?.dispose();rayTarget?.dispose();geometry.dispose();rayMaterial.dispose();compositeMaterial.dispose();postScene.clear();report={...report,active:false,raysActive:false,reason:'disposed',renderTargets:0,extraDrawCalls:0,sceneDrawCalls:0,estimatedBytes:0};}};
 }

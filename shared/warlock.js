@@ -7,6 +7,11 @@ import {unitFootprintRadius,unitContactFraction} from './unit-footprint.js';
 import {generateWarlockIslands,warlockSafeGround,warlockNearestGround} from './warlock-ground.js';
 
 const SCALE=REF.worldScale,TAU=Math.PI*2,dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),own=(o,k)=>typeof k==='string'&&Object.hasOwn(o,k);
+export const WARLOCK_LAVA_FEEDBACK_INTERVAL=.6;
+function flushLavaFeedback(game,target,force=false){
+ const amount=target.wlLavaDamagePending||0;if(!(amount>0)||!force&&game.time+1e-8<(target.wlLavaDamageNextAt||0))return;
+ game.fx('damage',target.x,target.z,{target:target.id,amount:Math.round(amount*10)/10,magic:true,element:'fire',warlock:true,warlockLava:true});target.wlLavaDamagePending=0;target.wlLavaDamageNextAt=game.time+WARLOCK_LAVA_FEEDBACK_INTERVAL;
+}
 const itemLevel=(u,key)=>u.inventory?.find(i=>i?.key===key)?.level||0;
 const casters=game=>game.units.filter(u=>u.warlockCharacter&&!u.wlGhost),alive=game=>casters(game).filter(u=>u.alive),opponents=(game,u)=>alive(game).filter(v=>v.team!==u.team);
 const segmentDistance=(p,a,b)=>{const dx=b.x-a.x,dz=b.z-a.z,l=dx*dx+dz*dz,t=l?clamp(((p.x-a.x)*dx+(p.z-a.z)*dz)/l,0,1):0;return Math.hypot(p.x-a.x-t*dx,p.z-a.z-t*dz);};
@@ -30,7 +35,7 @@ function movePoint(game,u,p,sweepBodies=false){
  for(const pillar of game.warlock.pillars.filter(v=>v.alive)){const radius=pillar.radius+body,dx=x-pillar.x,dz=z-pillar.z,d=Math.hypot(dx,dz);if(d<radius){const length=d||1;u.x=pillar.x+dx/length*radius;u.z=pillar.z+dz/length*radius;return;}}
  u.x=x;u.z=z;
 }
-function hit(game,source,target,amount,dx=0,dz=0,knock=1,element='arcane'){
+function hit(game,source,target,amount,dx=0,dz=0,knock=1,element='arcane',lavaFeedback=false){
  if(!target?.alive||target.wlGhost||!(amount>0))return 0;
  const warden=.4*(itemLevel(target,'warden')+itemLevel(source||{},'warden'));amount=Math.max(0,amount-warden);
  if((target.wlRushUntil||0)>game.time&&target.wlRushPool>0){const absorb=Math.min(amount*.5,target.wlRushPool);target.wlRushPool-=absorb;amount-=absorb;target.wlRushSpeed=(target.wlRushSpeed||0)+absorb*15*SCALE;}
@@ -43,8 +48,8 @@ function hit(game,source,target,amount,dx=0,dz=0,knock=1,element='arcane'){
   source.hp=Math.min(source.maxHp,source.hp+stolen);
   source.damagePoints=Math.max(0,(source.damagePoints||0)-stolen*.5);
  }
- game.fx('damage',target.x,target.z,{source:source?.id,target:target.id,amount:Math.round(actual*10)/10,magic:true,element,warlock:true});
- if(target.hp<=0){target.alive=false;target.died=game.time;target.destination=null;target.channel=null;game.fx('death',target.x,target.z,{target:target.id,source:source?.id,warlock:true});if(source&&source!==target){source.kills++;source.gold+=REF.killGold;}}
+ if(lavaFeedback){const pending=target.wlLavaDamagePending||0;if(!(pending>0)&&!(target.wlLavaDamageNextAt>game.time))target.wlLavaDamageNextAt=game.time+WARLOCK_LAVA_FEEDBACK_INTERVAL;target.wlLavaDamagePending=pending+actual;flushLavaFeedback(game,target,target.hp<=0);}else game.fx('damage',target.x,target.z,{source:source?.id,target:target.id,amount:Math.round(actual*10)/10,magic:true,element,warlock:true});
+ if(target.hp<=0){flushLavaFeedback(game,target,true);target.alive=false;target.died=game.time;target.destination=null;target.channel=null;game.fx('death',target.x,target.z,{target:target.id,source:source?.id,warlock:true});if(source&&source!==target){source.kills++;source.gold+=REF.killGold;}}
  return actual;
 }
 function field(game,u,key,family,point,radius,duration,extra={}){const entry={id:game.id(),key,skill:key,family,source:u.id,owner:u.owner,team:u.team,x:point.x,z:point.z,radius,until:game.time+duration,...extra};game.warlock.fields.push(entry);return entry;}
@@ -156,7 +161,7 @@ export const WarlockMethods={
  finishWarlockRound(){
   const w=this.warlock;if(w.phase!=='battle')return;const survivors=alive(this),winner=survivors.length===1?survivors[0]:null;
   if(winner)winner.score++;w.lastResult={round:w.round,at:this.time,winner:winner?{owner:winner.owner,name:winner.name,character:winner.warlockCharacter}:null};w.resultUntil=this.time+POLISH.arena.resultDuration;const results=casters(this).map(u=>({owner:u.owner,name:u.name,hp:u.hp,score:u.score,alive:u.alive}));w.results=results;
-  for(const u of casters(this)){u.gold+=REF.goldPerRound+(u===winner?REF.winGold:0);u.ready=!!u.bot;u.destination=null;u.channel=null;u.wlVx=u.wlVz=0;u.wlWallPush=null;}
+  for(const u of casters(this)){flushLavaFeedback(this,u,true);u.wlLavaDamageNextAt=0;u.gold+=REF.goldPerRound+(u===winner?REF.winGold:0);u.ready=!!u.bot;u.destination=null;u.channel=null;u.wlVx=u.wlVz=0;u.wlWallPush=null;}
   w.projectiles=[];w.fields=[];w.links=[];
   if(w.round>=w.maxRounds){const best=Math.max(...casters(this).map(u=>u.score));this.winningOwners=casters(this).filter(u=>u.score===best).map(u=>u.owner);this.winner=this.winningOwners[0];this.phase='victory';w.phase='finished';this.message='O duelo dos magos terminou.';return;}
   w.phase='shop';w.remaining=POLISH.arena.shopDuration+POLISH.arena.resultDuration;this.phase='preparation';this.message=(winner?winner.name+' venceu a rodada. ':'Empate. ')+'Visite a loja e prepare a próxima combinação.';
@@ -188,7 +193,7 @@ export const WarlockMethods={
    movePoint(this,u,{x:u.x+(u.wlVx||0)*dt,z:u.z+(u.wlVz||0)*dt},true);const damping=Math.pow(.96,dt/.03);u.wlVx*=damping;u.wlVz*=damping;u.moving=dist(u,before)>.001;
    if((u.wlWindUntil||0)>this.time){const enemy=opponents(this,u).find(t=>dist(u,t)<1);if(enemy){const d=direction(u,enemy);hit(this,u,enemy,u.wlWindDamage,d.dx,d.dz);u.wlWindUntil=0;}}
 
-   if(!warlockSafeGround(w,u)){u.fireUntil=this.time+.3;u.wlLavaContactUntil=this.time+.25;if((u.wlLavaUntil||0)<=this.time)hit(this,null,u,REF.lavaDamagePerSecond*dt,0,0,0);}else u.hp=Math.min(u.maxHp,u.hp+u.wlRegen*dt);
+   if(!warlockSafeGround(w,u)){u.fireUntil=this.time+.3;u.wlLavaContactUntil=this.time+.25;if((u.wlLavaUntil||0)<=this.time)hit(this,null,u,REF.lavaDamagePerSecond*dt,0,0,0,'fire',true);}else u.hp=Math.min(u.maxHp,u.hp+u.wlRegen*dt);flushLavaFeedback(this,u);
   }
   tickWarlockLinks(this,dt,hit);this.tickWarlockProjectiles(dt);this.tickWarlockFields(dt,motionStarts);
   for(const ghost of this.units.filter(u=>u.wlGhost)){const source=this.units.find(v=>v.id===ghost.wlGhostOf);if(source){ghost.x=source.x+ghost.wlGhostSide*1.5;ghost.z=source.z;ghost.facing=source.facing;ghost.alive=source.alive&&ghost.until>this.time;}}

@@ -1,5 +1,4 @@
 import test from 'node:test';
-import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import {RO_LIGHT_SCATTERING_BUDGET as B,roScatteringSize,roPixelGrid,createRoLightScattering} from '../src/ro-light-scattering.js';
@@ -100,15 +99,14 @@ test('atlas styles reuse the same scene depth and render targets while the origi
 });
 
 
-test('original pixel plus ink preserves the approved four-tap contour exactly and never changes SP or simulation state',()=>{
+test('pixel plus ink antialiases only contour coverage at continuous UVs while preserving scene color, strength and simulation state',()=>{
  const f=fixture();try{
   f.state.units=[{id:1,mana:42,maxMana:100,cooldowns:{fireball:2}}];const before=structuredClone(f.state);
-  const ink=readFileSync(new URL('./fixtures/ro-ink-73261ea.glsl',import.meta.url),'utf8').trim();
   assert.equal(f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:true}),true);
   const uniforms=draws(f).at(-1).material.uniforms,shader=draws(f).at(-1).material.fragmentShader;
   assert.equal(uniforms.outlines.value,1);assert.equal(uniforms.outlineStrength.value,1);assert.equal(uniforms.artStyle.value,0);assert.equal(uniforms.pixelGrid.value.x,400);assert.equal(uniforms.scattering.value,.2);
-  assert.ok(shader.includes('if(outlines>0.5&&outlineStrength==1.0){'+ink+'}'));assert.ok(shader.indexOf(ink)<shader.indexOf('#include <tonemapping_fragment>'));assert.ok(shader.includes('if(artStyle<0.5)return c;'));
-  const target=draws(f)[0].target;f.calls.length=0;f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:false});assert.equal(draws(f).at(-1).material.uniforms.outlines.value,0);assert.equal(draws(f)[0].target,target);assert.deepEqual(f.state,before);assert.equal(f.effect.stats().renderTargets,2);
+  assert.ok(shader.includes('float inkMask(vec2 at,float radius)'));assert.ok(shader.includes('float inkCoverage(vec2 at,float radius)'));assert.ok(shader.includes('inkCoverage(vUv,1.5*clamp(outlineStrength,0.5,2.0))'));assert.ok(!shader.includes('inkCoverage(uv,'));assert.ok(shader.includes('vec4 base=texture2D(tScene,uv);vec3 color=base.rgb;'));assert.ok(shader.includes('return 0.5*(inkMask(at-offset,radius)+inkMask(at+offset,radius))'));assert.ok(shader.includes('))<0.025)return 0.0'));assert.ok(shader.includes('normal*texelSize*0.42'));assert.ok(shader.indexOf('color*=1.0-coverage')<shader.indexOf('#include <tonemapping_fragment>'));assert.equal(f.effect.stats().outlineAA,'coverage-2x');assert.ok(shader.includes('if(artStyle<0.5)return c;'));
+  const target=draws(f)[0].target;f.calls.length=0;f.effect.render(f.state,2,{...f.options,preset:'pixel',intensity:.2,outlines:false});assert.equal(draws(f).at(-1).material.uniforms.outlines.value,0);assert.equal(f.effect.stats().outlineAA,'off');assert.equal(draws(f)[0].target,target);assert.deepEqual(f.state,before);assert.equal(f.effect.stats().renderTargets,2);
  }finally{f.effect.dispose();}
 });
 
