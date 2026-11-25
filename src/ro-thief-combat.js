@@ -29,3 +29,23 @@ export function roThiefCombatPose(age,duration=.48,job='thief'){
  if(!Number.isFinite(age)||!Number.isFinite(duration)||duration<=0||age<0||age>=duration)return IDLE;
  const frames=RO_THIEF_COMBAT_FRAMES[job]||THIEF;return frames[Math.min(7,Math.floor(age/duration*8))];
 }
+
+// Studied against the installed client's Assassin male ATTACK3 ACT (11 * 8
+// directions; dagger uses ATTACK2). Reinterpreted in shoulder-space geometry:
+// low ready -> right cut -> left follow-through -> raised guard -> recovery.
+// Reference routing: roBrowserLegacy src/DB/Jobs/WeaponAction.js.
+const KATAR=freeze([
+ frame(0,[.08,-.02,0],[.12,0,-.10],[.05,0,.10]),
+ frame(1,[.16,-.07,-.015],[.25,-.28,-.16],[.12,.20,.18]),
+ frame(2,[.24,-.055,.08],[-.94,.42,-.35,.04],[-.20,-.10,.18]),
+ frame(3,[.25,-.05,.11],[-1.06,.52,-.48,.055],[-.48,-.32,.24,.02]),
+ frame(4,[.22,-.045,.085],[-.42,.12,-.13,.01],[-1.12,-.48,.42,.05]),
+ frame(5,[.14,-.025,.04],[-.16,0,-.06],[-.72,-.24,.24,.02]),
+ frame(6,[.04,-.01,.01],[-.04,0,0],[-1.65,.08,.12]),
+ frame(7,[0,0,0],[0,0,0],[0,0,0])
+]);
+export const RO_KATAR_COMBAT_FRAMES=KATAR;
+export function roKatarCombatPose(age,duration=.48){
+ if(!Number.isFinite(age)||!Number.isFinite(duration)||duration<=0||age<0||age>=duration)return IDLE;
+ return KATAR[Math.min(7,Math.floor(age/duration*8))];
+}

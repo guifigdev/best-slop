@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {roAttackProfile} from '../shared/ro-attack-catalog.js';
-import {roThiefCombatPose} from './ro-thief-combat.js';
+import {roThiefCombatPose,roKatarCombatPose} from './ro-thief-combat.js';
 
 const clamp=n=>Math.max(0,Math.min(1,n)),smooth=n=>{n=clamp(n);return n*n*(3-2*n);};
 // Shoulder-space X rotation: raise behind the shoulder, pull down in front,
@@ -18,12 +18,12 @@ export function roAxePose(age,duration=.65){
 
 export function createRoWeaponRig({unit,spec,body,voxel,bake}){
  if(!unit?.bonkHero||!spec?.weaponRig||!body)return null;const descriptor=spec.weaponRig,group=new T.Group();group.name=(descriptor.arms?'ro-native-arms-':'ro-shoulder-sword-')+spec.key;
- if(descriptor.arms){const arms=descriptor.arms.map(arm=>{const child=new T.Group();child.name='ro-native-arm-'+spec.key+'-'+arm.key;for(const p of arm.parts)voxel(child,...p);bake(child,child.name);child.position.set(...arm.pivot);group.add(child);return{group:child,key:arm.key,pivot:arm.pivot};});body.add(group);return{group,kind:descriptor.kind,job:descriptor.job,arms};}
+ if(descriptor.arms){const arms=descriptor.arms.map(arm=>{const child=new T.Group();child.name='ro-native-arm-'+spec.key+'-'+arm.key;for(const p of arm.parts)voxel(child,...p);bake(child,child.name);child.position.set(...arm.pivot);group.add(child);return{group:child,key:arm.key,pivot:arm.pivot};});body.add(group);return{group,kind:descriptor.kind,job:descriptor.job,offhand:descriptor.offhand,arms};}
  for(const p of descriptor.parts)voxel(group,...p);bake(group,'ro-shoulder-sword-'+spec.key);group.position.set(...descriptor.pivot);body.add(group);return{group,kind:descriptor.kind};
 }
 
 export function updateRoWeaponRig(rig,unit,effects,time){
- if(!rig)return;let latest=null,profile=null;for(const event of effects||[]){if(event.type!=='roAttack'||event.source!==unit?.id||!Number.isFinite(event.time)||event.time>time||latest&&event.time<latest.time)continue;const p=roAttackProfile(event,unit);if((rig.arms?(p.family==='dagger'||p.motion==='overhead'):['overhead','axeSlam','thrust','daggerStreaks'].includes(p.motion))&&time-event.time<p.duration){latest=event;profile=p;}}
- if(rig.arms){const pose=latest?roThiefCombatPose(time-latest.time,profile.duration,rig.job):roThiefCombatPose(-1);for(const arm of rig.arms){const p=pose.arms[arm.key];arm.group.rotation.set(p.x,p.y,p.z);arm.group.position.set(arm.pivot[0],arm.pivot[1],arm.pivot[2]+p.push);}return pose;}
+ if(!rig)return;let latest=null,profile=null;for(const event of effects||[]){if(event.type!=='roAttack'||event.source!==unit?.id||!Number.isFinite(event.time)||event.time>time||latest&&event.time<latest.time)continue;const p=roAttackProfile(event,unit);if((rig.arms?(p.family==='dagger'||['overhead','axeSlam'].includes(p.motion)):['overhead','axeSlam','thrust','daggerStreaks'].includes(p.motion))&&time-event.time<p.duration){latest=event;profile=p;}}
+ if(rig.arms){const pose=latest?(profile.motion==='katarCross'||(!profile.weaponType&&rig.kind==='dual-katar')?roKatarCombatPose(time-latest.time,profile.duration):profile.weaponType==='sword'?{...roThiefCombatPose(time-latest.time,profile.duration),arms:{right:roSwordPose(time-latest.time,profile.duration),left:roSwordPose(time-latest.time,profile.duration)}}:profile.weaponType==='axe'?{...roThiefCombatPose(time-latest.time,profile.duration),arms:{right:roAxePose(time-latest.time,profile.duration),left:roAxePose(time-latest.time,profile.duration)}}:roThiefCombatPose(time-latest.time,profile.duration,rig.offhand&&rig.offhand!=='shield'?'assassin':'thief')):roThiefCombatPose(-1);for(const arm of rig.arms){const p=pose.arms[arm.key];arm.group.rotation.set(p.x,p.y,p.z);arm.group.position.set(arm.pivot[0],arm.pivot[1],arm.pivot[2]+(p.push||0));}return pose;}
  const pose=latest?(rig.kind==='thrust'?roThrustPose:rig.kind==='overhead-axe'?roAxePose:roSwordPose)(time-latest.time,profile.duration):roSwordPose(-1);rig.group.rotation.set(pose.x,pose.y,pose.z);return pose;
 }

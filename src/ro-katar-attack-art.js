@@ -1,0 +1,31 @@
+import * as T from 'three';
+import {roAttackProfile} from '../shared/ro-attack-catalog.js';
+import {roKatarCombatPose} from './ro-thief-combat.js';
+
+// Two short physical blade trails, in world space. No camera-facing dagger
+// sprite: the stepped, volumetric segments follow the two shoulder cuts.
+const CAPACITY=64,SEGMENTS=10,INSTANCES=CAPACITY*2*SEGMENTS*2;
+const clamp=n=>Math.max(0,Math.min(1,n));
+export function roKatarTrailPose(progress,side,segment){
+ const start=side===1?.20:.43,p=(progress-start)/.28,tail=segment/SEGMENTS*.32,q=clamp(p-tail);
+ if(p<=0||p>=1.32||q<=0||q>=1)return null;
+ const angle=(-.92+q*1.9)*side,r=.72,fade=Math.sin(q*Math.PI)*clamp((1.32-p)*3)*(1-segment/SEGMENTS);
+ return{x:side*.29+Math.sin(angle)*r,y:.92+Math.cos(q*Math.PI)*.24,z:.29+Math.cos(angle)*r,angle,alpha:fade};
+}
+export function createRoKatarAttackArt({scene}){
+ const root=new T.Group();root.name='ro-katar-volumetric-cuts';
+ let mesh,geometry,material,alpha,disposed=false,last=-Infinity,world='';const records=new Map(),dummy=new T.Object3D(),color=new T.Color();
+ function allocate(){if(mesh)return;scene.add(root);geometry=new T.BoxGeometry(1,1,1);alpha=new T.InstancedBufferAttribute(new Float32Array(INSTANCES),1);geometry.setAttribute('strokeOpacity',alpha);
+  material=new T.MeshBasicMaterial({transparent:true,depthWrite:false,toneMapped:false});material.onBeforeCompile=s=>{s.vertexShader='attribute float strokeOpacity;varying float vStrokeOpacity;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvStrokeOpacity=strokeOpacity;');s.fragmentShader='varying float vStrokeOpacity;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.a*=vStrokeOpacity;');};material.customProgramCacheKey=()=> 'ro-katar-3d-cuts-v1';
+  mesh=new T.InstancedMesh(geometry,material,INSTANCES);mesh.name='ro-katar-cross-cuts';mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.count=0;mesh.renderOrder=4;root.add(mesh);
+ }
+ const reset=()=>{records.clear();if(mesh){mesh.count=0;mesh.visible=false;}};
+ return{root,update(state,time=state?.time||0,heightAt=()=>0){if(disposed)return;if(!state){reset();return;}const key=[state.options?.mode,state.bonk?.map?.seed,state.bonk?.floor].join(':');if(key!==world||time<last)reset();world=key;last=time;const units=new Map((state.units||[]).map(u=>[u.id,u]));
+  for(const e of state.effects||[]){const u=units.get(e.source);if(e.type!=='roAttack'||!u||e.id==null||!Number.isFinite(e.time))continue;const p=roAttackProfile(e,u),age=time-e.time;if(p.motion!=='katarCross'||age<0||age>=p.duration)continue;const id=e.id+':'+e.time;if(!records.has(id))records.set(id,{e:{...e},u,p});}
+  while(records.size>CAPACITY)records.delete(records.keys().next().value);let at=0;
+  for(const [id,{e,u,p}]of records){const age=time-e.time;if(age<0||age>=p.duration){records.delete(id);continue;}allocate();const progress=age/p.duration,yaw=Number.isFinite(e.direction)?e.direction:Number.isFinite(e.tx)&&Number.isFinite(e.tz)?Math.atan2(e.tx-e.x,e.tz-e.z):u.facing||0,c=Math.cos(yaw),s=Math.sin(yaw),scale=u.size||1,x=e.x??u.x,z=e.z??u.z,ground=heightAt(x,z)+(u.bonkJumpHeight||0),body=roKatarCombatPose(age,p.duration).body;
+   for(const side of [-1,1])for(let j=0;j<SEGMENTS;j++){const t=roKatarTrailPose(progress,side,j);if(!t)continue;for(let layer=0;layer<2;layer++){const width=layer?.027:.064;dummy.position.set(x+(t.x*c+t.z*s)*scale,ground+(t.y+body.y)*scale,z+(-t.x*s+t.z*c)*scale);dummy.rotation.set(side*.24,yaw+t.angle,side*.18);dummy.scale.set(width*scale,width*scale,(layer?.12:.15)*scale);dummy.updateMatrix();mesh.setMatrixAt(at,dummy.matrix);mesh.setColorAt(at,color.setHex(layer?0xf3fcff:0x86bfe6));alpha.setX(at++,t.alpha*(layer?.95:.48));}}
+  }
+  if(mesh){mesh.count=at;mesh.visible=at>0;if(at){mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;alpha.needsUpdate=true;mesh.computeBoundingSphere();}}
+ },reset,stats:()=>({active:records.size,instances:mesh?.count||0,drawCalls:mesh?.visible?1:0,planes:0}),dispose(){if(disposed)return;disposed=true;reset();root.removeFromParent();mesh?.dispose();geometry?.dispose();material?.dispose();}};
+}
