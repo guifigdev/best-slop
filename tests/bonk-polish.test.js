@@ -35,7 +35,7 @@ test('navigation prioritises a guardian already awakened, then the nearest unrev
  const u={x:0,z:0},data={objectives:[{id:'a',x:0,z:-10,name:'Perto'},{id:'b',x:50,z:20,name:'Ativo',started:true},{id:'c',x:-20,z:40,completed:true}]};
  assert.equal(bonkNavigation(data,u).id,'b');data.objectives[1].completed=true;assert.equal(bonkNavigation(data,u).id,'a');assert.equal(bonkNavigation(data,u).direction,'N');
  data.objectives[0].completed=true;const target=bonkNavigation(data,{x:30,z:40});assert.equal(target.id,'temple');assert.equal(target.distance,50);assert.equal(target.direction,'NO');
- const html=bonkStatsMarkup({damage:1.44,haste:1.18,area:1.22,crit:.2,armor:8,amount:3});for(const v of ['1.44','1.18','1.22','20%','+3'])assert.ok(html.includes(v));assert.doesNotMatch(html,/NaN|undefined/);
+ const html=bonkStatsMarkup({damage:1.44,haste:1.18,aspd:175.5,aspdMax:193,attackDelay:.49,area:1.22,crit:.2,armor:8,amount:3});for(const v of ['1.44','175.5','0.49 s','1.22','20%','+3'])assert.ok(html.includes(v));assert.doesNotMatch(html,/NaN|undefined/);
 });
 
 test('full loot and projectile loads stay inside reusable rendering budgets through all three stage transitions',()=>{

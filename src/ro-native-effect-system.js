@@ -1,3 +1,4 @@
+import {roPoisonNovaHandles} from './ro-poison-nova-art.js';
 import {createRoNativeStrArt} from './ro-native-str-art.js';
 import {createRoNativePrimitiveArt,roNativePrimitiveAreaScale} from './ro-native-primitive-art.js';
 import {RO_NATIVE_EFFECT_ASSETS,RO_NATIVE_EFFECT_MANIFEST} from './ro-native-effect-assets.js';
@@ -11,7 +12,7 @@ export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrAr
  const active=()=>context?.options?.mode==='bonk';
  const primitiveOptions={types:primitiveTypes,hasAsset:row=>!!RO_NATIVE_PRIMITIVE_MANIFEST.parts[row.primitiveId]};
  const requests=(event,unit,primitive=false)=>{
-  if(!active())return[];
+  if(!active()||event.skillKey==='asc_meteorassault')return[];
   const result=roNativeEventRequests(event,unit,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,{state:context,...(primitive?primitiveOptions:{})});
   return primitive?result.map(r=>({...r,scale:roNativePrimitiveAreaScale(r.part,event,{baseScale:r.scale}),conformGround:true})):roNativeBuffDeadlines(result,unit,context,RO_NATIVE_EFFECT_ASSETS);
  };
@@ -29,7 +30,7 @@ export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrAr
    const groups=new Map();for(const request of zoneRequests(state,true)){const list=groups.get(request.zoneId)||[];list.push(request);groups.set(request.zoneId,list);}
    for(const [id,list]of groups)if(list.every(r=>primitive.isReady(r.primitiveId||r.file))&&list.map(r=>primitive.handlesRequest(r)).every(Boolean))primitiveZones.add(id);
   },
-  handles(event,unit){if(!active())return false;const a=str.handles(event,unit),b=primitive.handles(event,unit);return a||b;},
+  handles(event,unit){if(!active())return false;if(roPoisonNovaHandles(event))return true;const a=str.handles(event,unit),b=primitive.handles(event,unit);return a||b;},
   handlesZone:id=>str.handlesZone(id)||primitiveZones.has(id),
   legacyState(state){return roNativeLegacyState(state,api,{preserveAttackTrail:(event,unit)=>requests(event,unit).concat(requests(event,unit,true)).some(r=>r.preserveAttackTrail)});},
   update(state,time,heightAt,camera){context=state;str.update(state,time,heightAt,camera);primitive.update(state,time,heightAt,camera);},

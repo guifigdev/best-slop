@@ -12,8 +12,8 @@ function game(lineage='dragonknight'){const g=new Game(81,{mode:'bonk',bonkLinea
 const enemy=(g,u,extra={})=>({id:g.id(),bonkEnemy:true,dungeonSpecies:'rat',alive:true,team:100,x:u.x+2,z:u.z,hp:1000,maxHp:1000,damage:40,speed:0,armor:0,size:1,collisionRadius:.3,bonkNextAttack:Infinity,bonkNextSpecial:Infinity,...extra});
 const wear=(u,enchants)=>{u.roInventory.find(i=>i.id===u.roEquipment.weapon).enchants={...enchants};};
 
-test('equipment enchant catalog has twenty-two functional families, three independent types per piece and rejects forged payloads',()=>{
- assert.equal(Object.keys(E).length,22);assert.equal(RO_ENCHANT_TYPES_PER_ITEM,3);for(const key of ['damage','haste','amount','area','crit','magnet','vitality','speed'])assert.ok(E[key]);assert.ok(!E.silver);for(const definition of Object.values(E)){assert.ok(definition.name&&definition.description);assert.ok(Object.isFrozen(definition));}
+test('equipment enchant catalog has twenty-six functional families, three independent types per piece and rejects forged payloads',()=>{
+ assert.equal(Object.keys(E).length,26);assert.equal(RO_ENCHANT_TYPES_PER_ITEM,3);for(const key of ['damage','haste','amount','area','crit','magnet','vitality','speed'])assert.ok(E[key]);assert.ok(!E.silver);for(const definition of Object.values(E)){assert.ok(definition.name&&definition.description);assert.ok(Object.isFrozen(definition));}
  assert.deepEqual(validateRoEnchants(undefined),{});assert.deepEqual(validateRoEnchants({crit:8,magnet:1,area:2}),{crit:8,magnet:1,area:2});for(const invalid of [null,[],{damage:0},{damage:9},{damage:1.5},{silver:1},{damage:1,area:1,crit:1,speed:1},JSON.parse('{"__proto__":1}')])assert.equal(validateRoEnchants(invalid),null);assert.ok(validateRoLegacyEnchants({damage:8,area:8,crit:8,speed:8}));
 });
 

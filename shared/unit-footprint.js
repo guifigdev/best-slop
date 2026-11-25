@@ -1,7 +1,7 @@
 // World-space body footprints shared by physics, navigation and selection.
 // The classic four feet reach x=.455,z=.63 (radius .777), excluding equipment
 // and wings. Native modes retain their authored smaller bodies/corridors.
-export const UNIT_FOOTPRINT_PROFILES=Object.freeze({standard:Object.freeze({radius:.78,min:.2,max:1.6}),castle:Object.freeze({radius:.45,min:.2,max:2}),warlock:Object.freeze({radius:.47,min:.2,max:1.6,scaleSize:false}),bonk:Object.freeze({radius:.45,min:.2,max:1.6,scaleSize:false})});
+export const UNIT_FOOTPRINT_PROFILES=Object.freeze({standard:Object.freeze({radius:.78,min:.2,max:1.6}),castle:Object.freeze({radius:.45,min:.2,max:2}),warlock:Object.freeze({radius:.47,min:.2,max:1.6,scaleSize:false}),bonk:Object.freeze({radius:.45,min:.2,max:4,scaleSize:false})});
 const nativeModes=new Set(['castlefight','treetag','kodotag','phasekiller','bloody']);
 export function unitFootprintRadius(unit,options){
  const explicit=unit?.collisionRadius;if(Number.isFinite(explicit)&&explicit>=.2&&explicit<=1.6)return explicit;

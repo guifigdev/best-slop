@@ -7,7 +7,7 @@ const hudHandle=node=>node.nodeType===1&&node.classList?.contains('hud-drag-hand
 const HUD_LAYOUT_STYLES=['position','left','top','right','bottom','transform','width','max-width','max-height','margin','z-index'];
 function nodeKey(node,attributes){
  if(node.nodeType!==1)return null;
- for(const name of attributes)if(node.hasAttribute(name))return name+'='+node.getAttribute(name);
+ for(const name of attributes)if(node.hasAttribute(name))return name+'='+node.getAttribute(name)+(node.hasAttribute('data-bk-slot')?'|slot='+node.getAttribute('data-bk-slot'):'');
  return null;
 }
 function patchNode(node,next,keys){

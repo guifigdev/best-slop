@@ -76,7 +76,7 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
  mvpCard('fallenbishop','Fallen Bishop Card',4441,'shoes',{int:3,matk:7},['fallenbishop'],'MATK +10%, max SP -50%, magic damage to Angel and Demihuman +50%'),
 ].map(item=>[item.key,item])));
 export const RO_EQUIPMENT=freeze(Object.fromEntries(Object.entries({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT}).map(([key,d])=>[key,RO_BUILD_EQUIPMENT[key]===d?d:{...d,...RO_EQUIPMENT_TARGET_FACTS[d.sourceId]}])));
-export const RO_CARDS=freeze(Object.fromEntries(Object.entries({...BASE_RO_CARDS,...RO_TOWER_CARDS}).map(([key,card])=>[key,{...card,rarity:roCardRarity(card)}])));
+export const RO_CARDS=freeze(Object.fromEntries(Object.entries({...BASE_RO_CARDS,...RO_TOWER_CARDS}).map(([key,card])=>[key,{...card,stats:{...card.stats,...({4145:{variableCastReduction:.3},4169:{variableCastReduction:.1},4077:{variableCastReduction:-.25},4327:{variableCastReduction:-.3}})[card.sourceId]},rarity:roCardRarity(card)}])));
 export const RO_LOOT_RATES=freeze({card:.005,bossCard:.005,equipment:.06});
 export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','head','headMid','headLow','armor','garment','shoes','accessory','accessory2']);
 export const RO_EQUIPMENT_SLOT_NAMES=freeze({weapon:'Mão direita',offhand:'Mão esquerda',head:'Cabeça · topo',headMid:'Cabeça · meio',headLow:'Cabeça · baixo',armor:'Armadura',garment:'Capa',shoes:'Calçados',accessory:'Acessório 1',accessory2:'Acessório 2'});
@@ -157,7 +157,7 @@ export function roDrop(u,itemId){
 }
 export function roEquipmentBonuses(u){
  const bonuses={str:0,agi:0,vit:0,int:0,dex:0,luk:0,maxHp:0,attack:0,armor:0,matk:0,moveSpeed:0,crit:0,haste:0,flee:0,perfectEvasion:0,variableCastReduction:0,fixedCastReduction:0,fixedCastSeconds:0,afterCastReduction:0,doubleAttackLevel:0},seenItems=new Set(),seenCards=new Set();
- const add=stats=>{for(const[key,value]of Object.entries(stats||{}))if(Number.isFinite(value)&&typeof bonuses[key]==='number')bonuses[key]+=value;};
+ const add=stats=>{for(const[key,value]of Object.entries(stats||{}))if(Number.isFinite(value)&&typeof bonuses[key]==='number')bonuses[key]=key==='fixedCastReduction'?Math.max(bonuses[key],value):bonuses[key]+value;};
  const main=findItem(u,u?.roEquipment?.weapon),twoHanded=main&&RO_EQUIPMENT[main.key].hands===2;
  for(const slot of RO_EQUIPMENT_SLOTS){const item=findItem(u,u?.roEquipment?.[slot]);if(!item||seenItems.has(item.id)||!fits(u,item,slot)||slot==='offhand'&&twoHanded)continue;seenItems.add(item.id);
   const definition=RO_EQUIPMENT[item.key];add(definition.stats);bonuses.doubleAttackLevel=Math.max(bonuses.doubleAttackLevel,definition.doubleAttackLevel||0);if(definition.armorElement)bonuses.armorElement=definition.armorElement;if(slot==='weapon'&&definition.weaponElement)bonuses.weaponElement=definition.weaponElement;const refinement=Math.max(0,Math.min(10,item.refine||0));if(refinement){if(definition.slot==='weapon'){bonuses.attack+=(definition.stats.attack||0)*refinement*.05;bonuses.matk+=(definition.stats.matk||0)*refinement*.05;}else bonuses.armor+=refinement*.3;}

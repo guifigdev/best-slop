@@ -33,8 +33,8 @@ export function unitBlocked(game,u,point,ignoreId){
 }
 
 function bucketKey(u,x=u.x,z=u.z){return`${space(u)}|${layer(u)}|${Math.floor(x/BUCKET)},${Math.floor(z/BUCKET)}`;}
-function spatial(units){const result=new Map();for(const unit of units){const key=bucketKey(unit),list=result.get(key)||[];list.push(unit);result.set(key,list);}return result;}
-function nearby(hash,u){const result=[],x=Math.floor(u.x/BUCKET),z=Math.floor(u.z/BUCKET),prefix=`${space(u)}|${layer(u)}|`;for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const bucket=hash.get(`${prefix}${x+dx},${z+dz}`);if(bucket)result.push(...bucket);}return result;}
+function spatial(units){const result=new Map();result.maxRadius=units.reduce((r,u)=>Math.max(r,unitRadius(u)),0);for(const unit of units){const key=bucketKey(unit),list=result.get(key)||[];list.push(unit);result.set(key,list);}return result;}
+function nearby(hash,u){const result=[],x=Math.floor(u.x/BUCKET),z=Math.floor(u.z/BUCKET),prefix=`${space(u)}|${layer(u)}|`,reach=Math.max(1,Math.ceil((unitRadius(u)+(hash.maxRadius||0))/BUCKET));for(let dx=-reach;dx<=reach;dx++)for(let dz=-reach;dz<=reach;dz++){const bucket=hash.get(`${prefix}${x+dx},${z+dz}`);if(bucket)result.push(...bucket);}return result;}
 function idAngle(a,b){let hash=2166136261;for(const char of `${a.id}:${b.id}`)hash=Math.imul(hash^char.charCodeAt(0),16777619);return(hash>>>0)/4294967296*Math.PI*2;}
 
 function slide(game,u,destination){const p=bounded(game,u,destination),dx=p.x-u.x,dz=p.z-u.z,steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.15));for(let i=0;i<steps;i++){const next=bounded(game,u,{x:u.x+dx/steps,z:u.z+dz/steps});if(unitSegmentClear(game,u,u,next)){u.x=next.x;u.z=next.z;continue;}const x={x:next.x,z:u.z},z={x:u.x,z:next.z};if(Math.abs(dx)>EPS&&!solidBlocked(game,u,x)&&unitSegmentClear(game,u,u,x))u.x=x.x;else if(Math.abs(dz)>EPS&&!solidBlocked(game,u,z)&&unitSegmentClear(game,u,u,z))u.z=z.z;else break;}}

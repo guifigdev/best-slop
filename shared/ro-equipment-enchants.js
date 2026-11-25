@@ -9,7 +9,11 @@ export const RO_ENCHANT_TYPES_PER_ITEM=3,RO_ENCHANT_MAX_RANK=8;
 const entry=(key,name,skill,description)=>Object.freeze({key,name,skill,description});
 export const RO_ENCHANTMENTS=Object.freeze(Object.fromEntries([
  entry('damage','Força destrutiva','battlecry','+12% de dano por nível enquanto esta peça estiver equipada.'),
- entry('haste','Celeridade','endurance','+9% de frequência dos ataques por nível.'),
+ entry('haste','Celeridade','endurance','-9% de intervalo entre ataques por nível, respeitando o limite de ASPD.'),
+ entry('variableCast','Conjuração ágil','brilliance','-10% de conjuração variável por nível; acumula com a redução de DES e INT.'),
+ entry('fixedCast','Conjuração precisa','brilliance','-0,05 s de conjuração fixa por nível; não altera a variável.'),
+ entry('afterCast','Fluxo arcano','brilliance','-8% de pós-conjuração por nível; não reduz a recarga própria da habilidade.'),
+ entry('cooldown','Recarga acelerada','brilliance','-6% da recarga própria das habilidades por nível; não reduz conjuração ou intervalo de ataque.'),
  entry('amount','Multiplicidade','multishot','+1 projétil a cada dois níveis; também fortalece ataques orbitais.'),
  entry('area','Gigantismo','avatar','+11% de área e alcance das habilidades por nível.'),
  entry('crit','Precisão mortal','critical','+5 pontos percentuais de crítico físico por nível. O bônus pertence ao equipamento; magias não causam crítico.'),

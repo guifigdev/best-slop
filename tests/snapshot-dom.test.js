@@ -20,6 +20,11 @@ const keys=['data-cf-build','data-cf-action'];
 const text=value=>new Node('#text',{text:value});
 const button=(key,value,attributes={})=>new Node('BUTTON',{'data-cf-build':key,...attributes},[text(value)]);
 
+test('right and left hand buttons for the same item retain independent identities during live snapshots',()=>{
+ const make=slot=>new Node('BUTTON',{'data-bk-equip':'knife','data-bk-slot':slot},[text(slot)]),right=make('weapon'),left=make('offhand'),root=new Node('DIV',{},[right,left]);
+ for(let i=0;i<20;i++){patchChildren(root,new Node('DIV',{},[make('weapon'),make('offhand')]),['data-bk-equip']);assert.equal(root.childNodes[0],right);assert.equal(root.childNodes[1],left);assert.equal(left.getAttribute('data-bk-slot'),'offhand');}
+});
+
 test('independently mounted account selectors survive room updates without being detached',()=>{
  const selector=new Node('SELECT',{'data-ro-character':''},[new Node('OPTION',{value:'saved'},[text('Mago')])]),account=new Node('DIV',{'data-ui-key':'account','data-ui-preserve':''},[selector]),root=new Node('DIV',{},[account,text('1 jogador')]);
  for(let i=2;i<20;i++)patchChildren(root,new Node('DIV',{},[new Node('DIV',{'data-ui-key':'account','data-ui-preserve':''}),text(i+' jogadores')]));

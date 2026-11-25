@@ -13,6 +13,7 @@ export function stepRoMotion(map,u,elapsed,dt,speed=u.speed){
  const push=u.roContactPush;if(push?.remaining>0){const distance=Math.min(push.remaining,Math.min(.1,Math.max(0,dt))*RO_CONTACT_KNOCKBACK.distance/RO_CONTACT_KNOCKBACK.duration),facing=u.facing;moveRoActor(map,u,push.dx,push.dz,dt,distance/Math.max(1e-6,dt));u.facing=facing;push.remaining=Math.max(0,push.remaining-distance);if(push.remaining<1e-6)delete u.roContactPush;return;}
  if(elapsed<(u.roHitStunUntil||0)){u.moving=false;return;}
  const input=elapsed-(u.bonkMoveAt??-100)<.55?u.bonkMove:{dx:0,dz:0},dash=elapsed<(u.bonkDashUntil||0),v=dash?u.bonkDashVector:input;
+ if(u.roCasting&&Math.hypot(v?.dx||0,v?.dz||0)>.01)delete u.roCasting;
  const motion=roIceMovement(map,u,v||{dx:0,dz:0},dt,speed*(u.bonkWebUntil>elapsed?.55:1),{dash}),beforeX=u.x,beforeZ=u.z;
  moveRoActor(map,u,motion.dx,motion.dz,dt,motion.speed*(dash?2.9:1));
  if(u.roIceMotion){if(Math.abs(u.x-beforeX)<1e-7)u.roIceMotion.x=0;if(Math.abs(u.z-beforeZ)<1e-7)u.roIceMotion.z=0;}
