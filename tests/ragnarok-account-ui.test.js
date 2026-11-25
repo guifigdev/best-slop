@@ -32,7 +32,7 @@ test('Character saves merge by timestamp, honor the roster limit and resume only
  const b=saveRoCharacter(a,{id:'hero-a',name:'Rune 2',lineage:'dragonknight',checkpoint,updatedAt:20});assert.equal(mergeRoProgress(a,b).characters[0].name,'Rune 2');
  assert.equal(roAccountSelection({progress:a},{characterId:'hero-a',activity:'adventure',resume:true}).resume,true);
  assert.equal(roAccountSelection({progress:a},{characterId:'hero-a',activity:'tower',resume:true}).resume,false);
- let full=a;for(let i=1;i<12;i++)full=saveRoCharacter(full,{id:'hero-'+i,name:'n',lineage:'dragonknight',checkpoint,updatedAt:i});assert.equal(full.characters.length,12);assert.equal(saveRoCharacter(full,{id:'thirteenth',name:'n',lineage:'dragonknight',checkpoint}),null);
+ let full=a;for(let i=1;i<30;i++)full=saveRoCharacter(full,{id:'hero-'+i,name:'n',lineage:'dragonknight',checkpoint,updatedAt:i});assert.equal(full.characters.length,30);assert.equal(saveRoCharacter(full,{id:'thirty-first',name:'n',lineage:'dragonknight',checkpoint}),null);
 });
 test('Cloud creation and save use JSON auth, while a fresh character remains in preparation',async()=>{
  const service=backend(),saved=storage(),ui=createRagnarokAccountUI({fetchImpl:service.fetchImpl,storage:saved});await ui.loadReady();assert.equal(ui.status(),'cloud');assert.equal(saved.data().token,token);
@@ -93,4 +93,12 @@ test('Deleting a character frees a slot, preserves shared possessions and cannot
 test('A character deleted on another device is deselected and a new run receives a fresh savable ID',async()=>{
  const g=game(),checkpoint=createRoCheckpoint(g),cached=empty();cached.progress=saveRoCharacter(null,{id:'deleted-elsewhere',lineage:'dragonknight',checkpoint});const cloud=structuredClone(cached);cloud.progress=deleteRoCharacter(cloud.progress,'deleted-elsewhere');
  const ui=createRagnarokAccountUI({storage:storage({token,account:cached}),fetchImpl:backend(cloud).fetchImpl});await ui.loadReady();assert.equal(ui.selection().character,null);assert.notEqual(ui.selection().characterId,'deleted-elsewhere');const next=game();ui.prepareGame(next);assert.ok(await ui.save(next));assert.equal(ui.account().progress.characters.length,1);assert.ok(!ui.account().progress.characters.some(c=>c.id==='deleted-elsewhere'));
+});
+
+
+test('a new merchant after twelve saved characters gets a unique ID and stays new through a delayed cloud load',async()=>{
+ const original=game({bonkLineage:'meister'}),checkpoint=createRoCheckpoint(original),account=empty();for(let i=0;i<12;i++)account.progress=saveRoCharacter(account.progress,{id:'merchant-'+i,lineage:'meister',checkpoint});let complete;
+ const service=backend(account),ui=createRagnarokAccountUI({storage:storage({token,account}),fetchImpl:(url,options)=>url.endsWith('/account')?new Promise(resolve=>complete=()=>resolve(Response.json({account}))):service.fetchImpl(url,options)});
+ const loading=ui.loadReady();assert.ok(ui.newCharacter());ui.setLineage('meister');const id=ui.selection().characterId;assert.equal(ui.selection().character,null);complete();await loading;ui.setLineage('meister');assert.equal(ui.selection().characterId,id);assert.equal(ui.onlineSelection('meister').characterId,null);
+ const next=game({bonkLineage:'meister'});assert.ok(ui.prepareGame(next));assert.equal(next.player('p').level,1);assert.ok(await ui.save(next));assert.equal(ui.account().progress.characters.length,13);assert.ok(ui.account().progress.characters.some(c=>c.id===id));assert.ok(roCharacterGallery(ui.account().progress,id).includes('13 / 30'));
 });

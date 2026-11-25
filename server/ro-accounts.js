@@ -1,3 +1,4 @@
+import {RO_PROGRESS_MAX_BYTES,RO_PROGRESS_BODY_MAX_BYTES} from '../shared/ro-account-limits.js';
 import {RO_CARDS,RO_EQUIPMENT_SLOTS,roCardFitsSlot,rollRoLoot} from '../shared/ragnarok-equipment.js';
 import {RAGNAROK_VOXEL_REFERENCES} from '../shared/monster-visual-references.js';
 import {mvpDefinition} from '../shared/ragnarok-expansion.js';
@@ -10,11 +11,11 @@ const response=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Con
 const error=(status,message)=>response({error:message},status);
 const publicAccount=(state,siteLinked=false)=>({id:state.id,siteLinked,cards:state.cards,presets:state.presets,activePreset:state.activePreset,...(state.progress?{progress:state.progress}:{})});
 async function digest(value){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(n=>n.toString(16).padStart(2,'0')).join('');}
-async function body(request){
- if(Number(request.headers.get('Content-Length')||0)>MAX_BODY)throw new RangeError('Body too large');
+async function body(request,maxBytes=MAX_BODY){
+ if(Number(request.headers.get('Content-Length')||0)>maxBytes)throw new RangeError('Body too large');
  if(!request.headers.get('Content-Type')?.toLowerCase().startsWith('application/json'))throw new TypeError('JSON required');
  const reader=request.body?.getReader();if(!reader)return{};const chunks=[];let length=0;
- try{while(true){const result=await reader.read();if(result.done)break;length+=result.value.byteLength;if(length>MAX_BODY){await reader.cancel();throw new RangeError('Body too large');}chunks.push(result.value);}}finally{reader.releaseLock();}
+ try{while(true){const result=await reader.read();if(result.done)break;length+=result.value.byteLength;if(length>maxBytes){await reader.cancel();throw new RangeError('Body too large');}chunks.push(result.value);}}finally{reader.releaseLock();}
  const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
  const value=JSON.parse(new TextDecoder().decode(bytes));if(!value||Array.isArray(value)||typeof value!=='object')throw new TypeError('Object required');return value;
 }
@@ -29,7 +30,7 @@ function presets(input,cards){
 // Canonical game validator strips transient state, item sockets and unlocks.
 export function validateRoAccountProgress(value){
  const normalized=validateRoProgress(value);if(!normalized)return null;
- return new TextEncoder().encode(JSON.stringify(normalized)).length<=128*1024?normalized:null;
+ return new TextEncoder().encode(JSON.stringify(normalized)).length<=RO_PROGRESS_MAX_BYTES?normalized:null;
 }
 function validKill(kill){return kill&&((typeof kill.id==='number'&&Number.isSafeInteger(kill.id)&&kill.id>=0)||(typeof kill.id==='string'&&/^[a-zA-Z0-9:._-]{1,48}$/.test(kill.id)))&&(own(RAGNAROK_VOXEL_REFERENCES,kill.visual)||own(RO_TOWER_DROP_MAP,kill.visual));}
 async function accountRow(db,tokenHash){return db.prepare('SELECT id,site_user_id,payload,revision FROM ro_accounts WHERE token_hash=?').bind(tokenHash).first();}
@@ -54,7 +55,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
  if(!own(methods,route))return error(404,'Unknown account route');if(method!==methods[route])return response({error:'Method not allowed'},405);
  if(!env?.DB?.prepare)return error(503,'Cloud account storage unavailable');const db=env.DB;
  try{
-  const input=method==='POST'?await body(request):{},siteUserId=siteIdentity(request),authorization=request.headers.get('Authorization'),token=authorization?.match(/^Bearer (ro_[a-f0-9]{64})$/)?.[1];
+  const input=method==='POST'?await body(request,route==='progress'?RO_PROGRESS_BODY_MAX_BYTES:MAX_BODY):{},siteUserId=siteIdentity(request),authorization=request.headers.get('Authorization'),token=authorization?.match(/^Bearer (ro_[a-f0-9]{64})$/)?.[1];
   if(authorization&&!token)return error(401,'Invalid recovery key');const tokenHash=token?await digest(token):null;
   if(route==='account/create'){
    if(tokenHash){const existing=await accountRow(db,tokenHash);if(!existing)return error(401,'Invalid recovery key');const linked=await bindLegacyAccount(db,existing,siteUserId);return response({account:publicAccount(JSON.parse(existing.payload),linked)});}

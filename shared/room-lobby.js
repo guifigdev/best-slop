@@ -5,7 +5,7 @@ import {ARENAS} from './arenas.js';
 import {roomRoster,waitingRoomProblem,ensureLobbyOpposition,prepareLobbyMarket} from './lobby-catalog.js';
 import {applyRoRoomPolicy} from './ro-room-policy.js';
 
-export const ROOM_OPTION_KEYS=Object.freeze(['game','mode','teamSize','teamCount','clashEvery','towerLimit','laneCount','lineTeams','dungeonPartySize','dungeonTeams','dungeonPvp','dungeonLimit','bloodyTeams','bonkWorld','bonkActivity','bonkSkillMode']);
+export const ROOM_OPTION_KEYS=Object.freeze(['game','mode','teamSize','teamCount','clashEvery','towerLimit','laneCount','lineTeams','dungeonPartySize','dungeonTeams','dungeonPvp','dungeonLimit','bloodyTeams','bonkWorld','bonkActivity','bonkSkillMode','bonkDifficulty']);
 export function lobbyOptions(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!ROOM_OPTION_KEYS.includes(k))||!Object.hasOwn(MODES,input.mode))throw Error('Configuração de jogo inválida.');
  return modeOptions({...input,game:undefined,...(input.mode==='bonk'?{bonkWorld:'dominion'}:{})});

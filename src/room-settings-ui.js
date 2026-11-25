@@ -1,3 +1,4 @@
+import {RO_DIFFICULTIES} from '../shared/ro-difficulty.js';
 import {MODES} from '../shared/modes.js';
 import {LOBBY_GAMES,lobbyGameKey} from '../shared/lobby-catalog.js';
 import {escapeHTML as esc} from './competition-ui.js';
@@ -15,7 +16,7 @@ export function roomSettingsMarkup(room){
   ['adventure','Aventura de Midgard','Explore regiões e evolua em grupo.'],['tower','Torre sem Fim · Ragnarok','Combate survivor nos andares da torre.']
  ],o.bonkActivity,disabled)+choices('Habilidades oferecidas','bonkSkillMode',[
   ['class','Somente minha classe','Habilidades da classe e suas evoluções.'],['mixed','Todas as classes','Combine habilidades de qualquer linhagem.']
- ],o.bonkSkillMode,disabled);
+ ],o.bonkSkillMode,disabled)+choices('Dificuldade','bonkDifficulty',Object.values(RO_DIFFICULTIES).map(d=>[d.key,d.name,d.description]),o.bonkDifficulty||'normal',disabled);
  if(o.mode==='castlefight')html+=choices('Campo de batalha','laneCount',[[2,'Dois corredores','Duas frentes para os exércitos.'],[1,'Um corredor','Uma frente central de combate.']],o.laneCount,disabled);
  if(o.mode==='dungeon')html+=choices('Tamanho do grupo','dungeonPartySize',[[1,'Solo'],[2,'Dupla'],[3,'Trio'],[4,'Quarteto']],o.dungeonPartySize,disabled)+choices('Meta da expedição','dungeonLimit',[[0,'Sem fim'],[50,'50 andares']],o.dungeonLimit,disabled);
  if(o.mode==='tower')html+=choices('Meta cooperativa','towerLimit',[[0,'Sem fim'],[50,'50 ondas'],[100,'100 ondas']],o.towerLimit,disabled);

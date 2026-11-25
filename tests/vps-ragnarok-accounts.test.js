@@ -1,3 +1,4 @@
+import {saveRoCharacter} from '../src/ragnarok-account-ui.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync} from 'node:fs';
@@ -52,4 +53,11 @@ test('VPS account transport enforces configured origins and independent 150KiB a
   const phase=await fetch(baseFor(app)+'/api/phase/create',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://play.example'},body:JSON.stringify({room:'LARGEROOM',padding:'x'.repeat(8192)})});assert.equal(phase.status,413);
   assert.equal((await request(app,'unknown',{token})).status,404);assert.equal((await request(app,'account',{method:'POST',token,body:{}})).status,405);assert.equal((await request(app,'account/create',{method:'POST',raw:'{' })).status,400);
  }finally{app.close();await app.closed;}
+});
+
+
+test('the VPS stores thirty developed characters above the old 150KiB transport limit and rejects a thirty-first',async()=>{
+ const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');const checkpoint=createRoCheckpoint(g);checkpoint.hero.roEquipment={};checkpoint.hero.roInventory=Array.from({length:30},(_,i)=>({...checkpoint.hero.roInventory[0],id:'full-bag-'+String(i).padStart(2,'0')+'x'.repeat(48)}));
+ let progress=null;for(let i=0;i<30;i++){progress=saveRoCharacter(progress,{id:'hero-'+i,lineage:checkpoint.lineage,checkpoint});assert.ok(progress);}assert.ok(JSON.stringify(progress).length>150*1024);assert.equal(saveRoCharacter(progress,{id:'overflow',lineage:checkpoint.lineage,checkpoint}),null);
+ const app=createGameServer({config:configFor({})});try{await app.listen();const {token}=await(await request(app,'account/create',{method:'POST',body:{}})).json();const saved=await request(app,'progress',{method:'POST',token,body:{checkpoint:progress}});assert.equal(saved.status,200);const restored=(await saved.json()).account;assert.equal(restored.progress.characters.length,30);assert.equal(restored.progress.characters[29].checkpoint.hero.roInventory.length,30);}finally{app.close();await app.closed;}
 });

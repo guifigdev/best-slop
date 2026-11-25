@@ -1,3 +1,4 @@
+import {RO_CHARACTER_LIMIT} from './ro-account-limits.js';
 import {validateRoWarehouse} from './ro-kafra.js';
 import {roIsMount} from './ro-mounts.js';
 import {validateRoMerchantPurchases} from './ro-secret-merchants.js';
@@ -58,7 +59,7 @@ export function createRoCheckpoint(game){
 }
 export function validateRoProgress(value){
  const warehouse=validateRoWarehouse(value?.warehouse);if(!warehouse)return null;
- if(!value||value.version!==1||!Array.isArray(value.characters)||value.characters.length>12)return null;const characters=[],ids=new Set();
+ if(!value||value.version!==1||!Array.isArray(value.characters)||value.characters.length>RO_CHARACTER_LIMIT)return null;const characters=[],ids=new Set();
  for(const c of value.characters){if(!c||typeof c.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(c.id)||ids.has(c.id)||!own(RO_LINEAGES,c.lineage))return null;const checkpoint=validateRoCheckpoint(c.checkpoint);if(!checkpoint||checkpoint.lineage!==c.lineage)return null;const checkpoints={};for(const activity of ['adventure','tower'])if(c.checkpoints?.[activity]){const saved=validateRoCheckpoint(c.checkpoints[activity]);if(!saved||saved.lineage!==c.lineage||saved.activity!==activity)return null;checkpoints[activity]=saved;}checkpoints[checkpoint.activity]=checkpoint;ids.add(c.id);characters.push({checkpoints,id:c.id,name:String(c.name||RO_LINEAGES[c.lineage].names[0]).replace(/[\u0000-\u001f\u007f]/g,'').slice(0,30),lineage:c.lineage,checkpoint,updatedAt:num(c.updatedAt,0,1e14)?c.updatedAt:0});}
  const deleted=value.deletedCharacters??[];if(!Array.isArray(deleted)||deleted.length>4096||deleted.some(id=>typeof id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(id)))return null;
  const deletedCharacters=[...new Set(deleted)].sort(),removed=new Set(deletedCharacters),kept=characters.filter(c=>!removed.has(c.id));

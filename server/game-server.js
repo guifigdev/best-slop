@@ -1,3 +1,4 @@
+import {RO_PROGRESS_BODY_MAX_BYTES} from '../shared/ro-account-limits.js';
 import {roomRoster,waitingRoomProblem,ensureLobbyOpposition,prepareLobbyMarket} from '../shared/lobby-catalog.js';
 import {lobbyOptions} from '../shared/room-lobby.js';
 import http from 'node:http';
@@ -98,7 +99,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
    if(url.pathname.startsWith('/api/phase')){if(!originAllowed(origin,host,config))return json(res,403,{message:'Origem não autorizada.'});const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>8192)return json(res,413,{message:'Pedido muito grande.'},cors);chunks.push(chunk);}const body=Buffer.concat(chunks),protocol=config.publicOrigin?.startsWith('https:')?'https:':'http:',request=new Request(protocol+'//'+host+req.url,{method:req.method,headers:req.headers,...(body.length?{body}:{})}),response=await phaseHandler(request,{DB:store});if(!response)return json(res,404,{message:'Endpoint não encontrado.'},cors);res.writeHead(response.status,{...Object.fromEntries(response.headers),...cors});return res.end(Buffer.from(await response.arrayBuffer()));}
    if(url.pathname.startsWith('/api/ragnarok/')){
     if(!originAllowed(origin,host,config))return json(res,403,{message:'Origem não autorizada.'});
-    const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>150*1024)return json(res,413,{message:'Pedido muito grande.'},cors);chunks.push(chunk);}
+    const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>(url.pathname==='/api/ragnarok/progress'?RO_PROGRESS_BODY_MAX_BYTES:150*1024))return json(res,413,{message:'Pedido muito grande.'},cors);chunks.push(chunk);}
     const body=Buffer.concat(chunks),headers=new Headers(req.headers);
     // A self-hosted Node server has no trusted Sites identity gateway. Visitor
     // supplied identity headers must never select or bind a player's account.
@@ -158,6 +159,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
     const room=peer.room;if(!room)throw Error('Entre em uma sala primeiro.');room.lastActivity=clock();
     if(msg.type==='leave'){const member=room.members.get(peer.id);if(member)member.disconnectedAt=clock()-config.resumeSeconds*1000-1;peer.explicitLeave=true;ws.close(1000,'Saiu da sala');return;}
     if(msg.type!=='command'||!msg.command||typeof msg.command.type!=='string')throw Error('Comando inválido.');if(peer.movementReplay){if(!Number.isSafeInteger(msg.sequence)||msg.sequence<1)throw Error('Sequência de comando inválida.');if(msg.sequence<=(peer.lastCommandSequence||0))return;peer.lastCommandSequence=msg.sequence;}const c=msg.command;
+    if(c.type==='bkDifficulty'&&peer.id!==room.host)throw Error('Somente o host pode alterar a dificuldade.');
     if(room.game.options.mode==='bonk'&&['bkRestore','bkCards'].includes(c.type))throw Error('Personagens e cartas são carregados da sua conta ao entrar.');
     if(room.game.options.mode==='bonk'&&['bkReady','ready','bkNext'].includes(c.type)){if(c.type==='bkNext'){if(peer.id!==room.host)throw Error('Aguarde o host escolher o próximo andar.');}else{startRoom(peer,room);return;}}
     if(c.type==='roomCancelSelection'){if(peer.id!==room.host||room.lobbyVersion!==2||room.stage!=='selecting')throw Error('Somente o host pode voltar à sala durante a seleção.');room.stage='waiting';room.selectionProblem=null;for(const member of room.members.values())if(!member.bot)member.heroChosen=false;resetLobbyReady(room);checkpoint(room);publishRoom(room);return;}

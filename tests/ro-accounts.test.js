@@ -1,3 +1,4 @@
+import {RO_PROGRESS_BODY_MAX_BYTES} from '../shared/ro-account-limits.js';
 import {Game} from '../shared/simulation.js';
 import {createRoCheckpoint} from '../shared/ragnarok-save.js';
 import {saveRoCharacter,deleteRoCharacter} from '../src/ragnarok-account-ui.js';
@@ -106,7 +107,7 @@ test('Canonical progress rejects malformed data, strips client unlocks and obeys
  assert.equal(validateRoAccountProgress({...progress,characters:[{id:'bad',lineage:'dragonknight',checkpoint:{hero:{value:Infinity}}}]}),null);
  const f=fixture();try{const {token}=await account(f);assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);const current=await(await f.request('account',{method:'GET',token})).json();assert.deepEqual(current.account.progress,clean);assert.deepEqual(current.account.cards,[]);
   assert.equal((await f.request('progress',{token,body:{checkpoint:{version:1}}})).status,400);
-  assert.equal((await f.request('progress',{token,body:{checkpoint:{value:'x'.repeat(160000)}}})).status,413);
+  assert.equal((await f.request('progress',{token,body:{checkpoint:{value:'x'.repeat(RO_PROGRESS_BODY_MAX_BYTES)}}})).status,413);
  }finally{f.sqlite.close();}
 });
 

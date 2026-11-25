@@ -44,6 +44,7 @@ test('Ragnarok co-op keeps the lobby paused, classes and offers personal, comman
   await new Promise(r=>setTimeout(r,110));assert.equal(g.time,0);assert.equal(g.bonk.stage,'preparation');
   const denied=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'bkReady'}}));assert.match((await denied).message,/host/);
   const started=next(a.ws,'state',m=>m.state.onlineRoom.started);a.ws.send(JSON.stringify({type:'command',command:{type:'roomStart'}}));await started;
+  const deniedDifficulty=next(b.ws,'error');b.ws.send(JSON.stringify({type:'command',command:{type:'bkDifficulty',difficulty:'easy'}}));assert.match((await deniedDifficulty).message,/host/);const difficultyChanged=next(b.ws,'state',m=>m.state.options.bonkDifficulty==='easy');a.ws.send(JSON.stringify({type:'command',command:{type:'bkDifficulty',difficulty:'easy'}}));await difficultyChanged;assert.equal(g.options.bonkDifficulty,'easy');
   const compact=await next(b.ws,'state',m=>!!m.state.worldStaticKey&&!Object.hasOwn(m.state.bonk,'map'));assert.ok(!Object.hasOwn(compact.state.bonk,'map'));assert.ok(!Object.hasOwn(compact.state,'obstacles'));
   assert.equal(g.phase,'wave');assert.equal(g.bonk.stage,'playing');assert.ok(g.units.some(u=>u.bonkEnemy));first.hp=1;const otherHp=second.hp;assert.ok(g.command(a.data.id,{type:'bkConsumable',slot:0,target:second.id}));assert.ok(first.hp>1);assert.equal(second.hp,otherHp);
   first.bonkMove={dx:1,dz:0};first.bonkMoveAt=g.bonk.elapsed;second.bonkMove={dx:-1,dz:0};second.bonkMoveAt=g.bonk.elapsed;
