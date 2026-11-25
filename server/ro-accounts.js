@@ -70,7 +70,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
    if(route==='account')return response({account:publicAccount(state,linked)});
    let extra={};
    if(route==='presets'){const next=presets(input.presets,state.cards);if(!next||!next.some(p=>p.id===input.activePreset))return error(400,'Invalid or locked card preset');state.presets=next;state.activePreset=input.activePreset;}
-   if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');state.progress=progress;}
+   if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify(progress.warehouse.items)!==JSON.stringify(prior.items)))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=progress;}
    if(route==='run'){if(input.activity!==undefined&&!['adventure','tower'].includes(input.activity))return error(400,'Invalid activity');state.run={id:crypto.randomUUID(),activity:input.activity==='tower'?'tower':'adventure',started:stamp,processed:[],count:0};extra.runId=state.run.id;}
    if(route==='rewards'){
     if(!Array.isArray(input.kills)||input.kills.length>40||input.kills.some(k=>!validKill(k)))return error(400,'Invalid monster reports');

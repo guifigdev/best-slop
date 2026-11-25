@@ -76,6 +76,7 @@ function request(row,policy,event,phase,unit,options={}){
  * Returned requests are presentation only; readiness/suppression belongs to
  * the renderer after every requested asset has actually been loaded. */
 export function roNativeEventRequests(event,unit,manifest,options={}){
+ if(event?.skillKey==='asc_meteorassault')return[]; // Requested canonical volumetric circular fire replaces the neutral ring.
  if(!event||unit?.bonkEnemy||event.enemy||rejected.has(event.type))return[];const policy=roNativeSkillPolicy(event.skillKey,manifest);if(!policy)return[];
  if(impacts.has(event.type)&&!['roSkillImpact','roNativeHit'].includes(event.type)&&event.target!=null){
   const contact=(options.state?.effects||[]).find(e=>['roSkillImpact','roNativeHit'].includes(e.type)&&e.source===event.source&&e.target===event.target&&Math.abs(finite(e.time)-finite(event.time))<.025&&roNativeSkillPolicy(e.skillKey,manifest)?.key===policy.key);

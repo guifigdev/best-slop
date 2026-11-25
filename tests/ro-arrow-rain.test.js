@@ -1,3 +1,4 @@
+import {roSkillDamageBudget} from '../shared/ro-damage-formulas.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
@@ -11,11 +12,11 @@ function arena(){const u={id:1,x:0,z:0,alive:true,bonkHero:true,bonkBuild:{weapo
 test('Arrow Storm lands once in the target area after a visible fall and preserves its total damage',()=>{
  const{g,u,enemy,wallEnemy,api,events,hits}=arena(),w=RO_SKILLS.arrowstorm;assert.equal(w.kind,'zone');assert.equal(castRoUtilitySkill(g,u,w,1,{},api),true);assert.equal(events[0].type,'roArrowRainFall');assert.equal(events[0].x,enemy.x);assert.equal(g.bonk.roSkillZones[0].ticks,1);
  g.bonk.elapsed=RO_ARROW_RAIN_TIMING.fall-.01;g.time=g.bonk.elapsed;tickRoSkillEffects(g,u,.1,api);assert.equal(hits.length,0);
- g.bonk.elapsed=RO_ARROW_RAIN_TIMING.fall;g.time=g.bonk.elapsed;tickRoSkillEffects(g,u,.01,api);assert.equal(enemy.hp,10000-w.damage);assert.equal(wallEnemy.hp,10000);assert.equal(hits.length,1);assert.equal(events.at(-1).type,'roArrowRainImpact');
+ g.bonk.elapsed=RO_ARROW_RAIN_TIMING.fall;g.time=g.bonk.elapsed;tickRoSkillEffects(g,u,.01,api);assert.equal(enemy.hp,10000-roSkillDamageBudget(w,1,u));assert.equal(wallEnemy.hp,10000);assert.equal(hits.length,1);assert.equal(events.at(-1).type,'roArrowRainImpact');
  g.bonk.elapsed=2;g.time=2;tickRoSkillEffects(g,u,100,api);assert.equal(hits.length,1);assert.equal(g.bonk.roSkillZones.length,0);
 });
-test('Shower is a smaller single volley while Severe Rainstorm retains five budgeted volleys',()=>{
- for(const key of ['ac_shower','severerainstorm']){const{g,u,enemy,api,events}=arena(),w=RO_SKILLS[key];castRoUtilitySkill(g,u,w,1,{},api);const count=g.bonk.roSkillZones[0].ticks;assert.equal(count,key==='ac_shower'?1:5);for(let i=0;i<count;i++){g.bonk.elapsed=RO_ARROW_RAIN_TIMING.fall+i;g.time=g.bonk.elapsed;tickRoSkillEffects(g,u,.1,api);}assert.ok(Math.abs(enemy.hp-(10000-w.damage))<1e-8);assert.equal(events.filter(e=>e.type==='roArrowRainImpact').length,count);assert.equal(events.filter(e=>e.type==='roArrowRainFall').length,count);}
+test('Shower is a smaller single volley while Severe Rainstorm retains twelve native volleys',()=>{
+ for(const key of ['ac_shower','severerainstorm']){const{g,u,enemy,api,events}=arena(),w=RO_SKILLS[key];castRoUtilitySkill(g,u,w,1,{},api);const count=g.bonk.roSkillZones[0].ticks;assert.equal(count,key==='ac_shower'?1:12);for(let i=0;i<count;i++){g.bonk.elapsed=RO_ARROW_RAIN_TIMING.fall+i*(key==='ac_shower'?1:.3)+.00001;g.time=g.bonk.elapsed;tickRoSkillEffects(g,u,.1,api);}assert.ok(Math.abs(enemy.hp-(10000-roSkillDamageBudget(w,1,u)))<1e-8);assert.equal(events.filter(e=>e.type==='roArrowRainImpact').length,count);assert.equal(events.filter(e=>e.type==='roArrowRainFall').length,count);}
  assert.ok(RO_SKILLS.ac_shower.mechanics.radius<RO_SKILLS.arrowstorm.mechanics.radius);
 });
 test('shared samples and descending arrow geometry are deterministic, inside the damage disk and never restart in a late snapshot',()=>{

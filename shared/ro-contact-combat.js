@@ -13,5 +13,5 @@ export function roRecordHitReaction(unit,source,time){
  unit.roHitReaction={at:time,dx:length>1e-6?dx/length:0,dz:length>1e-6?dz/length:0};
 }
 
-export const RO_CONTACT_KNOCKBACK=Object.freeze({distance:.65,duration:.14});
+export const RO_CONTACT_KNOCKBACK=Object.freeze({distance:.4,duration:.14});
 export function roContactKnockback(hero,enemy){const dx=hero.x-enemy.x,dz=hero.z-enemy.z,d=Math.hypot(dx,dz),angle=enemy.facing||0;hero.roContactPush={dx:d>1e-6?dx/d:Math.sin(angle),dz:d>1e-6?dz/d:Math.cos(angle),remaining:RO_CONTACT_KNOCKBACK.distance};}

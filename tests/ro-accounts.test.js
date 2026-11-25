@@ -84,7 +84,7 @@ test('Concurrent reward requests cannot double roll an enemy or lose distinct ca
 test('A reported boss flag cannot increase normal creature odds; true MVPs use their catalog card',async()=>{
  const f=fixture();try{const {token}=await account(f),run=await(await f.request('run',{token})).json();f.settings.random=()=>.0005;
   const result=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:1,visual:'poring',boss:true},{id:2,visual:'ifrit',boss:false},{id:3,visual:'tower_1957',boss:false}]}})).json();
-  assert.deepEqual(result.newCards,['ifrit','towercard_4451']);assert.deepEqual(result.account.cards,['ifrit','towercard_4451']);
+  assert.deepEqual(result.newCards,['poring','ifrit','towercard_4451']);assert.deepEqual(result.account.cards,['poring','ifrit','towercard_4451']);
  }finally{f.sqlite.close();}
 });
 test('Tower reward credits cover a full 280-creature burst and its canonical spawn throughput without losing MVP receipts',async()=>{
@@ -98,11 +98,20 @@ test('Tower reward credits cover a full 280-creature burst and its canonical spa
 });
 test('Canonical progress rejects malformed data, strips client unlocks and obeys the body limit',async()=>{
  const progress={version:1,characters:[],selectedCharacter:null,cards:['poring'],presets:[{cards:{armor:'poring'}}]};
- const clean=validateRoAccountProgress(progress);assert.deepEqual(clean,{version:1,characters:[],selectedCharacter:null});
+ const clean=validateRoAccountProgress(progress);assert.deepEqual(clean,{version:1,warehouse:{version:1,revision:0,items:[]},characters:[],selectedCharacter:null});
  assert.equal(validateRoAccountProgress({...progress,version:2}),null);
  assert.equal(validateRoAccountProgress({...progress,characters:[{id:'bad',lineage:'dragonknight',checkpoint:{hero:{value:Infinity}}}]}),null);
  const f=fixture();try{const {token}=await account(f);assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);const current=await(await f.request('account',{method:'GET',token})).json();assert.deepEqual(current.account.progress,clean);assert.deepEqual(current.account.cards,[]);
   assert.equal((await f.request('progress',{token,body:{checkpoint:{version:1}}})).status,400);
   assert.equal((await f.request('progress',{token,body:{checkpoint:{value:'x'.repeat(160000)}}})).status,413);
+ }finally{f.sqlite.close();}
+});
+
+test('shared Kafra revisions reject stale or conflicting saves without overwriting the stored warehouse',async()=>{
+ const f=fixture();try{const {token}=await account(f),progress={version:1,characters:[],selectedCharacter:null,warehouse:{version:1,revision:1,items:[{id:'kafra:gift',key:'knife',cards:[],refine:3,enchants:{damage:2}}]}};
+  assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);
+  for(const warehouse of [{version:1,revision:0,items:[]},{version:1,revision:1,items:[]}])assert.equal((await f.request('progress',{token,body:{checkpoint:{...progress,warehouse}}})).status,409);
+  const current=await(await f.request('account',{method:'GET',token})).json();assert.equal(current.account.progress.warehouse.items[0].refine,3);assert.equal(current.account.progress.warehouse.items.length,1);
+  assert.equal((await f.request('progress',{token,body:{checkpoint:{...progress,warehouse:{version:1,revision:2,items:[]}}}})).status,200);
  }finally{f.sqlite.close();}
 });

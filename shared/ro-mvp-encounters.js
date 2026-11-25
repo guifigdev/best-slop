@@ -1,3 +1,4 @@
+import {roNativeEnemySkills} from './ro-native-enemy-behavior.js';
 import {mvpWarning} from './ragnarok-expansion.js';
 
 // Large attacks have visible gaps and at least two seconds of committed warning.
@@ -15,6 +16,15 @@ export const roMvpImpactDuration=pattern=>({blizzard:1.35,lightning:.85,holy:1.1
 export function roMvpPatterns(boss,player,index,time){
  const phase=Math.max(0,Math.floor(index)||0),kind=boss.ragnarokMvp,damage=boss.damage*2.6;
  const base={source:boss.id,mvp:kind,skill:'slam',element:boss.element||'physical',from:{x:boss.x,z:boss.z},targetPoint:{x:player.x,z:player.z},groundedOnly:false,damage,fireAt:time+2.4};
+ const nativeKeys=roNativeEnemySkills(boss).filter(key=>['WZ_STORMGUST','WZ_METEOR','NPC_EARTHQUAKE','NPC_DARKBREATH','SM_MAGNUM','ASC_METEORASSAULT'].includes(key)),sourceAegis=nativeKeys[phase%nativeKeys.length];
+ if(sourceAegis){
+  const source={...base,sourceAegis};
+  if(sourceAegis==='WZ_METEOR')return Array.from({length:3},(_,i)=>({...source,x:player.x+Math.sin(i*2.399+phase)*i*3,z:player.z+Math.cos(i*2.399+phase)*i*3,shape:'circle',radius:4.5,element:'fire',impactArt:'meteor',name:'Chuva de Meteoros',airborneAvoidable:true,fireAt:time+2.4+i*.4}));
+  if(sourceAegis==='WZ_STORMGUST')return[{...source,x:player.x,z:player.z,shape:'circle',radius:9,element:'ice',name:'Nevasca',slowSeconds:3,airborneAvoidable:true}];
+  if(sourceAegis==='NPC_EARTHQUAKE')return Array.from({length:3},(_,i)=>({...source,x:boss.x,z:boss.z,shape:'ring',radius:22+i*4,inner:4,element:'physical',groundedOnly:true,name:'Terremoto',damage:boss.damage*1.3,fireAt:time+2.5+i*.5}));
+  if(sourceAegis==='NPC_DARKBREATH'){const length=Math.hypot(player.x-boss.x,player.z-boss.z)||1;return[{...source,x:boss.x,z:boss.z,dx:(player.x-boss.x)/length,dz:(player.z-boss.z)/length,shape:'cone',radius:24,angle:Math.PI*.36,element:'dark',name:'Sopro Sombrio',airborneAvoidable:true}];}
+  return[{...source,x:boss.x,z:boss.z,shape:'circle',radius:sourceAegis==='SM_MAGNUM'?8:7,element:sourceAegis==='SM_MAGNUM'?'fire':'physical',name:sourceAegis==='SM_MAGNUM'?'Impacto Explosivo':'Impacto Meteoro',knockback:sourceAegis==='SM_MAGNUM'?4.2:0}];
+ }
  const ring=(radius,inner,element)=>({...base,x:boss.x,z:boss.z,shape:'ring',radius,inner,element,skill:'slam'});
  const line=(x,z,dx,dz,width=3,length=60,element='physical',delay=0)=>({...base,x,z,dx,dz,width,length,shape:'line',radius:length/2,element,skill:'volley',fireAt:time+2.4+delay});
  if(kind==='ifrit')return phase%2===0?[{...ring(38,8,'fire'),name:'Erupção infernal',damage:boss.damage*3.1},...[-1,1].map(s=>line(boss.x+s*16,boss.z,0,1,4,64,'fire',.45))]:Array.from({length:5},(_,i)=>({...base,x:player.x+Math.sin(i*2.399)*i*3,z:player.z+Math.cos(i*2.399)*i*3,shape:'circle',radius:5,element:'fire',skill:'slam',impactArt:'meteor',name:'Chuva de meteoros',fireAt:time+2.1+i*.32}));

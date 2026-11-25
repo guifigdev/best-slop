@@ -31,6 +31,7 @@ export function createHudLayoutStore(storage,user='local'){
 }
 
 const BARS=[
+ ['ro-town','.ro-town-window','Serviços de Midgard'],
  ['launcher','.hud-launcher','Atalhos'],['skills','.worldbottom .skilldock','Habilidades'],
  ['bag','.inventory-dock','Mochila'],['consumables','.consumable-dock','Consumíveis'],
  ['camera','.camera-tools','Câmera'],['map','.exploration-minimap','Minimapa'],

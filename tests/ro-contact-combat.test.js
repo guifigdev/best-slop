@@ -24,5 +24,5 @@ test('stunned monsters and jumps do not cause grounded contact damage; leaving s
  const{g,u,e}=setup();e.roSkillStunUntil=2;const hp=u.hp;step(g,2);assert.equal(u.hp,hp);e.roSkillStunUntil=0;u.bonkJumpHeight=2;u.bonkJumpVelocity=3;step(g,1);assert.equal(u.hp,hp);u.bonkJumpHeight=0;u.bonkJumpVelocity=0;e.x=u.x+4;step(g,20);assert.equal(u.hp,hp);
 });
 test('hit recoil is visible, transient and transforms source direction without moving the collision body',()=>{
- const u={alive:true,x:2,z:3,facing:Math.PI/2};roRecordHitReaction(u,{x:1,z:3},10);const p=roHitReactionPose(u,10.07);assert.ok(p.z>.1);assert.ok(p.flash>.5);assert.ok(p.scaleY<1);assert.deepEqual([u.x,u.z],[2,3]);assert.equal(roHitReactionPose(u,10.33),null);assert.equal(roHitReactionPose({...u,alive:false},10.07),null);
+ const u={alive:true,x:2,z:3,facing:Math.PI/2};roRecordHitReaction(u,{x:1,z:3},10);const p=roHitReactionPose(u,10.07);assert.ok(p.z>.1);assert.ok(p.flash>.5);assert.ok(p.scaleY<1);assert.deepEqual([u.x,u.z],[2,3]);assert.equal(roHitReactionPose(u,10.43),null);assert.equal(roHitReactionPose({...u,alive:false},10.07),null);
 });

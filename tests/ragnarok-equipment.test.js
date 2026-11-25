@@ -37,7 +37,7 @@ test('Rare card drops are monster-specific with exact normal and boss probabilit
  const fixed=v=>()=>v;
  assert.deepEqual(rollRoLoot(fixed(0),'poring'),{kind:'card',key:'poring'});assert.equal(rollRoLoot(fixed(0),'unknown'),null);
  assert.deepEqual(rollRoLoot(fixed(RO_LOOT_RATES.card-.0000001),'fabre'),{kind:'card',key:'fabre'});
- assert.equal(rollRoLoot(fixed(.0005),'poring',{boss:true}).kind,'card');assert.equal(rollRoLoot(fixed(.0005),'poring').kind,'equipment');
+ assert.equal(rollRoLoot(fixed(.0005),'poring',{boss:true}).kind,'card');assert.equal(rollRoLoot(fixed(.005),'poring').kind,'equipment');
  assert.equal(rollRoLoot(fixed(RO_LOOT_RATES.card+RO_LOOT_RATES.equipment),'poring'),null);assert.equal(rollRoLoot(fixed(NaN),'poring'),null);assert.equal(rollRoLoot(fixed(1),'poring'),null);
  for(const mvp of RAGNAROK_MVPS){const drop=rollRoLoot(fixed(.0005),mvp.key,{boss:true});assert.equal(drop?.kind,'card');assert.ok(RO_CARDS[drop.key].mvp);assert.ok(RO_CARDS[drop.key].monsters.includes(mvp.key));}
 });

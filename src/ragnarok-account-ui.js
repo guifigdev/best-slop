@@ -1,3 +1,4 @@
+import {validateRoWarehouse} from '../shared/ro-kafra.js';
 import {RO_CARDS,RO_EQUIPMENT_SLOTS,RO_EQUIPMENT_SLOT_NAMES,roCardFitsSlot} from '../shared/ragnarok-equipment.js';
 import {RO_LINEAGES} from '../shared/ragnarok-jobs.js';
 import {createRoCheckpoint,validateRoProgress} from '../shared/ragnarok-save.js';
@@ -28,16 +29,16 @@ export function mergeRoProgress(remote,local){
  const a=validateRoProgress(remote)||emptyProgress(),b=validateRoProgress(local)||emptyProgress(),characters=new Map(a.characters.map(c=>[c.id,c]));
  for(const c of b.characters)if(!characters.has(c.id)||c.updatedAt>characters.get(c.id).updatedAt)characters.set(c.id,c);
  const merged=[...characters.values()].sort((x,y)=>y.updatedAt-x.updatedAt).slice(0,12),selected=merged.some(c=>c.id===b.selectedCharacter)?b.selectedCharacter:a.selectedCharacter;
- return{version:1,characters:merged,selectedCharacter:merged.some(c=>c.id===selected)?selected:merged[0]?.id||null};
+ const warehouse=(b.warehouse?.revision||0)>(a.warehouse?.revision||0)?b.warehouse:a.warehouse;return{version:1,warehouse,characters:merged,selectedCharacter:merged.some(c=>c.id===selected)?selected:merged[0]?.id||null};
 }
 export function roAccountSelection(account,{activity='adventure',characterId,resume=false}={}){
  const progress=validateRoProgress(account?.progress)||emptyProgress(),character=progress.characters.find(c=>c.id===characterId)||null,checkpoint=character?.checkpoints?.[activity]?{...character.checkpoints[activity],hero:clone(character.checkpoint.hero)}:character?.checkpoint||null;
  return{activity:activity==='tower'?'tower':'adventure',characterId,character:character?clone(character):null,checkpoint:checkpoint?clone(checkpoint):null,resume:!!resume&&!!checkpoint&&checkpoint.activity===activity};
 }
-export function saveRoCharacter(progress,{id,name,lineage,checkpoint,updatedAt=Date.now()}){
+export function saveRoCharacter(progress,{id,name,lineage,checkpoint,warehouse,updatedAt=Date.now()}){
  const current=validateRoProgress(progress)||emptyProgress(),previous=current.characters.find(c=>c.id===id),characters=current.characters.filter(c=>c.id!==id);
  if(characters.length>=12)return null;
- return validateRoProgress({version:1,characters:[...characters,{id,name,lineage,checkpoint,checkpoints:{...previous?.checkpoints,[checkpoint.activity]:checkpoint},updatedAt}],selectedCharacter:id});
+ return validateRoProgress({version:1,warehouse:warehouse||current.warehouse,characters:[...characters,{id,name,lineage,checkpoint,checkpoints:{...previous?.checkpoints,[checkpoint.activity]:checkpoint},updatedAt}],selectedCharacter:id});
 }
 
 // Optional fetch/storage injection keeps account and retry behavior testable
@@ -79,6 +80,7 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   const hero=game?.units?.find(u=>u.bonkHero);if(!hero)return false;const chosen=roAccountSelection(account,{activity:game.bonk.activity,characterId:selectedId,resume});
   if(!online&&chosen.checkpoint&&chosen.character.lineage===hero.roLineage)localCommand(game,{type:'bkRestore',checkpoint:chosen.checkpoint,activity:chosen.activity,freshActivity:!chosen.resume||chosen.checkpoint.activity!==chosen.activity});
   else if(!online&&chosen.character){selectedId=uuid();characterName='';}
+  if(!online)hero.roWarehouse=clone(account.progress.warehouse||{version:1,revision:0,items:[]});
   if(!online)hero.roSkillMode=game.options.bonkSkillMode==='class'?'class':'mixed';
   if(!online)localCommand(game,{type:'bkCards',cards:clone(preset().cards)});
   const run={game,id:null,epoch,activity:game.bonk.activity==='tower'?'tower':'adventure',characterId:selectedId,name:characterName||RO_LINEAGES[hero.roLineage]?.names[0]||'Aventureiro',lineage:hero.roLineage};running=run;lastFloor='';lastRoute='';lastLevel=0;lastSaveAt=0;lastRewardAt=0;
@@ -88,7 +90,7 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
  function save(game=getGame()){
   if(game?.options?.bonkDebug===true)return Promise.resolve(false);
   if(!game?.bonk||!running||running.game!==game||running.epoch!==epoch)return Promise.resolve(false);
-  const checkpoint=createRoCheckpoint(game);if(!checkpoint)return Promise.resolve(false);const run=running,next=saveRoCharacter(account.progress,{id:run.characterId,name:run.name,lineage:run.lineage,checkpoint,updatedAt:Date.now()});if(!next){toast('Sua conta já tem 12 personagens.');return Promise.resolve(false);}
+  const checkpoint=createRoCheckpoint(game);if(!checkpoint)return Promise.resolve(false);const run=running,next=saveRoCharacter(account.progress,{id:run.characterId,name:run.name,lineage:run.lineage,checkpoint,warehouse:game.units.find(u=>u.bonkHero)?.roWarehouse,updatedAt:Date.now()});if(!next){toast('Sua conta já tem 12 personagens.');return Promise.resolve(false);}
   account.progress=next;selectedId=run.characterId;lastSaveAt=Date.now();pendingSave=false;stored();render();
   if(status!=='cloud')return Promise.resolve(true);const version=epoch,payload=clone(next);
   return serial(async()=>{if(game.options?.bonkDebug===true||version!==epoch)return false;try{const data=await api('progress',{method:'POST',body:{checkpoint:payload}});if(version!==epoch)return false;accept(data.account);return true;}catch(error){if(version===epoch){notice=error.message;status='local';notify();}return false;}});
@@ -99,7 +101,8 @@ export function createRagnarokAccountUI({send=()=>false,getGame=()=>null,getStat
   if(!running||running.game!==game||!game?.bonk)return;const hero=game.units.find(u=>u.bonkHero),floor=`${game.bonk.activity}:${game.bonk.clearedStages.length}:${game.bonk.stage}`;
   const route=game.bonk.routeVersion>=1?`${game.bonk.routeIndex}:${Number(game.bonk.routeBossDefeated)}`:'';const routeChanged=!!route&&route!==lastRoute;lastRoute=route;
   if(hero&&(floor!==lastFloor||hero.level!==lastLevel||routeChanged)){pendingSave=true;lastFloor=floor;lastLevel=hero.level;}
-  if(routeChanged||time-lastSaveAt>=15000)void save(game);
+  const warehouseRevision=hero?.roWarehouse?.revision||0;if(warehouseRevision!==(account.progress.warehouse?.revision||0))pendingSave=true;
+  if(warehouseRevision!==(account.progress.warehouse?.revision||0)||routeChanged||time-lastSaveAt>=15000)void save(game);
   if(status==='cloud'&&!running.id)void startRun(running);
   if(status!=='cloud'||!running.id||rewardBusy||time-lastRewardAt<(running.activity==='tower'?250:1000))return;const kills=(game.bonk.rewardKills||[]).slice(0,40).map(k=>({id:String(k.id),visual:k.visual,boss:!!k.boss}));if(!kills.length)return;
   const rewardPoints=new Map((game.bonk.rewardKills||[]).map(k=>[String(k.id),{x:k.x,z:k.z}])),run=running,version=epoch;rewardBusy=true;lastRewardAt=time;

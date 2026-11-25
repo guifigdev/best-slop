@@ -21,7 +21,7 @@ test('Ragnabonk critical chance belongs to equipped gear, bound enchantments and
 });
 test('normal equipment drops are more present and include critical gear without replacing monster-specific cards',()=>{
  let gear=0,crit=0;for(let i=0;i<10000;i++){const sequence=[(i+.5)/10000,(i%26+.5)/26];const drop=rollRoLoot(()=>sequence.shift()??.5,'poring');if(drop?.kind==='equipment'){gear++;if(['criticalring','katar'].includes(drop.key))crit++;}}
- assert.equal(gear,600);assert.ok(crit>20);assert.equal(RO_LOOT_RATES.card,.00015);assert.equal(RO_LOOT_RATES.bossCard,.0015);
+ assert.equal(gear,600);assert.ok(crit>20);assert.equal(RO_LOOT_RATES.card,.005);assert.equal(RO_LOOT_RATES.bossCard,.005);
  assert.deepEqual(rollRoLoot(()=>0,'poring'),{kind:'card',key:'poring'});
 });
 test('class-only offers cover every lineage and the authoritative chooser rejects skills outside the current offer',()=>{

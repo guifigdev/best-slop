@@ -9,7 +9,7 @@ import {saveRoCharacter,roAccountSelection} from '../src/ragnarok-account-ui.js'
 Object.assign(Game.prototype,BonkMethods);
 function setup(options={}){const g=new Game(492,{mode:'bonk',bonkLineage:'dragonknight',...options});assert.ok(g.addPlayer('review','knight'));return{g,u:g.player('review')};}
 function isolate(g){g.units=g.units.filter(u=>u.bonkHero);g.bonk.objectives=[];g.bonk.spawnAt=1e9;g.random=()=>0;}
-function burningBoss(g,u,extra={}){const e={id:g.id(),bonkEnemy:true,bonkBoss:true,dungeonSpecies:'ifrit',ragnarokVisual:'ifrit',ragnarokMvp:'ifrit',alive:true,team:100,x:u.x+12,z:u.z,hp:1,maxHp:1,damage:0,speed:0,size:2,collisionRadius:.8,bonkNextAttack:1e9,bonkNextSpecial:1e9,bonkBurnUntil:1000,bonkBurnDamage:100,bonkDotAt:0,interval:1.3,...extra};g.units.push(e);return e;}
+function burningBoss(g,u,extra={}){const e={id:g.id(),bonkEnemy:true,bonkBoss:true,dungeonSpecies:'hatii',ragnarokVisual:'hatii',ragnarokMvp:'hatii',alive:true,team:100,x:u.x+12,z:u.z,hp:1,maxHp:1,damage:0,speed:0,size:2,collisionRadius:.8,bonkNextAttack:1e9,bonkNextSpecial:1e9,bonkBurnUntil:1000,bonkBurnDamage:100,bonkDotAt:0,interval:1.3,...extra};g.units.push(e);return e;}
 
 test('New regions reset combat cooldowns when their elapsed clock restarts',()=>{
  const{g,u}=setup();g.command('review',{type:'bkReady'});isolate(g);g.bonk.stage='cleared';g.bonk.clearedStages=['grove'];g.bonk.elapsed=180;u.bonkWeaponAt={basic:180.5,bash:181};u.bonkDashReady=183;u.bonkDashUntil=179;u.bonkDashVector={dx:1,dz:0};

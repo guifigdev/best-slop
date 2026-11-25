@@ -29,3 +29,15 @@
 @media(orientation:landscape) and (max-height:550px){.ro-gear-enchant-slot{min-height:64px;padding:5px 3px}.ro-gear-enchant-slot>b{font-size:8px}.ro-gear-enchant-slot>span:first-child{font-size:17px}.ro-gear-detail>.ro-gear-enchantments{grid-column:auto}}
 /* Equipped enchantments are shown on each piece; keep the bag grid first. */
 .bonk-hud .bonk-build.expanded>div.ro-passive-build{display:none}
+
+.ro-gear-original{object-fit:contain;image-rendering:pixelated;background:radial-gradient(ellipse,#40574355,transparent 72%);padding:4px;box-sizing:border-box;filter:drop-shadow(0 2px 1px #0008)}
+.ro-gear-skill-bonuses{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px}.ro-gear-skill-bonuses p{display:grid;gap:4px}.ro-gear-skill-bonuses span{color:#e2c783}
+
+.ro-town-window{width:min(850px,calc(100vw - 32px));pointer-events:auto}.ro-town-window>header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.ro-town-window>header h3{margin:8px 0 16px}.ro-town-window>p{font-size:13px;line-height:1.55}.ro-town-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ro-town-columns>section{min-width:0}.ro-town-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #80967433}.ro-town-item>.ro-gear-icon{width:42px;height:42px;flex:none}.ro-town-item>div{display:grid;gap:5px;flex:1;font-size:12px;min-width:0}.ro-town-item small{font-size:10px;color:#bec9ad}.ro-town-item button{font-size:11px;padding:8px;min-height:36px;flex:none}.ro-town-stock>article{margin-bottom:16px}.ro-town-stock summary{padding:9px;font-size:12px;cursor:pointer}.ro-town-actions{display:flex;gap:16px}.ro-town-actions button{display:grid;gap:8px;padding:20px}.ro-town-window .ro-gear-comparison{margin:8px 0}
+@media(max-width:600px){.ro-town-columns{grid-template-columns:1fr}.ro-town-item button{max-width:130px}.ro-town-window{padding:14px}}
+
+.ro-proc-cue{position:absolute;right:18px;top:145px;max-width:260px;display:grid;gap:5px;padding:11px 14px;background:#143c31eb;border:1px solid #d5b76e;border-radius:8px;pointer-events:none;color:#eae5ca;font-size:12px;z-index:20}.ro-proc-cue small{font-size:9px;letter-spacing:.1em;color:#e8bc6a}.ro-proc-cue span{font-size:11px}.ro-gear-refine{font-size:10px;color:#e5c172}
+
+.ro-gear-element-bonuses{padding:0 0 0 13px;display:grid;gap:6px;font-size:11px;line-height:1.4;color:#c5dcc1}
+
+.ro-town-backdrop{padding:64px 16px 20px;box-sizing:border-box}.ro-town-window{max-height:calc(100dvh - 90px)}.ro-town-window button{background:#315448;color:#f2e6c7;border:1px solid #91aa80;border-radius:6px;font-family:inherit}.ro-town-window button:hover:not(:disabled){background:#48664b;border-color:#d8c080}.ro-town-window button:disabled{opacity:.5}.ro-town-stock .ro-town-item button,.ro-town-actions button{background:#ddc17c;color:#17392c;border-color:#eed49d}.ro-town-window>header{position:sticky;top:-14px;background:#15382e;z-index:3;padding-top:8px}.ro-town-window>header small{font-size:10px;letter-spacing:.07em;color:#d1bc85}body.hud-revamp .ro-town-window>.hud-drag-handle{top:7px;z-index:5}

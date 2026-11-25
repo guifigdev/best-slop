@@ -1,10 +1,10 @@
-export function combatStatuses(u,time){const statuses=[],burn=Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0,u.wlLavaContactUntil||0,u.wlMeteorBurnUntil||0),frost=Math.max(u.wlFrostUntil||0,u.frostUntil||0,u.dots?.frost?.until||0,(u.webbedUntil||0)>time?0:u.abilitySlowUntil||0),poison=u.dots?.poison?.until||0;
+export function combatStatuses(u,time){const statuses=[];if(u.roNativeAgilityVisualUntil>time)statuses.push({key:'haste',label:'AGI ↑',until:u.roNativeAgilityVisualUntil});if(u.roAgilityDownVisualUntil>time)statuses.push({key:'agidown',label:'AGI ↓',until:u.roAgilityDownVisualUntil});if(u.roNativeCast?.visualUntil>time)statuses.push({key:'cast',label:u.roNativeCast.name,until:u.roNativeCast.visualUntil});const burn=Math.max(u.dots?.burn?.until||0,u.dots?.lava?.until||0,u.solarUntil||0,u.wlLavaContactUntil||0,u.wlMeteorBurnUntil||0),frost=Math.max(u.wlFrostUntil||0,u.frostUntil||0,u.dots?.frost?.until||0,(u.webbedUntil||0)>time?0:u.abilitySlowUntil||0),poison=u.dots?.poison?.until||0;
  if(burn>time)statuses.push({key:'fire',label:'QUEIMANDO',until:burn});
- if((u.wlFrozenUntil||0)>time)statuses.push({key:'freeze',label:'CONGELADO',until:u.wlFrozenUntil});
- if(frost>time&&(u.wlFrozenUntil||0)<=time)statuses.push({key:'frost',label:'FROST · LENTO',until:frost});
+ if(Math.max(u.wlFrozenUntil||0,u.roFrozenVisualUntil||0)>time)statuses.push({key:'freeze',label:'CONGELADO',until:Math.max(u.wlFrozenUntil||0,u.roFrozenVisualUntil||0)});
+ if(frost>time&&Math.max(u.wlFrozenUntil||0,u.roFrozenVisualUntil||0)<=time)statuses.push({key:'frost',label:'FROST · LENTO',until:frost});
  if((u.webbedUntil||0)>time)statuses.push({key:'web',label:'TEIA · LENTO',until:u.webbedUntil});
  if(poison>time)statuses.push({key:'poison',label:'VENENO',until:poison});
- if((u.rageUntil||0)>time)statuses.push({key:'rage',label:'FÚRIA',until:u.rageUntil});
+ if((u.rageUntil||0)>time||u.bonkEnraged)statuses.push({key:'rage',label:'FÚRIA',until:u.rageUntil});
  if((u.violentForce?.until||0)>time)statuses.push({key:'violentforce',label:'FORÇA VIOLENTA',until:u.violentForce.until});
  if(u.stun>0)statuses.push({key:'stun',label:'ATORDOADO',until:time+u.stun});
  if((u.magicWardUntil||0)>time)statuses.push({key:'ward',label:'PROTEÇÃO MÁGICA',until:u.magicWardUntil});

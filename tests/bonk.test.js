@@ -51,8 +51,8 @@ test('four defeated MVPs finish the expedition without reusing portal or timer p
 
 test('long horde simulation keeps units, physical rewards, effects and projectiles inside technical budgets',()=>{
  const{g,u}=setup(913);u.bonkBuild.weapons={};u.bonkBuild.tomes={amount:5,haste:6,area:4,vitality:7};u.bonkBuild.relics={giantbone:10};let highest=0;
- for(let i=0;i<2400;i++){if(i===1000)u.bonkBuild.weapons={runeblade:5,ember:6,frost:7,thorns:6};choose(g);u.hp=u.maxHp;g.command('p',{type:'bkMove',dx:Math.sin(i*.003),dz:Math.cos(i*.003)});g.tick(.05);highest=Math.max(highest,g.units.length);assert.ok(g.bonk.pickups.length<=BONK_RULES.pickupBudget);assert.ok(g.bonk.projectiles.length<=BONK_RULES.projectileBudget);assert.ok(g.units.filter(e=>e.bonkEnemy&&e.alive).length<=BONK_RULES.aliveBudget+4);assert.ok(g.effects.length<1000);}
- assert.ok(highest>25,'the actual horde accumulates during play');assert.ok(highest<400);assert.ok(u.kills>20);
+ for(let i=0;i<2400;i++){if(i===1000){u.bonkBuild.weapons={basic:8,bash:8,sm_magnum:8};u.bonkSkillSlots=['basic','bash','sm_magnum'];u.attributes.str=u.attributes.dex=99;}choose(g);u.hp=u.maxHp;g.command('p',{type:'bkMove',dx:i<1000?Math.sin(i*.003):0,dz:i<1000?Math.cos(i*.003):0});g.tick(.05);highest=Math.max(highest,g.units.length);assert.ok(g.bonk.pickups.length<=BONK_RULES.pickupBudget);assert.ok(g.bonk.projectiles.length<=BONK_RULES.projectileBudget);assert.ok(g.units.filter(e=>e.bonkEnemy&&e.alive).length<=BONK_RULES.aliveBudget+4);assert.ok(g.effects.length<1000);}
+ assert.ok(highest>25,'the actual horde accumulates during play');assert.ok(highest<400);assert.ok(u.kills>0,'the budget run still exercises combat kills at the new durability');
 });
 
 

@@ -14,8 +14,8 @@ function arena(){
 const cast=g=>g.command('p',{type:'bkCast',key:'rollingcutter'});
 
 test('manual Rolling Cutter damages the actual target and shares SP/cooldown with AUTO',()=>{
- const{g,u,enemy}=arena();u.bonkBuild.tomes.haste=3;const startMana=u.mana,hp=enemy.hp,status=roSkillStatus(g,u,'rollingcutter',bonkStats(u));assert.equal(status.ready,true);assert.equal(status.manaCost,5);assert.ok(cast(g));assert.equal(u.mana,startMana-5);assert.ok(enemy.hp<hp);assert.equal(u.bonkWeaponAt.rollingcutter,g.bonk.elapsed+roSkillCooldown(BONK_WEAPONS.rollingcutter,3,bonkStats(u)));const after=enemy.hp,sp=u.mana,effects=g.effects.length;assert.equal(cast(g),false);assert.equal(enemy.hp,after);assert.equal(u.mana,sp);assert.equal(g.effects.length,effects);assert.match(g.commandFailureReason,/recarregando/i);
- const entry=g.snapshotBonk().weapons.find(w=>w.key==='rollingcutter');assert.equal(entry.auto,true);assert.equal(entry.ready,false);assert.equal(entry.reasonCode,'cooldown');assert.ok(entry.cooldownRemaining>0);assert.equal(entry.manaCost,5);
+ const{g,u,enemy}=arena();u.bonkBuild.tomes.haste=3;const startMana=u.mana,hp=enemy.hp,status=roSkillStatus(g,u,'rollingcutter',bonkStats(u));assert.equal(status.ready,true);assert.equal(status.manaCost,5);assert.ok(cast(g));assert.equal(u.mana,startMana-5);assert.ok(enemy.hp<hp);assert.equal(u.bonkWeaponAt.rollingcutter,g.bonk.elapsed+roSkillCooldown(BONK_WEAPONS.rollingcutter,3,bonkStats(u)));const after=enemy.hp,sp=u.mana,effects=g.effects.length;assert.equal(cast(g),false);assert.equal(enemy.hp,after);assert.equal(u.mana,sp);assert.equal(g.effects.length,effects);assert.match(g.commandFailureReason,/Pós-conjuração/i);
+ const entry=g.snapshotBonk().weapons.find(w=>w.key==='rollingcutter');assert.equal(entry.auto,true);assert.equal(entry.ready,false);assert.equal(entry.reasonCode,'aftercast');assert.equal(entry.cooldownRemaining,0);assert.ok(entry.afterCastRemaining>0);assert.equal(entry.manaCost,5);
 });
 
 test('casting never bypasses missing SP, target, learned skill, life or paused offer',()=>{

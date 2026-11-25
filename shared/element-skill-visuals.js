@@ -5,7 +5,7 @@ export const isLiquidWaterSkill=key=>/waterball|deluge|(?:^|_)water(?:_|$)|aqua|
 export function skillVisualElement(event={}){const key=event.skillKey||event.skill||event.key;return isLiquidWaterSkill(key)?'water':event.element||event.weapon?.element||RO_SKILLS[key]?.element;}
 const impacts=new Set(['roSkillImpact','roNativeHit','abilityPulse','fireball','frostnova','waterball','splash','watersurge','earthspike','rockfall','earthquake']);
 export function elementImpactRequest(event,state,time=state?.time||0){
- if(!event||event.basicAttack||['bossDanger','bossImpact','monsterWarning','damage','miss','cast'].includes(event.type)||event.skillKey==='lg_earthdrive')return null;
+ if(!event||event.basicAttack||['bossDanger','bossImpact','monsterWarning','damage','miss','cast'].includes(event.type)||['lg_earthdrive','tf_sprinklesand'].includes(event.skillKey))return null;
  const element=skillVisualElement(event);if(!['water','earth'].includes(element))return null;
  const skill=RO_SKILLS[event.skillKey],kind=event.attackKind||skill?.kind;
  if(event.type==='roAttack'&&['projectile','zone','summon','buff','heal'].includes(kind))return null;

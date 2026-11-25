@@ -1,3 +1,4 @@
+import {roSkillDamageBudget} from '../shared/ro-damage-formulas.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
@@ -17,20 +18,20 @@ test('meteor stones descend from above the trees to the exact terrain, with vari
  assert.deepEqual(roMeteorStones(structuredClone(e)),roMeteorStones(e));assert.notDeepEqual(roMeteorStones(fall(2)),roMeteorStones(e));assert.deepEqual(e,before);assert.deepEqual(roMeteorPose(e,-1),[]);assert.deepEqual(roMeteorPose(e,.9),[]);
 });
 
-test('Meteor Storm spends its existing damage budget only as the five showers land, with no catch-up burst or pre-cast flames',()=>{
+test('Meteor Storm spends its existing damage budget only as the native rank-one showers land, with no catch-up burst or pre-cast flames',()=>{
  const weapon=RO_SKILLS.wz_meteor,unit={id:1,x:0,z:0,alive:true,bonkBuild:{weapons:{wz_meteor:1}}},enemy={id:2,x:3,z:0,bonkEnemy:true,alive:true},blocked={id:3,x:3,z:1,bonkEnemy:true,alive:true},game={time:0,bonk:{elapsed:0,stage:'playing'},units:[unit,enemy,blocked],id:()=>9},events=[],hits=[];
  const api={segment:(a,b)=>b.id!==3,damage:(e,n)=>hits.push([e.id,n]),effect:(type,p,extra)=>events.push({id:events.length,type,x:p.x,z:p.z,time:game.time,...extra})};
- assert.equal(castRoUtilitySkill(game,unit,weapon,1,{area:1},api),true);const zone=game.bonk.roSkillZones[0];assert.equal(zone.ticks,5);assert.equal(events[0].type,'roMeteorFall');
+ assert.equal(castRoUtilitySkill(game,unit,weapon,1,{area:1},api),true);const zone=game.bonk.roSkillZones[0];assert.equal(zone.ticks,2);assert.equal(events[0].type,'roMeteorFall');
  const land=()=>{game.time=game.bonk.elapsed;tickRoSkillEffects(game,unit,.05,api);};land();assert.equal(hits.length,0);game.bonk.elapsed=.89;land();assert.equal(hits.length,0);game.bonk.elapsed=.9;land();assert.equal(hits.length,1);assert.equal(events.find(e=>e.type==='roMeteorImpact').showerId,events[0].showerId);
- for(const at of [1.9,2.9,3.9,4.9]){game.bonk.elapsed=at;land();}
- assert.equal(hits.length,5);assert.ok(hits.every(([id])=>id===2));assert.ok(Math.abs(hits.reduce((n,h)=>n+h[1],0)-weapon.damage)<1e-8);assert.equal(events.filter(e=>e.type==='roMeteorImpact').length,5);assert.equal(events.filter(e=>e.type==='roMeteorFall').length,5);
+ for(const at of [1.9]){game.bonk.elapsed=at;land();}
+ assert.equal(hits.length,2);assert.ok(hits.every(([id])=>id===2));assert.ok(Math.abs(hits.reduce((n,h)=>n+h[1],0)-roSkillDamageBudget(weapon,1,unit))<1e-8);assert.equal(events.filter(e=>e.type==='roMeteorImpact').length,2);assert.equal(events.filter(e=>e.type==='roMeteorFall').length,2);
  const s={bonk:{elapsed:.2,roSkillZones:[zone]},effects:[]};assert.deepEqual(roFireImpacts(s,.2),[],'meteor rain must not be drawn as a ground bonfire');
- game.bonk.elapsed=20;land();assert.equal(hits.length,5);resetRoSkillEffects(game,unit);assert.deepEqual(game.bonk.roSkillZones,[]);
+ game.bonk.elapsed=20;land();assert.equal(hits.length,2);resetRoSkillEffects(game,unit);assert.deepEqual(game.bonk.roSkillZones,[]);
 });
 
 test('a suspended meteor shower resumes with one impact rather than unloading its whole remaining damage budget',()=>{
  const unit={id:1,x:0,z:0,alive:true},enemy={id:2,x:1,z:0,bonkEnemy:true,alive:true},game={time:0,bonk:{elapsed:0,stage:'playing'},units:[unit,enemy],id:()=>1},hits=[];
- const api={damage:(e,n)=>hits.push(n)};castRoUtilitySkill(game,unit,RO_SKILLS.wz_meteor,1,{},api);game.bonk.elapsed=4;game.time=4;tickRoSkillEffects(game,unit,.1,api);assert.equal(hits.length,1);tickRoSkillEffects(game,unit,.1,api);assert.equal(hits.length,1);
+ const api={damage:(e,n)=>hits.push(n)};castRoUtilitySkill(game,unit,RO_SKILLS.wz_meteor,1,{},api);game.bonk.elapsed=2;game.time=2;tickRoSkillEffects(game,unit,.1,api);assert.equal(hits.length,1);tickRoSkillEffects(game,unit,.1,api);assert.equal(hits.length,1);
 });
 
 test('the real manual cast releases a network-visible shower after conjuration and hurts the target at its first landing',()=>{

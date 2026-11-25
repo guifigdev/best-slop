@@ -1,3 +1,5 @@
+import {RO_EQUIPMENT_ELEMENT_FACTS} from './ro-equipment-element-facts.js';
+import {RO_SYNERGY_EQUIPMENT} from './ro-synergy-equipment.js';
 // Verified RO identities, locally balanced for Frenesi. Names/slots/sockets are
 // source facts; stats, grades and lineage recommendations are game adaptations.
 const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
@@ -25,6 +27,10 @@ const gear=(id,name,slot,sockets,stats,lineages,minStage,nameSource,extra={})=>(
 const weapon=(id,name,sockets,stats,lineages,minStage,nameSource,weaponType,hands,extra={})=>gear(id,name,'weapon',sockets,stats,lineages,minStage,nameSource,{weaponType,hands,...extra});
 
 export const RO_BUILD_EQUIPMENT=freeze(Object.fromEntries([
+ ...RO_SYNERGY_EQUIPMENT,
+ gear(2347,"Saphien's Armor of Ocean",'armor',1,{armor:4,maxHp:25},RO_BUILD_EQUIPMENT_LINEAGES,2,'database',{armorElement:'water'}),
+ gear(2349,"Aebecee's Raging Typhoon Armor",'armor',1,{armor:4,agi:2},RO_BUILD_EQUIPMENT_LINEAGES,2,'database',{armorElement:'wind'}),
+ gear(2351,'Claytos Cracking Earth Armor','armor',1,{armor:4,vit:2},RO_BUILD_EQUIPMENT_LINEAGES,2,'database',{armorElement:'earth'}),
  // Rune Knight / Dragon Knight: cooldown-oriented sword and physical critical.
  weapon(1181,'Tae Goo Lyeon',2,{attack:18,str:2},['dragonknight'],2,'market','sword',2),
  weapon(21047,'Claymore-OS',2,{attack:26,crit:.05,str:2},['dragonknight'],3,'os','sword',2),
@@ -151,4 +157,4 @@ export const RO_BUILD_EQUIPMENT=freeze(Object.fromEntries([
  gear(2887,"Anel de Nab","accessory",0,{"attack":7,"dex":3},["shadowcross"],2,"mora",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":0},"collection":"mora-nab"}),
  gear(2890,"Broche das Asas da Luz","accessory",0,{"attack":5,"dex":4},["windhawk"],2,"mora",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":0},"collection":"mora-whitewing"}),
  gear(2894,"Sura Gauntlet","accessory",0,{"attack":7,"str":3,"dex":2},["inquisitor"],2,"database",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":1},"nameLanguage":"en"}),
-].map(item=>[item.key,item])));
+].map(item=>[item.key,{...item,...(['head','headMid','headLow'].includes(item.slot)?{headPosition:({head:'top',headMid:'middle',headLow:'lower'})[item.slot]}:{}),...RO_EQUIPMENT_ELEMENT_FACTS[item.sourceId]}])));

@@ -1,0 +1,1 @@
+Original Ragnarok equipment icons extracted read-only from the installed client. Artwork belongs to Gravity. BMP pixels retained, transparent magenta converted to PNG alpha. Resource mappings are recorded by numeric item ID.

@@ -75,7 +75,7 @@ test('every included active executes through the dispatcher and passives change 
  const g=new Game(381,{mode:'bonk',bonkLineage:'dragonknight'});g.addPlayer('p','knight');assert.ok(g.command('p',{type:'bkReady'}));const u=g.player('p');
  g.bonk.map.obstacles=[];g.bonk.map.walls=[];
  for(const s of Object.values(RO_SKILLS).filter(s=>s.sourceId)){
-  const lineage=Object.values(RO_LINEAGES).find(p=>p.skills.includes(s.key));delete u.roCasting;u.level=150;u.attributes.int=99;u.roLineage=lineage.key;u.roTier=3;u.bonkJob=lineage.jobs[3];u.roSkillBuffs=[];u.roSkillShield=null;u.roSkillProcAt={};u.bonkBuild={weapons:{basic:1,[s.key]:1},tomes:{},relics:{}};u.bonkSkillSlots=['basic',s.key,null,null];u.bonkWeaponAt={};u.hp=100;u.maxHp=500;u.mana=5000;u.maxMana=5000;u.alive=true;u.x=0;u.z=0;g.bonk.elapsed=10;g.bonk.stage='playing';g.bonk.offer=null;g.bonk.roSkillZones=[];g.bonk.roSkillSummons=[];g.bonk.spawnAt=1e9;g.effects=[];u.bonkSkillAuto={basic:false,[s.key]:false};
+  const lineage=Object.values(RO_LINEAGES).find(p=>p.skills.includes(s.key));delete u.roCasting;u.roAfterCastUntil=0;u.roSkillActionUntil=0;u.roHitStunUntil=0;u.level=150;u.attributes.int=99;u.roLineage=lineage.key;u.roTier=3;u.bonkJob=lineage.jobs[3];u.roSkillBuffs=[];u.roSkillShield=null;u.roSkillProcAt={};u.bonkBuild={weapons:{basic:1,[s.key]:1},tomes:{},relics:{}};u.bonkSkillSlots=['basic',s.key,null,null];u.bonkWeaponAt={};u.hp=100;u.maxHp=500;u.mana=5000;u.maxMana=5000;u.alive=true;u.x=0;u.z=0;g.bonk.elapsed=10;g.bonk.stage='playing';g.bonk.offer=null;g.bonk.roSkillZones=[];g.bonk.roSkillSummons=[];g.bonk.spawnAt=1e9;g.effects=[];u.bonkSkillAuto={basic:false,[s.key]:false};
   const enemy={id:999,name:'Alvo',bonkEnemy:true,alive:true,x:1,z:0,hp:1e7,maxHp:1e7,collisionRadius:.4,damage:0,armor:0,bonkNextAttack:100};g.units=[u,enemy];
   if(s.kind==='passive'){
    const stats=bonkStats(u);assert.ok(Object.values(stats).filter(v=>typeof v==='number').every(Number.isFinite),s.key);if(s.mechanics.companion||s.mechanics.companionMastery){const training=s.mechanics.companion?s.key:s.mechanics.companionMastery==='falcon'?'ht_falcon':'ra_wugmastery';u.bonkBuild.weapons[training]=1;tickRoSkillEffects(g,u,.1);assert.ok(g.bonk.roSkillSummons.some(p=>p.persistent&&p.source===u.id&&p.companion===(s.mechanics.companion||s.mechanics.companionMastery)),s.key);}else assert.ok(s.mechanics.proc||s.mechanics.status||Object.keys(s.mechanics.modifiers||{}).length,s.key);continue;
@@ -84,7 +84,7 @@ test('every included active executes through the dispatcher and passives change 
   assert.equal(g.command('p',{type:'bkCast',key:s.key}),true,`${s.sourceAegis} (${s.kind}) failed: ${g.commandFailureReason}`);
   if(s.kind==='mount'){assert.equal(u.roMountSkill,null);assert.equal(u.mana,5000);continue;}
   if(u.roCasting){const finish=u.roCasting.finishAt;for(let i=0;i<310&&g.bonk.elapsed<finish+.1;i++)g.tick(.1);}
-  assert.ok(u.bonkWeaponAt[s.key]>10,`${s.key} starts a real cooldown`);
+  assert.ok(u.bonkWeaponAt[s.key]>=10,`${s.key} records its native cooldown, including zero`);
   assert.ok(u.mana<5000||s.mechanics?.manaPercent,`${s.key} pays real SP`);
   assert.ok([u.x,u.z,u.hp,u.mana,enemy.hp].every(Number.isFinite),s.key);
  }

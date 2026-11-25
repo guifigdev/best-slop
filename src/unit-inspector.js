@@ -1,3 +1,6 @@
+import {roMonsterProperties} from '../shared/ro-monster-properties.js';
+import {roNativeEnemySkills} from '../shared/ro-native-enemy-behavior.js';
+import {roSkillSource} from '../shared/ro-skill-source.js';
 import {HEROES,SKILLS} from '../shared/catalog.js';
 import {skillFor} from '../shared/skill-quality.js';
 import {TREE_TAG_SKILLS,TREE_TAG_WORKER_SKILLS,treeTagSkillAt} from '../shared/tree-tag-catalog.js';
@@ -29,6 +32,7 @@ export function unitInspectionAllowed(state,owner,unit){
 }
 export function inspectedUnitSkills(state,unit,owner){
  const mode=state.options?.mode;
+ if(mode==='bonk'&&unit.bonkEnemy){const names={NPC_SUMMONSLAVE:'Invocar Escravos',NPC_AGIUP:'Aumentar Agilidade',NPC_POISON:'Ataque Venenoso',NPC_STUNATTACK:'Ataque Atordoante',NPC_DARKBREATH:'Sopro Sombrio',NPC_EARTHQUAKE:'Terremoto',NPC_BLEEDING:'Sangramento'};return roNativeEnemySkills(unit).map(key=>{const skill=Object.values(RO_SKILLS).find(s=>roSkillSource(s)===key);return{key,name:skill?.name||names[key]||key,description:'Habilidade registrada para este monstro no database LATAM.',kind:'active',rank:null};});}
  // Local games may still hold private powers in memory. Another inhabitant's
  // powers must not disclose the hidden Phase Killer role.
  if(mode==='phasekiller'&&!same(unit.owner,owner))return null;
@@ -63,7 +67,9 @@ function relationOf(state,u,owner){if(state.options?.mode==='phasekiller')return
 function meter(label,current,max){if(!finite(current))return '';const percent=finite(max)&&max>0?Math.max(0,Math.min(100,current/max*100)):null;return `<div class="unit-inspector-meter ${label==='SP / Mana'?'mana':''}"><div><span>${label}</span><b>${n(current)}${finite(max)?' / '+n(max):''}</b></div>${percent!==null?`<i role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${Math.max(0,Math.min(max,current))}"><i style="width:${percent}%"></i></i>`:''}</div>`;}
 function weaknessesOf(state,u){
  const resists={...u.resistances};if(finite(u.fireResist))resists.fire=u.fireResist;if(finite(u.coldResist))resists.ice=u.coldResist;
+ const properties=state.options?.mode==='bonk'&&u.bonkEnemy?roMonsterProperties(u):null;
  const rows=Object.entries(resists).filter(([,value])=>finite(value)&&value!==0).map(([element,value])=>`<li class="${value<0?'weak':'resistant'}">${value<0?'Vulnerável a':'Resiste a'} ${esc(elements[element]||element)} <b>${n(Math.abs(value)*100)}%</b></li>`);
+ if(properties)for(const [element,multiplier]of Object.entries(properties.multipliers))if(multiplier!==1)rows.push(`<li class="${multiplier>1?'weak':'resistant'}">Recebe dano ${esc(elements[element]||element)} <b>${n(multiplier*100)}%</b></li>`);
  if(state.options?.mode==='castlefight'&&u.armorType&&['light','medium','heavy','fortified','unarmored','hero','divine','normal'].includes(u.armorType)){
   const matches=castleMatchups(u);for(const m of matches.weak)rows.push(`<li class="weak">Recebe mais dano ${esc(castleTypeName(m.type))} <b>+${n((m.multiplier-1)*100)}%</b></li>`);
   for(const m of matches.resistant)rows.push(`<li class="resistant">Resiste a ${esc(castleTypeName(m.type))} <b>${n((1-m.multiplier)*100)}%</b></li>`);
@@ -73,11 +79,12 @@ function weaknessesOf(state,u){
 export function unitInspectorMarkup(state,u,owner){
  const privatePK=state.options?.mode==='phasekiller'&&!same(u.owner,owner),name=privatePK&&u.pkDisguise&&!u.pkDisplayName?'Habitante':u.pkDisplayName||u.name||HEROES[u.hero]?.name||u.kind||'Unidade',stats=[];
  const stat=(label,value,suffix='')=>{if(finite(value))stats.push(`<div><dt>${label}</dt><dd>${n(value)}${suffix}</dd></div>`);};
- stat('Nível',u.monsterLevel??u.level);stat('ATQ',u.basicDamage??u.damage);stat('ATQ mágico',u.magicAttack);stat('Defesa física',u.armor);stat('Defesa mágica',u.magicDefense);stat('Movimento',u.speed,' m/s');stat('Alcance',u.range,' m');
+ const ro=state.options?.mode==='bonk'&&u.bonkEnemy?roMonsterProperties(u):null;
+ stat('Nível',u.monsterLevel??u.level);stat('ATQ',u.basicDamage??u.damage);stat('ATQ mágico',u.magicAttack);stat('Defesa física',ro?.defense??u.armor);stat('Defesa mágica',ro?.magicDefense??u.magicDefense);stat('Movimento',u.speed,' m/s');stat('Alcance',u.range,' m');
  if(finite(u.interval)&&u.interval>0)stat('Intervalo de ataque',u.interval/(finite(u.attackSpeed)&&u.attackSpeed>0?u.attackSpeed:1),' s');
  stat('Precisão',finite(u.accuracy)?u.accuracy*100:null,'%');stat('Esquiva',finite(u.evasion)?u.evasion*100:null,'%');stat('Crítico',finite(u.critChance)?u.critChance*100:null,'%');
  const attributes=privatePK?{}:u.totalAttributes||u.attributes||u.inheritedAttributes||{},attributeRows=Object.entries(attributes).filter(([,v])=>finite(v)).map(([key,value])=>`<div><dt>${esc(labels[key]||key.toUpperCase())}</dt><dd>${n(value)}</dd></div>`),skills=inspectedUnitSkills(state,u,owner),statuses=statusOf(state,u),tags=[];
- if(u.element)tags.push(elements[u.element]||u.element);if(u.attackType)tags.push('Ataque '+(u.attackType==='physical'?'físico':castleTypeName(u.attackType)||u.attackType));if(u.armorType)tags.push('Armadura '+castleTypeName(u.armorType));if(typeof u.flying==='boolean')tags.push(u.flying?'Voador':'Terrestre');
+ if(ro){tags.push(({small:'Pequeno',medium:'Médio',large:'Grande'})[ro.size],ro.race,(elements[ro.element]||ro.element)+' '+ro.elementLevel);}else if(u.element)tags.push(elements[u.element]||u.element);if(u.attackType)tags.push('Ataque '+(u.attackType==='physical'?'físico':castleTypeName(u.attackType)||u.attackType));if(u.armorType)tags.push('Armadura '+castleTypeName(u.armorType));if(typeof u.flying==='boolean')tags.push(u.flying?'Voador':'Terrestre');
  return `<div class="unit-inspector-summary"><div><small>${esc(relationOf(state,u,owner))}</small><h3>${esc(name)}</h3></div>${u.bonkBoss||u.monsterRarity==='boss'?'<span class="unit-inspector-boss">Chefe</span>':''}</div>${tags.length?`<div class="unit-inspector-tags">${tags.map(tag=>'<span>'+esc(tag)+'</span>').join('')}</div>`:''}${meter('Vida',u.hp,u.maxHp)}${u.maxMana>0?meter('SP / Mana',u.mana,u.maxMana):''}${statuses.length?`<div class="unit-inspector-status" aria-label="Estados atuais">${statuses.map(s=>'<span>'+esc(s)+'</span>').join('')}</div>`:''}${stats.length?`<dl class="unit-inspector-stats">${stats.join('')}</dl>`:''}${attributeRows.length?`<section><h4>Atributos${u.inheritedAttributes&&!u.attributes&&!u.totalAttributes?' herdados':''}</h4><dl class="unit-inspector-attributes">${attributeRows.join('')}</dl></section>`:''}${privatePK?'':weaknessesOf(state,u)}<section><h4>Habilidades${skills?.length?' · '+skills.length:''}</h4>${skills?.length?`<ul class="unit-inspector-skills">${skills.map(s=>`<li><div><b>${esc(s.name)}</b>${s.rank!==null?'<em>Nv. '+n(s.rank)+'</em>':''}</div><small>${s.kind==='passive'?'Passiva':s.kind==='active'?'Ativa':''}${finite(s.cooldown)&&s.cooldown>0?' · Recarga '+n(s.cooldown)+'s':''}${finite(s.mana)&&s.mana>0?' · Mana '+n(s.mana):''}</small>${s.description?'<p>'+esc(s.description)+'</p>':''}</li>`).join('')}</ul>`:`<p class="unit-inspector-empty">${skills===null?'Habilidades não públicas.':'Nenhuma habilidade informada.'}</p>`}</section>`;
 }
 

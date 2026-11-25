@@ -6,7 +6,8 @@ import {createRoWeaponRig,updateRoWeaponRig,roSwordPose} from '../src/ro-weapon-
 
 test('sword shoulder rig separates the actual arm and weapon without changing the authored sculpture',()=>{
  for(const job of ['swordsman','knight','runeknight','dragonknight']){const spec=ragnarokJobSpec(job),emitted=[],rig=spec.weaponRig;assert.ok(rig&&rig.indices.length>10);assert.ok(Object.isFrozen(rig)&&rig.parts.every(Object.isFrozen));buildRagnarokJobModel({bonkHero:true,bonkJob:job},{},(_,...p)=>emitted.push(p),{rigged:true});assert.equal(emitted.length+rig.parts.length,spec.parts.length);assert.ok(rig.parts.some(p=>p[1]+rig.pivot[1]>1.8),'weapon blade belongs to the shoulder rig');assert.ok(rig.parts.some(p=>p[1]+rig.pivot[1]<.8),'right arm follows the weapon');for(let i=0;i<rig.parts.length;i++){const original=spec.parts[rig.indices[i]],part=rig.parts[i];for(let axis=0;axis<3;axis++)assert.ok(Math.abs(part[axis]+rig.pivot[axis]-original[axis])<1e-12);assert.deepEqual(part.slice(3),original.slice(3));}}
- for(const job of ['crusader','imperialguard','archmage','windhawk'])assert.equal(ragnarokJobSpec(job).weaponRig,null);
+ for(const job of ['crusader','imperialguard'])assert.equal(ragnarokJobSpec(job).weaponRig.kind,'thrust');
+ for(const job of ['archmage','windhawk'])assert.equal(ragnarokJobSpec(job).weaponRig,null);
 });
 
 test('overhead sword pose raises and pulls down on the vertical axis without any horizontal spin',()=>{

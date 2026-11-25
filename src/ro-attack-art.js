@@ -7,7 +7,7 @@ export {RO_ATTACK_BUDGET};
 const atlases=new Map(),N=RO_ATTACK_BUDGET.frameSize,F=RO_ATTACK_BUDGET.frames,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const segment=(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-ax-dx*t,y-ay-dy*t);};
 const gray=(v,alpha)=>[v,v,v,clamp(Math.round(alpha),0,255)];
-const variants=Object.freeze({impact:Object.freeze(['standard','axeSlam']),blade:Object.freeze(['standard','overhead','bashImpact']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield','waterorb','waterfield'])});
+const variants=Object.freeze({impact:Object.freeze(['standard','axeSlam']),blade:Object.freeze(['standard','overhead','bashImpact','thrust']),dagger:Object.freeze(['standard','daggerStreaks']),cast:Object.freeze(['standard','fireorb','icecrystal','lightning','holy','earth','poison','dark','heal','shield','rune','runezone','summon','firefield','icefield','waterorb','waterfield'])});
 // Tiny software rasterizer: every family has twelve pre-baked nearest-filtered
 // frames. Data is read-only by convention; descriptors and frame bounds freeze.
 export function roAttackFrames(value='blade'){
@@ -92,6 +92,11 @@ export function roAttackFrames(value='blade'){
      }
     }
    }
+   else if(motion==='thrust'){
+    const reach=.25+Math.sin(Math.min(1,p/.55)*Math.PI/2)*.65,yy=z*2-1,tail=reach-.75;
+    if(yy>tail&&yy<reach&&Math.abs(sx)<.035+(reach-yy)*.025)pixel=[235,251,255,Math.round(230*fade)];
+    if(yy>reach-.16&&yy<reach&&Math.abs(sx)<(reach-yy)*.45)pixel=[250,255,255,Math.round(245*fade)];
+   }
    else if(motion==='axeSlam'){
     // Only the axe afterimage: ground impact is a separate world-space event.
     const strike=clamp((p-.16)/.29,0,1),head=.94-strike*.84,tail=Math.min(.97,head+.56),curve=.08+Math.sin(z*2.5)*.15;
@@ -139,7 +144,7 @@ export function roAttackFrames(value='blade'){
 const NATIVE_HEROES=new Set(['knight','mage','ranger','turtle','owl','raccoon','fenrir']);
 const nativeHero=u=>!!u&&NATIVE_HEROES.has(u.hero)&&!u.castleBuilderKey&&!u.treeTagCharacter&&!u.warlockCharacter&&!u.kodoTagCharacter;
 const SKILL_VISUAL_EVENTS=new Set(['heal','devotion','battlecry','frostnova','poison','fireball','abilityPulse','summon','bolt','sprint']);
-export function roAttackArtHandles(event,source){return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source)||event.bonk===true&&typeof event.skillKey==='string'&&!!RO_ATTACK_SKILLS[event.skillKey]&&SKILL_VISUAL_EVENTS.has(event.type));}
+export function roAttackArtHandles(event,source){if(event?.bonk&&(event.type==='sprint'||event.skillKey==='tf_sprinklesand'))return false;return !!event&&(event.type==='roAttack'||event.type==='slash'&&event.basicAttack===true&&nativeHero(source)||event.bonk===true&&typeof event.skillKey==='string'&&!!RO_ATTACK_SKILLS[event.skillKey]&&SKILL_VISUAL_EVENTS.has(event.type));}
 const observes=(event,source)=>{if(event?.type==='roAttack'&&roAttackProfile(event,source).motion==='axeSlam')return false;if(roFireImpactHandles(event)||isRoArrowRainSkill(event?.skillKey)||event?.type==='roAttack'&&isRoMeteorSkill(event.skillKey))return false;if(event?.bonk&&source?.bonkHero&&(event.type==='roAttack'&&['projectile','pulse','orbit','zone'].includes(event.attackKind)||['fireball','frostnova','abilityPulse'].includes(event.type)))return false;return roAttackArtHandles(event,source)||!!event&&event.type==='arrow'&&event.basicAttack===true&&nativeHero(source);};
 const facing=(e,source)=>{if(Number.isFinite(e.direction))return e.direction;const d=e.direction,dx=Array.isArray(d)?d[0]:d?.x??e.dx,dz=Array.isArray(d)?d[1]:d?.z??e.dz;if(Number.isFinite(dx)&&Number.isFinite(dz)&&Math.hypot(dx,dz)>.001)return Math.atan2(dx,dz);const x=Number.isFinite(e.x)?e.x:source?.x||0,z=Number.isFinite(e.z)?e.z:source?.z||0,tx=e.tx??e.targetPoint?.x,tz=e.tz??e.targetPoint?.z;return Number.isFinite(tx)&&Number.isFinite(tz)&&Math.hypot(tx-x,tz-z)>.001?Math.atan2(tx-x,tz-z):source?.facing||0;};
 export function roAttackPlacement(event,profile,age,heightAt=()=>0,source){
