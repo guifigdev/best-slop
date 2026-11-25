@@ -4,7 +4,7 @@ import {Game} from '../shared/simulation.js';
 import {bonkStats} from '../shared/bonk.js';
 import {advanceRoJob} from '../shared/ragnarok-jobs.js';
 import {BONK_WEAPONS} from '../shared/bonk-catalog.js';
-import {roSkillStatus,roSkillCooldown,roSkillAuto} from '../shared/ro-skill-controls.js';
+import {roSkillStatus,roSkillCooldown,roSkillAuto,castRoSkill} from '../shared/ro-skill-controls.js';
 import {createRoCheckpoint,validateRoCheckpoint} from '../shared/ragnarok-save.js';
 
 function arena(){
@@ -35,4 +35,18 @@ test('individual AUTO preferences survive save/restore and invalid preferences a
 
 test('starting chest is immediately advertised and opens without movement, while range remains bounded',()=>{
  const{g,u}=arena(),chest=g.bonk.objects.find(o=>o.id==='starting-chest'),position=[u.x,u.z];assert.ok(Math.hypot(chest.x-u.x,chest.z-u.z)>4);assert.equal(g.snapshotBonk().nearestObject,chest.id);assert.ok(g.command('p',{type:'bkInteract',object:chest.id}));assert.deepEqual([u.x,u.z],position);assert.equal(g.bonk.lastLoot.equipment.length,1);assert.ok(g.bonk.lastLoot.relic);g.bonk.objects.push({id:'too-far',type:'pot',x:u.x+8.01,z:u.z,used:false});assert.equal(g.command('p',{type:'bkInteract',object:'too-far'}),false);
+});
+
+// Shared action locks still follow Ragnarok rules, without assigning recast to
+// other skills or rendering the same timer in every slot.
+test('casting writes only that skill cooldown, including a cast that finishes later',()=>{
+ const {g,u}=arena();u.bonkBuild.weapons.asc_meteorassault=1;u.bonkSkillSlots=['basic','rollingcutter','asc_meteorassault'];
+ const stats=bonkStats(u);u.bonkWeaponAt={basic:8};
+ assert.ok(castRoSkill(g,u,'rollingcutter',stats,()=>true).ok);
+ assert.deepEqual(Object.keys(u.bonkWeaponAt).sort(),['basic','rollingcutter']);
+ const other=roSkillStatus(g,u,'asc_meteorassault',stats);assert.equal(other.cooldownRemaining,0);assert.equal(other.reasonCode,'aftercast');
+ g.bonk.elapsed=Math.max(u.roAfterCastUntil,u.roSkillActionUntil)+.01;
+ assert.ok(castRoSkill(g,u,'asc_meteorassault',stats,()=>true).ok);assert.ok(u.roCasting);
+ assert.equal(roSkillStatus(g,u,'rollingcutter',stats).cooldownRemaining,0);
+ assert.equal(Object.hasOwn(u.bonkWeaponAt,'asc_meteorassault'),false,'cast time does not overwrite cooldown maps');
 });

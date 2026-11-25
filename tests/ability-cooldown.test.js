@@ -11,13 +11,21 @@ test('Warlock recast number occupies its own overlay while the rank and column r
  unit.cooldowns.S002=0;const ready=warlockAbilitiesMarkup(state,unit);assert.doesNotMatch(ready,/class="ability cooling/);timer(ready,'');assert.match(ready,/<em>N3<\/em>/);
 });
 
-test('Ragnarok shared timer retains real cooldown and subsecond cast locks without changing the skill slot or AUTO',()=>{
+test('Ragnarok shared timer shows individual cooldown independently of shared cast locks without changing the skill slot or AUTO',()=>{
  const weapon={key:'rollingcutter',name:'Rolling Cutter',skill:'cleave',level:3,manaCost:6,auto:false,ready:false,cooldown:2,cooldownRemaining:1.25},before=structuredClone(weapon),cooling=roSkillDockMarkup([weapon]);
  assert.match(cooling,/class="ro-skill-cast cooling"/);assert.match(cooling,/class="ro-skill-timer ability-cooldown" aria-hidden="true">2<\/em>/);assert.match(cooling,/class="ro-skill-rank" aria-hidden="true">3<\/em>/);assert.match(cooling,/data-bk-cast="rollingcutter" disabled/);assert.match(cooling,/data-bk-auto="rollingcutter" aria-pressed="false"/);assert.deepEqual(weapon,before);
- const locked=roSkillDockMarkup([{...weapon,cooldownRemaining:0,afterCastRemaining:.4,afterCast:1}]);assert.match(locked,/class="ro-skill-timer ability-cooldown" aria-hidden="true">0.4<\/em>/);
+ const locked=roSkillDockMarkup([{...weapon,cooldownRemaining:0,afterCastRemaining:.4,afterCast:1}]);assert.doesNotMatch(locked,/class="ro-skill-cast cooling/);assert.match(locked,/class="ro-skill-timer ability-cooldown" aria-hidden="true"><\/em>/);
  const ready=roSkillDockMarkup([{...weapon,cooldownRemaining:0,ready:true}]);assert.doesNotMatch(ready,/class="ro-skill-cast cooling"/);assert.match(ready,/class="ro-skill-timer ability-cooldown" aria-hidden="true"><\/em>/);
 });
 
+test('a full Ragnarok bar displays only the skill recast, never thirteen copies of the action lock',()=>{
+ const weapons=Array.from({length:13},(_,i)=>({key:i?'skill'+i:'basic',name:'Skill '+i,level:3,ready:false,reasonCode:'animation',readyReason:'Animação do ataque',animationRemaining:.1,afterCastRemaining:.1,castingRemaining:.1,cooldownRemaining:i===4?1.5:0,cooldown:2}));
+ const html=roSkillDockMarkup(weapons);
+ assert.equal((html.match(/class="ro-skill-cast cooling"/g)||[]).length,1);
+ assert.equal((html.match(/class="ro-skill-timer ability-cooldown" aria-hidden="true">2<\/em>/g)||[]).length,1);
+ assert.doesNotMatch(html,/>0\.1<\/em>/);
+ assert.equal((html.match(/class="ro-skill-rank" aria-hidden="true">3<\/em>/g)||[]).length,13);
+});
 test('Tree Tag gives learned spells the timer overlay and retains level captions while Kodo orders keep labels',()=>{
  const hero={id:1,owner:'p',alive:true,treeTagCharacter:'ent',treeTagRole:'ent',skills:['trueSight'],skillLevels:{trueSight:1},cooldowns:{},mana:200},worker={id:2,owner:'p',alive:true,treeTagTrained:true,treeTagWorker:true,workerType:'e002',rawId:'e002',treeTagRole:'ent',skills:['regrow'],skillLevels:{regrow:2},cooldowns:{regrow:3.2},mana:200},state={options:{mode:'treetag'},phase:'wave',units:[hero,worker]},before=structuredClone(worker);
  const cooling=tagUnitCommandCard(state,hero,[worker]);timer(cooling,4);assert.match(cooling,/data-legacy-cast="regrow"/);assert.match(cooling,/cooling/);assert.deepEqual(worker,before);worker.cooldowns.regrow=0;const ready=tagUnitCommandCard(state,hero,[worker]);assert.doesNotMatch(ready,/ability-cooldown/);assert.match(ready,/N2/);

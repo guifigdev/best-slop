@@ -1,10 +1,16 @@
 /* Shared skill-bar state. Only the art dims; the timer and hotkey stay clear. */
 body .ability.cooling,body .ro-skill-cast.cooling{filter:none!important;opacity:1!important}
 body .ability.cooling>svg,body .ability.cooling>img,body .ro-skill-cast.cooling>svg,body .ro-skill-cast.cooling>img{filter:grayscale(1) brightness(.32)!important;opacity:.55}
-body .ability>.ability-cooldown,body .ro-skill-cast>.ability-cooldown{position:absolute!important;inset:0!important;display:grid;place-items:center;margin:0;padding:0;border:0;border-radius:inherit;background:#07120d55;color:#fff4d5;font:800 clamp(21px,2.5vw,30px)/1 Outfit,sans-serif;letter-spacing:-.8px;text-shadow:0 2px 3px #000,0 0 6px #000;z-index:4;pointer-events:none;user-select:none;font-variant-numeric:tabular-nums}
+body .ability>.ability-cooldown,body .ro-skill-cast>.ability-cooldown{position:absolute!important;inset:0!important;display:grid;place-items:center;box-sizing:border-box;margin:0;padding:12px 6px 5px;border:0;border-radius:inherit;background:#07120d55;color:#fff4d5;font:800 clamp(16px,1.6vw,22px)/1.1 Outfit,sans-serif;letter-spacing:-.2px;text-align:center;text-shadow:0 2px 3px #000,0 0 6px #000;z-index:4;pointer-events:none;user-select:none;font-variant-numeric:tabular-nums}
 body .ability>.ability-cooldown:empty,body .ro-skill-cast>.ability-cooldown:empty{display:none!important}
 body .ability.cooling>em:not(.ability-cooldown),body .ability.cooling>.tag-command-state,body .ro-skill-cast.cooling>.ro-skill-rank,body .ro-skill-cast.cooling>b,body .ro-skill-cast.cooling>small,body .ro-skill-cast.cooling>.ro-skill-state{visibility:hidden}
 body .ability>small,body .ro-skill-cast>kbd{z-index:5;pointer-events:none}
-body .ro-skill-cast>kbd{display:block!important;position:absolute;top:3px;right:3px;padding:1px 3px;background:#11251dea;border-radius:3px;color:#fff0c5;font:700 9px/1.15 Outfit,sans-serif}
-body .ro-skill-cast>.ro-skill-rank{display:block;position:absolute;top:auto;bottom:3px;right:3px;z-index:3;padding:1px 3px;border-radius:3px;background:#11251dea;color:#eadfbc;font:700 9px/1.15 Outfit,sans-serif}
+body .ro-skill-cast>kbd{display:block!important;position:absolute;top:4px;right:4px;padding:1px 3px;background:#11251dea;border-radius:3px;color:#fff0c5;font:700 8px/1.15 Outfit,sans-serif}
+body .ro-skill-cast>.ro-skill-rank{display:block;position:absolute;top:auto;bottom:4px;right:4px;z-index:3;padding:1px 3px;border-radius:3px;background:#11251dea;color:#eadfbc;font:700 8px/1.15 Outfit,sans-serif}
 body .ability.cooling>.cooldown-mask,body .ro-skill-cast.cooling>.ro-skill-cooldown{display:none}
+/* Size the number from the slot, rather than the viewport: the desktop bar has
+   44px cells even on a wide monitor. Keep a distinct top lane for its hotkey. */
+body .ro-skill-cast{container-type:inline-size}
+body .bonk-hud .ro-twelve-skills .ro-skill-cast{padding:6px}
+body .ro-skill-cast>svg,body .ro-skill-cast>img{max-width:100%}
+body .ro-skill-cast>.ability-cooldown{padding:15px 6px 6px;font-size:18px;font-size:clamp(16px,60cqi,20px);letter-spacing:-.25px}

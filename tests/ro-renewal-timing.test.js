@@ -20,8 +20,8 @@ test('timing enchantments are bound to worn gear, independently reduce their cha
 test('a basic attack cannot clear a longer global post-cast delay',()=>{
  const g=new Game(2,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.units.push({id:999,bonkEnemy:true,alive:true,x:u.x+1,z:u.z});u.roAfterCastUntil=10;u.roSkillActionUntil=0;u.bonkWeaponAt={};u.bonkSkillSlots=['basic'];const s=bonkStats(u);assert.ok(castRoSkill(g,u,'basic',s,()=>true).ok);assert.equal(u.roAfterCastUntil,10);assert.ok(u.roSkillActionUntil>0);
 });
-test('the HUD shows a short post-cast block even when native skill cooldown is zero',()=>{
- const html=roSkillDockMarkup([{key:'basic',name:'Ataque',ready:false,cooldown:0,cooldownRemaining:0,afterCast:.3,afterCastRemaining:.2,readyReason:'Pós-conjuração'}]);assert.ok(html.includes('Pós-conjuração · 0.2 s'));assert.ok(html.includes('>0.2</em>'));assert.ok(html.includes('--ro-cooldown:0.667'));assert.ok(!html.includes('NaN'));
+test('shared postcast stays a readiness reason, never an individual HUD cooldown',()=>{
+ const html=roSkillDockMarkup([{key:'basic',name:'Ataque',ready:false,cooldown:0,cooldownRemaining:0,afterCast:.3,afterCastRemaining:.2,readyReason:'Pós-conjuração'}]);assert.ok(html.includes('Pós-conjuração'));assert.ok(!html.includes('>0.2</em>'));assert.ok(!html.includes('ro-skill-cast cooling'));assert.ok(html.includes('--ro-cooldown:0.000'));assert.ok(!html.includes('NaN'));
 });
 test('two native Berzebub cards reduce variable casting without touching fixed casting or recast',()=>{
  const gear=['a','b'].map(id=>({...createRoEquipment('clip',id),cards:[{id:'card-'+id,key:'towercard_4145'}]})),stats=roEquipmentBonuses({roInventory:gear,roEquipment:{accessory:'a',accessory2:'b'}});assert.equal(stats.variableCastReduction,.6);const cast=roSkillCastTime(RO_SKILLS.asc_meteorassault,1,{...stats,attributes:{int:0,dex:0}});assert.equal(cast.variable,.1);assert.equal(cast.fixed,.25);assert.equal(roSkillCooldown(RO_SKILLS.asc_meteorassault,1,stats),.5);

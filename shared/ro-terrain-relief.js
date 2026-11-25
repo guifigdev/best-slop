@@ -1,14 +1,14 @@
 // One continuous, deterministic height field for simulation, props and renderer.
 import {roTowerHeightAt} from './ro-tower-layout.js';
 // The playable landscape is a patch of a larger relief, not a flat square island.
-export const RO_TERRAIN_VERSION=3;
+export const RO_TERRAIN_VERSION=4;
 export const RO_TERRAIN_GRID=3.6;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,smooth=v=>{const t=clamp(v,0,1);return t*t*(3-2*t);};
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const cache=new WeakMap();
 const PROFILES=Object.freeze({grove:{base:7,amplitude:10,wave:3.2,ridge:2.8},payon:{base:8,amplitude:11,wave:3.8,ridge:3.5},sands:{base:7,amplitude:11,wave:3.9,ridge:2.2},coast:{base:6,amplitude:9,wave:3,ridge:2},crypt:{base:8,amplitude:10,wave:3.2,ridge:3.4},forge:{base:9,amplitude:13,wave:4,ridge:4},glacier:{base:10,amplitude:12,wave:3.5,ridge:4.2},geffen:{base:9,amplitude:11,wave:3.6,ridge:3.4}});
 function context(map){
- let c=cache.get(map);if(c)return c;const seed=map.seed||1,p=PROFILES[map.stageKey]||PROFILES.grove,phase=(seed%127)*.041,angle=(hash(seed*2.3)-.5)*1.2;
+ let c=cache.get(map);if(c&&c.town===map.town)return c;const seed=map.seed||1,p=PROFILES[map.stageKey]||PROFILES.grove,phase=(seed%127)*.041,angle=(hash(seed*2.3)-.5)*1.2;
  const landmarks=[{x:-64+hash(seed+5)*14,z:-47+hash(seed+7)*16,radius:43,height:p.amplitude*(1+hash(seed+31)*.6)},{x:55+hash(seed+11)*15,z:43+hash(seed+13)*11,radius:46,height:p.amplitude*.95},{x:35+hash(seed+17)*13,z:-73+hash(seed+19)*12,radius:36,height:p.amplitude*.70},{x:-31+hash(seed+23)*14,z:56+hash(seed+29)*12,radius:39,height:-p.amplitude*(.55+hash(seed+37)*.4)}];
  const raw=(x,z)=>{const xx=x*Math.cos(angle)-z*Math.sin(angle),zz=x*Math.sin(angle)+z*Math.cos(angle);let h=p.base+p.wave*(Math.sin(xx*.020+phase)*.65+Math.cos(zz*.023-phase*.6)*.5)+p.wave*.25*Math.sin((xx+zz)*.038+phase);for(const f of landmarks){const d=((x-f.x)**2+(z-f.z)**2)/(f.radius*f.radius);h+=f.height*Math.exp(-d*1.8);}const ridge=Math.sin(xx*.018+Math.sin(zz*.012+phase)*.55);h+=p.ridge*(1-Math.abs(ridge))**2;const outer=smooth((Math.max(Math.abs(x),Math.abs(z))-105)/75);h+=outer*(6+7*(.5+.5*Math.sin(xx*.012+phase)*Math.cos(zz*.014-phase)));return Math.max(.4,h);};
  if(hash(seed+41)>.4)landmarks.push({x:-82+hash(seed+43)*164,z:-82+hash(seed+47)*164,radius:24+hash(seed+53)*15,height:p.amplitude*(hash(seed+59)>.5?1.1:-.55)});
@@ -20,8 +20,11 @@ function context(map){
  const spawn=map.spawn||map.route?.entry||{x:0,z:23};addPad(spawn.x,spawn.z,6,6,5);
  for(const site of map.decorations||[])if(site.type==='scenery'||site.type==='regional-prop')addPad(site.x,site.z,(site.w||6)+1,(site.d||5)+1,5);
  for(const o of map.objects||[])if(['chest','shrine','campfire'].includes(o.type))addPad(o.x,o.z,o.type==='shrine'?3:1.8,o.type==='shrine'?3:1.8,2.5);
- const final=(x,z)=>{let h=grade(x,z),sum=0,weighted=0;for(const pad of pads){const d=Math.hypot(Math.max(0,Math.abs(x-pad.x)-pad.w*.5),Math.max(0,Math.abs(z-pad.z)-pad.d*.5)),w=1-smooth(d/pad.shoulder);if(w>0){sum+=w;weighted+=pad.height*w;}}return sum?mix(h,weighted/sum,Math.min(1,sum)):h;};
- c={raw,grade,final,vertices:new Map(),landmarks,paths,pads};cache.set(map,c);return c;
+ // A single graded foundation supports the whole authored village, including
+ // lattice vertices beyond the houses. Blend its shoulders back into the hills.
+ const town=map.town,townHeight=town?grade(town.x,town.z):0;
+ const final=(x,z)=>{let h=grade(x,z),sum=0,weighted=0;for(const pad of pads){const d=Math.hypot(Math.max(0,Math.abs(x-pad.x)-pad.w*.5),Math.max(0,Math.abs(z-pad.z)-pad.d*.5)),w=1-smooth(d/pad.shoulder);if(w>0){sum+=w;weighted+=pad.height*w;}}h=sum?mix(h,weighted/sum,Math.min(1,sum)):h;if(town){const distance=Math.hypot(Math.max(0,Math.abs(x-town.x)-20),Math.max(0,Math.abs(z-town.z)-18));h=mix(h,townHeight,1-smooth(distance/12));}return h;};
+ c={town,raw,grade,final,vertices:new Map(),landmarks,paths,pads};cache.set(map,c);return c;
 }
 
 export function roTerrainHeightAt(map,x,z){
