@@ -2,7 +2,7 @@ import {RO_NATIVE_ENEMY_SKILLS} from './ro-native-enemy-skills-data.js';
 import {MONSTER_HABITATS,habitatSpecies} from './ragnarok-habitats.js';
 const idOf=e=>e.roSourceId||MONSTER_HABITATS[e.ragnarokMvp||e.dungeonSpecies||e.ragnarokVisual]?.sourceId;
 export const roNativeEnemySkills=e=>RO_NATIVE_ENEMY_SKILLS[idOf(e)]||[];
-export function tickRoNativeEnemyBehavior(game,enemy,heroes,{effect=()=>{}}={}){const time=game.bonk.elapsed,skills=roNativeEnemySkills(enemy),player=heroes.filter(u=>u.alive).sort((a,b)=>Math.hypot(a.x-enemy.x,a.z-enemy.z)-Math.hypot(b.x-enemy.x,b.z-enemy.z))[0];if(!player||!skills.length||!enemy.alive)return;
+export function tickRoNativeEnemyBehavior(game,enemy,heroes,{effect=()=>{}}={}){const time=game.bonk.elapsed,skills=roNativeEnemySkills(enemy),player=heroes.filter(u=>u.alive).sort((a,b)=>Math.hypot(a.x-enemy.x,a.z-enemy.z)-Math.hypot(b.x-enemy.x,b.z-enemy.z))[0];if(!player||!skills.length||!enemy.alive||enemy.roCritStaggerUntil>time)return;
  if(enemy.roNativeCast){const cast=enemy.roNativeCast;if(enemy.roSkillStunUntil>time){delete enemy.roNativeCast;return;}if(time<cast.until)return;delete enemy.roNativeCast;const target=heroes.find(u=>u.id===cast.target);if(target?.alive&&Math.hypot(target.x-enemy.x,target.z-enemy.z)<11&&target.bonkJumpHeight<.7){target.roAgilityDownUntil=time+5;target.roAgilityDownVisualUntil=game.time+5;effect('abilityPulse',target,{source:enemy.id,radius:1.2,element:'dark',duration:.5,enemy:true,skillKey:'al_decagi'});}return;}
  if(time<(enemy.roNativeReadyAt??2)||enemy.roSkillStunUntil>time||Math.hypot(player.x-enemy.x,player.z-enemy.z)>17)return;
  enemy.roNativeReadyAt=time+(enemy.bonkEnraged?7:11);const faster=skills.includes('AL_INCAGI')||skills.includes('NPC_AGIUP');

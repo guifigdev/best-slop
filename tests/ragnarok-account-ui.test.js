@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {BonkMethods} from '../shared/bonk.js';
+import {roLoseBagOnDeath} from '../shared/ro-death-inventory.js';
+import {createRoEquipment} from '../shared/ragnarok-equipment.js';
 import {createRoCheckpoint} from '../shared/ragnarok-save.js';
 import {createRagnarokAccountUI,normalizeRoAccount,mergeRoProgress,roAccountSelection,saveRoCharacter,deleteRoCharacter,roCharacterGallery,RO_ACCOUNT_STORAGE_KEY} from '../src/ragnarok-account-ui.js';
 Object.assign(Game.prototype,BonkMethods);
@@ -10,6 +12,10 @@ const empty=()=>({id:'cloud-a',cards:[],presets:[{id:'default',name:'Padrão',ca
 const game=(options={})=>{const g=new Game(123,{mode:'bonk',bonkLineage:'dragonknight',...options});assert.ok(g.addPlayer('p','knight'));return g;};
 const storage=initial=>{const map=new Map(initial?[[RO_ACCOUNT_STORAGE_KEY,JSON.stringify(initial)]]:[]);return{getItem:key=>map.get(key)||null,setItem:(key,value)=>map.set(key,value),data:()=>JSON.parse(map.get(RO_ACCOUNT_STORAGE_KEY)||'{}')};};
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('death saves the emptied bag immediately, without waiting for the periodic autosave',async()=>{
+ const service=backend(),saved=storage(),messages=[],ui=createRagnarokAccountUI({fetchImpl:service.fetchImpl,storage:saved,toast:t=>messages.push(t)});await ui.loadReady();const g=game();ui.prepareGame(g);await settle();await settle();const u=g.player('p');u.roInventory.push(createRoEquipment('knife','do-not-restore'));await ui.save(g);const before=service.calls.filter(c=>c.path==='progress').length;roLoseBagOnDeath(u);u.alive=false;u.hp=0;ui.update(g);await settle();await settle();assert.equal(service.calls.filter(c=>c.path==='progress').length,before+1);assert.ok(messages.some(t=>t.includes('itens da mochila foram perdidos')));const hero=saved.data().account.progress.characters[0].checkpoint.hero;assert.ok(!hero.roInventory.some(i=>i.id==='do-not-restore'));ui.update(g);await settle();assert.equal(service.calls.filter(c=>c.path==='progress').length,before+1);
+});
 function backend(initial=empty()){
  let account=structuredClone(initial);const calls=[];
  const fetchImpl=async(url,options={})=>{const path=url.split('/').pop(),body=options.body?JSON.parse(options.body):{};calls.push({path,options,body});
@@ -101,4 +107,10 @@ test('a new merchant after twelve saved characters gets a unique ID and stays ne
  const service=backend(account),ui=createRagnarokAccountUI({storage:storage({token,account}),fetchImpl:(url,options)=>url.endsWith('/account')?new Promise(resolve=>complete=()=>resolve(Response.json({account}))):service.fetchImpl(url,options)});
  const loading=ui.loadReady();assert.ok(ui.newCharacter());ui.setLineage('meister');const id=ui.selection().characterId;assert.equal(ui.selection().character,null);complete();await loading;ui.setLineage('meister');assert.equal(ui.selection().characterId,id);assert.equal(ui.onlineSelection('meister').characterId,null);
  const next=game({bonkLineage:'meister'});assert.ok(ui.prepareGame(next));assert.equal(next.player('p').level,1);assert.ok(await ui.save(next));assert.equal(ui.account().progress.characters.length,13);assert.ok(ui.account().progress.characters.some(c=>c.id===id));assert.ok(roCharacterGallery(ui.account().progress,id).includes('13 / 30'));
+});
+
+
+test('a selected saved character can be confirmed directly without choosing its class again',async()=>{
+ const original=game({bonkLineage:'meister'}),checkpoint=createRoCheckpoint(original),account=empty();account.progress=saveRoCharacter(null,{id:'saved-merchant',name:'Ferreiro salvo',lineage:'meister',checkpoint});const choices=[],state={options:{mode:'bonk',bonkActivity:'adventure'},onlineRoom:{stage:'selecting'}};
+ const ui=createRagnarokAccountUI({getState:()=>state,storage:storage({token,account}),fetchImpl:backend(account).fetchImpl,onConfirmCharacter:choice=>{choices.push(choice);return true;}});await ui.loadReady();assert.ok(await ui.confirmCharacter());assert.equal(choices[0].characterId,'saved-merchant');assert.equal(choices[0].lineage,'meister');assert.equal(choices[0].character.name,'Ferreiro salvo');state.onlineRoom.stage='playing';assert.equal(await ui.confirmCharacter(),false);assert.equal(choices.length,1);
 });

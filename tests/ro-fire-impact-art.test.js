@@ -25,3 +25,6 @@ test('disposing the impact batch never releases another living campfire, and eac
  const scene=new T.Scene(),campfire=createVoxelFire(scene,{seed:8}),art=createRoFireImpactArt({scene});let sharedDisposals=0,geometry=0,material=0,mesh=0;const original=campfire.root.children[0];original.geometry.addEventListener('dispose',()=>sharedDisposals++);original.material.addEventListener('dispose',()=>sharedDisposals++);art.mesh.geometry.addEventListener('dispose',()=>geometry++);art.mesh.material.addEventListener('dispose',()=>material++);art.mesh.addEventListener('dispose',()=>mesh++);
  art.update(state([impact()]),.2);art.dispose();art.dispose();assert.equal(sharedDisposals,0);assert.deepEqual([geometry,material,mesh],[1,1,1]);assert.equal(scene.children.length,1);campfire.update(5);assert.equal(campfire.root.visible,true);campfire.dispose();assert.equal(sharedDisposals,2);assert.equal(scene.children.length,0);
 });
+
+
+test('Meteor Assault is a native neutral purple effect, never a canonical fire explosion',()=>{assert.equal(roFireImpactHandles({type:'abilityPulse',skillKey:'asc_meteorassault',element:'physical',radius:7}),false);assert.equal(roFireImpactHandles({type:'fireball',skillKey:'asc_meteorassault',element:'fire',bonk:true}),false);});

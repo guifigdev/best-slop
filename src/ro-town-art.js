@@ -2,7 +2,7 @@ import {RO_TOWN_SERVICE_TYPES} from '../shared/ro-town-services.js';
 import {RO_TOWN_NPC_MODELS} from './ro-town-npc-models.js';
 export const isRoTownNpc=o=>RO_TOWN_SERVICE_TYPES.includes(o?.type);
 const cache=new Map();
-// The people retain the actual client SPR silhouettes, costumes and palette.
+// Full 3D NPC bodies adapt the original costumes and palette in coarse voxels.
 // Stalls are separate scenery, placed behind them so faces and clothing stay visible.
 export function roTownNpcParts(o){
  if(!isRoTownNpc(o))return [];if(cache.has(o.type))return cache.get(o.type);

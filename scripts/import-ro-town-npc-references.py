@@ -1,8 +1,8 @@
-"""Read-only NPC import: python scripts/import-ro-town-npcs.py [client directory].
+"""Read-only NPC reference import: python scripts/import-ro-town-npc-references.py [client directory].
 
 Requires Pillow and the project's grf-loader. Never executes client code.
-Original SPR pixels supply the costume silhouettes and palette; each sampled
-pixel becomes a solid voxel column with rounded depth rather than a billboard.
+Original SPR pixels are reference images only. The full 3D NPC geometry is
+hand-modeled separately in src/ro-town-npc-models.js and is never overwritten.
 """
 import hashlib
 import json
@@ -72,32 +72,10 @@ for key, name in REFERENCES.items():
     data = (SOURCE / (name + '.spr')).read_bytes()
     image = first_frame(data)
     image.save(DEST / (key + '.png'))
-    height = 64
-    width = round(image.width * height / image.height)
-    image = image.resize((width, height), Image.Resampling.NEAREST)
-    quantized = image.convert('RGB').quantize(colors=40).convert('RGB')
-    parts, p = [], 2.5 / height
-    for y in range(height):
-        xs = [x for x in range(width) if image.getpixel((x, y))[3] > 0]
-        if not xs:
-            continue
-        center = (min(xs) + max(xs)) / 2
-        half = max(1, (max(xs) - min(xs) + 1) / 2)
-        for x in xs:
-            depth = round(max(2, (1 - ((x - center) / half) ** 2) ** .5 *
-                              (8 if y < 25 else 6)) / 2) * 2 * p
-            parts.append([round((x - width / 2 + .5) * p, 4),
-                          round((height - y - .5) * p, 4), 0,
-                          round(p, 4), round(p, 4), round(depth, 4),
-                          int.from_bytes(bytes(quantized.getpixel((x, y))), 'big')])
-    models[key] = parts
     records[key] = {'source': 'data/sprite/npc/' + name + '.spr',
                     'sha256': hashlib.sha256(data).hexdigest(),
-                    'reference': key + '.png', 'voxels': len(parts)}
-(ROOT / 'src/ro-town-npc-models.js').write_text(
-    '// Generated from original installed Ragnarok NPC sprites. See assets/ro-town-npcs/manifest.json.\n'
-    'export const RO_TOWN_NPC_MODELS=' + json.dumps(models, separators=(',', ':')) + ';\n', encoding='utf-8')
+                    'reference': key + '.png'}
 (DEST / 'manifest.json').write_text(json.dumps({
-    'source': 'Original Ragnarok LATAM client; artwork © Gravity. Read-only SPR extraction, first idle frame. Costume silhouette and palette sampled into solid voxel columns.',
+    'source': 'Original Ragnarok LATAM client; artwork © Gravity. Read-only SPR extraction, first idle frame. References for full 3D NPC models; geometry is authored separately.',
     'records': records}, indent=2), encoding='utf-8')
-print(json.dumps({key: len(parts) for key, parts in models.items()}))
+print(json.dumps({key: record["source"] for key, record in records.items()}))

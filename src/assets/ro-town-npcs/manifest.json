@@ -1,35 +1,30 @@
 {
-  "source": "Original Ragnarok LATAM client; artwork \u00a9 Gravity. Read-only SPR extraction, first idle frame. Costume silhouette and palette sampled into solid voxel columns.",
+  "source": "Original Ragnarok LATAM NPC sprites, artwork \u00a9 Gravity. Read-only reference images for manually sculpted full 3D voxel models. No sprite extrusion is used in the game.",
   "records": {
     "kafra": {
       "source": "data/sprite/npc/4_f_kafra1.spr",
       "sha256": "1d278e6001d95eed031500e18d52e948d6c7214ab772bf585ba7a8e3c37175cf",
-      "reference": "kafra.png",
-      "voxels": 1092
+      "reference": "kafra.png"
     },
     "potionShop": {
       "source": "data/sprite/npc/1_m_01.spr",
       "sha256": "072984e03f54893a62ec9d63d3b6cd82a4bf1d4f5db424a8024305933fc22290",
-      "reference": "potionShop.png",
-      "voxels": 949
+      "reference": "potionShop.png"
     },
     "equipmentShop": {
       "source": "data/sprite/npc/4_m_03.spr",
       "sha256": "328af4c2e967296d9201cfa31a0f91f5fbd896ea0db11af2d165bd330b3e226b",
-      "reference": "equipmentShop.png",
-      "voxels": 1022
+      "reference": "equipmentShop.png"
     },
     "healer": {
       "source": "data/sprite/npc/4_f_sister.spr",
       "sha256": "931f501722f10c866c69c7de83112b4a337b6bfaf31f64a6938a9ef374292bc3",
-      "reference": "healer.png",
-      "voxels": 969
+      "reference": "healer.png"
     },
     "blacksmith": {
       "source": "data/sprite/npc/1_m_smith.spr",
       "sha256": "2886328c88a227837e5fe0ba6071db1bd9b2d67c797fc0f375dd38a8faff85d3",
-      "reference": "blacksmith.png",
-      "voxels": 1553
+      "reference": "blacksmith.png"
     }
   }
 }

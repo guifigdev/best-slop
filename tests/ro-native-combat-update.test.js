@@ -51,7 +51,7 @@ test('skill bonuses, elemental resistance and refinement compose across several 
  const items=['build_19482','build_2115','build_470017'].map((key,i)=>createRoEquipment(key,'gear'+i)),u={roInventory:items,roEquipment:{head:'gear0',offhand:'gear1',shoes:'gear2'}};
  let stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,.4);assert.equal(stats.elementalResistance.fire,.2);assert.equal(stats.elementalPower.water,.15);assert.equal(stats.fixedCastSeconds,.5);
  items[0].refine=10;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,.4,'refining never gates the skill bonus');
- delete u.roEquipment.head;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses,undefined);assert.equal(stats.elementalPower,undefined);assert.equal(stats.elementalResistance.fire,.2);
+ delete u.roEquipment.head;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses,undefined);assert.deepEqual(stats.elementalPower,{all:.05});assert.equal(stats.elementalResistance.fire,.2);
 });
 test('MVP rage samples once inside 20–40 percent and cannot stack reinforcements over a living wave',()=>{
  assert.equal(roMvpEnrageThreshold(()=>0),.2);assert.ok(roMvpEnrageThreshold(()=>1)<.4);
@@ -73,4 +73,9 @@ test('magic never borrows physical critical chance after equipment and source ca
 
 test('jumping evades airborne MVP attacks; the same telegraph damages a grounded player',()=>{
  for(const jumping of [false,true]){const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.bonk.spawnAt=Infinity;g.bonk.objectives=[];g.bonk.bossSpawned=true;u.bonkBuild.weapons={};u.bonkInvulnerableUntil=0;u.bonkJumpHeight=jumping?1.5:0;u.bonkJumpVelocity=jumping?3:0;g.random=()=>.99;const e={id:999,alive:true,bonkEnemy:true,x:u.x+20,z:u.z,hp:1000,maxHp:1000,speed:0,damage:0,bonkNextAttack:Infinity,bonkNextSpecial:Infinity};g.units=[u,e];g.bonk.warnings=[{id:900,source:e.id,x:u.x,z:u.z,shape:'circle',radius:5,damage:40,element:'fire',fireAt:0,airborneAvoidable:true,groundedOnly:false}];const hp=u.hp;g.tick(.05);assert.equal(u.hp<hp,!jumping);assert.equal(g.bonk.warnings.length,0);}
+});
+
+
+test('dodge never explodes or damages nearby enemies, including with Travelers Boots',()=>{
+ const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');u.bonkBuild.relics.travelersboots=1;u.bonkDashReady=0;const e=g.units.find(e=>e.bonkEnemy);Object.assign(e,{x:u.x+1,z:u.z});const hp=e.hp;g.effects=[];assert.ok(g.command('p',{type:'bkDash'}));assert.equal(e.hp,hp);assert.deepEqual(g.effects.map(e=>e.type),['sprint']);assert.ok(!g.effects.some(e=>e.type==='fireball'||e.type==='abilityPulse'));assert.equal(u.bonkLastProc?.key,undefined);
 });

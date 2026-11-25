@@ -136,3 +136,8 @@ test('explicit character deletion is idempotent and retains a cloud character mi
  const f=fixture();try{const {token}=await account(f);assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);for(let i=0;i<2;i++){const result=await f.request('characters/delete',{token,body:{id:'old'}});assert.equal(result.status,200);const state=(await result.json()).account;assert.deepEqual(state.progress.characters.map(c=>c.id),['new-cloud-character']);assert.deepEqual(state.progress.deletedCharacters,['old']);}assert.equal((await f.request('characters/delete',{token,body:{id:'../invalid'}})).status,400);
  }finally{f.sqlite.close();}
 });
+
+
+test('duplicate card drops are still reported visibly but never duplicate the permanent unlock',async()=>{
+ const f=fixture();try{const {token}=await account(f);const run=await(await f.request('run',{token,body:{activity:'adventure'}})).json();const first=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'first',visual:'poring'}]}})).json();assert.deepEqual(first.newCards,['poring']);assert.equal(first.cardDrops[0].duplicate,false);const second=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'second',visual:'poring'}]}})).json();assert.deepEqual(second.newCards,[]);assert.deepEqual(second.account.cards,['poring']);assert.deepEqual(second.cardDrops,[{key:'poring',receipt:'second',duplicate:true}]);const replay=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'second',visual:'poring'}]}})).json();assert.deepEqual(replay.cardDrops,[]);}finally{f.sqlite.close();}
+});

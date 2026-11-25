@@ -1,13 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
-import {RO_ATMOSPHERE_BUDGET as B,RO_CELESTIAL_ART,roSolarVisibility,roDaylight,createRoActorLighting,createRoAtmosphere} from '../src/ro-atmosphere.js';
+import {RO_ATMOSPHERE_BUDGET as B,RO_CELESTIAL_ART,roSolarVisibility,roDaylight,roSurfaceLight,createRoActorLighting,createRoAtmosphere} from '../src/ro-atmosphere.js';
 import {createFoliageWindMaterial} from '../src/foliage-wind.js';
 
 const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freeze);Object.freeze(value);}return value;};
 const state=(elapsed=122.4,extra={})=>({options:{mode:'bonk'},time:elapsed,bonk:{totalElapsed:elapsed,warnings:[],...extra}});
 function fixture(){const scene=new T.Scene();scene.fog=new T.Fog(0x798e91,80,240);const sun=new T.DirectionalLight(),skyLight=new T.HemisphereLight(),actorLighting=createRoActorLighting(),camera=new T.PerspectiveCamera(65,1,.1,1000),renderer={toneMappingExposure:1};camera.position.set(0,12,22);camera.lookAt(0,1,0);camera.updateMatrixWorld();scene.add(sun,sun.target,skyLight);const atmosphere=createRoAtmosphere({scene,sun,skyLight,actorLighting});return{scene,sun,skyLight,actorLighting,camera,renderer,atmosphere};}
 const update=(f,s,dt=.016)=>f.atmosphere.update(s,s.time,f.camera,{target:new T.Vector3(0,1,0),renderer:f.renderer,dt});
+
+test('sunset visibly warms surfaces and bounced light while moonlight colors the same world blue',()=>{
+ const f=fixture();try{update(f,state(122.4));const noon=f.actorLighting.uniforms.roSolarTint.value.clone();update(f,state(300));const dusk=f.actorLighting.uniforms.roSolarTint.value.clone();assert.ok(dusk.r/dusk.b>noon.r/noon.b*1.25);assert.ok(f.sun.color.r/f.sun.color.b>2);assert.ok(f.actorLighting.uniforms.roSolarBounce.value>.07);update(f,state(482.4));const night=f.actorLighting.uniforms.roSolarTint.value;assert.ok(night.b>night.r*1.4);assert.ok(f.sun.color.b>f.sun.color.r);assert.ok(f.skyLight.groundColor.b>f.skyLight.groundColor.r);assert.deepEqual(night.toArray(),roSurfaceLight(roDaylight(482.4)).tint);}finally{f.atmosphere.dispose();}
+});
 
 test('the sun disk and its halo vanish below the horizon while night keeps borrowed moonlight',()=>{
  const f=fixture();try{const sky=f.atmosphere.root.children[0];for(let time=0;time<=720;time+=2){update(f,state(time));const u=sky.material.uniforms;if(u.sunDirection.value.y<=-.03||u.day.value===0)assert.equal(u.solarVisibility.value,0);assert.ok(u.solarVisibility.value>=0&&u.solarVisibility.value<=1);}update(f,state(482.4));assert.equal(sky.material.uniforms.solarVisibility.value,0);assert.ok(f.sun.intensity>=.68,'the directional fill is moonlight at night, not a second luminous sky disk');assert.equal(roSolarVisibility(-.04,1,1),0);assert.equal(roSolarVisibility(1,1,.4),0);assert.equal(roSolarVisibility(1,1,1),1);assert.ok(roSolarVisibility(0,1,1)<roSolarVisibility(.02,1,1));}finally{f.atmosphere.dispose();}
@@ -59,10 +63,10 @@ test('the world sunlight coating preserves foliage wind and adds warm bounce wit
  const vertex=expand(shader.vertexShader),fragment=expand(shader.fragmentShader);assert.match(vertex,/windPhase/);assert.match(fragment,/outgoingLight\*roSolarTint/);assert.doesNotMatch(fragment,/refract\(-roV|reflect\(-roV/);assert.ok(fragment.indexOf('vec3 outgoingLight')<fragment.indexOf('outgoingLight=outgoingLight*roSolarTint'));assert.equal((fragment.match(/uniform vec3 roSun;/g)||[]).length,1);material.dispose();
 });
 
-test('sunlit surfaces gain golden light and bounce while night stays neutral and the high sky remains blue',()=>{
+test('sunlit surfaces gain golden light and bounce while night gains blue moonlight and the high sky remains blue',()=>{
  const f=fixture();try{update(f,state(122.4));const u=f.actorLighting.uniforms,noon=f.sun.color.clone();assert.ok(noon.r>noon.g&&noon.g>noon.b);assert.ok(f.skyLight.groundColor.r>f.skyLight.groundColor.b);assert.ok(u.roSolarTint.value.r>u.roSolarTint.value.b);assert.ok(u.roSolarBounce.value>0);
   const sky=f.atmosphere.root.children[0].material;assert.ok(sky.uniforms.topColor.value.b>sky.uniforms.topColor.value.r);assert.ok(f.scene.fog.far>200,'distance haze remains');
-  update(f,state(302.4));assert.ok(f.sun.color.g/noon.g<1,'setting sun is more amber');update(f,state(482.4));assert.deepEqual(u.roSolarTint.value.toArray(),[1,1,1]);assert.equal(u.roSolarBounce.value,0);
+  update(f,state(302.4));assert.ok(f.sun.color.g/noon.g<1,'setting sun is more amber');update(f,state(482.4));assert.ok(u.roSolarTint.value.b>u.roSolarTint.value.r);assert.ok(u.roSolarBounce.value>0);
  }finally{f.atmosphere.dispose();}
 });
 

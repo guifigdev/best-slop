@@ -4,7 +4,7 @@ import {createRoAtmosphere} from '../src/ro-atmosphere.js';
 const state={options:{mode:'bonk'},worldSeed:100,bonk:{map:{seed:100,stageKey:'grove'},warnings:[],totalElapsed:122.4}};
 test('world scattering anchors stay fixed when the hero or camera moves within their cells and fit the mobile budget',()=>{
  const a=roScatteringPlanePlan(state,{day:1,target:{x:0,z:0}}),b=roScatteringPlanePlan(state,{day:1,target:{x:1,z:1}});assert.equal(a.length,B.planes);assert.equal(roScatteringPlanePlan(state,{day:1,low:true}).length,B.mobilePlanes);assert.equal(B.renderTargets,0);assert.equal(B.drawCalls,1);
- for(const anchor of a){const common=b.find(p=>p.id===anchor.id);assert.ok(common);assert.equal(anchor.x,common.x);assert.equal(anchor.z,common.z);assert.ok(anchor.opacity>0&&anchor.opacity<=.085);}
+ for(const anchor of a){const common=b.find(p=>p.id===anchor.id);assert.ok(common);assert.equal(anchor.x,common.x);assert.equal(anchor.z,common.z);assert.ok(anchor.opacity>0&&anchor.opacity<=.12);}
  const warning=roScatteringPlanePlan({...state,bonk:{...state.bonk,warnings:[{radius:4}]}},{day:1});assert.ok(warning.every((p,i)=>p.opacity===a[i].opacity*.5));
 });
 test('shafts disappear at night, in strong rain, inside the tower and underground, without touching gameplay',()=>{

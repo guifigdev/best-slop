@@ -160,7 +160,7 @@ export function applyRoSkillHit(game,unit,enemy,weapon,level,api={}){
 }
 
 export function roEnemySkillState(enemy,elapsed){
- const stunned=Math.max(enemy.roSkillStunUntil||0,enemy.roFrozenUntil||0)>elapsed,rooted=Math.max(enemy.roSkillRootUntil||0,enemy.roFrozenUntil||0)>elapsed,slow=enemy.roSkillSlowUntil>elapsed?clamp(enemy.roSkillSlow,0,.75):0,blind=enemy.roSkillBlindUntil>elapsed?clamp(enemy.roSkillBlind,0,.4):0;
+ const stunned=Math.max(enemy.roSkillStunUntil||0,enemy.roFrozenUntil||0,enemy.roCritStaggerUntil||0)>elapsed,rooted=Math.max(enemy.roSkillRootUntil||0,enemy.roFrozenUntil||0)>elapsed,slow=enemy.roSkillSlowUntil>elapsed?clamp(enemy.roSkillSlow,0,.75):0,blind=enemy.roSkillBlindUntil>elapsed?clamp(enemy.roSkillBlind,0,.4):0;
  return{stunned,rooted,speedMultiplier:stunned||rooted?0:1-slow,damageMultiplier:1-blind,damageTakenMultiplier:1+(enemy.roSkillArmorBreakUntil>elapsed?clamp(enemy.roSkillArmorBreak,0,.35):0)};
 }
 

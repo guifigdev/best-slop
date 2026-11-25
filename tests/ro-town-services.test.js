@@ -40,6 +40,6 @@ test('real equipment cells use original client sprites; empty slots retain silho
 });
 
 
-test('Town NPCs retain five distinct original sprite silhouettes as finite cached solid voxel models',()=>{
- const silhouettes=new Set();for(const type of RO_TOWN_SERVICE_TYPES){const body=RO_TOWN_NPC_MODELS[type],parts=roTownNpcParts({type});assert.ok(body.length>800&&parts.length<1700);assert.equal(parts,roTownNpcParts({type}),'static NPC geometry is cached');assert.ok(parts.every(p=>p.slice(0,7).every(Number.isFinite)&&p.slice(3,6).every(n=>n>0)));assert.ok(Math.abs(Math.max(...body.map(p=>p[1]+p[4]/2))-2.5)<.001);silhouettes.add(JSON.stringify(body));}assert.equal(silhouettes.size,5);assert.deepEqual(roTownNpcParts({type:'chest'}),[]);
+test('Town NPCs adapt five original costumes into distinct volumetric voxel bodies',()=>{
+ const silhouettes=new Set();for(const type of RO_TOWN_SERVICE_TYPES){const body=RO_TOWN_NPC_MODELS[type],parts=roTownNpcParts({type});assert.ok(body.length>=50&&parts.length<180);assert.equal(parts,roTownNpcParts({type}),'static NPC geometry is cached');assert.ok(parts.every(p=>p.slice(0,7).every(Number.isFinite)&&p.slice(3,6).every(n=>n>0)));assert.ok(Math.max(...body.map(p=>p[1]+p[4]/2))>=2.4);assert.ok(Math.max(...body.map(p=>p[5]))>.45,'full body depth, not an extruded pixel surface');silhouettes.add(JSON.stringify(body));}assert.equal(silhouettes.size,5);assert.deepEqual(roTownNpcParts({type:'chest'}),[]);
 });

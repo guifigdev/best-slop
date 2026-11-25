@@ -27,7 +27,7 @@ export const BONK_RELICS=Object.freeze({
  luckybell:relic('luckybell','Guizo de Hugin','critical','+10% de ouro por cópia.','common'),
  giantbone:relic('giantbone','Osso de gigante','avatar','+10% de área e +8% de vida máxima por cópia.','rare'),
  glassrune:relic('glassrune','Runa de vidro','rage','+22% de dano e -8 de vida máxima por cópia.','epic'),
- travelersboots:relic('travelersboots','Botas do caminho','sprint','+5% de velocidade; esquivar deixa uma explosão.','rare'),
+ travelersboots:relic('travelersboots','Botas do caminho','sprint','+5% de velocidade de movimento.','rare'),
  silvermirror:relic('silvermirror','Espelho de prata','mirror','+1 projétil por cópia nas armas compatíveis.','epic'),
  thorncrown:relic('thorncrown','Coroa de espinhos','thorns','Ao sofrer dano, emita espinhos em área.','common'),
  scholar:relic('scholar','Pergaminho do erudito','brilliance','+12% de experiência e +1 regeneração por cópia.','common'),

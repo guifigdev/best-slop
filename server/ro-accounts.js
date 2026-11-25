@@ -84,7 +84,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
     const tower=run.activity==='tower',processed=new Set(run.processed),credits=Math.min(MAX_RECEIPTS,(tower?280:6)+Math.floor((stamp-run.started)/1000*(tower?64:3))),newCards=[],cardDrops=[],acknowledgedIds=[];
     for(const kill of input.kills){const receipt=String(kill.id);if(processed.has(receipt)){acknowledgedIds.push(receipt);continue;}if(run.count>=credits)break;processed.add(receipt);acknowledgedIds.push(receipt);run.count++;
      // Boss odds derive from the server catalog, never the reported flag.
-     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'&&!state.cards.includes(drop.key)){state.cards.push(drop.key);newCards.push(drop.key);cardDrops.push({key:drop.key,receipt});}
+     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'){const duplicate=state.cards.includes(drop.key);if(!duplicate){state.cards.push(drop.key);newCards.push(drop.key);}cardDrops.push({key:drop.key,receipt,duplicate});}
     }
     run.processed=[...processed];extra.newCards=newCards;extra.cardDrops=cardDrops;extra.acknowledgedIds=acknowledgedIds;
    }

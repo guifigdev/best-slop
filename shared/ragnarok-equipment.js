@@ -1,3 +1,6 @@
+import {roCardRarity} from './ro-card-rarity.js';
+import {RO_EQUIPMENT_TARGET_FACTS} from './ro-equipment-target-facts.js';
+import {RO_TARGET_BONUS_FAMILIES} from './ro-equipment-target-bonuses.js';
 import {RO_EQUIPMENT_ELEMENT_FACTS} from './ro-equipment-element-facts.js';
 import {RO_TOWER_CARDS,RO_TOWER_MVP_GEAR,RO_TOWER_DROP_MAP} from './ragnarok-tower-drops.js';
 import {RO_BUILD_EQUIPMENT} from './ro-build-equipment.js';
@@ -72,8 +75,8 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
  mvpCard('hatii','Hatii Card',4324,'armor',{vit:2,armor:2},['hatii'],'Chance to freeze an attacker when struck'),
  mvpCard('fallenbishop','Fallen Bishop Card',4441,'shoes',{int:3,matk:7},['fallenbishop'],'MATK +10%, max SP -50%, magic damage to Angel and Demihuman +50%'),
 ].map(item=>[item.key,item])));
-export const RO_EQUIPMENT=freeze({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT});
-export const RO_CARDS=freeze({...BASE_RO_CARDS,...RO_TOWER_CARDS});
+export const RO_EQUIPMENT=freeze(Object.fromEntries(Object.entries({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT}).map(([key,d])=>[key,RO_BUILD_EQUIPMENT[key]===d?d:{...d,...RO_EQUIPMENT_TARGET_FACTS[d.sourceId]}])));
+export const RO_CARDS=freeze(Object.fromEntries(Object.entries({...BASE_RO_CARDS,...RO_TOWER_CARDS}).map(([key,card])=>[key,{...card,rarity:roCardRarity(card)}])));
 export const RO_LOOT_RATES=freeze({card:.005,bossCard:.005,equipment:.06});
 export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','head','headMid','headLow','armor','garment','shoes','accessory','accessory2']);
 export const RO_EQUIPMENT_SLOT_NAMES=freeze({weapon:'Mão direita',offhand:'Mão esquerda',head:'Cabeça · topo',headMid:'Cabeça · meio',headLow:'Cabeça · baixo',armor:'Armadura',garment:'Capa',shoes:'Calçados',accessory:'Acessório 1',accessory2:'Acessório 2'});
@@ -117,8 +120,8 @@ export function roCompactInventory(u){
  u.roInventory=kept;return kept;
 }
 const findItem=(u,id)=>validId(id)?inventory(u).find(item=>item&&item.id===id&&own(RO_EQUIPMENT,item.key)):null;
-const offhandWeapon=u=>u.roLineage==='shadowcross'&&(u.roTier||0)>=1;
-export function roItemFitsSlot(u,item,slot){const definition=RO_EQUIPMENT[item?.key];return !!definition&&(definition.slot===slot||definition.slot==='accessory'&&slot==='accessory2'||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&offhandWeapon(u)&&['dagger','sword','axe'].includes(definition.weaponType));}
+export const roCanDualWield=u=>u?.roLineage==='shadowcross'&&(u.roTier||0)>=1;
+export function roItemFitsSlot(u,item,slot){const definition=RO_EQUIPMENT[item?.key];return !!definition&&(definition.slot===slot||definition.slot==='accessory'&&slot==='accessory2'||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&roCanDualWield(u)&&['dagger','sword','axe'].includes(definition.weaponType));}
 const fits=roItemFitsSlot;
 export const roCompatibleSlots=(u,item)=>RO_EQUIPMENT_SLOTS.filter(slot=>fits(u,item,slot));
 
@@ -153,13 +156,13 @@ export function roDrop(u,itemId){
  const cards=Array.isArray(u?.roCards)?u.roCards:[],cardIndex=cards.findIndex(card=>card?.id===itemId);if(cardIndex<0)return false;cards.splice(cardIndex,1);return true;
 }
 export function roEquipmentBonuses(u){
- const bonuses={str:0,agi:0,vit:0,int:0,dex:0,luk:0,maxHp:0,attack:0,armor:0,matk:0,moveSpeed:0,crit:0,haste:0,variableCastReduction:0,fixedCastReduction:0,fixedCastSeconds:0,afterCastReduction:0},seenItems=new Set(),seenCards=new Set();
+ const bonuses={str:0,agi:0,vit:0,int:0,dex:0,luk:0,maxHp:0,attack:0,armor:0,matk:0,moveSpeed:0,crit:0,haste:0,flee:0,perfectEvasion:0,variableCastReduction:0,fixedCastReduction:0,fixedCastSeconds:0,afterCastReduction:0},seenItems=new Set(),seenCards=new Set();
  const add=stats=>{for(const[key,value]of Object.entries(stats||{}))if(Number.isFinite(value)&&typeof bonuses[key]==='number')bonuses[key]+=value;};
  const main=findItem(u,u?.roEquipment?.weapon),twoHanded=main&&RO_EQUIPMENT[main.key].hands===2;
  for(const slot of RO_EQUIPMENT_SLOTS){const item=findItem(u,u?.roEquipment?.[slot]);if(!item||seenItems.has(item.id)||!fits(u,item,slot)||slot==='offhand'&&twoHanded)continue;seenItems.add(item.id);
   const definition=RO_EQUIPMENT[item.key];add(definition.stats);if(definition.armorElement)bonuses.armorElement=definition.armorElement;if(slot==='weapon'&&definition.weaponElement)bonuses.weaponElement=definition.weaponElement;const refinement=Math.max(0,Math.min(10,item.refine||0));if(refinement){if(definition.slot==='weapon'){bonuses.attack+=(definition.stats.attack||0)*refinement*.05;bonuses.matk+=(definition.stats.matk||0)*refinement*.05;}else bonuses.armor+=refinement*.3;}
   for(const [key,values]of Object.entries(definition.skillBonuses||{})){const target=(bonuses.skillBonuses||={})[key]||={};for(const [stat,value]of Object.entries(values))target[stat]=(target[stat]||0)+value;}
-  for(const family of ['elementalPower','elementalResistance'])for(const [key,value]of Object.entries(definition[family]||{})){const target=bonuses[family]||={};target[key]=(target[key]||0)+value;}
+  for(const family of ['elementalPower','elementalResistance',...RO_TARGET_BONUS_FAMILIES])for(const [key,value]of Object.entries(definition[family]||{})){const target=bonuses[family]||={};target[key]=(target[key]||0)+value;}
   for(const entry of (Array.isArray(item.cards)?item.cards:[]).slice(0,definition.sockets)){if(!entry||seenCards.has(entry.id)||!own(RO_CARDS,entry.key)||RO_CARDS[entry.key].slot!==roSlotType(definition.slot))continue;seenCards.add(entry.id);add(RO_CARDS[entry.key].stats);}
  }
  return bonuses;

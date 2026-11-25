@@ -11,7 +11,7 @@ export function roScatteringPlanePlan(state,{target={x:0,y:0,z:0},day=0,weatherS
  const seed=Number(state?.bonk?.map?.seed||state?.worldSeed)||1,cx=Math.round(target.x/32),cz=Math.round(target.z/32),candidates=[],max=low?2:4;
  for(let ix=cx-1;ix<=cx+1;ix++)for(let iz=cz-1;iz<=cz+1;iz++){
   const key=ix*977+iz*739+seed*.017,x=ix*32+(hash(key)-.5)*17,z=iz*32+(hash(key+13)-.5)*17,distance=Math.hypot(x-target.x,z-target.z),fade=clamp((55-distance)/24,0,1);
-  if(fade<=0)continue;candidates.push({id:ix+':'+iz,x,z,seed:hash(key+29),width:5+hash(key+37)*5,height:22+hash(key+53)*10,opacity:Math.min(.085,day*clamp(weatherStrength,0,1)*clamp(intensity,0,1.5)*.065)*(state.bonk?.warnings?.length ? .5 : 1)*fade,distance});
+  if(fade<=0)continue;candidates.push({id:ix+':'+iz,x,z,seed:hash(key+29),width:5+hash(key+37)*5,height:22+hash(key+53)*10,opacity:Math.min(.12,day*clamp(weatherStrength,0,1)*clamp(intensity,0,1.5)*.115)*(state.bonk?.warnings?.length ? .5 : 1)*fade,distance});
  }
  return candidates.sort((a,b)=>a.distance-b.distance||a.id.localeCompare(b.id)).slice(0,max);
 }
