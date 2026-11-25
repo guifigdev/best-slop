@@ -23,9 +23,6 @@
 .status-chip.violentforce i{background:#ffd27c;box-shadow:0 0 10px #ffc56575}
 .unit-status-label .violentforce{background:#8b5c2de8;color:#fff0bd}
 
-/* Native multi-hit totals use gold digits; multi-hit criticals get their own
-   blue burst so they cannot be confused with ordinary physical criticals. */
+/* Multi-hit totals use gold digits; all criticals retain the warm burst above. */
 .combat-overlay .combat-text.ro-multihit{color:#fff06a;font-size:27px;font-weight:800;font-style:italic;line-height:1;-webkit-text-stroke:.5px #82611e;text-shadow:0 2px #715018,1px 0 #715018,-1px 0 #715018;z-index:3}
-.combat-overlay .combat-text.ro-multihit-critical.critical{color:#fff06a;-webkit-text-stroke:.65px #23486d;text-shadow:0 2px #193a62,1px 0 #193a62,-1px 0 #193a62}
-.combat-overlay .combat-text.ro-multihit-critical::before{background:linear-gradient(170deg,#9ce6ff 0%,#429fe2 38%,#2b66b6 76%,#254377 100%)}
-@media(max-width:1024px){body.bonk-mode .combat-text.ro-multihit{font-size:17px}body.bonk-mode .combat-text.ro-multihit-critical.critical{font-size:20px}}
+@media(max-width:1024px){body.bonk-mode .combat-text.ro-multihit{font-size:17px}}
