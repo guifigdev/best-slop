@@ -2,7 +2,7 @@ import {Game} from './simulation.js';
 import {modeOptions,capacity,MODES} from './modes.js';
 import {roomCharacterChoices} from './room-characters.js';
 import {ARENAS} from './arenas.js';
-import {roomRoster,waitingRoomProblem,ensureLobbyOpposition,prepareLobbyMarket} from './lobby-catalog.js';
+import {roomRoster,waitingRoomProblem,waitingRoomAutoBots,ensureLobbyOpposition,prepareLobbyMarket} from './lobby-catalog.js';
 import {applyRoRoomPolicy} from './ro-room-policy.js';
 
 export const ROOM_OPTION_KEYS=Object.freeze(['game','mode','teamSize','teamCount','clashEvery','towerLimit','laneCount','lineTeams','dungeonPartySize','dungeonTeams','dungeonPvp','dungeonLimit','bloodyTeams','bonkWorld','bonkActivity','bonkSkillMode','bonkDifficulty']);
@@ -36,7 +36,7 @@ export function createLocalLobby({seed,owner='local',options={mode:'campaign'}}=
   }
   if(c.type==='roomBots'){if(stage!=='waiting')throw Error('Configure bots antes de iniciar.');const free=capacity(game.options)-game.heroes().length,count=c.fill?free:c.count;if(!Number.isInteger(count)||count<1||count>free)throw Error('A sala está cheia.');addBots(count);ready=false;return true;}
   if(c.type==='roomKick'){if(stage!=='waiting')throw Error('Configure vagas antes de iniciar.');const unit=game.player(c.playerId);if(!unit?.bot)throw Error('Só é possível remover bots.');game.units=game.units.filter(u=>u.owner!==c.playerId);delete game.players[c.playerId];ready=false;return true;}
-  if(c.type==='roomStart'){if(stage==='waiting'){const problem=waitingRoomProblem(game,api.snapshot().onlineRoom.players);if(problem)throw Error(problem);stage='selecting';return true;}if(stage==='recruiting'){if(!game.player(owner)?.btRoster?.length)throw Error('Recrute pelo menos um grupo antes de iniciar.');return activate();}throw Error('Os jogadores estão escolhendo seus personagens.');}
+  if(c.type==='roomStart'){if(stage==='waiting'){const players=api.snapshot().onlineRoom.players,problem=waitingRoomProblem(game,players);if(problem)throw Error(problem);addBots(waitingRoomAutoBots(game.options,players));stage='selecting';return true;}if(stage==='recruiting'){if(!game.player(owner)?.btRoster?.length)throw Error('Recrute pelo menos um grupo antes de iniciar.');return activate();}throw Error('Os jogadores estão escolhendo seus personagens.');}
   if(c.type==='roomSelectionComplete'){if(stage!=='selecting'||!chosen)throw Error('Confirme seu personagem primeiro.');return activate();}
   if(stage==='recruiting'&&!c.type.startsWith('room')){if(['ready','btReady'].includes(c.type))return api.command({type:'roomStart'});return game.command(owner,c);}
   return false;

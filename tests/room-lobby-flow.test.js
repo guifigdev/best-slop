@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {once} from 'node:events';
 import {WebSocket} from 'ws';
 import {createLocalLobby} from '../shared/room-lobby.js';
-import {LOBBY_GAMES,lobbyGameKey} from '../shared/lobby-catalog.js';
+import {LOBBY_GAMES,lobbyGameKey,waitingRoomProblem,waitingRoomAutoBots} from '../shared/lobby-catalog.js';
 import {roomSettingsMarkup} from '../src/room-settings-ui.js';
 import {roomCharacterPickerMarkup} from '../src/room-character-picker.js';
 import {createGameServer} from '../server/game-server.js';
@@ -12,6 +12,7 @@ import {createRoCheckpoint} from '../shared/ragnarok-save.js';
 import {saveRoCharacter} from '../src/ragnarok-account-ui.js';
 import {roSkillOfferPool} from '../shared/ro-skill-offers.js';
 import {Game} from '../shared/simulation.js';
+import {wlSkillPrice} from '../shared/warlock-catalog.js';
 
 const config=()=>runtimeConfig({HOST:'127.0.0.1',PORT:'0',DRAIN_TIMEOUT_SECONDS:'0'});
 function next(ws,type,predicate=()=>true){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{ws.off('message',read);reject(Error('Timeout: '+type));},6000);function read(raw){const m=JSON.parse(raw);if(m.type===type&&predicate(m)){clearTimeout(timer);ws.off('message',read);resolve(m);}}ws.on('message',read);});}
@@ -52,6 +53,36 @@ test('local Tower class-only merchant keeps the clicked lineage and excludes swo
 test('Tree Tag computers fill the opposite role after the human chooses an Infernal',()=>{
  const room=createLocalLobby({seed:18,options:{mode:'treetag'}});room.command({type:'roomBots',count:1});room.command({type:'roomReady',ready:true});room.command({type:'roomStart'});room.command({type:'roomChooseHero',hero:'blaze'});room.command({type:'roomSelectionComplete'});
  assert.equal(room.game.player('local').treeTagRole,'infernal');assert.ok(room.game.heroes().some(u=>u.bot&&u.treeTagRole==='ent'));assert.equal(room.started,true);
+});
+
+test('a ready solo Warlock host starts with exactly one computer opponent and keeps it through character selection',()=>{
+ for(const manual of [false,true]){
+  const room=createLocalLobby({seed:21,options:{mode:'warlock'}});if(manual)room.command({type:'roomBots',count:1});
+  assert.throws(()=>room.command({type:'roomStart'}),/Pronto/);assert.equal(room.game.heroes().length,manual?2:1,'a rejected start cannot add a bot');
+  room.command({type:'roomReady',ready:true});const players=room.snapshot().onlineRoom.players;
+  assert.equal(waitingRoomProblem(room.game,players),null);assert.equal(waitingRoomAutoBots(room.game.options,players),manual?0:1);
+  room.command({type:'roomStart'});assert.equal(room.stage,'selecting');assert.equal(room.game.heroes().filter(u=>u.bot).length,1);
+  room.command({type:'roomChooseHero',hero:'heretic'});room.command({type:'roomSelectionComplete'});
+  const u=room.game.player('local');assert.equal(room.started,true);assert.equal(u.warlockCharacter,'heretic');assert.equal(room.game.heroes().filter(u=>u.bot).length,1);assert.equal(room.game.phase,'preparation');assert.equal(room.game.warlock.phase,'shop');assert.equal(room.game.warlock.remaining,30);assert.equal(u.ready,false);
+  for(const level of [1,2]){const price=wlSkillPrice(u,'S011'),gold=u.gold;assert.equal(room.command({type:'wlBuy',skill:'S011'}),true);assert.equal(u.skillLevels.S011,level);assert.equal(u.gold,gold-price);}
+  assert.equal(room.command({type:'wlReady'}),true);assert.equal(room.game.phase,'wave');assert.ok(room.game.heroes().find(v=>v.bot).skills.length>2,'the computer buys spells even if the human immediately starts');
+  for(let i=0;i<30;i++)room.game.tick(1/30);assert.equal(room.game.heroes().filter(u=>u.alive).length,2,'solo does not instantly win from having no opponent');
+ }
+ assert.match(waitingRoomProblem({options:{mode:'warlock'}},[{ready:true,connected:false,bot:false}]),/reconectarem/);
+ assert.match(waitingRoomProblem({options:{mode:'castlefight'}},[{ready:true,connected:true,bot:false}]),/outro jogador/);
+});
+
+test('a network Warlock room can start with one ready human and registers one real bot in the authoritative roster',async()=>{
+ const app=createGameServer({config:config()}),sockets=[];try{
+  await app.listen();const a=await join(app,sockets,{type:'join',intent:'create',room:'WLSOLO',options:{mode:'warlock'}});
+  assert.match((await command(a,{type:'roomStart'},()=>true,'error')).message,/Pronto/);assert.equal(app.rooms.get('WLSOLO').members.size,1);
+  await command(a,{type:'roomReady',ready:true},m=>m.state.onlineRoom.players.every(p=>p.ready));
+  const selected=await command(a,{type:'roomStart'},m=>m.state.onlineRoom.stage==='selecting');assert.equal(selected.state.onlineRoom.players.length,2);assert.equal(selected.state.onlineRoom.players.filter(p=>p.bot&&p.ready&&p.heroChosen).length,1);
+  const started=await command(a,{type:'roomChooseHero',hero:'heretic'},m=>m.state.onlineRoom.started);assert.equal(started.state.options.mode,'warlock');assert.equal(started.state.onlineRoom.players.length,2);
+  const room=app.rooms.get('WLSOLO'),u=room.game.player(a.data.id);assert.equal(room.game.heroes().filter(u=>u.bot).length,1);assert.equal(u.warlockCharacter,'heretic');assert.equal(room.game.phase,'preparation');assert.equal(room.game.warlock.phase,'shop');assert.ok(room.game.warlock.remaining>29);assert.equal(u.ready,false);
+  for(const level of [1,2]){const gold=u.gold,price=wlSkillPrice(u,'S011');await command(a,{type:'wlBuy',skill:'S011'},m=>m.state.units.find(v=>v.owner===a.data.id)?.skillLevels.S011===level);assert.equal(u.gold,gold-price);assert.equal(u.skillLevels.S011,level);}
+  await command(a,{type:'wlReady'},m=>m.state.warlock.phase==='battle');assert.equal(room.game.phase,'wave');assert.equal(room.game.warlock.round,1);
+ }finally{await close(app,sockets);}
 });
 
 test('two real clients confirm ready, select independent characters only after start, and launch the selected game',async()=>{

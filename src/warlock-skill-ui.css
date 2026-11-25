@@ -1,0 +1,34 @@
+.wl-ability-slot{position:relative;flex:none;padding-top:31px!important;padding-bottom:0!important}
+.wl-ability-slot>.wl-ability-upgrade{position:absolute;left:1px;right:1px;top:0;display:flex;align-items:center;justify-content:center;gap:4px;min-height:25px;height:25px;padding:2px;border:1px solid #f6d58c;border-radius:6px;background:linear-gradient(#e7c77e,#b49652);color:#18392c;font:700 17px Outfit;pointer-events:auto}
+.wl-ability-upgrade>small{font-size:8px;font-weight:700;white-space:nowrap}
+.wl-ability-upgrade:disabled{background:#253e34;border-color:#80947066;color:#afbc98;opacity:.75;cursor:default}
+.wl-ability-upgrade[hidden]{display:none!important}
+.wl-ability-slot:not(:has(>.wl-ability-upgrade:not([hidden]))){padding-top:0!important}
+.wl-ability-slot>.ability[aria-disabled=true]{cursor:help;filter:saturate(.55);opacity:.8}
+.wl-ability-slot>.wl-skill-info{position:absolute;right:2px;bottom:18px;display:grid;place-items:center;min-height:17px;width:17px;height:17px;padding:0;border:1px solid #b9c493b0;border-radius:50%;background:#102b27e8;color:#f9e4a8;font:700 10px Outfit;z-index:2;pointer-events:auto}
+.wl-ability-slot>button:focus-visible{outline:2px solid #ffe5a3;outline-offset:3px}
+.wl-skill-tooltip{position:fixed;z-index:500;width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;padding:15px;border:1px solid #cdb77fbb;border-radius:13px;background:linear-gradient(145deg,#234334fa,#0e2723fc);box-shadow:0 12px 45px #031610b0;color:#f3ebcf;font:12px/1.5 Outfit,system-ui,sans-serif;pointer-events:auto;text-align:left;scrollbar-width:thin}
+.wl-skill-tooltip[hidden]{display:none!important}
+.wl-skill-tooltip[popover]{inset:auto;margin:0}
+.wl-skill-tooltip>header{display:flex;gap:11px;align-items:center}
+.wl-skill-tooltip>header>span{width:48px;height:48px;flex:none;border:1px solid #b9bb8266;border-radius:8px;overflow:hidden;background:#0f2822}
+.wl-skill-tooltip>header>span>svg,.wl-skill-tooltip>header>span>img{width:48px;height:48px;object-fit:contain}
+.wl-skill-tooltip h3{margin:2px 0;color:#ffe3a1;font-size:18px;line-height:1.25}
+.wl-skill-tooltip header small{font-size:10px;color:#bdd0aa}
+.wl-skill-tooltip header b{font-size:11px;color:#d9d6b8;font-weight:500}
+.wl-skill-tooltip kbd{display:inline-block;min-width:18px;padding:0 4px;border:1px solid #acb88b77;border-radius:4px;font:700 10px Outfit;text-align:center}
+.wl-skill-tooltip>p{margin:12px 0;font-size:12px;color:#e1e5ca}
+.wl-skill-values{padding:9px 0;border-top:1px solid #a9b88a33;border-bottom:1px solid #a9b88a33}
+.wl-skill-values>div{display:grid;grid-template-columns:minmax(0,1fr) 66px 66px;gap:7px;padding:3px 0;align-items:baseline}
+.wl-skill-values>div:not(:has(>strong)):not(:has(>b:nth-of-type(2))){grid-template-columns:minmax(0,1fr) 66px}
+.wl-skill-values span{color:#b8c6a7;font-size:11px}
+.wl-skill-values b,.wl-skill-values strong{text-align:right;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.wl-skill-values .improved{color:#ecce85}
+.wl-skill-values>.wl-skill-value-head{padding-bottom:6px}
+.wl-skill-value-head span,.wl-skill-value-head b{font-size:9px;text-transform:uppercase;color:#96ad94;letter-spacing:.4px}
+.wl-skill-tooltip>footer{display:grid;gap:5px;padding-top:10px;font-size:11px}
+.wl-skill-tooltip footer>b{font-weight:500;color:#c8d5b6}
+.wl-skill-tooltip footer>span{color:#e7d3a0}
+.wl-skill-tooltip footer>.wl-skill-can-upgrade{color:#f5d57e}
+.wl-skill-tooltip footer>small{font-size:10px;color:#a5b99e}
+@media(pointer:coarse){.wl-ability-slot>.wl-skill-info{width:22px;height:22px;min-height:22px;bottom:18px}.wl-ability-slot>.wl-ability-upgrade{height:28px;min-height:28px}.wl-ability-slot{padding-top:33px!important}}

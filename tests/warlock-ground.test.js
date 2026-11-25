@@ -21,7 +21,7 @@ test('walking on an island prevents lava damage, while true lava ignites the pub
 });
 
 test('rounds regenerate seeded ground without gameplay RNG, snapshots never jitter and collapsing islands restore lava damage',()=>{
- const {g,p}=setup(),initial=JSON.stringify(g.warlock.islands),seed=g.seed;for(let i=0;i<5;i++)g.tick(.1);assert.equal(JSON.stringify(g.snapshotWarlock().islands),initial);assert.equal(g.seed,seed);const old=g.warlock.islands[0];Object.assign(p,{x:old.x,z:old.z,hp:90});g.warlock.remaining=30;g.tick(.1);assert.equal(warlockIslandScale(g.warlock),0);assert.ok(p.hp<90);assert.ok(p.wlLavaContactUntil>g.time);g.finishWarlockRound();g.startWarlockRound();assert.notEqual(JSON.stringify(g.warlock.islands),initial);assert.equal(p.wlLavaContactUntil,0);assert.equal(g.warlock.arenaRadius,24);
+ const {g,p}=setup(),initial=JSON.stringify(g.warlock.islands),seed=g.seed;for(let i=0;i<5;i++)g.tick(.1);assert.equal(JSON.stringify(g.snapshotWarlock().islands),initial);assert.equal(g.seed,seed);const old=g.warlock.islands[0];Object.assign(p,{x:old.x,z:old.z,hp:90});g.warlock.remaining=30;g.tick(.1);assert.equal(warlockIslandScale(g.warlock),0);assert.ok(p.hp<90);assert.ok(p.wlLavaContactUntil>g.time);g.finishWarlockRound();assert.equal(g.startWarlockRound(),false);g.tick(3.01);assert.equal(g.startWarlockRound(),true);assert.notEqual(JSON.stringify(g.warlock.islands),initial);assert.equal(p.wlLavaContactUntil,0);assert.equal(g.warlock.arenaRadius,24);
 });
 
 test('actual teleport and knockback motion can land on island ground and resume safe play',()=>{

@@ -102,7 +102,7 @@ export const WarlockMethods={
  },
  initWarlock(){
   if(this.warlock)return this.warlock;const players=casters(this);if(players.length<2)return false;
-  this.warlock={phase:'shop',round:0,maxRounds:REF.rounds,arenaRadius:POLISH.arena.radius,mapRadius:POLISH.arena.mapRadius,remaining:30,projectiles:[],fields:[],links:[],results:[],pillars:[{id:this.id(),x:-8,z:-2,radius:.8,hp:25,maxHp:25,alive:true},{id:this.id(),x:8,z:2,radius:.8,hp:25,maxHp:25,alive:true}],adaptedArena:true};
+  this.warlock={phase:'shop',round:0,maxRounds:REF.rounds,arenaRadius:POLISH.arena.radius,mapRadius:POLISH.arena.mapRadius,remaining:POLISH.arena.shopDuration,projectiles:[],fields:[],links:[],results:[],pillars:[{id:this.id(),x:-8,z:-2,radius:.8,hp:25,maxHp:25,alive:true},{id:this.id(),x:8,z:2,radius:.8,hp:25,maxHp:25,alive:true}],adaptedArena:true};
   this.warlock.islands=generateWarlockIslands(this.worldSeed??this.seed,0);this.phase='preparation';this.bounds=POLISH.arena.mapRadius;this.arena='fire';this.zones=[];this.obstacles=[];this.message='Warlock: escolha magias por coluna e equipamentos. Bola de fogo e sua magia pessoal já estão disponíveis.';
   for(const [i,u]of players.entries()){u.x=(i-(players.length-1)/2)*3;u.z=0;u.ready=!!u.bot;}return this.warlock;
  },
@@ -110,7 +110,7 @@ export const WarlockMethods={
   this.commandFailureReason=null;if(!u?.warlockCharacter||!c||typeof c!=='object')return false;
   if(!this.warlock&&!this.initWarlock())return setFailure(this,'Aguarde outro mago entrar.');const w=this.warlock;
   if(['victory','defeat'].includes(this.phase))return false;
-  if(c.type==='wlReady'||c.type==='ready'){if(w.phase!=='shop')return false;u.ready=true;if(casters(this).every(v=>v.ready||v.bot))this.startWarlockRound();return true;}
+  if(c.type==='wlReady'||c.type==='ready'){if(w.phase!=='shop')return false;u.ready=true;if(this.time>=(w.resultUntil||0)&&casters(this).every(v=>v.ready||v.bot))this.startWarlockRound();return true;}
   if(c.type==='wlBuy')return this.warlockBuy(u,c);
   if(c.type==='wlSell'){if(w.phase!=='shop'||!Number.isInteger(c.slot)||!u.inventory[c.slot])return false;const item=u.inventory[c.slot],definition=WARLOCK_ITEMS[item.key];if(item.key==='jordan'||item.key==='staff'||item.key==='scroll')return false;u.gold+=Math.max(0,definition.cost-1)*item.level;u.inventory.splice(c.slot,1);applyItems(u);return true;}
   if(c.type==='wlUseItem')return setFailure(this,'Estes equipamentos são passivos; seus efeitos funcionam automaticamente.');
@@ -149,24 +149,27 @@ export const WarlockMethods={
   u.gold-=s.cost;if(existing)existing.level++;else u.inventory.push({key:c.item,level:1,charges:1});if(c.item==='jordan')u.wlJordanPending=true;applyItems(u);return true;
  },
  startWarlockRound(){
-  const w=this.warlock;if(!w||w.phase!=='shop')return false;w.round++;this.wave=w.round;w.phase='battle';w.remaining=POLISH.arena.roundDuration;w.arenaRadius=POLISH.arena.radius;w.islands=generateWarlockIslands(this.worldSeed??this.seed,w.round);w.projectiles=[];w.fields=[];w.links=[];this.phase='wave';
+  const w=this.warlock;if(!w||w.phase!=='shop'||this.time<(w.resultUntil||0))return false;this.shopWarlockBots();w.round++;this.wave=w.round;w.phase='battle';w.remaining=POLISH.arena.roundDuration;w.arenaRadius=POLISH.arena.radius;w.islands=generateWarlockIslands(this.worldSeed??this.seed,w.round);w.projectiles=[];w.fields=[];w.links=[];this.phase='wave';
   for(const [i,u]of casters(this).entries()){const a=i/casters(this).length*TAU;applyItems(u);Object.assign(u,{x:Math.sin(a)*12,z:Math.cos(a)*12,hp:u.maxHp,mana:u.maxMana,alive:true,damagePoints:0,wlVx:0,wlVz:0,destination:null,channel:null,wlDash:null,wlWallPush:null,wlSpray:null,wlLink:null,wlControl:null,wlDrainSpeed:null,wlMoveVx:0,wlMoveVz:0,wlShieldUntil:0,shieldUntil:0,shield:0,wlTimeShift:null,wlVector:null,wlWindUntil:0,wlLavaContactUntil:0,wlMeteorBurnUntil:0,wlMeteorBurnNextAt:0,wlMeteorBurnSource:null,wlFrostUntil:0,wlFrostSlow:0,wlFrozenUntil:0});for(const key of u.skills)u.cooldowns[key]=0;}
   this.units=this.units.filter(u=>!u.wlGhost);this.message='Mantenha-se na pedra. Acerte projéteis, acumule impulso e empurre os rivais para a lava.';return true;
  },
  finishWarlockRound(){
   const w=this.warlock;if(w.phase!=='battle')return;const survivors=alive(this),winner=survivors.length===1?survivors[0]:null;
-  if(winner)winner.score++;const results=casters(this).map(u=>({owner:u.owner,name:u.name,hp:u.hp,score:u.score,alive:u.alive}));w.results=results;
+  if(winner)winner.score++;w.lastResult={round:w.round,at:this.time,winner:winner?{owner:winner.owner,name:winner.name,character:winner.warlockCharacter}:null};w.resultUntil=this.time+POLISH.arena.resultDuration;const results=casters(this).map(u=>({owner:u.owner,name:u.name,hp:u.hp,score:u.score,alive:u.alive}));w.results=results;
   for(const u of casters(this)){u.gold+=REF.goldPerRound+(u===winner?REF.winGold:0);u.ready=!!u.bot;u.destination=null;u.channel=null;u.wlVx=u.wlVz=0;u.wlWallPush=null;}
   w.projectiles=[];w.fields=[];w.links=[];
   if(w.round>=w.maxRounds){const best=Math.max(...casters(this).map(u=>u.score));this.winningOwners=casters(this).filter(u=>u.score===best).map(u=>u.owner);this.winner=this.winningOwners[0];this.phase='victory';w.phase='finished';this.message='O duelo dos magos terminou.';return;}
-  w.phase='shop';w.remaining=30;this.phase='preparation';this.message=(winner?winner.name+' venceu a rodada. ':'Empate. ')+'Visite a loja e prepare a próxima combinação.';
+  w.phase='shop';w.remaining=POLISH.arena.shopDuration+POLISH.arena.resultDuration;this.phase='preparation';this.message=(winner?winner.name+' venceu a rodada. ':'Empate. ')+'Visite a loja e prepare a próxima combinação.';
+ },
+ shopWarlockBots(){
+  const w=this.warlock;for(const u of casters(this).filter(v=>v.bot&&v.wlShoppedRound!==w.round)){const columns=['R','D','C','E','T','Y'];for(const column of columns){const choices=Object.values(WARLOCK_SKILLS).filter(s=>s.column===column),choice=choices[Math.floor(this.random()*choices.length)];if(!u.skills.some(k=>WARLOCK_SKILLS[k].column===column))this.warlockBuy(u,{skill:choice.key});}u.wlShoppedRound=w.round;u.ready=true;}
  },
  tickWarlock(dt){
   if(!Number.isFinite(dt)||dt<=0)return;if(!this.warlock){this.initWarlock();return;}const w=this.warlock;if(w.phase==='finished')return;
   this.effects=this.effects.filter(e=>this.time-e.time<(e.duration||1.5));w.remaining-=dt;
   if(w.phase==='shop'){
-   for(const u of casters(this).filter(v=>v.bot&&v.wlShoppedRound!==w.round)){const columns=['R','D','C','E','T','Y'];for(const column of columns){const choices=Object.values(WARLOCK_SKILLS).filter(s=>s.column===column),choice=choices[Math.floor(this.random()*choices.length)];if(!u.skills.some(k=>WARLOCK_SKILLS[k].column===column))this.warlockBuy(u,{skill:choice.key});}u.wlShoppedRound=w.round;u.ready=true;}
-   if(w.remaining<=0||casters(this).length>=2&&casters(this).every(u=>u.ready))this.startWarlockRound();return;
+   this.shopWarlockBots();
+   if(this.time>=(w.resultUntil||0)&&(w.remaining<=0||casters(this).length>=2&&casters(this).every(u=>u.ready)))this.startWarlockRound();return;
   }
   const elapsed=POLISH.arena.roundDuration-w.remaining;w.arenaRadius=Math.max(POLISH.arena.minRadius,POLISH.arena.radius-Math.max(0,elapsed-POLISH.arena.shrinkDelay)*POLISH.arena.shrinkRate);
   const motionStarts=new Map(alive(this).map(u=>[u.id,{x:u.x,z:u.z}]));

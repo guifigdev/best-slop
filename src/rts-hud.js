@@ -10,7 +10,22 @@ export const hudGameName=state=>({bonk:'RAGNAROK',castlefight:'CASTLE FIGHT',tre
 // equipment modes, but games with no inventory must not advertise one.
 export function hudLauncherActions(state,unit){
  if(!state||!unit)return[];
- const mode=state.options?.mode||'campaign',actions=[{action:'character',label:({bloody:'Exército',kodotag:'Unidades',castlefight:'Unidades',phasekiller:'Investigação',warlock:'Grimório'})[mode]||'Personagem',art:'panel'}];
+ const mode=state.options?.mode||'campaign',actions=[];
+ // Warlock has spells and items, but no character attributes to distribute.
+ if(mode==='warlock')actions.push({action:'skills',label:'Grimório',art:'skills'});
+ else{
+  actions.push({action:'character',label:({bloody:'Exército',kodotag:'Unidades',castlefight:'Unidades',phasekiller:'Investigação',treetag:'Seleção'})[mode]||'Atributos',art:'panel',points:['bloody','kodotag','castlefight','phasekiller','treetag'].includes(mode)?0:Math.max(0,Math.floor(unit.attributePoints||0))});
+  if(['campaign','tower','best','war','linewars','dungeon','bonk'].includes(mode))actions.push({action:'skills',label:'Habilidades',art:'skills',points:Math.max(0,Math.floor(unit.skillPoints||0))});
+ }
  if(!['kodotag','bloody'].includes(mode))actions.push({action:'inventory',label:'Mochila',art:'bag'});
  return actions;
+}
+
+// The shared surface is contextual: its content determines its title, rather
+// than exposing unrelated website tabs or NPC purchase routes in a hero sheet.
+export function hudPanelContext(state,page='attributes'){
+ const mode=state?.options?.mode;
+ if(['castlefight','treetag','kodotag','bloody','phasekiller'].includes(mode))return {title:hudPanelTitle(state),eyebrow:'COMANDOS DO JOGO',page:'commands'};
+ const title=({attributes:'Atributos',skills:'Habilidades',story:'Crônica',line:'Comandos da linha',target:'Inspecionar alvo'})[page]||'Personagem';
+ return {title,eyebrow:page==='skills'?'SUAS TÉCNICAS':'SEU PERSONAGEM',page};
 }

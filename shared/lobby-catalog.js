@@ -21,11 +21,12 @@ export function lobbyTeams(options,players){
  return [...grouped].map(([key,members])=>({key,name:key==='allies'?'Equipe cooperativa':key==='players'?'Jogadores':options.mode==='treetag'?(key==='1'?'Ents · sobreviventes':'Infernals · caçadores'):'Equipe '+key,players:members}));
 }
 export function roomRoster(game,members,host,connected=()=>true){return [...members].map((m,index)=>{const u=game.player(m.id);return{id:m.id,name:m.heroChosen===false?(m.name||'Jogador '+(index+1)):(u?.name||m.name),connected:!!m.bot||connected(m.id),bot:!!m.bot,ready:!!m.bot||!!m.ready,heroChosen:!!m.bot||m.heroChosen!==false,hero:u?.hero,lineage:u?.roLineage,host:m.id===host,color:LOBBY_COLORS[index%LOBBY_COLORS.length],team:lobbyTeamKey(game.options,u,index)};});}
+export const waitingRoomAutoBots=(options,players)=>options.mode==='warlock'&&players.length===1&&!players[0].bot?1:0;
 export function waitingRoomProblem(game,players){
  if(players.some(p=>!p.bot&&!p.connected))return 'Aguarde os jogadores reconectarem ou remova as vagas desconectadas.';
  if(players.some(p=>!p.bot&&!p.ready))return 'Todos os jogadores precisam marcar Pronto.';
  const mode=game.options.mode;
- if(['castlefight','treetag','warlock','phasekiller','bloody','linewars'].includes(mode)&&players.length<2)return 'Adicione outro jogador ou um bot para iniciar.';
+ if(['castlefight','treetag','warlock','phasekiller','bloody','linewars'].includes(mode)&&players.length<2&&!waitingRoomAutoBots(game.options,players))return 'Adicione outro jogador ou um bot para iniciar.';
  if(mode==='linewars'&&game.options.lineTeams&&players.length!==4)return 'Guerra das Linhas 2 × 2 precisa de quatro jogadores ou bots.';
  return null;
 }
@@ -40,6 +41,7 @@ export function ensureLobbyOpposition(game){
 
 // Entering Custom Hero is the first market, not a vote to skip buying gear.
 export function prepareLobbyMarket(game){
+ if(game.options.mode==='warlock'){if(!game.initWarlock())return false;for(const u of game.heroes())u.ready=!!u.bot;game.timer=game.warlock.remaining;return true;}
  if(!['campaign','tower','best','war'].includes(game.options.mode))return false;
  for(const u of game.heroes())u.ready=!!u.bot;
  game.timer=60;game.message='Compre seu primeiro equipamento e prepare suas técnicas. O sino inicia a primeira prova.';

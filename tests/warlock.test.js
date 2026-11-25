@@ -45,8 +45,20 @@ test('lava inflicts nine HP per second, stone regenerates, and round purchases a
  const {g}=setup(),{p}=battle(g);Object.assign(p,{x:25,z:0});advance(g,1);near(p.hp,91);Object.assign(p,{x:0,z:0,wlRegen:.5});advance(g,1);near(p.hp,91.5);const gold=p.gold;assert.equal(g.command('p',{type:'wlBuy',item:'pendant'}),false);assert.equal(p.gold,gold);assert.match(g.commandFailureReason,/entre rodadas/);
 });
 
-test('a completed round returns surviving and dead casters to the shop, keeps loadouts and records scores',()=>{
- const {g,p}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S011'});battle(g);g.player('q').alive=false;advance(g,.025);assert.equal(g.warlock.phase,'shop');assert.equal(g.phase,'preparation');assert.equal(p.score,1);assert.ok(p.skills.includes('S011'));assert.equal(g.warlock.results.length,2);assert.equal(g.snapshot().warlock.round,1);g.command('p',{type:'wlReady'});g.command('q',{type:'wlReady'});assert.equal(g.warlock.round,2);assert.equal(g.player('q').alive,true);
+test('round results hold for three seconds, retain purchases, reward everyone and permit a ready start afterwards',()=>{
+ const {g,p,q}=setup();p.gold=100;g.command('p',{type:'wlBuy',skill:'S011'});const gold=p.gold;battle(g);q.alive=false;advance(g,.025);assert.equal(g.warlock.phase,'shop');assert.equal(g.phase,'preparation');assert.equal(p.score,1);assert.equal(p.gold,gold+10);assert.equal(q.gold,30);assert.ok(p.skills.includes('S011'));assert.equal(g.warlock.results.length,2);assert.equal(g.snapshot().warlock.round,1);
+ assert.deepEqual(g.snapshot().warlock.lastResult,{round:1,at:g.time,winner:{owner:'p',name:p.name,character:'warlock'}});near(g.warlock.resultUntil-g.time,3);near(g.warlock.remaining,33);
+ g.command('p',{type:'wlReady'});g.command('q',{type:'wlReady'});assert.equal(g.startWarlockRound(),false);advance(g,2.9);assert.equal(g.warlock.phase,'shop');assert.equal(g.warlock.round,1);advance(g,.11);assert.equal(g.warlock.phase,'battle');assert.equal(g.warlock.round,2);assert.equal(q.alive,true);assert.equal(p.skillLevels.S011,1);
+});
+
+test('the first shop lasts thirty seconds and later shops retain thirty seconds after the result reveal',()=>{
+ const {g,p,q}=setup();assert.equal(g.warlock.round,0);near(g.warlock.remaining,30);assert.equal(p.ready,false);assert.equal(q.ready,false);advance(g,29.9);assert.equal(g.warlock.phase,'shop');advance(g,.11);assert.equal(g.warlock.phase,'battle');assert.equal(g.warlock.round,1);
+ q.alive=false;advance(g,.025);const resultAt=g.time;advance(g,3);near(g.time-resultAt,3);near(g.warlock.remaining,30);assert.equal(g.warlock.phase,'shop');const price=wlSkillPrice(p,'S011'),gold=p.gold;assert.equal(g.command('p',{type:'wlBuy',skill:'S011'}),true);assert.equal(p.gold,gold-price);advance(g,29.9);assert.equal(g.warlock.phase,'shop');advance(g,.11);assert.equal(g.warlock.phase,'battle');assert.equal(g.warlock.round,2);assert.equal(p.skillLevels.S011,1);
+});
+
+test('eleven rounds produce final standings, ties and no additional market or round',()=>{
+ for(const tied of [false,true]){const {g,p,q}=setup();for(let round=1;round<=11;round++){g.command('p',{type:'wlReady'});g.command('q',{type:'wlReady'});if(round>1)advance(g,3.01);assert.equal(g.warlock.phase,'battle');assert.equal(g.warlock.round,round);q.alive=false;if(tied)p.alive=false;g.finishWarlockRound();assert.equal(p.gold,20+10*round);assert.equal(q.gold,20+10*round);}
+ assert.equal(g.phase,'victory');assert.equal(g.warlock.phase,'finished');assert.equal(g.warlock.lastResult.round,11);assert.equal(p.score,tied?0:11);assert.deepEqual(g.winningOwners,tied?['p','q']:['p']);assert.equal(g.snapshot().winner,'p');const before=g.warlock.round;advance(g,40);assert.equal(g.warlock.round,before);assert.equal(g.command('p',{type:'wlReady'}),false);assert.equal(g.command('p',{type:'wlBuy',skill:'S011'}),false);}
 });
 
 test('every purchasable native spell executes its family without nonfinite simulation state',()=>{

@@ -1,5 +1,5 @@
 import {RO_PROGRESS_BODY_MAX_BYTES} from '../shared/ro-account-limits.js';
-import {roomRoster,waitingRoomProblem,ensureLobbyOpposition,prepareLobbyMarket} from '../shared/lobby-catalog.js';
+import {roomRoster,waitingRoomProblem,waitingRoomAutoBots,ensureLobbyOpposition,prepareLobbyMarket} from '../shared/lobby-catalog.js';
 import {lobbyOptions} from '../shared/room-lobby.js';
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
@@ -55,7 +55,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
  function publishRoom(room){for(const peer of room.clients.values())send(peer,{type:'state',state:snapshot(room,peer.id)});}
  function startRoom(peer,room){
   if(peer.id!==room.host)throw Error('Somente o host pode iniciar a sala.');if(room.started)throw Error('A partida já começou.');
-  if(room.lobbyVersion===2&&room.stage==='waiting'){const problem=waitingRoomProblem(room.game,roomInfo(room,peer.id).players);if(problem)throw Error(problem);room.stage='selecting';for(const member of room.members.values())if(!member.bot)member.heroChosen=false;checkpoint(room);publishRoom(room);return;}
+  if(room.lobbyVersion===2&&room.stage==='waiting'){const players=roomInfo(room,peer.id).players,problem=waitingRoomProblem(room.game,players);if(problem)throw Error(problem);addRoomBots(room,waitingRoomAutoBots(room.game.options,players));room.stage='selecting';for(const member of room.members.values())if(!member.bot)member.heroChosen=false;checkpoint(room);publishRoom(room);return;}
   if(room.lobbyVersion===2&&room.stage==='selecting')throw Error('Aguarde todos escolherem seus personagens.');
   const problem=startProblem(room);if(problem)throw Error(problem);
   if(room.game.options.mode==='bloody'&&room.game.heroes().some(u=>!u.bot&&!u.btRoster.length))throw Error('Cada comandante precisa recrutar pelo menos um grupo.');
@@ -86,7 +86,7 @@ export function createGameServer({config=runtimeConfig(),store=new RoomStore(con
  }
  for(const [code,room]of rooms)room.code=code;
  function attach(peer,room,{token=null}={}){peer.room=room;room.clients.set(peer.id,peer);room.paused=false;room.lastActivity=clock();const member=room.members.get(peer.id);if(member)member.disconnectedAt=null;const u=room.game.player(peer.id);if(u){u.bonkDisconnected=false;u.bot=false;u.name=member?.name||u.name;}if(!room.clients.has(room.host))room.host=peer.id;send(peer,{type:'joined',id:peer.id,room:room.code,...(token?{resumeToken:token}:{}),state:snapshot(room,peer.id)});checkpoint(room);}
- function addMember(peer,room,input,squad=null){const token=randomUUID();if(!room.game.addPlayer(peer.id,input.roProfile?RO_LINEAGES[input.roProfile.lineage].hero:input.hero,input.name,false,squad,input.roProfile))throw Error('Sala em andamento, cheia ou herói inválido.');if(input.roProfile){const u=room.game.player(peer.id),p=input.roProfile;if(p.checkpoint)room.game.bonkCommand(u,{type:'bkRestore',checkpoint:p.checkpoint,activity:room.game.bonk.activity,freshActivity:!p.resume||p.checkpoint.activity!==room.game.bonk.activity,restoreWorld:peer.id===room.host});room.game.bonkCommand(u,{type:'bkCards',cards:p.cards});}room.members.set(peer.id,{id:peer.id,tokenHash:hash(token),hero:input.hero,name:room.game.player(peer.id).name,heroChosen:input.heroChosen!==false,disconnectedAt:null});attach(peer,room,{token});}
+ function addMember(peer,room,input,squad=null){const token=randomUUID();if(!room.game.addPlayer(peer.id,input.roProfile?RO_LINEAGES[input.roProfile.lineage].hero:input.heroChosen===false?roomCharacterChoices(room.game.options.mode)[0].hero:input.hero,input.name,false,squad,input.roProfile))throw Error('Sala em andamento, cheia ou herói inválido.');if(input.roProfile){const u=room.game.player(peer.id),p=input.roProfile;if(p.checkpoint)room.game.bonkCommand(u,{type:'bkRestore',checkpoint:p.checkpoint,activity:room.game.bonk.activity,freshActivity:!p.resume||p.checkpoint.activity!==room.game.bonk.activity,restoreWorld:peer.id===room.host});room.game.bonkCommand(u,{type:'bkCards',cards:p.cards});}room.members.set(peer.id,{id:peer.id,tokenHash:hash(token),hero:input.hero,name:room.game.player(peer.id).name,heroChosen:input.heroChosen!==false,disconnectedAt:null});attach(peer,room,{token});}
  const matchmaker=new Matchmaker((parties,options)=>{const code='WAR-'+randomUUID().slice(0,8).toUpperCase(),room={code,game:new Game(Date.now()>>>0,options),host:parties[0].host,started:true,paused:false,lastActivity:clock(),clients:new Map(),members:new Map()};rooms.set(code,room);for(const [i,party]of parties.entries())for(const player of party.players){const peer=peers.get(player.id);if(peer)addMember(peer,room,player,i+1);}});
  function parties(){for(const party of matchmaker.parties.values()){const state=matchmaker.state(party);for(const member of party.players)send(peers.get(member.id),{type:'party',party:state,id:member.id});}}
  const server=http.createServer(async(req,res)=>{

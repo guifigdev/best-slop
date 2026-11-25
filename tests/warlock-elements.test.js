@@ -26,7 +26,7 @@ test('ice lance damages only the first hostile hit and applies a visible timed s
 });
 
 test('element effects reset across rounds and extension ranks expose honest costs, duration and geometry',()=>{
- const {g,q}=setup();applyWarlockBurn(q,g.player('p').id,g.time);applyWarlockFrost(q,g.time,3);g.finishWarlockRound();for(const u of g.heroes())g.command(u.owner,{type:'wlReady'});assert.equal(q.wlMeteorBurnUntil,0);assert.equal(q.wlFrostUntil,0);for(const key of ['W_FIRE_WALL','W_ICE_WALL','W_FROST_BOLT']){const s=wlSkillAt(key,1);assert.equal(s.browserExtension,true);assert.equal(s.range,14);assert.ok(s.cooldown>0);near(s.wallLength,4.2);near(wlSkillAt(key,5).wallLength,7);assert.equal(s.wallThickness,.7);assert.ok(wlSkillAt(key,5).duration>s.duration);}
+ const {g,q}=setup();applyWarlockBurn(q,g.player('p').id,g.time);applyWarlockFrost(q,g.time,3);g.finishWarlockRound();for(const u of g.heroes())g.command(u.owner,{type:'wlReady'});advance(g,3.01);assert.equal(g.warlock.phase,'battle');assert.equal(q.wlMeteorBurnUntil,0);assert.equal(q.wlFrostUntil,0);for(const key of ['W_FIRE_WALL','W_ICE_WALL','W_FROST_BOLT']){const s=wlSkillAt(key,1);assert.equal(s.browserExtension,true);assert.equal(s.range,14);assert.ok(s.cooldown>0);near(s.wallLength,4.2);near(wlSkillAt(key,5).wallLength,7);assert.equal(s.wallThickness,.7);assert.ok(wlSkillAt(key,5).duration>s.duration);}
 });
 
 test('wall length begins forty percent shorter and reaches full length at the maximum base rank',()=>{for(const key of ['W_FIRE_WALL','W_ICE_WALL'])for(const [i,length]of [4.2,4.9,5.6,6.3,7,7,7].entries())near(wlSkillAt(key,i+1).wallLength,length);});

@@ -1,7 +1,7 @@
 // Browser presentation/battle tuning requested after the native 1.02 audit.
 // Raw map numbers remain available in wlSkillAt(...).native.
 export const WARLOCK_POLISH=Object.freeze({
- arena:Object.freeze({radius:24,minRadius:9,mapRadius:32,roundDuration:120,shrinkDelay:20,shrinkRate:.13}),
+ arena:Object.freeze({radius:24,minRadius:9,mapRadius:32,shopDuration:30,resultDuration:3,roundDuration:120,shrinkDelay:20,shrinkRate:.13}),
  fireball:Object.freeze({radius:.64,range:17.1875,speed:14.75,blastRadius:1.75,splashMultiplier:.55}),
  meteor:Object.freeze({radius:4.4,range:17.2,warning:1,visualRadius:1.9,fallHeight:15,groundDuration:4,burnDuration:2,burnDps:3,burnInterval:.5}),
  gravity:Object.freeze({speed:6,duration:2.65,pullRadius:8,damageRadius:4.4,projectileRadius:10.3,bodyRadius:1.15}),
