@@ -6,6 +6,12 @@ import {legacyCharacterPortrait} from './legacy-character-art.js';
 import {warlockResultsMarkup} from './warlock-results.js';
 import {escapeHTML as esc} from './competition-ui.js';
 import {patchHTML} from './snapshot-dom.js';
+import {preparationAction} from './preparation-action.js';
+
+const readyMarkup=u=>`<button type="button" class="primary" data-wl-ready ${u.ready?'disabled':''}>${u.ready?'Pronto · aguardando':'Pronto para lutar →'}</button>`;
+export const warlockShopCountdownMarkup=u=>`<div class="wl-shop-countdown"><p>O próximo round começa em <b data-wl-seconds>30</b>s, ou quando todos estiverem prontos.</p>${readyMarkup(u)}</div>`;
+export const warlockPreparationDockMarkup=u=>`<div class="wl-preparation-clock" aria-label="Tempo para o próximo round"><small>PRÓXIMO ROUND</small><b data-wl-seconds>30</b><span>segundos</span></div>${readyMarkup(u)}<button type="button" data-wl-open>Loja de feitiços</button>`;
+export const warlockPreparationDockVisible=(screen,dialogOpen=false)=>!!screen&&!dialogOpen&&screen.war.phase==='shop'&&!screen.result;
 
 export function warlockRoundScreen(state,owner){
  const w=state?.warlock,unit=state?.units?.find(u=>u.owner===owner&&u.warlockCharacter);
@@ -35,36 +41,38 @@ export function warlockRoundResultMarkup(w,owner){
 }
 
 export function createWarlockRoundUI({getState,getOwner,send,view,onEnd,doc=globalThis.document}={}){
- let dialog=null,notice=null,dock=null,autoRound=null,resultKey=null,signature='',tab='skills',finalShown=false,windowDrag=null,tooltips=null;
- function close(){tooltips?.hide();if(dialog?.open)dialog.close();}
+ let dialog=null,notice=null,dock=null,autoRound=null,resultKey=null,signature='',tab='skills',finalShown=false,windowDrag=null,dockDrag=null,tooltips=null;
+ function syncDock(screen=warlockRoundScreen(getState(),getOwner())){if(dock)dock.hidden=!warlockPreparationDockVisible(screen,!!dialog?.open);dockDrag?.refresh();}
+ function close(){tooltips?.hide();if(dialog?.open)dialog.close();syncDock();}
  function ensure(){if(dialog)return;
   dialog=doc.createElement('dialog');dialog.className='warlock-round-shop';dialog.setAttribute('aria-modal','false');dialog.setAttribute('aria-label','Loja do Warlock');doc.body.append(dialog);
   dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
   tooltips=bindWarlockSkillTooltips(dialog,{getState,getUnit:()=>warlockRoundScreen(getState(),getOwner())?.unit});
   notice=doc.createElement('section');notice.className='wl-round-result';notice.setAttribute('role','status');notice.setAttribute('aria-live','assertive');notice.hidden=true;doc.body.append(notice);
-  dock=doc.createElement('nav');dock.className='wl-shop-dock';dock.setAttribute('aria-label','Preparação do próximo round');dock.innerHTML='<button data-wl-open>Loja · <b data-wl-seconds>30</b>s</button><button data-wl-ready>Pronto para lutar</button>';dock.hidden=true;doc.body.append(dock);dock.querySelector('[data-wl-open]').onclick=()=>open('skills');dock.querySelector('[data-wl-ready]').onclick=()=>send({type:'wlReady'});
+  dock=doc.createElement('nav');dock.className='wl-shop-dock';dock.setAttribute('aria-label','Preparação do próximo round');dock.innerHTML=warlockPreparationDockMarkup({ready:false});dock.hidden=true;doc.body.append(dock);dock.querySelector('[data-wl-open]').onclick=()=>open('skills');dock.querySelector('[data-wl-ready]').onclick=()=>ready();dockDrag=installFloatingWindow(doc,doc.defaultView,{element:dock,handle:dock.querySelector('.wl-preparation-clock'),getScope:()=> 'warlock:preparation-clock',getUserId:getOwner,isOpen:()=>!dock.hidden});
  }
- function open(page='skills'){const screen=warlockRoundScreen(getState(),getOwner());if(!screen||screen.result)return false;ensure();tab=page==='inventory'||page==='items'?'items':'skills';signature='';paint(screen);if(!dialog.open)dialog.show();windowDrag?.refresh();return true;}
+ function ready(){const screen=warlockRoundScreen(getState(),getOwner()),action=preparationAction(getState(),screen?.unit);if(action&&!action.disabled)send(action.command);}
+ function open(page='skills'){const screen=warlockRoundScreen(getState(),getOwner());if(!screen||screen.result)return false;ensure();tab=page==='inventory'||page==='items'?'items':'skills';signature='';paint(screen);if(!dialog.open)dialog.show();windowDrag?.refresh();syncDock(screen);return true;}
  function paint(screen){const {unit:u,war:w,final}=screen,shopping=w.phase==='shop',sig=JSON.stringify([final,shopping,w.round,tab,u.gold,u.ready,u.skills,u.skillLevels,u.inventory,u.inventorySlots,u.masteries,u.wlJordanSkill,u.wlJordanPending]);if(sig===signature)return;signature=sig;
-  const html=final?`<header class="wl-shop-header"><small>WARLOCK · CAMPEÃO DA PARTIDA</small><button data-wl-close aria-label="Fechar resultado">×</button></header>${warlockResultsMarkup(getState(),getOwner())}`:`<header class="wl-shop-header"><div><small>${shopping?'PREPARAÇÃO · ROUND '+(w.round+1):'SEU PERSONAGEM'}</small><h2>${shopping?'Loja de feitiços':tab==='items'?'Sua mochila':'Seu grimório'}</h2></div><span class="wl-shop-gold">◆ ${u.gold}<small>OURO DISPONÍVEL</small></span><button data-wl-close aria-label="Voltar à arena">×</button></header>${shopping?'<p class="wl-shop-countdown">O próximo round começa em <b data-wl-seconds>30</b>s, ou quando todos estiverem prontos.</p><nav class="wl-shop-tabs" aria-label="Produtos da loja"><button data-wl-tab="skills" aria-pressed="'+(tab==='skills')+'">Feitiços</button><button data-wl-tab="items" aria-pressed="'+(tab==='items')+'">Equipamentos e melhorias</button></nav>':''}<div class="wl-shop-stock">${warlockShopContents(u,{shopping,tab,state:getState()})}</div><footer><span>${shopping?'As compras ficam com você nos próximos rounds.':'Suas magias usam as teclas indicadas na barra.'}</span>${shopping?`<button class="primary" data-wl-ready ${u.ready?'disabled':''}>${u.ready?'Pronto · aguardando':'Pronto para lutar →'}</button>`:'<button data-wl-close>Voltar à arena</button>'}</footer>`;
+  const html=final?`<header class="wl-shop-header"><small>WARLOCK · CAMPEÃO DA PARTIDA</small><button data-wl-close aria-label="Fechar resultado">×</button></header>${warlockResultsMarkup(getState(),getOwner())}`:`<header class="wl-shop-header"><div><small>${shopping?'PREPARAÇÃO · ROUND '+(w.round+1):'SEU PERSONAGEM'}</small><h2>${shopping?'Loja de feitiços':tab==='items'?'Sua mochila':'Seu grimório'}</h2></div><span class="wl-shop-gold">◆ ${u.gold}<small>OURO DISPONÍVEL</small></span><button data-wl-close aria-label="Voltar à arena">×</button></header>${shopping?warlockShopCountdownMarkup(u)+'<nav class="wl-shop-tabs" aria-label="Produtos da loja"><button data-wl-tab="skills" aria-pressed="'+(tab==='skills')+'">Feitiços</button><button data-wl-tab="items" aria-pressed="'+(tab==='items')+'">Equipamentos e melhorias</button></nav>':''}<div class="wl-shop-stock">${warlockShopContents(u,{shopping,tab,state:getState()})}</div><footer><span>${shopping?'As compras ficam com você nos próximos rounds.':'Suas magias usam as teclas indicadas na barra.'}</span><button data-wl-close>Voltar à arena</button></footer>`;
   patchHTML(dialog,html,['data-wl-skill-tooltip','data-wl-buy-skill','data-wl-buy-item','data-wl-mastery','data-wl-tab','data-wl-ready','data-wl-close']);
   for(const b of dialog.querySelectorAll('[data-wl-close]'))b.onclick=close;
   for(const b of dialog.querySelectorAll('[data-wl-tab]'))b.onclick=()=>{tab=b.dataset.wlTab;signature='';paint(screen);};
   for(const b of dialog.querySelectorAll('[data-wl-buy-skill]'))b.onclick=()=>{if(b.getAttribute('aria-disabled')!=='true')send({type:'wlBuy',skill:b.dataset.wlBuySkill});};
   for(const b of dialog.querySelectorAll('[data-wl-buy-item]'))b.onclick=()=>send({type:'wlBuy',item:b.dataset.wlBuyItem});
   for(const b of dialog.querySelectorAll('[data-wl-mastery]'))b.onclick=()=>send({type:'wlBuy',mastery:b.dataset.wlMastery});
-  for(const b of dialog.querySelectorAll('[data-wl-ready]'))b.onclick=()=>send({type:'wlReady'});
+  for(const b of dialog.querySelectorAll('[data-wl-ready]'))b.onclick=()=>ready();
   const expand=dialog.querySelector('[data-wl-expand]');if(expand)expand.onclick=()=>send({type:'wlBuy',upgrade:'inventory'});
   windowDrag?.destroy();windowDrag=installFloatingWindow(doc,doc.defaultView,{element:dialog,handle:dialog.querySelector('.wl-shop-header'),getScope:()=> 'warlock:'+tab,getUserId:getOwner,isOpen:()=>dialog.open});windowDrag.refresh();
   if(final){const button=dialog.querySelector('.warlock-final-ranking')?.parentElement?.querySelector('.primary');if(button)button.onclick=onEnd;}
  }
  return {open,close,render(){const state=getState(),screen=warlockRoundScreen(state,getOwner());if(!screen){close();if(dock)dock.hidden=true;if(notice)notice.hidden=true;return;}ensure();const {war:w}=screen;
-  notice.hidden=!screen.result;dock.hidden=w.phase!=='shop'||screen.result;
+  notice.hidden=!screen.result;syncDock(screen);
   if(screen.result){close();const key=w.lastResult.round+':'+w.lastResult.at;if(key!==resultKey){resultKey=key;notice.innerHTML=warlockRoundResultMarkup(w,getOwner());const winner=state.units.find(u=>u.owner===w.lastResult.winner?.owner);if(winner)view?.focusPoint?.({...winner,distance:15});}notice.querySelector('[data-wl-result-seconds]').textContent=Math.max(0,Math.ceil(w.resultUntil-state.time));return;}
   if(screen.final&&!finalShown){finalShown=true;const winner=state.units.find(u=>state.winningOwners?.includes(u.owner));if(winner)view?.focusPoint?.({...winner,distance:15});open();}
   else if(w.phase==='shop'&&autoRound!==w.round){autoRound=w.round;open();}
   else if(w.phase==='battle'&&dialog.open&&dialog.dataset.wlPhase==='shop')close();
   if(dialog.open){paint(screen);tooltips?.update();dialog.dataset.wlPhase=w.phase;}for(const el of [...dialog.querySelectorAll('[data-wl-seconds]'),...dock.querySelectorAll('[data-wl-seconds]')])el.textContent=screen.seconds;
-  const ready=dock.querySelector('[data-wl-ready]');ready.disabled=!!screen.unit.ready;ready.textContent=screen.unit.ready?'Pronto · aguardando':'Pronto para lutar';
- },reset(){close();windowDrag?.destroy();windowDrag=null;tooltips?.destroy();tooltips=null;dialog?.remove();notice?.remove();dock?.remove();dialog=notice=dock=null;autoRound=resultKey=null;signature='';tab='skills';finalShown=false;}};
+  const ready=dock.querySelector('[data-wl-ready]');ready.disabled=!!screen.unit.ready;ready.textContent=screen.unit.ready?'Pronto · aguardando':'Pronto para lutar';syncDock(screen);
+ },reset(){close();windowDrag?.destroy();windowDrag=null;dockDrag?.destroy();dockDrag=null;tooltips?.destroy();tooltips=null;dialog?.remove();notice?.remove();dock?.remove();dialog=notice=dock=null;autoRound=resultKey=null;signature='';tab='skills';finalShown=false;}};
 }
