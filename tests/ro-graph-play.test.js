@@ -8,7 +8,8 @@ import {roWorldAtlasMarkup} from '../src/ro-world-atlas.js';
 
 const game=(debug=false)=>{const g=new Game(121,{mode:'bonk',bonkWorld:'dominion',bonkDebug:debug});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});return g;};
 function choose(g){for(let i=0;g.bonk.offer&&i<90;i++)g.command('p',{type:'bkChoose',choiceId:g.bonk.offer.choices[0].id});}
-function defeat(g){const u=g.player('p');Object.assign(u,{x:0,z:2});g.tick(.01);const boss=g.units.find(t=>t.bonkBoss);assert.ok(boss);boss.hp=.001;u.attributes.dex=99;u.bonkBuild.weapons={basic:8,bash:8};u.bonkWeaponAt={};for(let i=0;boss.alive&&i<80;i++)g.tick(.1);assert.equal(boss.alive,false);choose(g);}
+function defeat(g){const u=g.player('p');Object.assign(u,{x:0,z:2});g.tick(.01);const boss=g.units.find(t=>t.bonkBoss);assert.ok(boss);boss.hp=.001;boss.roSourceId=999999; // Isolate route progression from native MVP FLEE.
+u.attributes.dex=99;u.bonkBuild.weapons={basic:8,bash:8};u.bonkWeaponAt={};for(let i=0;boss.alive&&i<80;i++)g.tick(.1);assert.equal(boss.alive,false);choose(g);}
 function cross(g,key){const gate=g.bonk.exitGates.find(t=>t.nextKey===key);assert.ok(gate?.open,'open passage to '+key);Object.assign(g.player('p'),{x:gate.x+gate.direction.x*3,z:gate.z+gate.direction.z*3});g.tick(.01);assert.equal(g.bonk.route.key,key);}
 
 test('the green route reaches a three-way volcano and unlocked regions permit safe return without another MVP reward',()=>{

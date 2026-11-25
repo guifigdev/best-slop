@@ -30,7 +30,7 @@ test('Sockets consume a loose card once, respect slot and capacity, and stay per
 });
 test('Injected item stats, invalid slots, duplicate pointers and excess cards cannot inflate bonuses',()=>{
  const u=make(),weapon=u.roInventory[0],armor=u.roInventory[1];weapon.stats={attack:1e9};weapon.cards=Array.from({length:20},(_,id)=>({id,key:'fabre'}));armor.cards=[{id:90,key:'constructor'}];u.roEquipment.offhand=weapon.id;u.roEquipment.accessory=weapon.id;
- const stats=roEquipmentBonuses(u);assert.equal(stats.attack,RO_EQUIPMENT[weapon.key].stats.attack);assert.equal(stats.vit,3);assert.equal(stats.maxHp,30);assert.equal(stats.armor,1);
+ const stats=roEquipmentBonuses(u);assert.equal(stats.attack,RO_EQUIPMENT[weapon.key].stats.attack);assert.equal(stats.vit,3);assert.equal(stats.maxHp,30);assert.equal(stats.armor,RO_EQUIPMENT[armor.key].stats.armor);
  assert.equal(roEquip(u,weapon.id,'__proto__'),false);assert.equal(roEquip(u,weapon.id,'armor'),false);
 });
 test('Rare card drops are monster-specific with exact normal and boss probability boundaries',()=>{

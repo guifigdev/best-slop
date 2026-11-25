@@ -42,6 +42,7 @@ export function roNativeEventPhases(event,definition={}){
  if(event.type==='roMeteorFall'||event.type==='roArrowRainFall')return['cast'];
  if(event.type==='roMeteorImpact'||event.type==='roArrowRainImpact')return['hit'];
  if(event.type==='roAttack'){
+  if(event.skillKey==='as_grimtooth')return[]; // Ground samples carry the spike animation, never the victim or launch.
   if(event.attackKind==='projectile'||definition.kind==='projectile')return['cast'];
   if(event.bonk&&['pulse','orbit','zone'].includes(event.attackKind||definition.kind))return['cast'];
   return['cast','hit','ground'];
@@ -69,7 +70,7 @@ function request(row,policy,event,phase,unit,options={}){
  const anchor=options.zone?'point':atSource?'source':row.attachedEntity&&event.target!=null?'target':'point';
  const time=finite(event.time,finite(state?.time)),seed=String(event.id??[event.type,event.source,event.skillKey,event.x,event.z].join(':'))+':'+time;
  const buff=row.type!=='STR'&&utilities.has(event.type)&&(unit?.roSkillBuffs||[]).find(v=>roNativeSkillPolicy(v.key,options.manifest)?.key===policy.key&&v.until>finite(state?.bonk?.elapsed));
- const until=buff&&state?.bonk?finite(state.time)-finite(state.bonk.elapsed)+buff.until:undefined;
+ const until=policy.key==='as_grimtooth'?time+.7:buff&&state?.bonk?finite(state.time)-finite(state.bonk.elapsed)+buff.until:undefined;
  return{file:rowFile(row),primitiveId:row.primitiveId,part:row,effectId:row.effectId,skillKey:policy.key,phase,x:finite(position.x),z:finite(position.z),time,scale:finite(options.scale,1),anchor,attachedEntity:!!row.attachedEntity&&anchor!=='point',targetId:event.target,sourceIdActor:event.source??unit?.id,dedupeKey:'event:'+seed+':'+phase+':'+rowFile(row),groupId:'event:'+seed,preserveAttackTrail:event.type==='roAttack'&&['slash','dash','chain'].includes(kind),...(Number.isFinite(until)?{until}:{}),...options.request};
 }
 /** Launches never fake projectile impacts. Utilities work without roAttack.

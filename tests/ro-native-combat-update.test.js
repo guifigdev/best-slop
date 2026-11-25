@@ -49,8 +49,8 @@ test('zero-cooldown Back Slide moves without a target and cannot damage, proc or
 });
 test('skill bonuses, elemental resistance and refinement compose across several pieces; unequipping removes their contribution',()=>{
  const items=['build_19482','build_2115','build_470017'].map((key,i)=>createRoEquipment(key,'gear'+i)),u={roInventory:items,roEquipment:{head:'gear0',offhand:'gear1',shoes:'gear2'}};
- let stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,.4);assert.equal(stats.elementalResistance.fire,.2);assert.equal(stats.elementalPower.water,.15);assert.equal(stats.fixedCastSeconds,.5);
- items[0].refine=10;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,.4,'refining never gates the skill bonus');
+ let stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,0);assert.equal(stats.elementalResistance.fire,.2);assert.equal(stats.elementalPower.water,0);assert.equal(stats.fixedCastSeconds,0);
+ items[0].refine=10;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses.WL_CHAINLIGHTNING.damage,.6,'only the actual refinement activates its native bonus');
  delete u.roEquipment.head;stats=roEquipmentBonuses(u);assert.equal(stats.skillBonuses,undefined);assert.deepEqual(stats.elementalPower,{all:.05});assert.equal(stats.elementalResistance.fire,.2);
 });
 test('MVP rage samples once inside 20–40 percent and cannot stack reinforcements over a living wave',()=>{

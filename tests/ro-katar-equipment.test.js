@@ -27,7 +27,7 @@ test('equipped Katars keep two frozen shoulder rigs across Mercenary evolutions 
 
 test('Katar uses its own two-cut pose while a dagger keeps the short single thrust and ASPD controls duration',()=>{
  const u=unit(),body=new T.Group(),rig=createRoWeaponRig({unit:u,spec:ragnarokJobSpec(u),body,voxel:()=>{},bake:()=>{}}),profile=roAttackProfile(attack,u);assert.equal(profile.motion,'katarCross');assert.equal(profile.duration,.8);
- const right=updateRoWeaponRig(rig,u,[attack],.28),left=updateRoWeaponRig(rig,u,[attack],.44);assert.ok(right.arms.right.x<right.arms.left.x);assert.ok(left.arms.left.x<left.arms.right.x);assert.notDeepEqual(right,roKatarCombatPose(.44,.8));
+ const right=updateRoWeaponRig(rig,u,[attack],.28),left=updateRoWeaponRig(rig,u,[attack],.44);assert.equal(right.arms.right.x,right.arms.left.x);assert.ok(right.arms.right.y>0&&right.arms.left.y<0);assert.ok(left.arms.left.x<left.arms.right.x);assert.notDeepEqual(right,roKatarCombatPose(.44,.8));
  assert.ok(roEquip(u,'scalpel','weapon'));assert.equal(roAttackProfile(attack,u).motion,'daggerStreaks');const pose=updateRoWeaponRig(rig,u,[attack],.44);assert.notDeepEqual(pose,left);updateRoWeaponRig(rig,u,[],1);for(const arm of rig.arms){assert.deepEqual(arm.group.rotation.toArray(),[0,0,0,'XYZ']);assert.deepEqual(arm.group.position.toArray(),arm.pivot);}
 });
 

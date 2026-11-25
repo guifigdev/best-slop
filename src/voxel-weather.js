@@ -14,7 +14,7 @@ export function voxelClimateForState(state,target={x:0,z:0}){
  if(['treetag','kodotag'].includes(mode))biome='forest';if(mode==='warlock')biome='forge';
  if(mode==='phasekiller')biome=state.phaseKiller?.dimension||'moon';
  if(mode==='bloody')biome=bloodyTerrainThemeAt(target.x,target.z)||'coast';
- const cold=roHasFrozenTerrain(map)||/frost|glacier|ice|snow|glacial/.test(biome),hot=/forge|volcano|fire|lava|ember/.test(biome),arid=/desert|sand|dune/.test(biome),indoor=!!map?.tower||!!room?.indoor||/cavern|crypt|catacomb|interior|void/.test(biome);
+ const cold=roHasFrozenTerrain(map)||/frost|glacier|ice|snow|glacial/.test(biome),hot=/forge|volcano|fire|lava|ember/.test(biome),arid=/desert|sand|dune/.test(biome),indoor=!!map?.enclosed||!!map?.tower||!!room?.indoor||/cavern|crypt|catacomb|interior|void/.test(biome);
  const ambientKind=hot?'sparks':indoor&&/cavern|crypt|void/.test(biome)?'mist':'none',seed=state.worldSeed??map?.seed??state.options?.seed??state.seed??state.onlineRoom?.code??17,time=Number.isFinite(state.time)?state.time:state.bonk?.totalElapsed??state.bonk?.elapsed??state.dungeon?.elapsed??0;
  const climate=seasonalWeather({seed,time,biome,cold,hot,arid,indoor,ambientKind});
  const explicit=state.weatherOverride??state.debug?.weatherKind??state.debug?.weather??state.weather?.kind??(typeof state.weather==='string'?state.weather:null)??state.options?.weatherKind??state.options?.weather;

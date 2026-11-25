@@ -1,3 +1,4 @@
+import {roNativeEquipmentDefinition} from './ro-equipment-native.js';
 import {RO_EQUIPMENT_ELEMENT_FACTS} from './ro-equipment-element-facts.js';
 import {RO_EQUIPMENT_TARGET_FACTS} from './ro-equipment-target-facts.js';
 import {RO_SYNERGY_EQUIPMENT} from './ro-synergy-equipment.js';
@@ -158,4 +159,4 @@ export const RO_BUILD_EQUIPMENT=freeze(Object.fromEntries([
  gear(2887,"Anel de Nab","accessory",0,{"attack":7,"dex":3},["shadowcross"],2,"mora",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":0},"collection":"mora-nab"}),
  gear(2890,"Broche das Asas da Luz","accessory",0,{"attack":5,"dex":4},["windhawk"],2,"mora",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":0},"collection":"mora-whitewing"}),
  gear(2894,"Sura Gauntlet","accessory",0,{"attack":7,"str":3,"dex":2},["inquisitor"],2,"database",{"buildTags":["physical","accuracy"],"statsAreIntrinsic":true,"sourceBase":{"attack":0,"matk":0,"defense":1},"nameLanguage":"en"}),
-].map(item=>[item.key,{...item,...(['head','headMid','headLow'].includes(item.slot)?{headPosition:({head:'top',headMid:'middle',headLow:'lower'})[item.slot]}:{}),...RO_EQUIPMENT_ELEMENT_FACTS[item.sourceId],...RO_EQUIPMENT_TARGET_FACTS[item.sourceId],...(item.sourceId===1130?{doubleAttackLevel:5}:{}),...(item.sourceId===1266?{stats:{...item.stats,armor:3,flee:5,perfectEvasion:.02}}:{})}])));
+ ].map(item=>[item.key,roNativeEquipmentDefinition({...item,...(['head','headMid','headLow'].includes(item.slot)?{headPosition:({head:'top',headMid:'middle',headLow:'lower'})[item.slot]}:{}),...RO_EQUIPMENT_ELEMENT_FACTS[item.sourceId],...RO_EQUIPMENT_TARGET_FACTS[item.sourceId],...(item.sourceId===1130?{doubleAttackLevel:5}:{}),...(item.sourceId===1266?{stats:{...item.stats,armor:3,flee:5,perfectEvasion:.02}}:{})})])));

@@ -8,7 +8,7 @@ const fill=u=>{while(roBagUsage(u)<30)assert.ok(roReceiveEquipment(u,createRoEqu
 
 test('30 physical bag spaces exclude worn pieces; duplicates use separate cells and bonuses do not multiply',()=>{
  const {u}=setup();assert.equal(roBagUsage(u),0);fill(u);assert.equal(roBagPieces(u).length,30);assert.equal(roInventoryItemCount(u),32);assert.equal(roReceiveEquipment(u,createRoEquipment('knife','overflow')),null);assert.equal(roUnequip(u,'weapon'),false);assert.equal(roBagUsage(u),30);
- const item=u.roInventory.at(-1);assert.ok(roEquip(u,item.id,'weapon'));assert.equal(roBagUsage(u),30);assert.equal(roEquipmentBonuses(u).attack,2);
+ const item=u.roInventory.at(-1);assert.ok(roEquip(u,item.id,'weapon'));assert.equal(roBagUsage(u),30);assert.equal(roEquipmentBonuses(u).attack,17);
 });
 test('two accessories and three distinct head positions equip and socket independently',()=>{
  const {u}=setup();assert.equal(RO_EQUIPMENT_SLOTS.length,10);for(const [key,slot] of [['clip','accessory'],['ring','accessory2'],['cap','head'],['sunglasses','headMid'],['flumask','headLow']]){roReceiveEquipment(u,createRoEquipment(key,key));assert.ok(roEquip(u,key,slot));}assert.equal(roBagUsage(u),0);assert.equal(roEquip(u,'cap','headMid'),false);assert.equal(roEquipmentBonuses(u).str,2);u.roCards=[{id:'elder',key:'elderwillow'}];assert.ok(roSocket(u,'elder','sunglasses'));assert.equal(roEquipmentBonuses(u).int,2);

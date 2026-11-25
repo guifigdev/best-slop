@@ -11,7 +11,7 @@ const chest=(g,u,cost=25)=>{const o={id:'test-chest-'+g.id(),type:'chest',x:u.x,
 
 test('every chest pool entry is a real normal RO item and level/progression favour stronger normal gear without granting cards',()=>{
  assert.ok(RO_CHEST_EQUIPMENT_KEYS.length>=73);for(const key of RO_CHEST_EQUIPMENT_KEYS){const d=RO_EQUIPMENT[key];assert.ok(d&&!Object.hasOwn(RO_TOWER_MVP_GEAR,key));assert.match(d.source,/divine-pride\.net\/database\/item\/\d+/);assert.ok(Number.isInteger(d.sourceId));}
- const high=new Set(Object.keys(RO_EQUIPMENT).filter(k=>RO_EQUIPMENT[k].grade>=3)),ratio=pool=>pool.filter(p=>high.has(p.key)).reduce((s,p)=>s+p.weight,0)/pool.reduce((s,p)=>s+p.weight,0);assert.ok(ratio(roChestEquipmentPool({level:50},8))>ratio(roChestEquipmentPool({level:1},0))+.4);
+ const high=new Set(Object.keys(RO_EQUIPMENT).filter(k=>RO_EQUIPMENT[k].grade>=3)),ratio=pool=>pool.filter(p=>high.has(p.key)).reduce((s,p)=>s+p.weight,0)/pool.reduce((s,p)=>s+p.weight,0);assert.ok(ratio(roChestEquipmentPool({level:100},8))>ratio(roChestEquipmentPool({level:1},0))+.4);
  const u={level:1,roInventory:[],roCards:[{id:'existing',key:'poring'}]};for(let i=0;i<24;i++){const award=awardRoChestEquipment(u,{random:()=>i/24,id:'item-'+i});assert.ok(award);assert.deepEqual(award.item.cards,[]);}assert.deepEqual(u.roCards,[{id:'existing',key:'poring'}]);assert.deepEqual(RO_LOOT_RATES,{card:.005,bossCard:.005,equipment:.06});
 });
 

@@ -10,6 +10,13 @@ function fixture({width=1200,height=800,pixelRatio=1,autoReset=true}={}){
 }
 const draws=f=>f.calls.filter(call=>call.scene),render=f=>f.effect.render(f.state,10,f.options);
 
+test('local cave flames scatter at night through real scene depth within the existing two-pass budget',()=>{
+ const f=fixture();try{const localFires=Array.from({length:9},(_,i)=>({x:i,y:3,z:-5}));assert.ok(f.effect.render(f.state,1,{...f.options,day:0,fireSources:localFires}));
+  const report=f.effect.stats(),list=draws(f);assert.equal(report.extraDrawCalls,2);assert.equal(report.renderTargets,2);assert.equal(report.raysActive,true);assert.equal(list[1].material.uniforms.fireCount.value,6);assert.equal(list[1].material.uniforms.tDepth.value,list[0].target.depthTexture);assert.equal(list[2].material.uniforms.halo.value,0);
+  f.calls.length=0;f.effect.render(f.state,2,{...f.options,preset:'pixel',day:0,fireSources:[]});assert.equal(f.effect.stats().raysActive,false);assert.equal(draws(f).at(-1).material.uniforms.scattering.value,0);
+ }finally{f.effect.dispose();}
+});
+
 test('pixel strength restores native detail at zero and the exact approved pixel grid at one without changing rays or ink',()=>{
  const f=fixture({width:1920,height:1080});try{
   const before=structuredClone(f.state),options={...f.options,preset:'pixel'};f.effect.render(f.state,1,options);const original=f.effect.stats(),originalGrid=draws(f).at(-1).material.uniforms.pixelGrid.value.toArray(),originalShader=draws(f).at(-1).material.fragmentShader,sceneTarget=draws(f)[0].target;

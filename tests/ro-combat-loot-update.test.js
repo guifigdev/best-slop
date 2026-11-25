@@ -14,9 +14,9 @@ import {RO_WORLD_ROUTE,roWorldRegion,roWorldGates} from '../shared/ro-world-rout
 import {roExpansionSceneryParts} from '../src/ro-expansion-scenery.js';
 const make=(options={})=>{const g=new Game(81,{mode:'bonk',bonkWorld:'dominion',...options});g.addPlayer('p','knight');return{g,u:g.player('p')};};
 test('Ragnabonk critical chance belongs to equipped gear, bound enchantments and cards, never naked attributes or buffs',()=>{
- const {g,u}=make();u.attributes.luk=99;u.bonkBuild.relics.luckybell=20;u.roSkillBuffs=[{key:'test',until:100,modifiers:{crit:.25}}];assert.equal(bonkStats(u).crit,0);u.bonkBuild.tomes.crit=8;assert.equal(bonkStats(u).crit,.4);assert.deepEqual(u.bonkBuild.tomes,{});
- const ring=createRoEquipment('criticalring','crit-ring');u.roInventory.push(ring);assert.ok(roEquip(u,ring.id,'accessory'));assert.equal(bonkStats(u).crit,.45);
- u.roInventory[0].cards.push({id:'crit-card',key:'lunatic'});assert.ok(bonkStats(u).crit>.45);u.roEquipment.accessory=null;u.roEquipment.weapon=null;assert.equal(bonkStats(u).crit,0);
+ const {g,u}=make();u.attributes.luk=99;u.bonkBuild.relics.luckybell=20;u.roSkillBuffs=[{key:'test',until:100,modifiers:{crit:.25}}];assert.equal(bonkStats(u).crit,0);u.bonkBuild.tomes.crit=8;assert.equal(bonkStats(u).crit,.12);assert.deepEqual(u.bonkBuild.tomes,{});
+ const ring=createRoEquipment('criticalring','crit-ring');u.roInventory.push(ring);assert.ok(roEquip(u,ring.id,'accessory'));assert.ok(Math.abs(bonkStats(u).crit-.17)<1e-12);
+ u.roInventory[0].cards.push({id:'crit-card',key:'lunatic'});assert.ok(bonkStats(u).crit>.17);u.roEquipment.accessory=null;u.roEquipment.weapon=null;assert.equal(bonkStats(u).crit,0);
  assert.ok(roSkillOfferPool(u).some(o=>o.kind==='tome'&&o.key==='crit'&&o.itemId===u.roEquipment.armor));
 });
 test('normal equipment drops are more present and include critical gear without replacing monster-specific cards',()=>{
@@ -58,7 +58,7 @@ test('Blessing supports nearby party members without stacking duplicate buffs or
  assert.ok(castRoUtilitySkill(g,u,skill,1,{},{}));assert.ok(ally.roSkillBuffs.some(b=>b.key===skill.key));assert.equal(far.roSkillBuffs.length,0);assert.equal(castRoUtilitySkill(g,u,skill,1,{},{}),false);assert.equal(ally.roSkillBuffs.length,1);
 });
 test('old critical tome ranks migrate onto equipment without refund or lost progress and the atlas names all new regions',()=>{
- const {g,u}=make();g.command('p',{type:'bkReady'});u.bonkBuild.tomes.crit=3;const cp=createRoCheckpoint(g),restored=make();assert.ok(restored.g.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(restored.u.bonkBuild.tomes.crit,undefined);assert.equal(restored.u.bonkPendingLevels,0);assert.ok(Math.abs(bonkStats(restored.u).crit-.15)<1e-12);
+ const {g,u}=make();g.command('p',{type:'bkReady'});u.bonkBuild.tomes.crit=3;const cp=createRoCheckpoint(g),restored=make();assert.ok(restored.g.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(restored.u.bonkBuild.tomes.crit,undefined);assert.equal(restored.u.bonkPendingLevels,0);assert.ok(Math.abs(bonkStats(restored.u).crit-.045)<1e-12);
  const html=roWorldAtlasMarkup({route:roWorldRegion('lutie'),clearedStages:[],visitedStages:[]});for(const text of ['Lutie','Fábrica de Brinquedos','Torre do Relógio','Torre de Thanatos','22 selos'])assert.ok(html.includes(text));assert.ok(!html.includes('undefined'));
 });
 

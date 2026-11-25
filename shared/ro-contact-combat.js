@@ -1,6 +1,7 @@
 import {unitFootprintRadius} from './unit-footprint.js';
 // Match the physical bodies, with a small skin for collision separation tolerance.
 export const RO_CONTACT_INTERVAL=.75;
+export const RO_CONTACT_DAMAGE=.75;
 export const RO_HIT_STUN=.18;
 export function roEnemyTouchesHero(enemy,hero){
  if(!enemy?.alive||!hero?.alive||!enemy.bonkEnemy||!hero.bonkHero)return false;

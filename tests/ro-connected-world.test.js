@@ -12,7 +12,8 @@ import {createRoGroundAreaArt} from '../src/ro-ground-area-art.js';
 import * as T from 'three';
 const start=()=>{const g=new Game(114,{mode:'bonk',bonkWorld:'midgard',bonkLineage:'dragonknight'});g.addPlayer('p','knight');assert.ok(g.command('p',{type:'bkReady'}));return g;};
 const resolveChoices=g=>{let tries=0;while(g.bonk.offer&&tries++<60)assert.ok(g.command('p',{type:'bkChoose',choiceId:g.bonk.offer.choices[0].id}));};
-function defeat(g){const u=g.player('p');Object.assign(u,{x:0,z:-62});g.tick(.05);const boss=g.units.find(e=>e.bonkBoss);assert.ok(boss);assert.equal(boss.ragnarokMvp,g.bonk.route.mvp);boss.hp=.01;u.attributes.dex=99;u.bonkWeaponAt={};for(let i=0;i<40&&boss.alive;i++)g.tick(.1);assert.equal(boss.alive,false);resolveChoices(g);return u;}
+function defeat(g){const u=g.player('p');Object.assign(u,{x:0,z:-62});g.tick(.05);const boss=g.units.find(e=>e.bonkBoss);assert.ok(boss);assert.equal(boss.ragnarokMvp,g.bonk.route.mvp);boss.hp=.01;boss.roSourceId=999999; // Isolate passage progression from native MVP FLEE.
+u.attributes.dex=99;u.bonkWeaponAt={};for(let i=0;i<40&&boss.alive;i++)g.tick(.1);assert.equal(boss.alive,false);resolveChoices(g);return u;}
 
 test('connected adventure has a physical locked gate, exact MVP and walks into the next region instead of menu teleporting',()=>{
  const g=start(),u=g.player('p');assert.equal(g.bonk.route.key,'prontera');assert.equal(g.bonk.objectives.length,0);assert.equal(u.z,96);assert.equal(g.command('p',{type:'bkNext',stageKey:'forge'}),false);

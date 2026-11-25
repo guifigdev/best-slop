@@ -7,7 +7,7 @@ import {RO_EXPANDED_SKILLS,RO_LINEAGE_SKILL_KEYS,RO_LINEAGE_SKILL_TIERS,RO_SKILL
 import {Game} from '../shared/simulation.js';
 import {bonkStats} from '../shared/bonk.js';
 
-const allowedKinds=new Set(['slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash','mount']);
+const allowedKinds=new Set(['groundline','slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash','mount']);
 const modifierKeys=new Set(['damage','haste','area','crit','armor','magicDefense','evasion','regen','speed','manaRegen','damageReduction','lifeSteal','accuracy','critDamage','xp','magnet','amount','maxHp']);
 const statusKeys=new Set(['slow','stun','root','poison','burn','armorBreak','blind']);
 const mechanicKeys=new Set(['allyRadius','modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance','companion','companionMastery']);

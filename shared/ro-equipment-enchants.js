@@ -6,17 +6,18 @@ import {RO_EQUIPMENT,RO_EQUIPMENT_SLOTS,roItemFitsSlot} from './ragnarok-equipme
 export const RO_ENCHANT_SOURCE='https://bonk.wiki/tomes.html';
 export const RO_ENCHANT_SLOT_SOURCE='https://browiki.org/wiki/Equipamentos_Ilusi%C3%B3n';
 export const RO_ENCHANT_TYPES_PER_ITEM=3,RO_ENCHANT_MAX_RANK=8;
+export const RO_HASTE_ENCHANT_PER_RANK=.03,RO_CRIT_ENCHANT_PER_RANK=.015;
 const entry=(key,name,skill,description)=>Object.freeze({key,name,skill,description});
 export const RO_ENCHANTMENTS=Object.freeze(Object.fromEntries([
  entry('damage','Força destrutiva','battlecry','+12% de dano por nível enquanto esta peça estiver equipada.'),
- entry('haste','Celeridade','endurance','-9% de intervalo entre ataques por nível, respeitando o limite de ASPD.'),
+ entry('haste','Celeridade','endurance','-3% de intervalo entre ataques por nível, respeitando o limite de ASPD.'),
  entry('variableCast','Conjuração ágil','brilliance','-10% de conjuração variável por nível; acumula com a redução de DES e INT.'),
  entry('fixedCast','Conjuração precisa','brilliance','-0,05 s de conjuração fixa por nível; não altera a variável.'),
  entry('afterCast','Fluxo arcano','brilliance','-8% de pós-conjuração por nível; não reduz a recarga própria da habilidade.'),
  entry('cooldown','Recarga acelerada','brilliance','-6% da recarga própria das habilidades por nível; não reduz conjuração ou intervalo de ataque.'),
  entry('amount','Multiplicidade','multishot','+1 projétil a cada dois níveis; também fortalece ataques orbitais.'),
  entry('area','Gigantismo','avatar','+11% de área e alcance das habilidades por nível.'),
- entry('crit','Precisão mortal','critical','+5 pontos percentuais de crítico físico por nível. O bônus pertence ao equipamento; magias não causam crítico.'),
+ entry('crit','Precisão mortal','critical','+1,5 ponto percentual de crítico físico por nível. O bônus pertence ao equipamento; magias não causam crítico.'),
  entry('magnet','Atração','brilliance','+28% de alcance de coleta e +6% de experiência por nível.'),
  entry('vitality','Vitalidade','lifeaura','+18 de vida máxima e +0,3 de regeneração por segundo a cada nível.'),
  entry('speed','Agilidade','sprint','+8% de movimento e -0,2 s na recarga da esquiva por nível.'),
