@@ -51,7 +51,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
  const url=new URL(request.url);if(!url.pathname.startsWith(PREFIX))return null;
  const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)return error(403,'Origin not allowed');
  const route=url.pathname.slice(PREFIX.length),method=request.method;
- const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST','characters/delete':'POST'};
+ const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST','characters/delete':'POST','cards/claim':'POST'};
  if(!own(methods,route))return error(404,'Unknown account route');if(method!==methods[route])return response({error:'Method not allowed'},405);
  if(!env?.DB?.prepare)return error(503,'Cloud account storage unavailable');const db=env.DB;
  try{
@@ -77,14 +77,29 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
     const next=validateRoAccountProgress({...progress,characters:progress.characters.filter(c=>c.id!==input.id),deletedCharacters:[...deleted]});if(!next)return error(400,'Character deletion history exceeds account limit');state.progress=next;
    }
    if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify({...progress.warehouse,revision:0})!==JSON.stringify({...prior,revision:0})))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=validateRoAccountProgress({...progress,deletedCharacters:[...new Set([...(state.progress?.deletedCharacters||[]),...(progress.deletedCharacters||[])])]});if(!state.progress)return error(400,'Character deletion history exceeds account limit');}
-   if(route==='run'){if(input.activity!==undefined&&!['adventure','tower'].includes(input.activity))return error(400,'Invalid activity');state.run={id:crypto.randomUUID(),activity:input.activity==='tower'?'tower':'adventure',started:stamp,processed:[],count:0};extra.runId=state.run.id;}
+   if(route==='run'){if(input.activity!==undefined&&!['adventure','tower'].includes(input.activity))return error(400,'Invalid activity');state.run={id:crypto.randomUUID(),activity:input.activity==='tower'?'tower':'adventure',started:stamp,processed:[],count:0,pickupMode:input.pickupMode==='ground'?'ground':'automatic',cardDrops:[]};extra.runId=state.run.id;}
+   if(route==='cards/claim'){
+    const run=state.run;if(!run||input.runId!==run.id||run.pickupMode!=='ground'||stamp-run.started>RUN_TTL)return error(409,'Run expired or replaced');
+    if(typeof input.receipt!=='string'||input.receipt.length>48)return error(400,'Invalid card receipt');
+    const drop=(run.cardDrops||[]).find(d=>d.receipt===input.receipt);if(!drop)return error(404,'Card drop not found');
+    if(!drop.claimed&&stamp>=drop.expiresAt)return error(409,'Card drop expired');
+    if(!drop.claimed&&(!Number.isFinite(input.x)||!Number.isFinite(input.z)||Math.hypot(input.x-drop.x,input.z-drop.z)>4||input.mapSeed!==drop.mapSeed))return error(400,'Approach the card before picking it up');
+    const duplicate=state.cards.includes(drop.key);if(!duplicate)state.cards.push(drop.key);drop.claimed=true;extra.collectedCard={key:drop.key,receipt:drop.receipt,duplicate};
+   }
    if(route==='rewards'){
     if(!Array.isArray(input.kills)||input.kills.length>40||input.kills.some(k=>!validKill(k)))return error(400,'Invalid monster reports');
     const run=state.run;if(!run||input.runId!==run.id||stamp<run.started||stamp-run.started>RUN_TTL)return error(409,'Run expired or replaced');
     const tower=run.activity==='tower',processed=new Set(run.processed),credits=Math.min(MAX_RECEIPTS,(tower?280:6)+Math.floor((stamp-run.started)/1000*(tower?64:3))),newCards=[],cardDrops=[],acknowledgedIds=[];
     for(const kill of input.kills){const receipt=String(kill.id);if(processed.has(receipt)){acknowledgedIds.push(receipt);continue;}if(run.count>=credits)break;processed.add(receipt);acknowledgedIds.push(receipt);run.count++;
      // Boss odds derive from the server catalog, never the reported flag.
-     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'){const duplicate=state.cards.includes(drop.key);if(!duplicate){state.cards.push(drop.key);newCards.push(drop.key);}cardDrops.push({key:drop.key,receipt,duplicate});}
+     const drop=rollRoLoot(random,kill.visual,{boss:!!mvpDefinition(kill.visual)||!!RO_TOWER_DROP_MAP[kill.visual]?.boss});if(drop?.kind==='card'){
+      const duplicate=state.cards.includes(drop.key);
+      if(run.pickupMode==='ground'){
+       if(!Number.isFinite(kill.x)||!Number.isFinite(kill.z)||Math.abs(kill.x)>115||Math.abs(kill.z)>115||!Number.isSafeInteger(kill.mapSeed))continue;
+       const pending={key:drop.key,receipt,x:kill.x,z:kill.z,mapSeed:kill.mapSeed,expiresAt:stamp+180000,claimed:false};
+       run.cardDrops=(run.cardDrops||[]).filter(d=>d.expiresAt>stamp).slice(-127);run.cardDrops.push(pending);cardDrops.push({...pending,pending:true,duplicate});
+      }else{if(!duplicate){state.cards.push(drop.key);newCards.push(drop.key);}cardDrops.push({key:drop.key,receipt,duplicate});}
+     }
     }
     run.processed=[...processed];extra.newCards=newCards;extra.cardDrops=cardDrops;extra.acknowledgedIds=acknowledgedIds;
    }
