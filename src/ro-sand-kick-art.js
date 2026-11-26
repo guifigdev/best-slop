@@ -2,10 +2,26 @@ import * as T from 'three';
 
 export const RO_SAND_BUDGET=Object.freeze({casts:8,puffs:80,grains:224,duration:1.15,drawCalls:2});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+export const roSandEffectHandles=e=>e?.type==='roAttack'&&e.skillKey==='tf_sprinklesand'||e?.type==='roSkillImpact'&&e.skillKey==='as_grimtooth';
 /** A low, forward fan of thrown sand, anchored to the cast position. */
 export function roSandParticles(state,time,heightAt=()=>0){
  const puffs=[],grains=[];
- for(const e of (state?.effects||[]).filter(e=>e.type==='roAttack'&&e.skillKey==='tf_sprinklesand').slice(-RO_SAND_BUDGET.casts)){
+ for(const e of (state?.effects||[]).filter(roSandEffectHandles).slice(-RO_SAND_BUDGET.casts)){
+  // Grimtooth's authoritative ground samples also anchor its disturbed earth.
+  // Claim these events even before the native spikes load: never draw a ring.
+  if(e.skillKey==='as_grimtooth'){
+   const age=time-e.time,duration=.9;if(age<0||age>=duration)continue;
+   const p=age/duration,fade=Math.min(1,age/.055)*(1-p)**1.5,seed=e.x*3.7+e.z*2.9;
+   for(let i=0;i<3;i++){
+    const angle=seed+i*2.399,radius=.08+age*(.25+i*.12),x=e.x+Math.sin(angle)*radius,z=e.z+Math.cos(angle)*radius;
+    puffs.push({x,y:heightAt(x,z)+.12+i*.05+p*.42,z,size:.22+p*.72,opacity:fade*.32,phase:seed+i*.7});
+   }
+   for(let i=0;i<8;i++){
+    const a=seed+i*2.399,radius=.06+age*(.45+(i%3)*.28),x=e.x+Math.sin(a)*radius,z=e.z+Math.cos(a)*radius;
+    grains.push({x,y:heightAt(x,z)+.04+Math.max(0,(1.1+(i%3)*.25)*age-2.5*age*age),z,size:(.035+(i%3)*.012)*(1-p),yaw:a+age*3,color:i%3===0?0xe4c994:i%3===1?0xb78c55:0x826241});
+   }
+   continue;
+  }
   const age=time-e.time;if(age<0||age>=RO_SAND_BUDGET.duration)continue;
   const yaw=Number.isFinite(e.direction)?e.direction:Math.atan2((e.tx??e.x)-e.x,(e.tz??e.z)-e.z),s=Math.sin(yaw),c=Math.cos(yaw),p=age/RO_SAND_BUDGET.duration,fade=Math.min(1,age/.07)*(1-p)**1.4,reach=clamp(e.range||4,2,5);
   for(let i=0;i<10;i++){

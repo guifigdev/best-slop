@@ -1,3 +1,6 @@
+import {roHasSight,roIsHidden} from './ro-mage-spells.js';
+import {unitBodyGap} from './unit-body-shape.js';
+import {roSkillTargetRange} from './ro-skill-range.js';
 import {RO_NATIVE_SKILL_DATA} from './ro-native-skill-data.js';
 import {roSkillSource} from './ro-skill-source.js';
 import {roIsMount,roMountedKind,toggleRoMount} from './ro-mounts.js';
@@ -42,7 +45,8 @@ export function roSkillStatus(game,unit,key,stats={},options={manual:true}){
  else if(cooldownRemaining>0){reasonCode='cooldown';readyReason='Recarregando';}
  else if((unit.mana||0)<manaCost){reasonCode='mana';readyReason='SP insuficiente';}
  else if(roIsMount(key)){readyReason=unit.roMountSkill===key?'Desmontar':'Montar';}
- else{const utility=roUtilitySkillReadiness(game,unit,weapon,stats,options);if(utility){reasonCode=utility.reasonCode;readyReason=utility.readyReason;}else{const range=weapon.range*(stats.area||1);if(!(game.units||[]).some(enemy=>enemy.bonkEnemy&&enemy.alive&&Math.hypot(enemy.x-unit.x,enemy.z-unit.z)<=range+(enemy.collisionRadius||0))){reasonCode='target';readyReason='Sem inimigo no alcance';}}}
+ else if(key==='wz_sightrasher'&&!roHasSight(unit,elapsed)){reasonCode='sight';readyReason='Ative Chama Reveladora';}
+ else{const utility=roUtilitySkillReadiness(game,unit,weapon,stats,options);if(utility){reasonCode=utility.reasonCode;readyReason=utility.readyReason;}else{const range=roSkillTargetRange(weapon,stats,level);if(!(game.units||[]).some(enemy=>enemy.bonkEnemy&&enemy.alive&&!roIsHidden(enemy,elapsed)&&unitBodyGap(enemy,unit)<=range)){reasonCode='target';readyReason='Sem inimigo no alcance';}}}
  return{variableCast:weapon?roSkillCastTime(weapon,Math.max(1,level),stats).variable:0,fixedCast:weapon?roSkillCastTime(weapon,Math.max(1,level),stats).fixed:0,attackDelay:stats.attackDelay||0,animationRemaining:Math.max(0,(unit.roSkillActionUntil||0)-elapsed),afterCastRemaining:Math.max(0,(unit.roAfterCastUntil||0)-elapsed),afterCast:weapon?roSkillAfterCast(weapon,Math.max(1,level),stats):0,mount:roIsMount(key),mounted:roIsMount(key)&&unit.roMountSkill===key&&!!roMountedKind(unit),castTime:roSkillCastTime(weapon,level,stats).total,castingRemaining:unit?.roCasting?Math.max(0,unit.roCasting.finishAt-elapsed):0,learned,auto:roSkillAuto(unit,key),manaCost,cooldown,cooldownRemaining:Number(cooldownRemaining.toFixed(2)),ready:reasonCode==='ready',reasonCode,readyReason};
 }
 

@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -9,7 +10,7 @@ import {RO_CARDS,RO_EQUIPMENT,createRoEquipment} from '../shared/ragnarok-equipm
 import {RO_ENDLESS_FLOORS,RO_ENDLESS_SOURCE_IDS} from '../shared/ragnarok-endless-tower.js';
 import {planRoTowerFloor} from '../shared/ragnarok-tower.js';
 import {bonkEquipmentMarkup} from '../src/bonk-ui.js';
-function game(lineage='dragonknight',activity='adventure'){const p=RO_LINEAGES[lineage],g=new Game(557,{mode:'bonk',bonkLineage:lineage,bonkActivity:activity});g.addPlayer('p',p.hero);return {g,u:g.player('p')};}
+function game(lineage='dragonknight',activity='adventure'){const p=RO_LINEAGES[lineage],g=new Game(557,{mode:'bonk',bonkLineage:lineage,bonkActivity:activity});g.addPlayer('p',p.hero);return {g,u:qualifiedRoTestHero(g.player('p'),{level:20})};}
 function tick(g,n=1){for(let i=0;i<n;i++)g.tick(.05);}
 test('all twelve lineages start with native jobs, meaningful fixed attacks and four valid evolution tiers',()=>{
  assert.equal(Object.keys(RO_LINEAGES).length,12);

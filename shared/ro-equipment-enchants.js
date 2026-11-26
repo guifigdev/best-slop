@@ -1,3 +1,4 @@
+import {roEquipmentLevelAllowed} from './ro-equipment-requirements.js';
 import {RO_EQUIPMENT,RO_EQUIPMENT_SLOTS,roItemFitsSlot} from './ragnarok-equipment.js';
 
 // Local equipment adaptation: Ilusión has up to three enchant positions. Cards
@@ -41,7 +42,7 @@ function validated(value,limit){if(value===undefined)return{};if(!value||typeof 
 export const validateRoEnchants=value=>validated(value,RO_ENCHANT_TYPES_PER_ITEM);
 export const validateRoLegacyEnchants=value=>validated(value,Object.keys(RO_ENCHANTMENTS).length);
 const pieces=u=>(u?.roInventory||[]).filter(item=>item&&own(RO_EQUIPMENT,item.key));
-export function roEnchantedEquipment(u){const seen=new Set(),result=[];for(const slot of RO_EQUIPMENT_SLOTS){const id=u?.roEquipment?.[slot],main=pieces(u).find(item=>item.id===u?.roEquipment?.weapon);if(slot==='offhand'&&RO_EQUIPMENT[main?.key]?.hands===2)continue;const item=pieces(u).find(item=>item.id===id);if(!item||seen.has(id)||!roItemFitsSlot(u,item,slot))continue;seen.add(id);result.push({item,slot});}return result;}
+export function roEnchantedEquipment(u){const seen=new Set(),result=[];for(const slot of RO_EQUIPMENT_SLOTS){const id=u?.roEquipment?.[slot],main=pieces(u).find(item=>item.id===u?.roEquipment?.weapon);if(slot==='offhand'&&RO_EQUIPMENT[main?.key]?.hands===2)continue;const item=pieces(u).find(item=>item.id===id);if(!item||seen.has(id)||!roItemFitsSlot(u,item,slot)||!roEquipmentLevelAllowed(u,RO_EQUIPMENT[item.key]))continue;seen.add(id);result.push({item,slot});}return result;}
 const chaosPool=['damage','haste','amount','area','crit','vitality','speed','armor','evasion','lifesteal','shield','regen','duration','projectileSpeed','knockback','thorns'];
 export function roChaosRolls(item){const rank=validateRoEnchants(item?.enchants)?.chaos||0;let seed=2166136261;for(const c of String(item?.id))seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;return Array.from({length:rank},(_,i)=>{let value=(seed+Math.imul(i+1,2654435761))>>>0;value=Math.imul(value^(value>>>16),2246822507)>>>0;value=Math.imul(value^(value>>>13),3266489909)>>>0;return chaosPool[((value^(value>>>16))>>>0)%chaosPool.length];});}
 export function roEnchantLevels(u){const levels={};for(const {item}of roEnchantedEquipment(u)){for(const [key,rank]of Object.entries(validateRoEnchants(item.enchants)||{}))levels[key]=Math.min(RO_ENCHANT_MAX_RANK,(levels[key]||0)+rank);for(const key of roChaosRolls(item))if(key)levels[key]=Math.min(RO_ENCHANT_MAX_RANK,(levels[key]||0)+1);}return levels;}

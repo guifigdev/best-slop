@@ -10,7 +10,7 @@ import {bonkStats} from '../shared/bonk.js';
 const allowedKinds=new Set(['groundline','slash','pulse','projectile','chain','orbit','heal','buff','passive','zone','summon','dash','mount']);
 const modifierKeys=new Set(['damage','haste','area','crit','armor','magicDefense','evasion','regen','speed','manaRegen','damageReduction','lifeSteal','accuracy','critDamage','xp','magnet','amount','maxHp']);
 const statusKeys=new Set(['slow','stun','root','poison','burn','armorBreak','blind']);
-const mechanicKeys=new Set(['allyRadius','modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance','companion','companionMastery']);
+const mechanicKeys=new Set(['allyRadius','modifiers','status','duration','statusDuration','healPercent','healFlat','manaPercent','interval','radius','ticks','summonCount','knockback','dashDistance','retreat','follow','centered','cleanse','shieldPercent','hits','proc','chance','companion','companionMastery','noDamage','revealRadius']);
 
 test('every source skill has an executable combat role, coherent numeric profile and a primary source identity',()=>{
  assert.equal(Object.keys(RO_EXPANDED_SKILLS).length,681);
@@ -24,7 +24,7 @@ test('every source skill has an executable combat role, coherent numeric profile
   for(const [field,value] of Object.entries(m.modifiers||{})){assert.ok(modifierKeys.has(field),`${key}.${field}`);assert.ok(Number.isFinite(value)&&value>=0,`${key}.${field}`);}
   for(const [field,value] of Object.entries(m.status||{})){assert.ok(statusKeys.has(field),`${key}.${field}`);assert.ok(Number.isFinite(value)&&value>=0,`${key}.${field}`);}
   if(s.kind==='passive')assert.ok(Object.keys(m.modifiers||{}).length||m.proc||m.status||m.companion||m.companionMastery,key);
-  if(s.kind==='buff')assert.ok(m.duration>0&&(Object.keys(m.modifiers||{}).length||m.shieldPercent||m.healPercent||m.manaPercent),key);
+  if(s.kind==='buff')assert.ok(m.duration>0&&(Object.keys(m.modifiers||{}).length||m.shieldPercent||m.healPercent||m.manaPercent||m.status||m.proc||m.revealRadius),key);
   if(s.kind==='heal')assert.ok(m.healPercent||m.healFlat||m.manaPercent||m.cleanse,key);
   if(['zone','summon'].includes(s.kind))assert.ok(s.damage>0&&m.interval>0&&m.duration>0,key);
   if(s.kind==='dash')assert.ok(m.dashDistance>0,key);
@@ -82,6 +82,7 @@ test('every included active executes through the dispatcher and passives change 
   }
   if(s.mechanics?.cleanse==='poison')u.bonkPoisonUntil=g.bonk.elapsed+10;
   if(s.kind==='mount'){u.roMountSkill=s.key;u.roMountKnown=[s.key];}
+  if(s.key==='wz_sightrasher')u.roSkillBuffs=[{key:'mg_sight',until:g.bonk.elapsed+10}];
   assert.equal(g.command('p',{type:'bkCast',key:s.key}),true,`${s.sourceAegis} (${s.kind}) failed: ${g.commandFailureReason}`);
   if(s.kind==='mount'){assert.equal(u.roMountSkill,null);assert.equal(u.mana,5000);continue;}
   if(u.roCasting){const finish=u.roCasting.finishAt;for(let i=0;i<310&&g.bonk.elapsed<finish+.1;i++)g.tick(.1);}

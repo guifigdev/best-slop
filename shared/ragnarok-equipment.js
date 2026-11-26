@@ -1,3 +1,4 @@
+import {roEquipmentRequiredLevel,roEquipmentLevelAllowed} from './ro-equipment-requirements.js';
 import {roNativeEquipment,roNativeEquipmentDefinition} from './ro-equipment-native.js';
 import {roSkillSource} from './ro-skill-source.js';
 import {roCardRarity} from './ro-card-rarity.js';
@@ -76,7 +77,7 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
  mvpCard('hatii','Hatii Card',4324,'armor',{vit:2,armor:2},['hatii'],'Chance to freeze an attacker when struck'),
  mvpCard('fallenbishop','Fallen Bishop Card',4441,'shoes',{int:3,matk:7},['fallenbishop'],'MATK +10%, max SP -50%, magic damage to Angel and Demihuman +50%'),
 ].map(item=>[item.key,item])));
-export const RO_EQUIPMENT=freeze(Object.fromEntries(Object.entries({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT}).map(([key,d])=>[key,RO_BUILD_EQUIPMENT[key]===d?d:roNativeEquipmentDefinition({...d,...RO_EQUIPMENT_TARGET_FACTS[d.sourceId]})])));
+export const RO_EQUIPMENT=freeze(Object.fromEntries(Object.entries({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT}).map(([key,d])=>[key,RO_BUILD_EQUIPMENT[key]===d?d:{...roNativeEquipmentDefinition({...d,...RO_EQUIPMENT_TARGET_FACTS[d.sourceId]}),requiredLevel:roEquipmentRequiredLevel(d)}])));
 export const RO_CARDS=freeze(Object.fromEntries(Object.entries({...BASE_RO_CARDS,...RO_TOWER_CARDS}).map(([key,card])=>[key,{...card,stats:{...card.stats,...({4145:{variableCastReduction:.3},4169:{variableCastReduction:.1},4077:{variableCastReduction:-.25},4327:{variableCastReduction:-.3}})[card.sourceId]},rarity:roCardRarity(card)}])));
 export const RO_LOOT_RATES=freeze({card:.005,bossCard:.005,equipment:.06});
 export const RO_EQUIPMENT_SLOTS=freeze(['weapon','offhand','head','headMid','headLow','armor','garment','shoes','accessory','accessory2']);
@@ -102,6 +103,7 @@ export const roInventoryItemCount=u=>inventory(u).reduce((n,item)=>n+roEquipment
 export const roBagUsage=u=>Math.max(0,roInventoryItemCount(u)-new Set(Object.values(u.roEquipment||{}).filter(id=>inventory(u).some(item=>item.id===id))).size);
 export function roBagPieces(u){const worn=new Set(Object.values(u.roEquipment||{}));return inventory(u).flatMap(item=>Array.from({length:Math.min(RO_BAG_CAPACITY,roEquipmentQuantity(item)-Number(worn.has(item.id)))},(_,copy)=>({item,copy}))).slice(0,RO_BAG_CAPACITY);}
 export function roMigrateBag(u,{force=false}={}){
+ for(const [slot,id]of Object.entries(u?.roEquipment||{})){const item=inventory(u).find(i=>i.id===id);if(item&&!roEquipmentLevelAllowed(u,RO_EQUIPMENT[item.key])){u.roEquipment[slot]=null;force=true;}}
  if(!u||u.roBagVersion===1&&!force)return;u.roInventory??=[];u.roUnclaimed??=[];const worn=new Set(Object.values(u.roEquipment||{}));let available=RO_BAG_CAPACITY;const kept=[],ids=new Set([...u.roInventory,...u.roUnclaimed].map(i=>i.id));
  for(const item of [...u.roInventory].sort((a,b)=>Number(worn.has(b.id))-Number(worn.has(a.id)))){const quantity=roEquipmentQuantity(item),equipped=Number(worn.has(item.id)),take=Math.min(quantity,equipped+available);available-=take-equipped;if(take){const keptItem={...item};if(take>1)keptItem.quantity=take;else delete keptItem.quantity;kept.push(keptItem);}if(quantity>take){let id=item.id;if(take){let n=1;do{id=String(item.id).slice(0,78)+':saved:'+n++;}while(ids.has(id));ids.add(id);}u.roUnclaimed.push({...item,id,quantity:quantity-take});}}
  u.roInventory=kept;u.roBagVersion=1;
@@ -129,7 +131,7 @@ export const roCompatibleSlots=(u,item)=>RO_EQUIPMENT_SLOTS.filter(slot=>fits(u,
 // A successful swap preserves both items in the bag. A two-handed weapon
 // unequips the offhand; equipping an offhand cannot silently remove the weapon.
 export function roEquip(u,itemId,slot){
- let item=findItem(u,itemId);if(!item||!RO_EQUIPMENT_SLOTS.includes(slot)||!fits(u,item,slot)||!u.roEquipment)return false;
+ let item=findItem(u,itemId);if(!item||!RO_EQUIPMENT_SLOTS.includes(slot)||!fits(u,item,slot)||!roEquipmentLevelAllowed(u,RO_EQUIPMENT[item.key])||!u.roEquipment)return false;
  const definition=RO_EQUIPMENT[item.key],main=findItem(u,u.roEquipment.weapon);
  if(slot==='offhand'&&main&&RO_EQUIPMENT[main.key].hands===2)return false;
  // A stack contains physical copies, not bonuses that multiply when equipped.
@@ -160,7 +162,7 @@ export function roEquipmentBonuses(u){
  const bonuses={str:0,agi:0,vit:0,int:0,dex:0,luk:0,maxHp:0,attack:0,armor:0,matk:0,moveSpeed:0,crit:0,haste:0,flee:0,perfectEvasion:0,variableCastReduction:0,fixedCastReduction:0,fixedCastSeconds:0,afterCastReduction:0,doubleAttackLevel:0,hit:0,magicDefense:0,maxMana:0,attackRate:0,magicAttackRate:0,maxHpRate:0,maxManaRate:0,critDamage:0,healPower:0,rangedDamage:0,meleeDamage:0,spCostReduction:0,flatAspd:0,hpOnKill:0,spOnHit:0,rangedResistance:0,armorRate:0,softDefenseRate:0,reflectPhysical:0,reflectMagic:0,hpRecoveryRate:0,spRecoveryRate:0,receivedHealPower:0,perfectHit:0,bossDamage:0,normalDamage:0},seenItems=new Set(),seenCards=new Set();
  const add=stats=>{for(const[key,value]of Object.entries(stats||{}))if(Number.isFinite(value)&&typeof bonuses[key]==='number')bonuses[key]=key==='fixedCastReduction'?Math.max(bonuses[key],value):bonuses[key]+value;};
  const main=findItem(u,u?.roEquipment?.weapon),twoHanded=main&&RO_EQUIPMENT[main.key].hands===2;
- for(const slot of RO_EQUIPMENT_SLOTS){const item=findItem(u,u?.roEquipment?.[slot]);if(!item||seenItems.has(item.id)||!fits(u,item,slot)||slot==='offhand'&&twoHanded)continue;seenItems.add(item.id);
+ for(const slot of RO_EQUIPMENT_SLOTS){const item=findItem(u,u?.roEquipment?.[slot]);if(!item||seenItems.has(item.id)||!fits(u,item,slot)||!roEquipmentLevelAllowed(u,RO_EQUIPMENT[item.key])||slot==='offhand'&&twoHanded)continue;seenItems.add(item.id);
   const base=RO_EQUIPMENT[item.key],context={...u,roSourceSkillLevels:Object.fromEntries(Object.entries(u.bonkBuild?.weapons||{}).map(([key,level])=>[roSkillSource({key}),level])),roEquippedSourceIds:Object.values(u.roEquipment||{}).map(id=>RO_EQUIPMENT[findItem(u,id)?.key]?.sourceId).filter(Boolean)},native=roNativeEquipment(base.sourceId,context,item),definition=native?{...base,...native}:base;add(definition.stats);if(definition.onHit?.length)(bonuses.onHit||=[]).push(...definition.onHit);for(const flag of ['ignoreSize','noCastCancel','noGemStone'])if(definition[flag])bonuses[flag]=true;for(const field of ['ignoreBossDefense','ignoreNormalDefense','ignoreBossMagicDefense','ignoreNormalMagicDefense'])bonuses[field]=Math.max(bonuses[field]||0,definition[field]||0);for(const field of ['monsterDamage','ignoreDefense','statusResistance'])for(const [key,n]of Object.entries(definition[field]||{})){const target=bonuses[field]||={};target[key]=(target[key]||0)+n;}bonuses.doubleAttackLevel=Math.max(bonuses.doubleAttackLevel,definition.doubleAttackLevel||0);if(definition.armorElement)bonuses.armorElement=definition.armorElement;if(slot==='weapon'&&definition.weaponElement)bonuses.weaponElement=definition.weaponElement;const refinement=Math.max(0,Math.min(10,item.refine||0));if(refinement){if(definition.slot==='weapon'){bonuses.attack+=(definition.stats.attack||0)*refinement*.05;bonuses.matk+=(definition.stats.matk||0)*refinement*.05;}else bonuses.armor+=refinement*.3;}
   for(const [key,values]of Object.entries(definition.skillBonuses||{})){const target=(bonuses.skillBonuses||={})[key]||={};for(const [stat,value]of Object.entries(values))target[stat]=(target[stat]||0)+value;}
   for(const family of ['elementalPower','elementalResistance',...RO_TARGET_BONUS_FAMILIES])for(const [key,value]of Object.entries(definition[family]||{})){const target=bonuses[family]||={};target[key]=(target[key]||0)+value;}

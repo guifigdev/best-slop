@@ -1,6 +1,6 @@
 // Server-owned hit shapes. Cosmetic weapon ribbons never determine damage.
 export function roAxeImpact(unit,weapon,stats={},level=1){
- const direction=unit.facing||0,reach=Math.min(2.6,(weapon.range||4)*.52)*(stats.area||1);
+ const direction=unit.facing||0,reach=(weapon.key==='basic'?2.6:Math.min(2.6,(weapon.range||4)*.52))*(stats.area||1);
  return{x:unit.x+Math.sin(direction)*reach,z:unit.z+Math.cos(direction)*reach,radius:2.6*(stats.area||1)*(1+Math.max(0,level-1)*.06)};
 }
 export const roSkillPierces=weapon=>weapon.key!=='basic'&&!(weapon.radius>.5);

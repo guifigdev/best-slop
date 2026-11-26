@@ -31,7 +31,7 @@ test('Renewal accuracy actually compares HIT against each monster FLEE rather th
 test('Scalpel bleeding and Snake Head Double Attack affect a real hit without inventing critical or agility bonuses',()=>{
  const g=new Game(617,{mode:'bonk',bonkLineage:'shadowcross'});g.addPlayer('p','raccoon');g.command('p',{type:'bkReady'});const u=g.player('p');u.level=150;u.attributes.dex=99;u.bonkBuild.weapons={basic:1};u.roInventory=[];u.roEquipment={};
  for(const [slot,key]of [['weapon','build_13027'],['head','build_5388']]){const item=createRoEquipment(key,slot);u.roInventory.push(item);u.roEquipment[slot]=item.id;}
- const e={id:9001,bonkEnemy:true,alive:true,x:u.x,z:u.z+2,team:100,armor:0,roSourceId:999999,hp:100000,maxHp:100000,collisionRadius:.3,damage:0,speed:0};g.units=[u,e];g.bonk.map.obstacles=[];g.obstacles=[];g.effects=[];g.random=()=>.01;
+ const e={id:9001,bonkEnemy:true,alive:true,x:u.x,z:u.z+1.2,team:100,armor:0,roSourceId:999999,hp:100000,maxHp:100000,collisionRadius:.3,damage:0,speed:0};g.units=[u,e];g.bonk.map.obstacles=[];g.obstacles=[];g.effects=[];g.random=()=>.01;
  assert.ok(g.command('p',{type:'bkCast',key:'basic'}));const hit=g.effects.find(f=>f.type==='damage'&&f.target===e.id);
  assert.equal(hit.hits,2);assert.equal(hit.critical,false);assert.ok(e.roBleedUntil>g.bonk.elapsed);assert.equal(u.bonkBuild.weapons.tf_double,undefined,'item grants the effect without spending learned skill ranks');
 });

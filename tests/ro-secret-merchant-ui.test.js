@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {transform} from 'esbuild';
@@ -8,7 +9,7 @@ import {createBonkUI,bonkInteraction,bonkUpgradeMarkup,BONK_HELP} from '../src/b
 import {roSkillDockMarkup} from '../src/ro-skill-dock.js';
 import {roSecretMerchantMarkup} from '../src/ro-secret-merchant-ui.js';
 
-function setup(){const g=new Game(84,{mode:'bonk',bonkLineage:'dragonknight'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p'),merchant=g.bonk.objects.find(o=>o.type==='secretMerchant');assert.ok(merchant);u.x=merchant.x;u.z=merchant.z;u.gold=2000;g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.ambientSeeded=true;g.tick(.05);return{g,u,merchant};}
+function setup(){const g=new Game(84,{mode:'bonk',bonkLineage:'dragonknight'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{}),merchant=g.bonk.objects.find(o=>o.type==='secretMerchant');assert.ok(merchant);u.x=merchant.x;u.z=merchant.z;u.gold=2000;g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.ambientSeeded=true;g.tick(.05);return{g,u,merchant};}
 test('merchant E and pointer open a shop and pause local input without buying anything',()=>{
  for(const input of ['E','pointer']){const {g,u,merchant}=setup(),sent=[],paused=[],getState=()=>g.snapshotFor('p'),ui=createBonkUI({getState,getOwner:()=> 'p',send:command=>{sent.push(command);g.command('p',command);},onInventory:value=>paused.push(value)});const gold=u.gold,entry=bonkInteraction(getState().bonk,u);assert.equal(entry.merchant,true);assert.match(entry.description,/comparar antes/);if(input==='E')ui.action('interact');else ui.point({bonkObject:merchant.id,button:0});assert.deepEqual(sent.map(c=>c.type),['bkMove','bkInteract']);assert.equal(u.gold,gold);assert.equal(paused.at(-1),true);assert.equal(getState().bonk.secretMerchant.id,merchant.id);ui.action('interact');assert.equal(sent.at(-1).type,'bkSecretClose');assert.equal(paused.at(-1),false);assert.equal(getState().bonk.secretMerchant,null);}
 });

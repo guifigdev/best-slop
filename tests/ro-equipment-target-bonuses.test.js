@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {RO_EQUIPMENT,initializeRoInventory,createRoEquipment,roEquip,roEquipmentBonuses,roCompatibleSlots} from '../shared/ragnarok-equipment.js';
@@ -30,7 +31,7 @@ test('Mercenary evolutions equip two real weapons; all other branches equip one-
  }
 });
 test('authoritative physical hit includes the humanoid equipment multiplier before reporting damage',()=>{
- const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p'),e=g.units.find(e=>e.bonkEnemy),weapon=createRoEquipment('build_1266','test-infiltrator');u.roInventory.push(weapon);assert.ok(roEquip(u,weapon.id,'weapon'));g.random=()=>0;
+ const g=new Game(17,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{level:150}),e=g.units.find(e=>e.bonkEnemy),weapon=createRoEquipment('build_1266','test-infiltrator');u.roInventory.push(weapon);assert.ok(roEquip(u,weapon.id,'weapon'));g.random=()=>0;
  Object.assign(e,{...human,hp:1e7,maxHp:1e7,armor:0,x:u.x+1,z:u.z});g.units=[u,e];g.effects=[];g.command('p',{type:'bkCast',key:'basic'});const withBonus=g.effects.find(f=>f.type==='damage'&&f.target===e.id)?.amount;assert.ok(withBonus>0);
  // Same attack against an unknown neutral body provides the unmodified budget.
  e.roSourceId=999999;u.bonkNextAttack=0;u.bonkAttackAt=0;u.bonkCooldowns={};g.bonk.elapsed+=10;g.time+=10;g.effects=[];g.command('p',{type:'bkCast',key:'basic'});const normal=g.effects.find(f=>f.type==='damage'&&f.target===e.id)?.amount;assert.ok(normal>0);

@@ -45,7 +45,7 @@ test('clearing the first real roster in one burst creates only one pending base 
 });
 
 test('tower uses ordinary character XP bonuses and the smaller reward also reaches class XP',()=>{
- const{g,u}=setup(),weapon=u.roInventory.find(i=>i.id===u.roEquipment.weapon);weapon.enchants={xp:8};const multiplier=bonkStats(u).xp;assert.ok(multiplier>1);kill(g,u,1);assert.ok(Math.abs(u.xp-multiplier)<1e-8);assert.ok(Math.abs(u.roJobXp-multiplier)<1e-8);
+ const{g,u}=setup(),weapon=u.roInventory.find(i=>i.id===u.roEquipment.armor);weapon.enchants={xp:8};const multiplier=bonkStats(u).xp;assert.ok(multiplier>1);kill(g,u,1);assert.ok(Math.abs(u.xp-multiplier)<1e-8);assert.ok(Math.abs(u.roJobXp-multiplier)<1e-8);
  const next=setup();kill(next.g,next.u,1,{boss:true});assert.equal(next.g.bonk.xpTotal,18);assert.equal(next.u.level,2);assert.equal(next.u.xp,1);assert.equal(next.u.roJobLevel,2);assert.equal(next.u.roJobXp,5);
 });
 

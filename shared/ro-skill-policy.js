@@ -1,6 +1,7 @@
+import {roSkillLearnLevels} from './ro-skill-learn-levels.js';
 import {roLineage,roSkillTier} from './ragnarok-jobs.js';
 // Keep old learned skills loadable; curate only new offers and library learning.
-const support=new Set(['sm_endure','al_blessing','al_incagi','al_angelus','mg_safetywall','al_pneuma','pr_kyrie','pr_magnificat','pr_aspersio']);
+const support=new Set(['mg_sight','sm_endure','al_blessing','al_incagi','al_angelus','mg_safetywall','al_pneuma','pr_kyrie','pr_magnificat','pr_aspersio']);
 const redundant=new Set(['attack_buff','mixed_buff','crit_buff','mastery','precision_passive','defense_passive','holy_passive','proc_passive','autospell_passive']);
 const nonsurvivor=new Set(['sm_provoke','pr_slowpoison','tf_throwstone','ac_chargearrow','nc_license','nc_mainframe','sc_bodypaint','sc_enervation','sc_groomy','sc_ignorance','sc_laziness','sc_unlucky','sc_weakness']);
 export function roSkillIsCurated(skill){
@@ -10,9 +11,9 @@ export function roSkillIsCurated(skill){
  if(redundant.has(skill.role))return false;
  return true;
 }
-export function roSkillIsAvailable(unit,skill){
+export function roSkillIsAvailable(unit,skill,rank=1){
  if(!roSkillIsCurated(skill))return false;
  const tier=unit?.roSkillMode==='class'?roSkillTier(unit.roLineage,skill.key):skill.tier??0;
- if(tier>Math.max(0,unit?.roTier||0))return false;
+ if(tier>Math.max(0,unit?.roTier||0)||!roSkillLearnLevels(unit,skill,rank,tier).allowed)return false;
  return unit?.roSkillMode!=='class'||roLineage(unit.roLineage).skills.includes(skill.key);
 }

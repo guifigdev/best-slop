@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -5,7 +6,7 @@ import {roEnchantOffers,roEnchantLevels} from '../shared/ro-equipment-enchants.j
 import {roUnequip} from '../shared/ragnarok-equipment.js';
 import {createRoCheckpoint} from '../shared/ragnarok-save.js';
 
-function game(options={}){const g=new Game(81,{mode:'bonk',...options});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.ambientSeeded=true;g.random=()=>.5;return{g,u};}
+function game(options={}){const g=new Game(81,{mode:'bonk',...options});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{});g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.ambientSeeded=true;g.random=()=>.5;return{g,u};}
 function installOffer(g,u,choices){u.bonkPendingLevels=1;if(g.bonkOnline){g.bonk.stage='playing';u.bonkOffer={id:88,choices};}else{g.bonk.stage='levelup';g.bonk.offer={id:88,choices};}}
 const legacy={damage:8,haste:8,amount:8,area:8};
 test('legacy tomes migrate before altar offers, so snapshot reads cannot invalidate an advertised Adventurer Suit enchant',()=>{

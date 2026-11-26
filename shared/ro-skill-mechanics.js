@@ -1,3 +1,4 @@
+import {roRevealNearby} from './ro-mage-spells.js';
 import {roSkillDamageBudget,roNativeZonePlan} from './ro-damage-formulas.js';
 import {syncRoCompanions,tickRoCompanions} from './ro-pet-companions.js';
 import {roSkillTargetRange} from './ro-skill-range.js';
@@ -70,7 +71,7 @@ function cleanse(unit,time,kind){unit.bonkPoisonTicks=0;unit.bonkPoisonUntil=tim
 export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
  const plan=roNativeZonePlan(weapon,level),kind=plan?'zone':weapon?.kind;if(!['heal','buff','passive','zone','summon','dash'].includes(kind))return null;
  if(!roUtilitySkillReadiness(game,unit,weapon,stats)?.ready)return false;
- const b=game.bonk,time=now(game),m=weapon.mechanics||{},scale=factor(level),duration=plan?.duration||safeDuration(weapon),radius=clamp((m.radius||weapon.radius||weapon.range||4)*(stats.area||1),1,24);
+ const b=game.bonk,time=now(game),m=weapon.mechanics||{},scale=factor(level),duration=weapon.key==='ws_meltdown'?10+5*Math.max(1,Math.min(10,level)):plan?.duration||safeDuration(weapon),radius=clamp((m.radius||weapon.radius||weapon.range||4)*(stats.area||1),1,24);
  if(kind==='heal'){
   unit.hp=Math.min(unit.maxHp,unit.hp+Math.max(0,finite(m.healFlat))*scale+unit.maxHp*clamp(m.healPercent,0,.5)*scale);
   if(m.manaPercent)unit.mana=Math.min(unit.maxMana,unit.mana+unit.maxMana*clamp(m.manaPercent,0,.35)*scale);
@@ -81,7 +82,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   const modifiers={};for(const [key,value]of Object.entries(m.modifiers||{}))if(Object.hasOwn(modifierCaps,key))modifiers[key]=finite(value)*scale;
   unit.roSkillBuffs=(unit.roSkillBuffs||[]).filter(v=>v.until>time&&v.key!==weapon.key);
   if(unit.roSkillBuffs.length>=RO_SKILL_EFFECT_LIMITS.buffs)unit.roSkillBuffs.shift();
-  unit.roSkillBuffs.push({key:weapon.key,until:time+duration,level,modifiers,...(m.status||m.proc?{weapon,level}: {})});
+  if(weapon.key==='ws_meltdown')weapon={...weapon,mechanics:{...m,chance:Math.min(.1,level*.01)}};unit.roSkillBuffs.push({key:weapon.key,until:time+duration,level,modifiers,...(m.status||m.proc?{weapon,level}: {})});
   if(m.shieldPercent){const amount=unit.maxHp*clamp(m.shieldPercent*scale,0,.45);unit.roSkillShield={value:Math.max(unit.roSkillShield?.until>time?unit.roSkillShield.value:0,amount),until:time+duration};}
   if(m.cleanse)cleanse(unit,time,m.cleanse);
   if(m.healPercent||m.healFlat)unit.hp=Math.min(unit.maxHp,unit.hp+unit.maxHp*clamp(m.healPercent,0,.25)+Math.max(0,finite(m.healFlat)));
@@ -120,6 +121,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
 /** Status durations use encounter time, which freezes during offers and menus. */
 export function applyRoSkillHit(game,unit,enemy,weapon,level,api={}){
  if(!enemy?.alive)return false;
+ if(weapon.key==='hammerfall'){if(enemy.bonkBoss||game.random()>=Math.min(.7,.2+.1*level))return false;enemy.roSkillStunUntil=Math.max(enemy.roSkillStunUntil||0,now(game)+4.5);return true;}
  const stats=api.stats||{attributes:unit.attributes||{}},m=weapon.mechanics||{},status=m.status||{},time=now(game),boss=!!enemy.bonkBoss,scale=factor(level),duration=clamp(m.statusDuration||m.duration||2.5,.25,8);
  let applied=false;
  if(status.slow){enemy.roSkillSlowUntil=Math.max(enemy.roSkillSlowUntil||0,time+duration);enemy.roSkillSlow=clamp(Math.max(enemy.roSkillSlow||0,finite(status.slow)),0,boss?.25:.75);enemy.frostUntil=Math.max(enemy.frostUntil||0,finite(game.time)+duration);applied=true;}
@@ -136,8 +138,8 @@ export function applyRoSkillHit(game,unit,enemy,weapon,level,api={}){
   enemy['bonk'+name+'Until']=Math.max(enemy['bonk'+name+'Until']||0,until);enemy['bonk'+name+'Damage']=Math.max(enemy['bonk'+name+'Damage']||0,damage);
   enemy.dots={...enemy.dots,[element]:{until:finite(game.time)+(until-time)}};applied=true;
  }
- if(m.knockback&&!boss&&api.move){const dx=enemy.x-unit.x,dz=enemy.z-unit.z;api.move(enemy,dx,dz,.05,clamp(m.knockback,0,5)/.05);}
- if(applied)emit(api,status.poison?'poison':status.burn?'fireball':status.slow||status.root?'frostnova':'abilityPulse',enemy,{source:unit.id,target:enemy.id,radius:Math.min(1.5,enemy.size||1),duration:.3,skillKey:weapon.key});
+ if(m.knockback&&!boss&&api.move){const dx=enemy.x-unit.x,dz=enemy.z-unit.z;if(weapon.key==='sm_magnum'){const d=Math.hypot(dx,dz)||1;enemy.roImpactPush={dx:dx/d,dz:dz/d,remaining:clamp(m.knockback,0,5)};}else api.move(enemy,dx,dz,.05,clamp(m.knockback,0,5)/.05);}
+ if(applied&&weapon.key==='ws_meltdown')emit(api,'roSkillImpact',enemy,{source:unit.id,target:enemy.id,radius:0,duration:.65,skillKey:weapon.key});
  if(weapon.key==='basic'){
   for(const buff of (unit.roSkillBuffs||[]).slice(0,RO_SKILL_EFFECT_LIMITS.buffs)){
    const enchant=buff.weapon,m=enchant?.mechanics;if(buff.until<=time||!m||!m.status&&!m.proc)continue;
@@ -178,7 +180,7 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  unit.roSkillBuffs=(unit.roSkillBuffs||[]).filter(v=>v.until>time);
  if(unit.roSkillShield?.until<=time)delete unit.roSkillShield;
  syncRoCompanions(game,unit,time,api);if(unit.alive)tickRoCompanions(game,unit,dt,time,api);
- if(!unit.alive||b.stage!=='playing')return;
+ if(!unit.alive||b.stage!=='playing')return;roRevealNearby(game,unit);
  b.roSkillZones=(b.roSkillZones||[]).filter(z=>z.until>time);
  for(const zone of b.roSkillZones.filter(z=>z.source===unit.id).slice(-RO_SKILL_EFFECT_LIMITS.zones)){if(zone.follow){zone.x=unit.x;zone.z=unit.z;}if(zone.at>time||zone.ticks<=0)continue;zone.at=time+zone.interval;const meteor=isRoMeteorSkill(zone.key),rain=isRoArrowRainSkill(zone.key),showerId=zone.id+':'+zone.ticks;zone.ticks--;for(const enemy of nearby(game,zone,zone.radius,api))if(clear(api,zone,enemy)&&!(zone.key==='stormgust'&&enemy.roFrozenUntil>time)){api.damage?.(enemy,zone.damage,zone.weapon.element||'physical',false,zone.weapon.key);applyRoSkillHit(game,unit,enemy,zone.weapon,zone.level,api);if(zone.key==='stormgust'&&!enemy.bonkBoss){const hits=zone.hitCounts||={};hits[enemy.id]=(hits[enemy.id]||0)+1;if(hits[enemy.id]>=3){enemy.roFrozenUntil=time+3;enemy.roFrozenVisualUntil=game.time+3;}}}emit(api,meteor?'roMeteorImpact':rain?'roArrowRainImpact':zone.weapon.skill||'abilityPulse',zone,{source:unit.id,radius:zone.radius,duration:meteor?.85:rain?RO_ARROW_RAIN_TIMING.impact:.4,skillKey:zone.key,...(meteor||rain?{showerId,element:meteor?'fire':'physical'}:{})});if(meteor&&zone.ticks>0)emit(api,'roMeteorFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'fire'});if(rain&&zone.ticks>0)emit(api,'roArrowRainFall',zone,{source:unit.id,radius:zone.radius,duration:zone.interval,skillKey:zone.key,showerId:zone.id+':'+zone.ticks,element:'physical'});}
  b.roSkillSummons=(b.roSkillSummons||[]).filter(s=>s.until>time);
@@ -194,4 +196,4 @@ export function tickRoSkillEffects(game,unit,dt,api={}){
  }
 }
 
-export function resetRoSkillEffects(game,unit){delete unit.roCasting;unit.roSkillElapsed=0;unit.roSkillBuffs=[];unit.roPassiveProcAt={};delete unit.roSkillShield;if(game.bonk){game.bonk.roSkillZones=[];game.bonk.roSkillSummons=[];}}
+export function resetRoSkillEffects(game,unit){delete unit.roAutoQueue;delete unit.roCasting;unit.roSkillElapsed=0;unit.roSkillBuffs=[];unit.roPassiveProcAt={};delete unit.roSkillShield;if(game.bonk){game.bonk.roSkillZones=[];game.bonk.roSkillSummons=[];}}

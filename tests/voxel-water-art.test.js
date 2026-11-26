@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as T from 'three';
+import {createWaterVoxelGeometry,installWaterVoxelShader,waterFountainSources,fountainWaterTiles} from '../src/voxel-water-art.js';
+import {createElementImpactArt,ELEMENT_IMPACT_BUDGET as B} from '../src/element-impact-art.js';
+import {roProjectileParts} from '../src/ro-projectile-art.js';
+
+test('liquid voxels have real rounded cube geometry and a transparent animated reflective shader without a texture',()=>{
+ const geometry=createWaterVoxelGeometry(),material=new T.MeshPhongMaterial({transparent:true,opacity:.52,depthWrite:false});try{assert.equal(geometry.userData.waterVoxel,true);assert.ok(geometry.attributes.position.count<180);const p=geometry.attributes.position,n=geometry.attributes.normal;assert.ok(Array.from(p.array).every(Number.isFinite));assert.ok(p.array.some(v=>Math.abs(v)>.4&&Math.abs(v)<.5));for(let i=0;i<n.count;i++)assert.ok(Math.abs(Math.hypot(n.getX(i),n.getY(i),n.getZ(i))-1)<1e-5);installWaterVoxelShader(material);const shader={uniforms:{},vertexShader:T.ShaderLib.phong.vertexShader,fragmentShader:T.ShaderLib.phong.fragmentShader};material.onBeforeCompile(shader);assert.ok(shader.uniforms.uFluidTime===material.userData.waterClock);assert.match(shader.fragmentShader,/fluidFresnel/);assert.match(shader.fragmentShader,/fluidWave/);assert.equal(material.map,null);assert.ok(material.transparent&&material.opacity<1&&!material.depthWrite);}finally{geometry.dispose();material.dispose();}
+});
+
+test('fountain water follows the actual regional scenery replacement and village basin on a sloped map',()=>{
+ const map={town:{x:0,z:0},route:{style:'pastoral'},decorations:[{id:'bonk-regional-0',type:'scenery',model:'prontera-fountain',x:10,z:0},{id:'bonk-regional-1',type:'scenery',model:'prontera-house',x:20,z:0}]},sources=waterFountainSources({bonk:{map}},{x:15,z:0});assert.deepEqual(sources.map(s=>s.id),['bonk-regional-1','town-fountain']);const f=sources[0],tiles=fountainWaterTiles(f,0,(x,z)=>x*.1+z*.2),later=fountainWaterTiles(f,.3,(x,z)=>x*.1+z*.2);assert.ok(tiles.length>80&&tiles.length<128);assert.ok(tiles.every(p=>Math.hypot(p[0]-f.x,p[2]-f.z)<=2.41&&p[1]>3&&p[7]<1));assert.ok(tiles.some((p,i)=>p[1]!==later[i][1]));assert.equal(waterFountainSources({bonk:{map}},{x:500,z:500}).length,0);
+});
+
+test('fountain streams use the coupled solver, accumulate on the basin, keep fixed buffers and do not spawn while paused',()=>{
+ const scene=new T.Scene(),art=createElementImpactArt({scene}),state={options:{mode:'bonk'},seed:1,units:[{id:1,hero:'mage',bonkHero:true,alive:true,x:0,z:8}],effects:[],bonk:{elapsed:0,map:{seed:1,town:{x:0,z:0},decorations:[]},projectiles:[]}},before=structuredClone(state),buffers=art.root.children.map(m=>m.geometry);try{for(let i=0;i<90;i++)art.update(state,i/60,()=>0);const stats=art.stats();assert.equal(stats.fountains,1);assert.ok(stats.surfaceVoxels>80);assert.ok(stats.fluid.particles>40);assert.ok(stats.fluid.pairs>0);assert.ok(stats.fluid.collisions>0);assert.ok(stats.water<=B.waterParticles+B.surfaceVoxels);assert.equal(stats.drawCalls<=4,true);const births=stats.fluid.particles,steps=stats.fluid.steps;for(let i=0;i<10;i++)art.update(state,89/60,()=>0);assert.equal(art.stats().fluid.particles,births);assert.equal(art.stats().fluid.steps,steps);assert.deepEqual(state,before);assert.deepEqual(art.root.children.map(m=>m.geometry),buffers);assert.equal(art.root.children[0].geometry.userData.waterVoxel,true);assert.equal(art.root.children[1].geometry.userData.waterVoxel,true);art.reset();assert.equal(art.stats().surfaceVoxels,0);assert.equal(art.stats().fluid.particles,0);}finally{art.dispose();}assert.equal(scene.children.length,0);
+});
+
+test('liquid projectiles emit independent world-space fluid rather than an ice lance in every game mode',()=>{
+ for(const mode of ['bonk','warlock','castlefight','dungeon','campaign']){const art=createElementImpactArt({scene:new T.Scene()}),shot={id:8,x:0,z:0,dx:1,dz:0,speed:20,height:1.5,element:'ice',skillKey:'wz_waterball'},s={options:{mode},seed:1,units:[],effects:[],projectiles:[shot]};try{assert.deepEqual(roProjectileParts(shot,0),[]);art.update(s,0);art.update(s,.05);assert.ok(art.stats().water>0,mode);const drop=art.fluid.active[0],x=art.fluid.data.x[drop];shot.x=2;art.update(s,.1);assert.ok(art.fluid.data.x[drop]<2);assert.ok(art.fluid.data.x[drop]>x);s.projectiles=[];art.update(s,.2);assert.ok(art.stats().water>0,'water survives the projectile');}finally{art.dispose();}}
+});

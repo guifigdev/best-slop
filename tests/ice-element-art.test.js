@@ -6,6 +6,11 @@ import {createSharedIceGeometry} from '../src/warlock-element-art.js';
 import {createRoElementAreaArt} from '../src/ro-element-area-art.js';
 const shot=(x=0)=>({id:1,x,z:0,dx:1,dz:0,element:'ice',life:1});
 const state=(mode='campaign',projectiles=[])=>({options:{mode},seed:1,time:0,units:[],effects:[],projectiles});
+
+test('Cold Bolt preserves the approved faceted lance and vapor, points downward and ignores delayed spears',()=>{
+ const art=createIceElementArt({scene:new T.Scene()}),s=state('bonk',[{...shot(),roMageBolt:true,skillKey:'coldbolt',height:6},{...shot(),id:2,roMageBolt:true,skillKey:'coldbolt',height:9,delay:.2}]);
+ try{art.update(s,0);assert.equal(art.stats().ice,2);const matrix=new T.Matrix4(),position=new T.Vector3(),rotation=new T.Quaternion(),scale=new T.Vector3();art.ice.getMatrixAt(0,matrix);matrix.decompose(position,rotation,scale);assert.ok(position.y>6);assert.ok(new T.Vector3(0,1,0).applyQuaternion(rotation).y<-.99);assert.ok(art.pool.filter(Boolean).every(p=>p.y===6));s.projectiles=[];art.update(s,.2);assert.equal(art.stats().ice,0);assert.ok(art.stats().vapor>0);}finally{art.dispose();}
+});
 test('all game modes reuse the exact approved ice sculpture and material while liquid water stays liquid',()=>{
  const a=createIceElementArt({scene:new T.Scene()}),reference=createSharedIceGeometry();try{assert.deepEqual(a.ice.geometry.attributes.position.array,reference.attributes.position.array);assert.equal(a.ice.material.opacity,.69);assert.equal(a.ice.material.shininess,90);for(const mode of ['campaign','tower','best','war','linewars','castlefight','dungeon','bloody','treetag','kodotag','phasekiller','bonk']){a.reset();a.update(state(mode,[shot()]),0);assert.ok(a.stats().ice>0,mode);assert.ok(a.stats().vapor>0,mode);}assert.equal(isIceVisual({skillKey:'wz_waterball',element:'ice'}),false);assert.equal(isIceVisual({skillKey:'sa_deluge',element:'ice'}),false);a.reset();a.update(state('bonk',[{...shot(),skillKey:'wz_waterball'}]),0);assert.equal(a.stats().drawCalls,0);}finally{reference.dispose();a.dispose();}
 });

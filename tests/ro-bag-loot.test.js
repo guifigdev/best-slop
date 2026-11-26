@@ -1,9 +1,10 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
 import {RO_EQUIPMENT_SLOTS,createRoEquipment,initializeRoInventory,roReceiveEquipment,roEquipmentQuantity,roInventoryItemCount,roEquip,roEquipmentBonuses,roBagUsage,roBagPieces,roMigrateBag,roUnequip,roSocket} from '../shared/ragnarok-equipment.js';
 import {roEquipGroundItem,roClaimLegacyItem,roDropOne} from '../shared/ro-ground-loot.js';
 import {createRoCheckpoint,validateRoCheckpoint} from '../shared/ragnarok-save.js';
-const setup=()=>{const g=new Game(29,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.units=[u];g.bonk.spawnAt=Infinity;u.bonkBuild.weapons={};return{g,u};};
+const setup=()=>{const g=new Game(29,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{level:150});g.units=[u];g.bonk.spawnAt=Infinity;u.bonkBuild.weapons={};return{g,u};};
 const fill=u=>{while(roBagUsage(u)<30)assert.ok(roReceiveEquipment(u,createRoEquipment('knife','bag-'+u.roInventory.length)));};
 
 test('30 physical bag spaces exclude worn pieces; duplicates use separate cells and bonuses do not multiply',()=>{

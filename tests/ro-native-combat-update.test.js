@@ -56,8 +56,8 @@ test('skill bonuses, elemental resistance and refinement compose across several 
 test('MVP rage samples once inside 20–40 percent and cannot stack reinforcements over a living wave',()=>{
  assert.equal(roMvpEnrageThreshold(()=>0),.2);assert.ok(roMvpEnrageThreshold(()=>1)<.4);
  const boss={id:1,bonkBoss:true,bonkEnemy:true,alive:true,bonkEnraged:true},g={bonk:{elapsed:20,encounter:{species:['poring','lunatic']}},units:[boss]};
- assert.deepEqual(roMvpReinforcementKeys(g,boss),['poring','lunatic','poring']);g.units.push({id:2,bonkEnemy:true,alive:true});assert.deepEqual(roMvpReinforcementKeys(g,boss),[]);g.units[1].alive=false;boss.roReinforceReadyAt=21;assert.deepEqual(roMvpReinforcementKeys(g,boss),[]);
- boss.roReinforceReadyAt=0;boss.ragnarokMvp='ifrit';g.bonk.encounter={species:[],habitat:'firecave'};const adds=roMvpReinforcementKeys(g,boss);assert.equal(adds.length,3);assert.ok(adds.every(k=>k!=='poring'&&k!=='lunatic'),'a boss-only floor summons its own natural habitat, not unrelated starter monsters');
+ assert.deepEqual(roMvpReinforcementKeys(g,boss),Array.from({length:24},(_,i)=>i%2?'lunatic':'poring'));g.units.push({id:2,bonkEnemy:true,alive:true});assert.deepEqual(roMvpReinforcementKeys(g,boss),[]);g.units[1].alive=false;boss.roReinforceReadyAt=21;assert.deepEqual(roMvpReinforcementKeys(g,boss),[]);
+ boss.roReinforceReadyAt=0;boss.ragnarokMvp='ifrit';g.bonk.encounter={species:[],habitat:'firecave'};const adds=roMvpReinforcementKeys(g,boss);assert.equal(adds.length,24);assert.ok(adds.every(k=>k!=='poring'&&k!=='lunatic'),'a boss-only floor summons its own natural habitat, not unrelated starter monsters');
 });
 test('native enemy skills belong to their actual monster and drive visible agility behavior',()=>{
  const beetle={id:2,roSourceId:1051,x:2,z:0,alive:true,bonkEnemy:true},u={id:1,x:0,z:0,alive:true},g={time:30,bonk:{elapsed:3},units:[u,beetle]};assert.ok(roNativeEnemySkills(beetle).includes('NPC_AGIUP'));assert.ok(!roNativeEnemySkills(beetle).includes('AL_DECAGI'));

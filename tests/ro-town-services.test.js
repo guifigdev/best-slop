@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import {roTownNpcParts} from '../src/ro-town-art.js';
 import {RO_TOWN_NPC_MODELS} from '../src/ro-town-npc-models.js';
 import test from 'node:test';import assert from 'node:assert/strict';
@@ -12,7 +13,7 @@ import {roWorldRegion} from '../shared/ro-world-route.js';
 import {roSandParticles,RO_SAND_BUDGET} from '../src/ro-sand-kick-art.js';
 import {roEquipmentBagMarkup} from '../src/ro-equipment-bag-ui.js';
 
-const setup=()=>{const g=new Game(17,{mode:'bonk',bonkWorld:'dominion'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.units=[u];g.bonk.spawnAt=Infinity;u.gold=10000;return{g,u};};
+const setup=()=>{const g=new Game(17,{mode:'bonk',bonkWorld:'dominion'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{level:150});g.units=[u];g.bonk.spawnAt=Infinity;u.gold=10000;return{g,u};};
 const open=(g,u,type)=>{const o=g.bonk.objects.find(o=>o.type===type);assert.ok(o);u.x=o.x;u.z=o.z;assert.ok(g.command('p',{type:'bkTownOpen',object:o.id}));return o;};
 test('Kafra moves one real copy atomically, keeps enchants/refinement and refuses equipped or overflowing transfers',()=>{
  const item={...createRoEquipment('knife','bag'),refine:3,enchants:{damage:2}},u={roInventory:[item],roEquipment:{}};assert.ok(roKafraTransfer(u,'deposit','bag',{id:()=>1}).ok);assert.equal(u.roInventory.length,0);assert.equal(u.roWarehouse.items.length,1);assert.equal(u.roWarehouse.revision,1);assert.ok(roKafraTransfer(u,'withdraw','kafra:1').ok);assert.equal(u.roInventory[0].refine,3);assert.deepEqual(u.roInventory[0].enchants,{damage:2});assert.equal(u.roWarehouse.revision,2);

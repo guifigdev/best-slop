@@ -19,8 +19,8 @@ test('fourteen elemental and utility motifs have unique silhouettes and twelve c
 });
 
 test('the real projectile batch uses eight bounded voxel pieces with distinct elemental palettes and silhouettes',()=>{
- const shapes=new Set();for(const element of ['fire','ice','water','holy','lightning','poison','dark','arcane','physical']){const parts=roProjectileParts({id:7,x:0,z:0,dx:0,dz:1,element},1.01);assert.equal(parts.length,8);assert.ok(parts.every(p=>p.length===8&&p.every(Number.isFinite)));assert.ok(parts.every(([x,y,z,w,h,d])=>Math.abs(x)<1&&Math.abs(z)<1.4&&y>0&&y<2&&w>0&&h>0&&d>0));shapes.add(JSON.stringify(parts));}
- assert.equal(shapes.size,9);assert.equal(RO_PROJECTILE_ART_BUDGET.instances,RO_PROJECTILE_ART_BUDGET.shots*8);assert.equal(RO_PROJECTILE_ART_BUDGET.drawCalls,1);
+ const shapes=new Set();for(const element of ['fire','ice','holy','lightning','poison','dark','arcane','physical']){const parts=roProjectileParts({id:7,x:0,z:0,dx:0,dz:1,element},1.01);assert.equal(parts.length,8);assert.ok(parts.every(p=>p.length===8&&p.every(Number.isFinite)));assert.ok(parts.every(([x,y,z,w,h,d])=>Math.abs(x)<1&&Math.abs(z)<1.4&&y>0&&y<2&&w>0&&h>0&&d>0));shapes.add(JSON.stringify(parts));}
+ assert.deepEqual(roProjectileParts({id:7,x:0,z:0,element:'water'},1),[],'liquid water belongs to the coupled rounded-voxel renderer');assert.equal(shapes.size,8);assert.equal(RO_PROJECTILE_ART_BUDGET.instances,RO_PROJECTILE_ART_BUDGET.shots*8);assert.equal(RO_PROJECTILE_ART_BUDGET.drawCalls,1);
  const fire=roProjectileParts({id:7,x:3,z:5,dx:1,dz:0,element:'fire'},1.01),later=roProjectileParts({id:7,x:3,z:5,dx:1,dz:0,element:'fire'},1.15);assert.notDeepEqual(fire[3],later[3]);assert.ok(fire.every(p=>(p[6]>>16&255)>(p[6]&255)));
 });
 

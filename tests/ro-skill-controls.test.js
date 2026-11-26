@@ -20,7 +20,7 @@ test('manual Rolling Cutter damages the actual target and shares SP/cooldown wit
 
 test('casting never bypasses missing SP, target, learned skill, life or paused offer',()=>{
  for(const [mutate,code]of [[({u})=>u.mana=0,'mana'],[({enemy,u})=>enemy.x=u.x+100,'target'],[({u})=>u.alive=false,'dead'],[({g})=>g.bonk.stage='preparation','paused'],[({g})=>g.paused=true,'paused'],[({g})=>{g.bonk.offer={choices:[]};g.bonk.stage='levelup';},'paused']]){const f=arena();mutate(f);const hp=f.enemy.hp,sp=f.u.mana;assert.equal(roSkillStatus(f.g,f.u,'rollingcutter',bonkStats(f.u)).reasonCode,code);assert.equal(cast(f.g),false);assert.equal(f.enemy.hp,hp);assert.equal(f.u.mana,sp);}
- const{g,u,enemy}=arena();assert.equal(g.command('p',{type:'bkCast',key:'eternalslash'}),false);u.mana=0;assert.ok(g.command('p',{type:'bkCast',key:'basic'}));assert.ok(enemy.hp<enemy.maxHp);assert.equal(u.mana,0);
+ const{g,u,enemy}=arena();assert.equal(g.command('p',{type:'bkCast',key:'eternalslash'}),false);u.mana=0;enemy.x=u.x+1.2;assert.ok(g.command('p',{type:'bkCast',key:'basic'}));assert.ok(enemy.hp<enemy.maxHp);assert.equal(u.mana,0);
 });
 
 test('AUTO is on by default, per-skill toggles do not reset recast and offers freeze cooldown',()=>{

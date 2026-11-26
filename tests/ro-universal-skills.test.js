@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import {roSkillIsCurated} from '../shared/ro-skill-policy.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,7 +14,7 @@ test('each lineage learns current and earlier class skills, unlocking the comple
  }
 });
 test('an evolved mage can learn an offered cross-class skill and equip it without a free catalog choice',()=>{
- const g=new Game(157,{mode:'bonk',bonkLineage:'archmage'});g.addPlayer('p','mage');g.command('p',{type:'bkReady'});const u=g.player('p');
+ const g=new Game(157,{mode:'bonk',bonkLineage:'archmage'});g.addPlayer('p','mage');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{level:150,jobLevel:70});
  u.bonkPendingLevels=1;g.bonk.stage='levelup';g.bonk.offer={id:1,choices:[]};
  assert.equal(g.command('p',{type:'bkChooseSkill',key:'rollingcutter'}),false);u.roTier=2;assert.equal(g.command('p',{type:'bkChooseSkill',key:'rollingcutter'}),false,'eligible but absent from the current four choices');g.bonk.offer.choices=[{...roSkillOfferPool(u).find(o=>o.kind==='weapon'&&o.key==='rollingcutter'),id:'drawn-cutter'}];assert.equal(g.command('p',{type:'bkChooseSkill',key:'rollingcutter'}),true);assert.equal(u.bonkBuild.weapons.rollingcutter,1);assert.equal(u.roTier,2);
  assert.equal(g.command('p',{type:'bkEquipSkill',key:'rollingcutter',slot:2}),true);

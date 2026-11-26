@@ -45,7 +45,7 @@ pr_turnundead|Esconjurar
 pr_lexaeterna|Lex Aeterna
 magnusexorcismus|Magnus Exorcismus
 wz_firepillar|Coluna de Fogo
-wz_sightrasher|Fúria da Chama Reveladora
+wz_sightrasher|Supernova
 wz_meteor|Chuva de Meteoros
 wz_jupitel|Trovão de Júpiter
 wz_vermilion|Ira de Thor

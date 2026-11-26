@@ -33,10 +33,10 @@ export function createRoFireImpactArt({scene}){
   const useFrustum=!!camera?.projectionMatrix&&!!camera?.matrixWorldInverse;if(useFrustum)frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));const active=slots.filter(s=>{if(!s.event)return false;const e=s.event;bounds.center.set(e.x,heightAt(e.x,e.z)+e.radius*.5,e.z);bounds.radius=e.radius*1.6+3;return !useFrustum||frustum.intersectsSphere(bounds);});
   let at=0;sites=0;visibleImpacts=active.length;const siteBase=active.length?Math.min(B.sitesPerImpact,Math.floor(B.sites/active.length)):0,spare=active.length?B.sites-siteBase*active.length:0;
   for(const [index,slot]of active.entries()){
-   const e=slot.event,p=e.zone?0:clamp(e.age/e.duration,0,1),ease=1-Math.pow(1-p,3),fade=e.zone?.82:Math.min(1,p/.055)*Math.pow(1-p,.65),siteCount=Math.min(4,siteBase+(index<spare?1:0)),phase=seed(slot.key);
+   const e=slot.event,p=e.zone?0:clamp(e.age/e.duration,0,1),ease=1-Math.pow(1-p,3),fade=e.zone?.82:Math.min(1,p/.055)*Math.pow(1-p,.65),siteCount=Math.min(e.skillKey==='sm_magnum'?8:4,siteBase+(index<spare?1:0)),phase=seed(slot.key);
    for(let site=0;site<siteCount;site++){
-    const angle=phase+site*2.39996,spread=site===0?0:e.radius*(e.zone?.52:.15+ease*.40),x=e.x+Math.sin(angle)*spread,z=e.z+Math.cos(angle)*spread,base=heightAt(x,z);
-    const width=e.radius*(e.zone?.40:.24+ease*.43)*(siteCount===1?1.5:.85),height=e.radius*(e.zone?.24:.19+Math.sin(p*Math.PI)*.22);position.set(x,base+.04,z);rotation.setFromAxisAngle(axis,angle);scale.set(width,height,width);transform.compose(position,rotation,scale);
+    const circular=e.skillKey==='sm_magnum',angle=phase+site*(circular?Math.PI*2/siteCount:2.39996),spread=circular?e.radius*ease*.66:site===0?0:e.radius*(e.zone?.52:.15+ease*.40),x=e.x+Math.sin(angle)*spread,z=e.z+Math.cos(angle)*spread,base=heightAt(x,z);
+    const width=e.radius*(circular?.26:e.zone?.40:.24+ease*.43)*(siteCount===1?1.5:.85),height=e.radius*(e.zone?.24:.19+Math.sin(p*Math.PI)*.22);position.set(x,base+.04,z);rotation.setFromAxisAngle(axis,angle);scale.set(width,height,width);transform.compose(position,rotation,scale);
     template.update(time+phase*3+site*.47,{enabled:true,scale:1});for(const source of sources)for(let j=0;j<source.count;j++){source.getMatrixAt(j,local);world.multiplyMatrices(transform,local);mesh.setMatrixAt(at,world);source.getColorAt(j,color);mesh.setColorAt(at,color);alpha.setX(at++,fade);}
     sites++;
    }

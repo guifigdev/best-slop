@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -7,7 +8,7 @@ import {roBasicAttack,advanceRoJob} from '../shared/ragnarok-jobs.js';
 import {createRoEquipment} from '../shared/ragnarok-equipment.js';
 import {saveRoCharacter,roAccountSelection} from '../src/ragnarok-account-ui.js';
 Object.assign(Game.prototype,BonkMethods);
-function setup(options={}){const g=new Game(492,{mode:'bonk',bonkLineage:'dragonknight',...options});assert.ok(g.addPlayer('review','knight'));return{g,u:g.player('review')};}
+function setup(options={}){const g=new Game(492,{mode:'bonk',bonkLineage:'dragonknight',...options});assert.ok(g.addPlayer('review','knight'));return{g,u:qualifiedRoTestHero(g.player('review'),{level:20})};}
 function isolate(g){g.units=g.units.filter(u=>u.bonkHero);g.bonk.objectives=[];g.bonk.spawnAt=1e9;g.random=()=>0;}
 function burningBoss(g,u,extra={}){const e={id:g.id(),bonkEnemy:true,bonkBoss:true,dungeonSpecies:'hatii',ragnarokVisual:'hatii',ragnarokMvp:'hatii',alive:true,team:100,x:u.x+12,z:u.z,hp:1,maxHp:1,damage:0,speed:0,size:2,collisionRadius:.8,bonkNextAttack:1e9,bonkNextSpecial:1e9,bonkBurnUntil:1000,bonkBurnDamage:100,bonkDotAt:0,interval:1.3,...extra};g.units.push(e);return e;}
 
@@ -26,7 +27,7 @@ test('A distant final MVP cannot strand its equipment when the floor closes',()=
 
 });
 test('Saving during a level-up offer preserves every unchosen skill upgrade',()=>{
- const{g,u}=setup();g.command('review',{type:'bkReady'});isolate(g);g.bonk.pickups.push({id:g.id(),type:'xp',x:u.x,z:u.z,value:100,age:0});g.tick(.05);assert.equal(g.bonk.stage,'levelup');assert.ok(u.bonkPendingLevels>0);
+ const{g,u}=setup();g.command('review',{type:'bkReady'});isolate(g);g.bonk.pickups.push({id:g.id(),type:'xp',x:u.x,z:u.z,value:1000,age:0});g.tick(.05);assert.equal(g.bonk.stage,'levelup');assert.ok(u.bonkPendingLevels>0);
  const pending=u.bonkPendingLevels,checkpoint=createRoCheckpoint(g);assert.ok(checkpoint);const next=setup();assert.ok(next.g.command('review',{type:'bkRestore',checkpoint,activity:'adventure',freshActivity:false}));
  assert.equal(next.u.bonkPendingLevels,pending,'A save cannot consume the XP but discard the associated weapon choices');assert.equal(next.g.bonk.stage,'levelup');
 });

@@ -1,3 +1,4 @@
+import {unitBodyContact} from './unit-body-shape.js';
 import {unitFootprintRadius} from './unit-footprint.js';
 // Match the physical bodies, with a small skin for collision separation tolerance.
 export const RO_CONTACT_INTERVAL=.75;
@@ -6,8 +7,7 @@ export const RO_HIT_STUN=.18;
 export function roEnemyTouchesHero(enemy,hero){
  if(!enemy?.alive||!hero?.alive||!enemy.bonkEnemy||!hero.bonkHero)return false;
  if((hero.bonkJumpHeight||0)>=1.05&&!enemy.flying)return false;
- const radius=unitFootprintRadius(enemy,{profile:'bonk'})+unitFootprintRadius(hero,{profile:'bonk'})+.04;
- return Math.hypot(enemy.x-hero.x,enemy.z-hero.z)<=radius;
+ return unitBodyContact(enemy,hero,unitFootprintRadius(enemy,{profile:'bonk'}),unitFootprintRadius(hero,{profile:'bonk'})).depth>=-.04;
 }
 export function roRecordHitReaction(unit,source,time){
  const dx=unit.x-(source?.x??unit.x),dz=unit.z-(source?.z??unit.z),length=Math.hypot(dx,dz);

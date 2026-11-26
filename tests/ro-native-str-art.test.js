@@ -24,6 +24,10 @@ test('1024 STR angle units equal one full turn and classic pivot is 320,320 with
  assert.deepEqual(roStrBlendFactors(5,7),{src:T.SrcAlphaFactor,dst:T.DstAlphaFactor});assert.deepEqual(roStrBlendFactors(5,6),{src:T.SrcAlphaFactor,dst:T.OneMinusSrcAlphaFactor});assert.equal(roStrBlendFactors(0,0),null);
 });
 
+test('game presentation can keep original animation keyframes while drawing exclusively solid voxels without the old sprite planes',async()=>{
+ const art=createRoNativeStrArt({scene:new T.Scene(),voxelOnly:true,assets:{crashearth:{data:synthetic(),textures:{a:'image'}}},loadPixels:async()=>({width:2,height:2,data:new Uint8Array(16).fill(255)})});try{await art.preload(['crashearth']);art.update({nativeEffectRequests:[request()]},.2);assert.ok(art.stats().voxels>0);assert.equal(art.stats().originalDrawCalls,0);assert.ok(art.root.children.filter(m=>m.name.startsWith('ro-native-str-atlas-')).every(m=>!m.visible));assert.ok(art.root.children.some(m=>m.isInstancedMesh&&m.count>0&&m.geometry.type==='BoxGeometry'));}finally{art.dispose();}
+});
+
 test('incremental texture animation modes stop, repeat and reverse without conflating absolute and delta poses',()=>{
  const layer={textures:['a','b','c'],animations:[base(),{...base(),type:1,pos:[1,-2],xy:Array(8).fill(.5),uv:Array(8).fill(0),color:[-1,0,0,-2],angle:4,aniframe:0,anitype:3,delay:1}]};const a=roStrLayerFrame(layer,4);assert.deepEqual(a.pos,[324,312]);assert.equal(a.angle,16);assert.equal(a.color[0],251);assert.equal(a.textureIndex,1);layer.animations[1].anitype=2;assert.equal(roStrLayerFrame(layer,10).textureIndex,2);layer.animations[1].anitype=4;assert.equal(roStrLayerFrame(layer,1).textureIndex,2);
  const hold={textures:['a'],animations:[base(),base(20,{pos:[350,350]})]};assert.deepEqual(roStrLayerFrame(hold,10).pos,[320,320]);assert.deepEqual(roStrLayerFrame(hold,20).pos,[350,350]);

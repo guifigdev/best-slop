@@ -28,3 +28,7 @@ test('disposing the impact batch never releases another living campfire, and eac
 
 
 test('Meteor Assault is a native neutral purple effect, never a canonical fire explosion',()=>{assert.equal(roFireImpactHandles({type:'abilityPulse',skillKey:'asc_meteorassault',element:'physical',radius:7}),false);assert.equal(roFireImpactHandles({type:'fireball',skillKey:'asc_meteorassault',element:'fire',bonk:true}),false);});
+
+test('Magnum Break reuses the fireball flame sculpture in eight circular expanding plumes at its compact actual radius',()=>{
+ const scene=new T.Scene(),art=createRoFireImpactArt({scene}),s=state([impact(1,{type:'abilityPulse',skillKey:'sm_magnum',element:'fire',radius:2,duration:.7})]);try{art.update(s,.3);assert.equal(art.stats().sites,8);assert.equal(art.stats().drawCalls,1);assert.ok(art.stats().instances<=B.instances);assert.equal(art.mesh.material.map,null);assert.equal(art.mesh.geometry.type,'BoxGeometry');const matrix=new T.Matrix4();for(let i=0;i<art.mesh.count;i++){art.mesh.getMatrixAt(i,matrix);assert.ok(Math.hypot(matrix.elements[12],matrix.elements[14])<2.5);}}finally{art.dispose();}
+});

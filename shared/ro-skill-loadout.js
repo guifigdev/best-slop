@@ -18,7 +18,7 @@ export function roEquipSkill(unit,key,slot){
  if(!Number.isInteger(slot)||slot<1||slot>=RO_ACTIVE_SLOT_COUNT||key==='basic'||!Object.hasOwn(unit?.bonkBuild?.weapons||{},key)||!Object.hasOwn(BONK_WEAPONS,key)||roIsPassive(key))return false;
  const slots=roSkillSlots(unit),previous=slots.indexOf(key),replaced=slots[slot];
  if(previous===slot)return true;
- slots[slot]=key;if(previous>=0)slots[previous]=replaced;unit.bonkSkillSlots=slots;return true;
+ slots[slot]=key;if(previous>=0)slots[previous]=replaced;unit.bonkSkillSlots=slots;if(unit.roAutoQueue)unit.roAutoQueue.keys.sort((a,b)=>slots.indexOf(a)-slots.indexOf(b));return true;
 }
 export function roAutoEquipLearned(unit,key){
  if(roIsPassive(key))return;

@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -8,7 +9,7 @@ import {RO_EQUIPMENT,createRoEquipment,initializeRoInventory,roUnequip,roEquip} 
 import {roSkillOfferPool} from '../shared/ro-skill-offers.js';
 import {RO_ENCHANTMENTS as E,RO_ENCHANT_TYPES_PER_ITEM,validateRoEnchants,validateRoLegacyEnchants,roEnchantLevels,roEnchantOffers,applyRoEnchant,roMigrateEnchants,claimRoLegacyEnchant,roChaosRolls,roEnchantSnapshot} from '../shared/ro-equipment-enchants.js';
 function unit(){const u={id:1,roTier:0,bonkBuild:{weapons:{basic:1},tomes:{},relics:{}}};initializeRoInventory(u,'dragonknight');return u;}
-function game(lineage='dragonknight'){const g=new Game(81,{mode:'bonk',bonkLineage:lineage});g.addPlayer('p',lineage==='archmage'?'mage':'knight');g.command('p',{type:'bkReady'});const u=g.player('p');g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.objectives=[];g.bonk.map.obstacles=[];g.obstacles=[];g.random=()=>0;return{g,u};}
+function game(lineage='dragonknight'){const g=new Game(81,{mode:'bonk',bonkLineage:lineage});g.addPlayer('p',lineage==='archmage'?'mage':'knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{});g.units=[u];g.bonk.spawnAt=Infinity;g.bonk.objectives=[];g.bonk.map.obstacles=[];g.obstacles=[];g.random=()=>0;return{g,u};}
 const enemy=(g,u,extra={})=>({id:g.id(),bonkEnemy:true,dungeonSpecies:'rat',alive:true,team:100,x:u.x+2,z:u.z,hp:1000,maxHp:1000,damage:40,speed:0,armor:0,size:1,collisionRadius:.3,bonkNextAttack:Infinity,bonkNextSpecial:Infinity,...extra});
 const wear=(u,enchants)=>{u.roInventory.find(i=>i.id===u.roEquipment.weapon).enchants={...enchants};};
 
@@ -52,7 +53,7 @@ test('projectile speed, lifesteal and knockback alter actual attacks and gold/XP
 });
 
 test('barriers absorb real attacks after regeneration and thorns harm the actual attacker',()=>{
- const {g,u}=game();u.bonkBuild.weapons={};wear(u,{shield:4,thorns:3});const target=enemy(g,u,{x:u.x+2,bonkNextAttack:Infinity});g.units.push(target);for(let i=0;i<105;i++)g.tick(.05);assert.ok(u.roEnchantShield>70);const hp=u.hp,enemyHp=target.hp;target.x=u.x+.6;target.bonkNextAttack=0;g.random=()=>.99;g.tick(.05);assert.equal(u.hp,hp);assert.ok(u.roEnchantShield<80);assert.ok(target.hp<enemyHp);roUnequip(u,'weapon');g.tick(.05);assert.equal(u.roEnchantShield,0);
+ const {g,u}=game();u.bonkBuild.weapons={};wear(u,{shield:4,thorns:3});const target=enemy(g,u,{x:u.x+2,bonkNextAttack:Infinity});g.units.push(target);for(let i=0;i<105;i++)g.tick(.05);assert.ok(u.roEnchantShield>70);const hp=u.hp,enemyHp=target.hp;target.x=u.x+.6;target.bonkNextAttack=0;g.random=()=>.99;g.tick(.05);assert.ok(Math.abs(u.hp-hp-bonkStats(u).regen*.05)<.001);assert.ok(u.roEnchantShield<80);assert.ok(target.hp<enemyHp);roUnequip(u,'weapon');g.tick(.05);assert.equal(u.roEnchantShield,0);
 });
 
 test('enchants survive a real JSON checkpoint round trip bound to their physical piece',()=>{
@@ -60,7 +61,7 @@ test('enchants survive a real JSON checkpoint round trip bound to their physical
 });
 
 test('base level gains emit one aggregated angel event per XP packet with the updated real level',()=>{
- const {g,u}=game();u.bonkBuild.weapons={};g.effects=[];g.bonk.pickups.push({id:g.id(),x:u.x,z:u.z,type:'xp',value:100,age:0});g.tick(.05);assert.ok(u.level>2);const events=g.effects.filter(e=>e.type==='levelup'&&e.source===u.id);assert.equal(events.length,1);assert.equal(events[0].baseLevel,u.level);assert.equal(events[0].levels,u.level-1);assert.equal(events[0].duration,1.6);assert.ok(g.effects.filter(e=>e.type==='jobLevelup').length<=1);
+ const {g,u}=game();u.bonkBuild.weapons={};const previousLevel=u.level;g.effects=[];g.bonk.pickups.push({id:g.id(),x:u.x,z:u.z,type:'xp',value:100,age:0});g.tick(.05);assert.ok(u.level>2);const events=g.effects.filter(e=>e.type==='levelup'&&e.source===u.id);assert.equal(events.length,1);assert.equal(events[0].baseLevel,u.level);assert.equal(events[0].levels,u.level-previousLevel);assert.equal(events[0].duration,1.6);assert.ok(g.effects.filter(e=>e.type==='jobLevelup').length<=1);
 });
 
 test('duration extends a real defensive spell while Curse changes actual outgoing and incoming damage',()=>{

@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import {roWorldAtlasMarkup} from '../src/ro-world-atlas.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +13,7 @@ import {createRoCheckpoint,validateRoCheckpoint} from '../shared/ragnarok-save.j
 import {roSurvivorEnemyBudget} from '../shared/ro-survivor-balance.js';
 import {RO_WORLD_ROUTE,roWorldRegion,roWorldGates} from '../shared/ro-world-route.js';
 import {roExpansionSceneryParts} from '../src/ro-expansion-scenery.js';
-const make=(options={})=>{const g=new Game(81,{mode:'bonk',bonkWorld:'dominion',...options});g.addPlayer('p','knight');return{g,u:g.player('p')};};
+const make=(options={})=>{const g=new Game(81,{mode:'bonk',bonkWorld:'dominion',...options});g.addPlayer('p','knight');return{g,u:qualifiedRoTestHero(g.player('p'),{level:150,jobLevel:70})};};
 test('Ragnabonk critical chance belongs to equipped gear, bound enchantments and cards, never naked attributes or buffs',()=>{
  const {g,u}=make();u.attributes.luk=99;u.bonkBuild.relics.luckybell=20;u.roSkillBuffs=[{key:'test',until:100,modifiers:{crit:.25}}];assert.equal(bonkStats(u).crit,0);u.bonkBuild.tomes.crit=8;assert.equal(bonkStats(u).crit,.12);assert.deepEqual(u.bonkBuild.tomes,{});
  const ring=createRoEquipment('criticalring','crit-ring');u.roInventory.push(ring);assert.ok(roEquip(u,ring.id,'accessory'));assert.ok(Math.abs(bonkStats(u).crit-.17)<1e-12);

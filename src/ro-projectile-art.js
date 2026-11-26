@@ -1,3 +1,4 @@
+import {isLiquidWaterSkill} from '../shared/element-skill-visuals.js';
 // Small voxel silhouettes shared by every active projectile in one GPU batch.
 // Tuples: x, height above local ground, z, width, height, depth, color, yaw.
 export const RO_PROJECTILE_ART_BUDGET=Object.freeze({partsPerShot:8,shots:220,instances:1760,drawCalls:1});
@@ -5,7 +6,17 @@ const palettes=Object.freeze({fire:[0xffedb0,0xffba55,0xe7662d],ice:[0xe6ffff,0x
 export function roProjectileParts(shot,time=0){
  const length=Math.hypot(shot.dx||0,shot.dz||0)||1,dx=(shot.dx||0)/length,dz=(shot.dz||0)/length,yaw=Math.atan2(dx,dz),element=shot.element||'physical',palette=palettes[element]||palettes.physical,parts=[],seed=Number(shot.id)||0,frame=Math.floor(time*10),phase=frame*.31+seed*.7;
  const put=(along,side,height,w,h,d,color,angle=yaw)=>parts.push([shot.x+dx*along+dz*side,height,shot.z+dz*along-dx*side,w,h,d,color,angle]);
- if(element==='fire'){
+ if(shot.delay>0||shot.roMageBolt&&shot.skillKey==='mg_lightningbolt'||element==='water'||isLiquidWaterSkill(shot.skillKey||shot.key))return[];
+ if(shot.roMageBolt){
+  const y=Number.isFinite(shot.height)?shot.height:1.25+8*Math.max(0,shot.flightRemaining||0)/(shot.flightDuration||.35);
+  if(shot.skillKey==='mg_lightningbolt'){for(let i=0;i<7;i++)put(0,(i%2-.5)*.16,y+i*.28,.065,.34,.065,i%2?0xfff3b0:0xdcecff);put(0,0,y-.12,.16,.18,.16,0xffffff);}
+  else if(shot.skillKey==='coldbolt'){for(let i=0;i<8;i++)put(0,Math.sin(phase+i)*.20,y+.1+i*.15,.035,.065,.035,i%2?0xafe5ef:0xeaffff);}
+  else{put(0,0,y,.27,.64,.27,0xffc25d);put(0,-.04,y-.12,.18,.40,.18,0xfff1b4);for(let i=0;i<6;i++)put(0,Math.sin(phase+i*2.4)*.13,y+.18+i*.16,.13-i*.013,.25,.13-i*.013,i%3?0xffb34b:0xea7033);}
+ }else if(shot.skillKey==='mg_soulstrike'){
+  // A small luminous spirit with a cream core and receding violet voxel tail.
+  put(0,0,1.3,.32,.36,.38,0xf5eee0);put(.10,0,1.28,.23,.24,.24,0xffffff);put(-.12,0,1.33,.34,.27,.25,0xc7b9e0);put(.17,-.09,1.35,.045,.055,.045,0xa777aa);put(.17,.09,1.35,.045,.055,.045,0xa777aa);for(let i=0;i<3;i++)put(-.3-i*.17,Math.sin(phase+i)*.09,1.28+Math.cos(phase+i)*.06,.18-i*.04,.14-i*.03,.19-i*.03,i%2?0xd7c6e4:0xf4e8e6);
+ }else if(element==='fire'){
+
   // A round, layered fireball with three animated tongues, not an ice needle.
   put(0,0,1.25,.54,.48,.54,palette[1]);put(.06,-.03,1.29,.34,.34,.43,palette[0]);put(-.12,.12,1.20,.31,.27,.35,palette[2]);
   for(let i=0;i<3;i++){const life=(frame*.071+i/3+(seed%7)*.03)%1,taper=1-life;put(-.23-i*.20,Math.sin(phase+i*2.1)*.10,1.18+life*.32,.12+taper*.18,.17+taper*.22,.22+taper*.16,i===0?palette[0]:life>.6?palette[2]:palette[1],yaw+i*.6);}

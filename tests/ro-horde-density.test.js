@@ -8,16 +8,16 @@ const alive=g=>g.units.filter(e=>e.bonkEnemy&&e.alive);
 function setup(seed=52,activity='adventure'){const g=new Game(seed,{mode:'bonk',bonkWorld:'dominion',bonkLineage:'dragonknight',bonkActivity:activity});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');u.bonkBuild.weapons={};u.bonkSkillSlots=[];return{g,u};}
 function synthetic(template,g,count){return Array.from({length:count},(_,i)=>({...template,id:g.id(),x:g.player('p').x+Math.sin(i*2.399)*20,z:g.player('p').z+Math.cos(i*2.399)*20,hp:1e9,maxHp:1e9,speed:0,damage:0,bonkNextAttack:Infinity,bonkNextSpecial:Infinity}));}
 
-test('normal regions open with six real biome monsters in distinct safe pairs',()=>{
+test('normal regions open with ten real biome monsters in distinct safe pairs',()=>{
  for(const seed of [52,381,913]){const{g,u}=setup(seed),monsters=alive(g);assert.equal(monsters.length,R.opening);assert.ok(monsters.every(e=>g.bonk.encounter.species.includes(e.dungeonSpecies)));assert.ok(monsters.every(e=>Math.hypot(e.x-u.x,e.z-u.z)>=R.minimumSafeDistance));assert.equal(new Set(monsters.map(e=>e.x.toFixed(2)+','+e.z.toFixed(2))).size,monsters.length);assert.ok(monsters.every(e=>Math.abs(e.x)<110&&Math.abs(e.z)<110));assert.equal(g.bonk.spawnSerial,0);}
 });
 
 test('region encounters remain smaller while cadence and cap rise modestly with progression',()=>{
- for(const progress of [0,1,3,7,11])for(const elapsed of [0,30,120,600]){const p=roHordeSpawnPlan({elapsed,progress,aliveBudget:BONK_RULES.aliveBudget});assert.ok(p.cap>=24&&p.cap<=48);assert.equal(p.pack,2);assert.ok(p.interval>=1.3);}
- const{g,u}=setup();for(let i=0;i<200;i++){u.hp=u.maxHp;g.tick(.05);}assert.ok(alive(g).length>=10&&alive(g).length<=24);
+ for(const progress of [0,1,3,7,11])for(const elapsed of [0,30,120,600]){const p=roHordeSpawnPlan({elapsed,progress,aliveBudget:BONK_RULES.aliveBudget});assert.ok(p.cap>=32&&p.cap<=56);assert.equal(p.pack,3);assert.ok(p.interval>=1.3);}
+ const{g,u}=setup();for(let i=0;i<200;i++){u.hp=u.maxHp;g.tick(.05);}assert.ok(alive(g).length>=16&&alive(g).length<=32);
 });
 
-test('one tick spawns no more than one two-monster pack and never catches up multiple missed waves',()=>{
+test('one tick spawns no more than one three-monster pack and never catches up multiple missed waves',()=>{
  const{g,u}=setup();g.units=[u];g.bonk.spawnAt=0;g.tick(9);assert.equal(alive(g).length,R.maxPerTick);g.bonk.spawnAt=-100;const before=alive(g).length;g.tick(.1);assert.equal(alive(g).length-before,R.maxPerTick);assert.ok(g.bonk.spawnAt>g.bonk.elapsed);
 });
 
@@ -34,5 +34,5 @@ test('defeating the actual MVP repopulates a cleared region, preserves ordinary 
 });
 
 test('post-MVP cadence is calmer and the original Endless Tower queue and eight-unit entry batch stay intact',()=>{
- const calm=roHordeSpawnPlan({cleared:true});assert.equal(calm.interval,5);assert.equal(calm.cap,12);assert.equal(calm.elite,false);const{g}=setup(52,'tower'),total=g.bonk.floorTotal;assert.equal(alive(g).length,0);g.tick(.05);assert.equal(alive(g).length,8);assert.equal(g.bonk.towerQueue.length+alive(g).length,total);assert.ok(g.bonk.towerQueue.every(e=>Number.isInteger(e.sourceId)));
+ const calm=roHordeSpawnPlan({cleared:true});assert.equal(calm.interval,3.5);assert.equal(calm.cap,20);assert.equal(calm.elite,false);const{g}=setup(52,'tower'),total=g.bonk.floorTotal;assert.equal(alive(g).length,0);g.tick(.05);assert.equal(alive(g).length,8);assert.equal(g.bonk.towerQueue.length+alive(g).length,total);assert.ok(g.bonk.towerQueue.every(e=>Number.isInteger(e.sourceId)));
 });

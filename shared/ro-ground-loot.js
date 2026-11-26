@@ -1,9 +1,10 @@
+import {roEquipmentLevelAllowed} from './ro-equipment-requirements.js';
 import {RO_EQUIPMENT,RO_BAG_CAPACITY,roEquipmentQuantity,roBagUsage,roReceiveEquipment,roEquip,roItemFitsSlot} from './ragnarok-equipment.js';
 
 // Work on a copy: picking up and replacing gear is one authoritative action.
 // A full backpack puts the displaced pieces on the ground, never in a queue.
 export function roEquipGroundItem(hero,item,slot,newId){
- if(!item||!roItemFitsSlot(hero,item,slot)||typeof newId!=='function'||hero.roInventory.some(i=>i.id===item.id))return null;
+ if(!item||!roEquipmentLevelAllowed(hero,RO_EQUIPMENT[item.key])||!roItemFitsSlot(hero,item,slot)||typeof newId!=='function'||hero.roInventory.some(i=>i.id===item.id))return null;
  const trial={...hero,roInventory:structuredClone(hero.roInventory),roEquipment:{...hero.roEquipment}},incoming={...item,quantity:1,cards:structuredClone(item.cards||[]),...(item.enchants?{enchants:structuredClone(item.enchants)}:{})},dropped=[];
  trial.roInventory.push(incoming);
  if(!roEquip(trial,item.id,slot)){

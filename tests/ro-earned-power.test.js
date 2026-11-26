@@ -1,3 +1,4 @@
+import {qualifiedRoTestHero} from './ro-qualified-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
@@ -7,7 +8,7 @@ import {RO_BUILD_EQUIPMENT} from '../shared/ro-build-equipment.js';
 import {roSurvivorEnemyBudget} from '../shared/ro-survivor-balance.js';
 
 test('eight earned enchant ranks cannot grant endgame attack speed or forty percent free critical chance',()=>{
- const g=new Game(12,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p'),initial=bonkStats(u),item=u.roInventory.find(i=>i.id===u.roEquipment.weapon);
+ const g=new Game(12,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{}),initial=bonkStats(u),item=u.roInventory.find(i=>i.id===u.roEquipment.weapon);
  for(let rank=1;rank<=8;rank++){
   item.enchants={haste:rank,crit:rank};const stats=bonkStats(u);
   assert.ok(Math.abs(stats.attackDelay-initial.attackDelay*(1-rank*.03))<1e-9);
@@ -28,7 +29,7 @@ test('fewer enemies have more individual threat without scaling against the curr
  const common=roSurvivorEnemyBudget({key:'poring'}),boss=roSurvivorEnemyBudget({key:'poring',boss:true});
  assert.ok(common.damage>50);assert.ok(common.hp>=150);assert.ok(boss.damage>140);assert.ok(boss.hp>10000);
  assert.deepEqual(common,roSurvivorEnemyBudget({key:'poring',level:150,damage:1e9,equipment:{haste:100}}));
- const g=new Game(12,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p'),e=g.units.find(v=>v.bonkEnemy);
+ const g=new Game(12,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=qualifiedRoTestHero(g.player('p'),{}),e=g.units.find(v=>v.bonkEnemy);
  Object.assign(e,{x:u.x+.3,z:u.z,damage:common.damage,speed:0,bonkNextAttack:Infinity,bonkNextSpecial:Infinity});u.bonkInvulnerableUntil=0;u.bonkBuild.weapons={};g.units=[u,e];g.bonk.spawnAt=Infinity;g.bonk.objectives=[];const before=u.hp;g.tick(.05);
  assert.ok(before-u.hp>25,'one unprotected contact makes a visible dent in starting HP');
 });
