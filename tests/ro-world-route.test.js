@@ -5,8 +5,8 @@ import {MVP_BY_KEY} from '../shared/ragnarok-expansion.js';
 import {monsterHabitats} from '../shared/ragnarok-habitats.js';
 import {RO_WORLD_ROUTE,roRouteStage,roRouteNext,roRouteIndex,roRouteEncounter,roRouteGate} from '../shared/ro-world-route.js';
 
-test('the connected pilgrimage has twenty-two distinct regions with true MVP guardians',()=>{
- assert.equal(RO_WORLD_ROUTE.length,22);assert.equal(new Set(RO_WORLD_ROUTE.map(r=>r.key)).size,22);assert.equal(new Set(RO_WORLD_ROUTE.map(r=>r.mvp)).size,19);
+test('the connected pilgrimage has twenty-five distinct regions with true MVP guardians',()=>{
+ assert.equal(RO_WORLD_ROUTE.length,25);assert.equal(new Set(RO_WORLD_ROUTE.map(r=>r.key)).size,25);assert.equal(new Set(RO_WORLD_ROUTE.map(r=>r.mvp)).size,20);
  for(const region of RO_WORLD_ROUTE){assert.ok(BONK_STAGES[region.scene]);assert.ok(MVP_BY_KEY[region.mvp]);assert.equal(monsterHabitats(region.mvp).bossKind,'mvp');assert.ok(monsterHabitats(region.mvp).habitats.includes(region.habitat),region.key);assert.ok(Object.isFrozen(region)&&Object.isFrozen(region.entry)&&Object.isFrozen(region.featured));assert.equal(roRouteStage(region.key),region);assert.equal(roRouteIndex(region),region.index);assert.equal(roRouteNext(region),region.index<15?RO_WORLD_ROUTE[region.index+1]:null);}
  assert.equal(roRouteStage('prontera').index,0);assert.ok(roRouteStage('payon-forest').index<roRouteStage('payon-cave').index);assert.ok(roRouteStage('morroc').index<roRouteStage('rachel').index);assert.ok(roRouteStage('rachel').index<roRouteStage('juno').index);
 });
@@ -26,5 +26,5 @@ test('physical gate metadata joins the next region and the final sanctuary never
   const gate=roRouteGate(region),open=roRouteGate(region,true),next=roRouteNext(region);assert.equal(gate.locked,true);assert.equal(gate.open,false);assert.equal(open.locked,false);assert.equal(open.open,true);assert.equal(gate.nextKey,next.key);assert.equal(gate.mvp,region.mvp);assert.deepEqual({x:gate.x,z:gate.z},region.exit);assert.ok(gate.width>=14&&gate.depth>=4);assert.deepEqual(next.entry,region.entry);assert.ok(region.entry.z-region.exit.z>180);
  }
  assert.equal(roRouteGate('thanatos-tower'),null);assert.equal(roRouteNext('thanatos-tower'),null);
- for(const bad of [-1,22,NaN,Infinity,.5,'__proto__','constructor','missing',null]){assert.equal(roRouteIndex(bad),-1);assert.equal(roRouteStage(bad),null);assert.equal(roRouteNext(bad),null);assert.equal(roRouteEncounter(bad),null);assert.equal(roRouteGate(bad),null);}
+ for(const bad of [-1,25,NaN,Infinity,.5,'__proto__','constructor','missing',null]){assert.equal(roRouteIndex(bad),-1);assert.equal(roRouteStage(bad),null);assert.equal(roRouteNext(bad),null);assert.equal(roRouteEncounter(bad),null);assert.equal(roRouteGate(bad),null);}
 });

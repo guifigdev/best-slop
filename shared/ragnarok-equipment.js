@@ -75,6 +75,7 @@ const BASE_RO_CARDS=freeze(Object.fromEntries([
  mvpCard('maya','Maya Card',4146,'offhand',{armor:2,int:2},['maya'],'Chance to reflect targeted magic'),
  mvpCard('stormyknight','Stormy Knight Card',4318,'weapon',{matk:6,attack:3},['stormyknight'],'Storm Gust autocast and freeze chance'),
  mvpCard('hatii','Hatii Card',4324,'armor',{vit:2,armor:2},['hatii'],'Chance to freeze an attacker when struck'),
+ {...mvpCard('bio_eremes','Carta Algoz Eremes',4359,'garment',{flee:12},['bio_eremes'],'Habilita Furtividade nv. 3 no original. Aqui: +12 Esquiva; a habilidade ativa da carta ainda não foi adaptada.'),latamSource:'https://latamro.com/item/4359/',adaptation:'Proteção de Furtividade convertida em Esquiva nesta versão; não concede a habilidade ativa.'},
  mvpCard('fallenbishop','Fallen Bishop Card',4441,'shoes',{int:3,matk:7},['fallenbishop'],'MATK +10%, max SP -50%, magic damage to Angel and Demihuman +50%'),
 ].map(item=>[item.key,item])));
 export const RO_EQUIPMENT=freeze(Object.fromEntries(Object.entries({...BASE_RO_EQUIPMENT,...RO_TOWER_MVP_GEAR,...RO_BUILD_EQUIPMENT}).map(([key,d])=>[key,RO_BUILD_EQUIPMENT[key]===d?d:{...roNativeEquipmentDefinition({...d,...RO_EQUIPMENT_TARGET_FACTS[d.sourceId]}),requiredLevel:roEquipmentRequiredLevel(d)}])));

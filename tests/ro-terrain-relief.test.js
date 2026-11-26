@@ -11,7 +11,7 @@ const palette={stone:0xa5a58b,dark:0x3c5242,wood:0x735438,grass:0x8eac66,glow:0x
 const range=points=>Math.max(...points)-Math.min(...points);
 
 test('all twelve connected regions have pronounced deterministic hills and valleys instead of a flat playable plane',()=>{
- for(const seed of [1,52,880])for(const r of RO_WORLD_ROUTE){
+ for(const seed of [1,52,880])for(const r of RO_WORLD_ROUTE.filter(r=>!r.biolabFloor)){
   const map=generateBonkLevel(seed,r.scene,r.habitat,roWorldRegion(r)),heights=[];
   assert.equal(map.terrainVersion,RO_TERRAIN_VERSION);assert.deepEqual(map,generateBonkLevel(seed,r.scene,r.habitat,roWorldRegion(r)));
   for(let x=-100;x<=100;x+=10)for(let z=-100;z<=100;z+=10)heights.push(bonkHeightAt(map,x,z));
@@ -21,7 +21,7 @@ test('all twelve connected regions have pronounced deterministic hills and valle
 });
 
 test('graded roads join spawn, boss plaza and every gate without terrain jumps or new decorative blockages',()=>{
- for(const r of RO_WORLD_ROUTE){
+ for(const r of RO_WORLD_ROUTE.filter(r=>!r.biolabFloor)){
   const map=generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r));assert.ok(map.paths.some(p=>p.from.x===map.spawn.x&&p.from.z===map.spawn.z));
   for(const path of map.paths)for(let t=0;t<=.90;t+=.02){const x=path.from.x+(path.to.x-path.from.x)*t,z=path.from.z+(path.to.z-path.from.z)*t;assert.ok(roTerrainSlope(map,x,z)<.65,`${r.key} at ${x},${z}`);assert.equal(bonkBlocked(map,{x,z},.5),false,`${r.key} clear avenue`);const next=bonkHeightAt(map,x+.1,z);assert.ok(Math.abs(next-bonkHeightAt(map,x,z))<.1,'no discontinuous terrace walls');}
   const arena=r.graph?r.bossArena:roWorldRegion(r).bossArena,h=bonkHeightAt(map,arena.x,arena.z);for(const [dx,dz]of [[5,0],[-5,0],[0,5],[0,-5]])assert.ok(Math.abs(bonkHeightAt(map,arena.x+dx,arena.z+dz)-h)<.05,'readable local boss floor');
@@ -29,13 +29,13 @@ test('graded roads join spawn, boss plaza and every gate without terrain jumps o
 });
 
 test('the same relief continues into the visual surroundings without an edge clamp or distant empty flat plane',()=>{
- for(const r of RO_WORLD_ROUTE){const map=generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r));for(const sign of [-1,1]){const h=[];for(let d=125;d<=500;d+=12){h.push(bonkHeightAt(map,sign*d,35));h.push(bonkHeightAt(map,35,sign*d));}assert.ok(range(h)>6,`${r.key} outer relief`);assert.ok(Math.abs(bonkHeightAt(map,sign*115.19,20)-bonkHeightAt(map,sign*115.21,20))<.05,'physical limit does not cut visual height');}}
+ for(const r of RO_WORLD_ROUTE.filter(r=>!r.biolabFloor)){const map=generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r));for(const sign of [-1,1]){const h=[];for(let d=125;d<=500;d+=12){h.push(bonkHeightAt(map,sign*d,35));h.push(bonkHeightAt(map,35,sign*d));}assert.ok(range(h)>6,`${r.key} outer relief`);assert.ok(Math.abs(bonkHeightAt(map,sign*115.19,20)-bonkHeightAt(map,sign*115.21,20))<.05,'physical limit does not cut visual height');}}
 });
 
 test('twenty seeded regional scenes per map provide recognizable biome-appropriate props with bounded cached voxel parts',()=>{
  const signatures=new Set();for(const [style,pool]of Object.entries(RO_REGION_PROP_POOLS))for(const model of pool.models){const parts=roRegionalPropParts(model,palette,0);assert.ok(parts&&parts.length>=14,model);assert.ok(parts.length<=RO_REGION_PROP_BUDGET.partsPerProp,model);assert.equal(roRegionalPropParts(model,palette,0),parts,'cached authored geometry');assert.ok(Object.isFrozen(parts)&&parts.every(Object.isFrozen));for(const part of parts){assert.ok(part.slice(0,8).every(Number.isFinite));assert.ok(part.slice(3,6).every(v=>v>0));assert.ok(part[1]-part[4]*.5>=-.35,`${model} grounded miniature`);}signatures.add(JSON.stringify(parts));}
  assert.ok(signatures.size>=22,'different silhouettes, not one square recolored');
- for(const r of RO_WORLD_ROUTE){const map=generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r)),props=map.decorations.filter(o=>o.type==='regional-prop');assert.equal(props.length,20);assert.deepEqual(props,generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r)).decorations.filter(o=>o.type==='regional-prop'));assert.ok(new Set(props.map(o=>o.model)).size>=4);assert.ok(props.every(o=>map.obstacles.some(s=>s.id.startsWith(o.id+'-'))));}
+ for(const r of RO_WORLD_ROUTE.filter(r=>!r.biolabFloor)){const map=generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r)),props=map.decorations.filter(o=>o.type==='regional-prop');assert.equal(props.length,20);assert.deepEqual(props,generateBonkLevel(52,r.scene,r.habitat,roWorldRegion(r)).decorations.filter(o=>o.type==='regional-prop'));assert.ok(new Set(props.map(o=>o.model)).size>=4);assert.ok(props.every(o=>map.obstacles.some(s=>s.id.startsWith(o.id+'-'))));}
 });
 
 test('rendered fine terrain intersects at the exact authoritative height and new scenery reuses existing instance budgets',()=>{

@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {isRoArrowRainSkill,roArrowRainArrows,RO_ARROW_RAIN_TIMING} from '../shared/ro-arrow-rain.js';
-export const RO_ARROW_RAIN_ART_BUDGET=Object.freeze({showers:8,arrows:336,drawCalls:1,lights:0});
+export const RO_ARROW_RAIN_ART_BUDGET=Object.freeze({showers:8,arrows:336,sparks:672,drawCalls:2,lights:0});
 export const roArrowRainVisualHandles=e=>['roArrowRainFall','roArrowRainImpact'].includes(e?.type)||isRoArrowRainSkill(e?.skillKey)&&['roAttack','abilityPulse','multishot'].includes(e?.type);
 export function roArrowRainPose(event,time,heightAt=()=>0){
  const age=time-event.time,impact=event.type==='roArrowRainImpact',duration=event.duration||(impact?RO_ARROW_RAIN_TIMING.impact:RO_ARROW_RAIN_TIMING.fall);if(!Number.isFinite(age)||age<0||age>=duration)return[];
@@ -16,13 +16,16 @@ function arrowGeometry(){
 }
 export function createRoArrowRainArt({scene}={}){
  const geometry=arrowGeometry(),material=new T.MeshLambertMaterial({vertexColors:true}),mesh=new T.InstancedMesh(geometry,material,RO_ARROW_RAIN_ART_BUDGET.arrows);mesh.name='ro-arrow-rain-volley';mesh.count=0;mesh.castShadow=false;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;scene.add(mesh);
+ const sparkGeometry=new T.BoxGeometry(1,1,1),sparkMaterial=new T.MeshBasicMaterial({color:0xffd85c,toneMapped:false,transparent:true,opacity:.8,depthWrite:false,blending:T.AdditiveBlending}),sparks=new T.InstancedMesh(sparkGeometry,sparkMaterial,RO_ARROW_RAIN_ART_BUDGET.sparks);sparks.name='ro-arrow-rain-yellow-impact-particles';sparks.count=0;sparks.frustumCulled=false;scene.add(sparks);
  const dummy=new T.Object3D(),frustum=new T.Frustum(),projection=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),3);let disposed=false,showers=0;
- return{mesh,update(state,time=state?.time||0,heightAt=()=>0,camera){mesh.count=showers=0;if(disposed||!state)return;
+ return{mesh,update(state,time=state?.time||0,heightAt=()=>0,camera){mesh.count=showers=sparks.count=0;if(disposed||!state)return;
   if(camera){camera.updateMatrixWorld();frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));}
   const events=(state.effects||[]).filter(e=>['roArrowRainFall','roArrowRainImpact'].includes(e.type)&&[e.x,e.z,e.time].every(Number.isFinite)&&time>=e.time&&time-e.time<(e.duration||(e.type==='roArrowRainImpact'?RO_ARROW_RAIN_TIMING.impact:RO_ARROW_RAIN_TIMING.fall))).slice(-RO_ARROW_RAIN_ART_BUDGET.showers*2);
   const groupIds=new Set();for(const e of events){const id=e.showerId??e.id;if(!groupIds.has(id)&&groupIds.size>=RO_ARROW_RAIN_ART_BUDGET.showers)continue;groupIds.add(id);for(const p of roArrowRainPose(e,time,heightAt)){
    if(mesh.count>=RO_ARROW_RAIN_ART_BUDGET.arrows)break;sphere.center.set(p.x,p.y,p.z);if(camera&&!frustum.intersectsSphere(sphere))continue;
    dummy.position.set(p.x,p.y,p.z);dummy.rotation.set(.04,.1*Math.sin(p.angle),-.07);dummy.scale.setScalar(p.scale*(e.skillKey==='ac_shower'?.8:1));dummy.updateMatrix();mesh.setMatrixAt(mesh.count++,dummy.matrix);
-  }}showers=groupIds.size;if(mesh.count)mesh.instanceMatrix.needsUpdate=true;
- },stats(){return{showers,arrows:mesh.count,drawCalls:Number(mesh.count>0),lights:0};},reset(){mesh.count=showers=0;},dispose(){if(disposed)return;disposed=true;mesh.removeFromParent();mesh.dispose();geometry.dispose();material.dispose();}};
+  }
+   if(e.type==='roArrowRainImpact')for(const a of roArrowRainArrows(e)){const p=Math.min(1,(time-e.time)/(e.duration||RO_ARROW_RAIN_TIMING.impact));for(let j=0;j<4&&sparks.count<RO_ARROW_RAIN_ART_BUDGET.sparks;j++){const angle=a.angle+j*Math.PI/2,spread=p*(.45+(j%2)*.3),x=a.x+Math.cos(angle)*spread,z=a.z+Math.sin(angle)*spread,y=heightAt(x,z)+.2+Math.sin(p*Math.PI)*(.4+j*.06),size=.05*(1-p)+.012;sphere.center.set(x,y,z);if(camera&&!frustum.intersectsSphere(sphere))continue;dummy.position.set(x,y,z);dummy.rotation.set(j*.7,angle,p*3);dummy.scale.set(size*(j%2?1:3),size*(j%2?3:1),size);dummy.updateMatrix();sparks.setMatrixAt(sparks.count++,dummy.matrix);}}
+  }showers=groupIds.size;if(mesh.count)mesh.instanceMatrix.needsUpdate=true;if(sparks.count)sparks.instanceMatrix.needsUpdate=true;
+ },stats(){return{showers,arrows:mesh.count,particles:sparks.count,planes:0,drawCalls:Number(mesh.count>0)+Number(sparks.count>0),lights:0};},reset(){mesh.count=showers=sparks.count=0;},dispose(){if(disposed)return;disposed=true;mesh.removeFromParent();sparks.removeFromParent();sparks.dispose();sparkGeometry.dispose();sparkMaterial.dispose();mesh.dispose();geometry.dispose();material.dispose();}};
 }

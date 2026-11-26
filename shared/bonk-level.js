@@ -1,3 +1,4 @@
+import {generateRoBiolab} from './ro-biolab.js';
 import {encloseRoCave} from './ro-cave-layout.js';
 import {roMvpDomainProps} from './ro-mvp-domain.js';
 import {roRegionPropPool,RO_REGION_PROP_BUDGET} from './ro-regional-props.js';
@@ -8,6 +9,7 @@ const nearSpoke=(p,spoke,r=14)=>{const {from,to}=spoke,dx=to.x-from.x,dz=to.z-fr
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 export const bonkHeightAt=roTerrainHeightAt;
 export function generateBonkLevel(seed=1,stageKey='grove',habitat=null,route=null){
+ if(route?.biolabFloor)return generateRoBiolab(seed,route);
  if(!BONK_STAGES[stageKey])stageKey='grove';const theme=BONK_STAGES[stageKey],half=115,landmarks=[{id:'north-rune',x:0,z:-76,name:'Santuário do norte'},{id:'east-rune',x:72,z:38,name:'Santuário da aurora'},{id:'west-rune',x:-72,z:38,name:'Santuário das raízes'}],spawn={x:0,z:23},obstacles=[],decorations=[],objects=[],routes=[{x:0,z:0},...landmarks,spawn];
  const regionalModels={sands:['sand-pyramid','sand-gate','desert-well','sand-pyramid'],coast:['coastal-wreck','coastal-arch','coral-garden','coastal-wreck'],grove:['prontera-fountain','prontera-house','prontera-gate','prontera-house'],payon:['payon-gate','payon-pavilion','payon-cavemouth','payon-lanterns'],crypt:['ruined-chapel','tomb-garden','gothic-gate','tomb-garden'],forge:['magma-furnace','lava-arch','basalt-throne','magma-furnace'],glacier:['ice-crown','ice-spires','ice-cavemouth','ice-spires'],geffen:['mage-tower','arcane-library','runic-gate','crystal-orbit']};
  const scenicSites=[[-48,-62],[46,-60],[-83,-17],[83,-17]].map(([x,z],i)=>({x,z,model:regionalModels[stageKey][i],w:11,d:10}));

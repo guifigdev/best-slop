@@ -6,6 +6,9 @@ import {roMerchantReachableCells} from './ro-secret-merchants.js';
 // The same immutable ellipses are supplied to the host and the ground renderer.
 export const RO_ENVIRONMENT_HAZARD_RULES=Object.freeze({maxZones:3,interval:1,maxDt:.25,coldGrace:3});
 const themes={
+ 'biolab-1':['poison','Reagente derramado',0x68b39c,'poison',.025,.85],
+ 'biolab-2':['poison','Resíduo experimental',0x9fb35d,'poison',.03,.82],
+ 'biolab-3':['dark','Resíduo de memória',0xaa86c7,'ghost',.035,.85],
  alberta:['poison','Carga derramada',0x73966c,'poison',.02,.88],
  'turtle-island':['poison','Lagoa salobra',0x759765,'poison',.025,.8],
  amatsu:['dark','Selo amaldiçoado',0x927e9f,'dark',.025,.9],

@@ -5,6 +5,7 @@ const ring=(element,radius=8,inner=3)=>({shape:'ring',element,radius,inner,delay
 const cone=(element,radius=9)=>({shape:'cone',element,radius,angle:Math.PI*.52,delay:2.2});
 const line=(element,length=18,width=3)=>({shape:'line',element,length,width,delay:2.4});
 export const RAGNAROK_MVPS=freeze([
+ {key:'bio_eremes',id:1647,sourceName:'Assassin Cross Eremes',name:'Eremes Guile · Memória do Mercenário',biomes:['void'],role:'skirmisher',skill:'cleave',element:'poison',unlockWave:38,patterns:[cone('physical',5),circle('poison',4),line('physical',12,2),ring('poison',6,2)]},
  {key:'ifrit',id:1832,sourceName:'Ifrit',name:'Ifrit, Soberano das Brasas',biomes:['forge'],role:'caster',skill:'flamebreath',element:'fire',unlockWave:30,patterns:[cone('fire',10),circle('fire',5),ring('fire',9,4),line('fire')]},
  {key:'valkyrierandgris',id:1751,sourceName:'Valkyrie Randgris',name:'Valquíria Randgrís',biomes:['frost','void'],role:'flyer',skill:'chain',element:'lightning',unlockWave:35,patterns:[line('lightning',20,3),cone('lightning',9),circle('lightning',5),ring('lightning',8,3.5)]},
  {key:'satanmorroc',id:1916,sourceName:'Satan Morroc',name:'Sathán Morrok',biomes:['void'],role:'heavy',skill:'gravity',element:'dark',unlockWave:40,patterns:[circle('dark',6),ring('dark',10,4),cone('dark',11),line('dark',20,4)]},

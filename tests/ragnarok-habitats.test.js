@@ -4,8 +4,8 @@ import {RAGNAROK_VOXEL_REFERENCES as refs} from '../shared/monster-visual-refere
 import {RO_HABITATS,RO_HABITAT_BY_KEY,MONSTER_HABITATS,monsterHabitats,habitatSpecies} from '../shared/ragnarok-habitats.js';
 const frozen=v=>{if(v&&typeof v==='object'){assert.ok(Object.isFrozen(v));Object.values(v).forEach(frozen);}};
 
-test('every388 concrete Ragnarok sculpture has a curated ecological domain, tier and source identity',()=>{
- assert.equal(Object.keys(refs).length,388);assert.deepEqual(Object.keys(MONSTER_HABITATS).sort(),Object.keys(refs).sort());assert.equal(RO_HABITATS.length,10);frozen(MONSTER_HABITATS);frozen(RO_HABITATS);
+test('every389 concrete Ragnarok sculpture has a curated ecological domain, tier and source identity',()=>{
+ assert.equal(Object.keys(refs).length,389);assert.deepEqual(Object.keys(MONSTER_HABITATS).sort(),Object.keys(refs).sort());assert.equal(RO_HABITATS.length,11);frozen(MONSTER_HABITATS);frozen(RO_HABITATS);
  for(const [key,m]of Object.entries(MONSTER_HABITATS)){
   assert.equal(m.key,key);assert.equal(m.sourceId,refs[key].id);assert.equal(m.sourceName,refs[key].sourceName);assert.equal(m.curated,true);assert.ok(m.ecologyRule&&m.provenance);
   assert.ok(m.habitats.length>0&&m.habitats.length<=3);assert.equal(m.primary,m.habitats[0]);for(const h of m.habitats)assert.ok(RO_HABITAT_BY_KEY[h]);

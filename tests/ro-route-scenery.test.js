@@ -6,10 +6,10 @@ import {generateBonkLevel} from '../shared/bonk-level.js';
 import {RO_ROUTE_PALETTES,roRouteSceneryParts} from '../src/ro-route-scenery.js';
 import {createBonkWorld,bonkPaletteForMap} from '../src/bonk-world.js';
 
-test('all twenty-two regional identities have bounded architecture, complete palettes and different silhouettes',()=>{
- const fingerprints=new Set();assert.deepEqual(Object.keys(RO_ROUTE_PALETTES).sort(),RO_WORLD_ROUTE.map(r=>r.style).sort());
+test('all twenty-five regional identities have bounded architecture, complete palettes and different silhouettes',()=>{
+ const fingerprints=new Set();assert.deepEqual(Object.keys(RO_ROUTE_PALETTES).sort(),[...new Set(RO_WORLD_ROUTE.map(r=>r.style))].sort());
  for(const region of RO_WORLD_ROUTE){const p=RO_ROUTE_PALETTES[region.style],sets=[0,1,2,3].map(i=>roRouteSceneryParts(region.style,i,p));assert.ok(Object.isFrozen(p));assert.ok(sets.every(parts=>parts.length>10));for(const parts of sets)for(const part of parts){assert.ok(part.slice(0,7).every(Number.isFinite),region.key);assert.ok(part.slice(3,6).every(n=>n>0));assert.ok(Math.abs(part[0])+part[3]/2<9,region.key);assert.ok(Math.abs(part[2])+part[5]/2<10,region.key);}fingerprints.add(JSON.stringify(sets));}
- assert.equal(fingerprints.size,22);assert.equal(roRouteSceneryParts('unknown',0,{}),null);
+ assert.equal(fingerprints.size,23);assert.equal(roRouteSceneryParts('unknown',0,{}),null);
 });
 
 test('route visuals keep the full boss footprint and main travel spine clear of tall scenery',()=>{

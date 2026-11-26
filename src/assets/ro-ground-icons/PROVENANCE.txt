@@ -1,0 +1,1 @@
+Original Ragnarok item pixels, from installed data.grf. Artwork belongs to Gravity. Equipment provenance: ../ro-equipment-icons/manifest.json. Potions: item IDs 501 and 505. Atlas introduces no resampling.

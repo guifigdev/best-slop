@@ -1,9 +1,11 @@
+import {roBiolabPropParts} from './ro-biolab-art.js';
 import {RO_MIDGARD_MODELS,roMidgardLandmarkParts} from './ro-midgard-landmarks.js';
 import {roExpansionSceneryParts} from './ro-expansion-scenery.js';
 import {bonkSceneryParts,bonkMonumentParts} from './bonk-prop-art.js';
 
 const freeze=o=>Object.freeze(o);
 export const RO_ROUTE_PALETTES=freeze({
+ biolab:freeze({soil:0x657075,grass:0x657075,dark:0x26323c,stone:0x9ba7a8,wood:0x586474,sky:0x262f3b,glow:0x87e0d2,path:0x8c9999}),
  'alberta-harbor':freeze({soil:0xa9b99c,grass:0x9db782,dark:0x405f67,stone:0xd4d5bb,wood:0x977551,sky:0x9fc9d4,glow:0xf5d590,path:0xc8c8ae}),
  'turtle-island':freeze({soil:0xbcbb8b,grass:0x86a66c,dark:0x426b64,stone:0x9cad92,wood:0x877457,sky:0x9ccbc9,glow:0xc7eac4,path:0xd4c8a1}),
  'amatsu-sakura':freeze({soil:0x8e9b70,grass:0xb3bc8d,dark:0x425d57,stone:0xc8c2af,wood:0x89664b,sky:0xc3cbd0,glow:0xf4d2aa,path:0xc5b697}),
@@ -34,6 +36,7 @@ const MODELS=freeze({pastoral:['prontera-house','prontera-fountain','prontera-ga
 // The same lateral sites have different architectural silhouettes by region.
 // All dimensions fit their existing 11m pocket; the 18m central road stays open.
 export function roRouteSceneryParts(style,index,p){
+ if(style==='biolab')return roBiolabPropParts(index%2?'table':'tank');
  const midgard=RO_MIDGARD_MODELS[style];if(midgard)return roMidgardLandmarkParts(midgard[index%midgard.length],p,index);
  const expansion=roExpansionSceneryParts(style,p,index);if(expansion)return expansion;
  const models=MODELS[style];if(!models)return null;const model=models[index%models.length];if(!['tomb-obelisk','rachel-temple','rachel-aqueduct','juno-observatory','juno-orrery','valkyrie-throne','valkyrie-colonnade','valkyrie-arch'].includes(model))return bonkSceneryParts(model,p,index);

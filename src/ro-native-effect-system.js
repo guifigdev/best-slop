@@ -1,3 +1,5 @@
+import {isRoArrowRainSkill} from '../shared/ro-arrow-rain.js';
+import {roSolidWeaponHandles} from './ro-solid-hit-art.js';
 import {isLiquidWaterSkill} from '../shared/element-skill-visuals.js';
 import {roMageVisual} from '../shared/ro-mage-spells.js';
 import {roPoisonNovaHandles} from './ro-poison-nova-art.js';
@@ -15,11 +17,11 @@ export function createRoNativeEffectSystem({scene,strFactory=createRoNativeStrAr
  const active=()=>context?.options?.mode==='bonk';
  const primitiveOptions={types:primitiveTypes,hasAsset:row=>!!RO_NATIVE_PRIMITIVE_MANIFEST.parts[row.primitiveId]};
  const requests=(event,unit,primitive=false)=>{
-  if(!active()||roMageVisual(event)||isLiquidWaterSkill(event.skillKey)||['sm_magnum','asc_meteorassault','rollingcutter','axetornado','gc_counterslash','gc_crossimpact','ws_meltdown'].includes(event.skillKey))return[];
+  if(!active()||isRoArrowRainSkill(event.skillKey)||roSolidWeaponHandles(event,unit)||roMageVisual(event)||isLiquidWaterSkill(event.skillKey)||['sm_magnum','asc_meteorassault','rollingcutter','axetornado','gc_counterslash','gc_crossimpact','ws_meltdown'].includes(event.skillKey))return[];
   const result=roNativeEventRequests(event,unit,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,{state:context,...(primitive?primitiveOptions:{})});
   const clean=result.filter(r=>r.phase!=='hit'||event.skillKey==='as_grimtooth'&&r.part?.type==='QuadHorn');return primitive?clean.map(r=>({...r,scale:roNativePrimitiveAreaScale(r.part,event,{baseScale:r.scale}),conformGround:true})):roNativeBuffDeadlines(clean,unit,context,RO_NATIVE_EFFECT_ASSETS);
  };
- const zoneRequests=(state,primitive=false)=>state?.options?.mode==='bonk'?roNativeRequestsForState(state,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,primitive?primitiveOptions:{}).filter(r=>{if(roMageVisual(r)||isLiquidWaterSkill(r.skillKey))return false;const zone=(state.bonk?.roSkillZones||[]).find(z=>z.id===r.zoneId);return !zone||!replaceGroundZone(zone,state);}):[];
+ const zoneRequests=(state,primitive=false)=>state?.options?.mode==='bonk'?roNativeRequestsForState(state,primitive?RO_NATIVE_PRIMITIVE_MANIFEST:RO_NATIVE_EFFECT_MANIFEST,primitive?primitiveOptions:{}).filter(r=>{if(isRoArrowRainSkill(r.skillKey)||roMageVisual(r)||isLiquidWaterSkill(r.skillKey))return false;const zone=(state.bonk?.roSkillZones||[]).find(z=>z.id===r.zoneId);return !zone||!replaceGroundZone(zone,state);}):[];
  const str=strFactory({scene,voxelOnly:true,assets:RO_NATIVE_EFFECT_ASSETS,requestsForEvent:(e,u)=>requests(e,u),requestsForState:state=>zoneRequests(state)});
  const primitive=primitiveFactory({scene,manifest:RO_NATIVE_PRIMITIVE_MANIFEST,assets:RO_NATIVE_PRIMITIVE_ASSETS,requestsForEvent:(e,u)=>requests(e,u,true),requestsForState:state=>zoneRequests(state,true)});
  const api={

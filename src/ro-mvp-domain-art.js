@@ -27,6 +27,8 @@ export function roMvpDomainParts(theme,variant=0){
   for(let i=0;i<7;i++)b((i-3)*.65,.7+i%2*.15,0,.58,1.1,2.5-Math.abs(i-3)*.25,wood);b(0,3.2,0,.25,5.8,.25,wood);b(0,5.2,0,3,.2,.2,dark);for(let i=0;i<4;i++)b(0,4.8-i*.5,.2,2.5-i*.25,.48,.08,0xa5a59b);b(1.6,1.3,1.5,.25,2.2,.3,stone);b(1.6,.6,1.5,1.6,.25,.35,stone);
  }else if(theme==='fox-shrine'){
   for(const side of [-1,1]){b(side*1.6,2.5,0,.45,5,.6,0xa85444);b(side*1.6,4.1,.8,.8,1,.8,0xf3d198,true);}b(0,4.8,0,4.4,.4,.9,0x9e4d42);b(0,5.3,0,5,.3,1.1,dark);for(let i=0;i<3;i++)b((i-1)*.8,3.9,.1,.25,.8,.1,0xe9d9b9);
+ }else if(theme==='assassin-lab'){
+  base(dark);for(const side of [-1,1]){b(side*1.25,2.2,0,.3,3.7,.3,0x79838e);b(side*.75,3.7,0,1.7,.25,.5,0xc5a16c);b(side*1.25,3.1,0,.8,1.4,.22,0xadc6d3);b(side*1.25,1.4,0,.22,.8,.25,0x624861);b(side*1.25,1,.3,1.3,.2,.4,0xac88db,true);}for(let j=0;j<4;j++){b(0,1+j*.75,-.9,1.2,.18,.4,0x796984);b(0,1.2+j*.75,-.9,.3,.35,.3,0xac88db,true);}
  }else if(theme==='laboratory'){
   base(stone);for(const side of [-1,1]){b(side*1.1,2,0,1.5,2.8,1.5,0x61888c);b(side*1.1,2,.8,1.1,2,.12,0x9ad3bd,true);for(const y of [.8,3.4])b(side*1.1,y,0,1.8,.3,1.8,dark);}b(0,4,0,.25,1.5,.25,gold);
  }else if(theme==='frost-toys'){

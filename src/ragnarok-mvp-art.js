@@ -1,3 +1,4 @@
+import {ragnarokTowerPackASpec} from './ragnarok-tower-art-a.js';
 // Authored voxel studies of the sixteen MVP sprite silhouettes. Geometry only:
 // encounters, rewards and health belong to the shared scenario simulation.
 import {RAGNAROK_MVPS} from '../shared/ragnarok-mvp-catalog.js';
@@ -5,7 +6,7 @@ export const RAGNAROK_MVP_KINDS=Object.freeze(RAGNAROK_MVPS.map(v=>v.key));
 const models=new Map();
 const freeze=v=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}return v;};
 export function ragnarokMvpSpec(key){
- if(!RAGNAROK_MVP_KINDS.includes(key))return null;if(models.has(key))return models.get(key);
+ if(key==='bio_eremes'){if(!models.has(key)){const base=ragnarokTowerPackASpec('tower_1635');const shards=Array.from({length:8},(_,j)=>[Math.sin(j*Math.PI/4)*.52,.5+j*.13,-.35+Math.cos(j*Math.PI/4)*.2,.035,.07,.035,0xb3a4cf]);models.set(key,freeze({...base,key,parts:[...base.parts,...shards],features:[...(base.features||[]),'biolab-mvp-memory']}));}return models.get(key);}if(!RAGNAROK_MVP_KINDS.includes(key))return null;if(models.has(key))return models.get(key);
  const parts=[],legs=[],wings=[],flames=[],b=(...p)=>parts.push(p),leg=(x,y,z,w,h,d,color)=>legs.push({x,y,z,w,h,d,color});
  const oval=(x,y,z,rx,ry,rz,palette,ny=7,nz=7)=>{
   const dy=ry*2/ny,dz=rz*2/nz;for(let j=0;j<ny;j++)for(let k=0;k<nz;k++){

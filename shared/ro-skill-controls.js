@@ -1,4 +1,5 @@
-import {roHasSight,roIsHidden} from './ro-mage-spells.js';
+import {activeRoManualAim} from './ro-manual-aim.js';
+import {roHasSight,roIsHidden,roMageBolt} from './ro-mage-spells.js';
 import {unitBodyGap} from './unit-body-shape.js';
 import {roSkillTargetRange} from './ro-skill-range.js';
 import {RO_NATIVE_SKILL_DATA} from './ro-native-skill-data.js';
@@ -21,7 +22,7 @@ export function roSkillCastTime(weapon,level=1,stats={}){
 export function finishRoSkillCast(game,unit,stats,attack){
  const casting=unit.roCasting;if(!casting||game.bonk.stage!=='playing'||game.bonk.offer||unit.bonkOffer||game.paused||game.bonk.elapsed<casting.finishAt)return false;
  delete unit.roCasting;if(!unit.alive||!unit.bonkBuild.weapons[casting.key])return false;
- const weapon=BONK_WEAPONS[casting.key],level=unit.bonkBuild.weapons[casting.key];if(!weapon||(unit.mana||0)<roSkillManaCost(weapon,level,stats)||!attack(weapon,level,stats))return false;
+ const weapon=BONK_WEAPONS[casting.key],level=unit.bonkBuild.weapons[casting.key];if(!weapon||(unit.mana||0)<roSkillManaCost(weapon,level,stats)||!attack(weapon,level,stats,casting.aim))return false;
  lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[casting.key]=game.bonk.elapsed+roSkillCooldown(weapon,level,stats);return true;
 }
 const nativeAt=(value,level)=>(Array.isArray(value)?value[Math.min(value.length-1,Math.max(0,level-1))]:value)||0;
@@ -39,21 +40,21 @@ export function roSkillStatus(game,unit,key,stats={},options={manual:true}){
  else if(!unit?.alive){reasonCode='dead';readyReason='Herói derrotado';}
  else if(game?.options?.mode!=='bonk'||game?.bonk?.stage!=='playing'||game?.bonk?.offer||unit?.bonkOffer||game?.paused){reasonCode='paused';readyReason=game?.bonk?.offer?'Escolha uma melhoria':game?.bonk?.stage==='preparation'?'Comece a partida':'Pausado';}
  else if(elapsed<(unit.roHitStunUntil||0)){reasonCode='hitstun';readyReason='Recebendo golpe';}
+ else if(roIsMount(key)){readyReason=unit.roMountSkill===key?'Desmontar':'Montar';}
  else if(unit.roCasting){reasonCode='casting';readyReason='Conjurando '+(BONK_WEAPONS[unit.roCasting.key]?.name||'habilidade');}
  else if(key!=='basic'&&elapsed<(unit.roAfterCastUntil||0)){reasonCode='aftercast';readyReason='Pós-conjuração';}
  else if(elapsed<(unit.roSkillActionUntil||0)){reasonCode='animation';readyReason='Animação do ataque';}
  else if(cooldownRemaining>0){reasonCode='cooldown';readyReason='Recarregando';}
  else if((unit.mana||0)<manaCost){reasonCode='mana';readyReason='SP insuficiente';}
- else if(roIsMount(key)){readyReason=unit.roMountSkill===key?'Desmontar':'Montar';}
  else if(key==='wz_sightrasher'&&!roHasSight(unit,elapsed)){reasonCode='sight';readyReason='Ative Chama Reveladora';}
- else{const utility=roUtilitySkillReadiness(game,unit,weapon,stats,options);if(utility){reasonCode=utility.reasonCode;readyReason=utility.readyReason;}else{const range=roSkillTargetRange(weapon,stats,level);if(!(game.units||[]).some(enemy=>enemy.bonkEnemy&&enemy.alive&&!roIsHidden(enemy,elapsed)&&unitBodyGap(enemy,unit)<=range)){reasonCode='target';readyReason='Sem inimigo no alcance';}}}
+ else{const utility=roUtilitySkillReadiness(game,unit,weapon,stats,{...options,aim:options.aim||activeRoManualAim(game,unit)});if(utility){reasonCode=utility.reasonCode;readyReason=utility.readyReason;}else{const range=roSkillTargetRange(weapon,stats,level),freeAim=(options.aim||activeRoManualAim(game,unit))&&weapon.kind==='projectile'&&!roMageBolt(key);if(!freeAim&&!(game.units||[]).some(enemy=>enemy.bonkEnemy&&enemy.alive&&!roIsHidden(enemy,elapsed)&&unitBodyGap(enemy,unit)<=range)){reasonCode='target';readyReason='Sem inimigo no alcance';}}}
  return{variableCast:weapon?roSkillCastTime(weapon,Math.max(1,level),stats).variable:0,fixedCast:weapon?roSkillCastTime(weapon,Math.max(1,level),stats).fixed:0,attackDelay:stats.attackDelay||0,animationRemaining:Math.max(0,(unit.roSkillActionUntil||0)-elapsed),afterCastRemaining:Math.max(0,(unit.roAfterCastUntil||0)-elapsed),afterCast:weapon?roSkillAfterCast(weapon,Math.max(1,level),stats):0,mount:roIsMount(key),mounted:roIsMount(key)&&unit.roMountSkill===key&&!!roMountedKind(unit),castTime:roSkillCastTime(weapon,level,stats).total,castingRemaining:unit?.roCasting?Math.max(0,unit.roCasting.finishAt-elapsed):0,learned,auto:roSkillAuto(unit,key),manaCost,cooldown,cooldownRemaining:Number(cooldownRemaining.toFixed(2)),ready:reasonCode==='ready',reasonCode,readyReason};
 }
 
 export function castRoSkill(game,unit,key,stats,attack,options={manual:true}){
  const status=roSkillStatus(game,unit,key,stats,options);if(!status.ready)return{ok:false,reason:status.readyReason,reasonCode:status.reasonCode};
  if(roIsMount(key)){const ok=toggleRoMount(unit,key);return {ok,reason:unit.roMountSkill===key?'Montado':'Desmontado',reasonCode:'mount'};}
- const weapon=key==='basic'?roBasicAttack(unit):BONK_WEAPONS[key],level=unit.bonkBuild.weapons[key],cast=roSkillCastTime(weapon,level,stats);if(cast.total>1e-6){unit.castAt=game.time;unit.roCasting={key,level,started:game.bonk.elapsed,finishAt:game.bonk.elapsed+cast.total,duration:cast.total,variable:cast.variable,fixed:cast.fixed};return{ok:true,reason:'Conjurando '+weapon.name,reasonCode:'casting'};}if(typeof attack!=='function'||!attack(weapon,level,stats))return{ok:false,reason:'Sem inimigo no alcance',reasonCode:'target'};
+ const weapon=key==='basic'?roBasicAttack(unit):BONK_WEAPONS[key],level=unit.bonkBuild.weapons[key],cast=roSkillCastTime(weapon,level,stats),aim=options.aim||activeRoManualAim(game,unit);if(cast.total>1e-6){unit.castAt=game.time;unit.bonkMove={dx:0,dz:0};unit.bonkDashUntil=0;delete unit.roIceMotion;unit.roCasting={key,level,...(aim?{aim:{x:aim.x,z:aim.z,...(aim.target!==undefined?{target:aim.target}:{})}}:{}),started:game.bonk.elapsed,finishAt:game.bonk.elapsed+cast.total,duration:cast.total,variable:cast.variable,fixed:cast.fixed};return{ok:true,reason:'Conjurando '+weapon.name,reasonCode:'casting'};}if(typeof attack!=='function'||!attack(weapon,level,stats,aim))return{ok:false,reason:'Sem inimigo no alcance',reasonCode:'target'};
  lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[key]=game.bonk.elapsed+status.cooldown;return{ok:true,reason:'Habilidade usada',reasonCode:'cast'};
 }
 

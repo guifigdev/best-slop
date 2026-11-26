@@ -16,11 +16,12 @@ test('middle mouse rotates without a modifier and leaves the chosen left/touch d
  g.down(event(2,10,10,{pointerType:'mouse',button:0}));g.move(event(2,70,30,{pointerType:'mouse',button:0}));g.up(event(2,70,30,{pointerType:'mouse',button:0}));assert.ok(pans>0);assert.equal(mode,'pan');
 });
 
-test('character orbit replaces terrain dragging while keeping short taps available for interactions',()=>{
+test('Ragnarok right-drag or touch orbits while left mouse stays available for aiming',()=>{
  for(const pointerType of ['mouse','touch'])for(const preferred of ['pan','rotate']){
   const rotations=[];let pans=0,taps=0,orbit=true;const g=createCameraGestures({getMode:()=>preferred,isCharacterOrbit:()=>orbit,onRotate:(x,y)=>rotations.push([x,y]),onPan:()=>pans++,onTap:()=>taps++});
-  g.down(event(1,100,100,{pointerType}));g.move(event(1,102,100,{pointerType}));g.up(event(1,102,100,{pointerType}));assert.equal(taps,1);
-  g.down(event(2,100,100,{pointerType}));g.move(event(2,160,125,{pointerType}));g.up(event(2,160,125,{pointerType}));assert.equal(pans,0);assert.equal(taps,1);assert.deepEqual(rotations[0],[60,25]);
+  const button=pointerType==='mouse'?2:0;if(pointerType==='mouse')assert.equal(g.down(event(99,10,10,{pointerType,button:0})),false);
+  g.down(event(1,100,100,{pointerType,button}));g.move(event(1,102,100,{pointerType,button}));g.up(event(1,102,100,{pointerType,button}));assert.equal(taps,pointerType==='touch'?1:0);
+  g.down(event(2,100,100,{pointerType,button}));g.move(event(2,160,125,{pointerType,button}));g.up(event(2,160,125,{pointerType,button}));assert.equal(pans,0);assert.equal(taps,pointerType==='touch'?1:0);assert.deepEqual(rotations[0],[60,25]);
   // Leaving the survivor restores the existing RTS preference.
   orbit=false;rotations.length=0;g.down(event(3,0,0,{pointerType}));g.move(event(3,40,10,{pointerType}));g.up(event(3,40,10,{pointerType}));assert.equal(pans>0,preferred==='pan');assert.equal(rotations.length>0,preferred==='rotate');
  }
@@ -30,3 +31,5 @@ test('two-finger character orbit zooms and rotates without translating the pivot
  let pans=0,taps=0;const rotations=[],zooms=[],g=createCameraGestures({isCharacterOrbit:()=>true,onPan:()=>pans++,onRotate:(x,y)=>rotations.push([x,y]),onZoom:k=>zooms.push(k),onTap:()=>taps++});
  g.down(event(1,100,100));g.down(event(2,200,100));g.move(event(2,250,120));assert.deepEqual(rotations[0],[25,10]);assert.ok(zooms[0]<1);g.up(event(2,250,120));g.move(event(1,110,110));assert.deepEqual(rotations.at(-1),[10,10]);g.up(event(1,110,110));assert.equal(pans,0);assert.equal(taps,0);assert.equal(g.active,false);
 });
+
+test('right-click cancels once on press, respects the drag deadzone and never clicks the world on release',()=>{let cancelled=0,taps=0;const rotations=[],g=createCameraGestures({isCharacterOrbit:()=>true,onCancel:()=>cancelled++,onTap:()=>taps++,onRotate:(x,y)=>rotations.push([x,y])});const e=(x,y)=>event(1,x,y,{pointerType:'mouse',button:2});assert.equal(g.down(e(10,10)),true);assert.equal(cancelled,1);g.move(e(13,12));assert.equal(rotations.length,0);g.move(e(40,20));assert.deepEqual(rotations,[[30,10]]);g.up(e(40,20));assert.equal(taps,0);assert.equal(cancelled,1);assert.equal(g.active,false);});

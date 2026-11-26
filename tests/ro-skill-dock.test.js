@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {roSkillDockMarkup} from '../src/ro-skill-dock.js';
+import {roSkillDockMarkup,roMountActionMarkup} from '../src/ro-skill-dock.js';
 import {createBonkUI,bonkInteraction,BONK_HELP} from '../src/bonk-ui.js';
 
 const weapons=[{key:'basic',name:'Adagas duplas',level:1,manaCost:0,auto:true,ready:true},{key:'rollingcutter',name:'Rolling Cutter',description:'Cortes <circulares>',level:3,manaCost:6,auto:false,ready:false,cooldownRemaining:1.25,cooldown:2,readyReason:'Recarregando'}];
@@ -19,4 +19,12 @@ test('chest and altar descriptions distinguish actual equipment loot from a free
 test('the last active slot can be cast and its mobile page is exposed without removing learned skills',()=>{
  const sent=[],equipped=Array.from({length:13},(_,i)=>({key:i?'skill'+i:'basic',name:'Habilidade '+i,level:1})),state={options:{mode:'bonk'},units:[{id:1}],players:{p:1},bonk:{stage:'playing',weapons:equipped}},ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>sent.push(c)});
  ui.action('skill',12);assert.deepEqual(sent,[{type:'bkCast',key:'skill12'}]);assert.match(roSkillDockMarkup(equipped,{mobilePage:1}),/data-mobile-page="1"/);assert.match(roSkillDockMarkup(equipped,{mobilePage:1}),/data-bk-cast="skill12"/);
+});
+
+test('mounts expose a real cast toggle and a compact shortcut independent of the selected skill page',()=>{
+ const mount={key:'wugrider',name:'Montaria Worg',mount:true,mounted:true,level:1,ready:true,cooldownRemaining:0},html=roSkillDockMarkup([weapons[0],...Array(10).fill(null),mount],{mobilePage:0});
+ assert.match(html,/<div class="ro-mount-action"><button[^>]+class="ro-skill-mount"[^>]+data-bk-cast="wugrider"[^>]+aria-pressed="true"[^>]+>Desmontar<\/button><\/div>/);
+ assert.match(html,/<button[^>]+class="ro-mount-shortcut"[^>]+data-bk-cast="wugrider"[^>]+>Desmontar<\/button>/);
+ assert.doesNotMatch(html,/data-bk-auto="wugrider"/);assert.match(roMountActionMarkup({...mount,mounted:false}),/>Montar<\/button>/);
+ assert.match(roMountActionMarkup({...mount,ready:false}),/ disabled>Desmontar/);assert.match(roMountActionMarkup(mount,{interactive:false}),/ disabled>Desmontar/);
 });

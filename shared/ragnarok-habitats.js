@@ -5,6 +5,7 @@ import {RAGNAROK_EXPANSION} from './ragnarok-expansion.js';
 import {RAGNAROK_MVPS} from './ragnarok-mvp-catalog.js';
 const freeze=v=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}return v;};
 export const RO_HABITATS=freeze([
+ {key:'biolab',name:'Laboratório de Somatologia',scene:'geffen'},
  {key:'meadow',name:'Campo Verdejante',scene:'grove'},
  {key:'forest',name:'Floresta',scene:'grove'},
  {key:'cave',name:'Caverna',scene:'payon'},
@@ -19,6 +20,7 @@ export const RO_HABITATS=freeze([
 export const RO_HABITAT_SOURCES=freeze({spawns:'https://github.com/rathena/rathena/tree/master/npc/pre-re/mobs',tower:'https://github.com/rathena/rathena/blob/master/npc/instances/EndlessTower.txt',database:'https://github.com/rathena/rathena/blob/master/db/re/mob_db.yml',policy:'Curated source geography plus explicit project ecological overrides; not a claim to reproduce every official spawn map.'});
 export const RO_HABITAT_BY_KEY=freeze(Object.fromEntries(RO_HABITATS.map(h=>[h.key,h])));
 const CURATED={
+ "1647":{habitats:["biolab"],ecologyRule:"biolab-transcendent",provenance:"Lighthalzen Laboratory 3: Assassin Cross Eremes MVP"},
  "1002": {
   "habitats": [
    "meadow",
@@ -2994,12 +2996,13 @@ const CURATED={
 // The throne guardian belongs to the tower's haunted stone sanctuary.
 CURATED[1956]={habitats:['haunted','ruins'],ecologyRule:'endless-tower-final-throne',provenance:'EndlessTower.txt, 6@tower Tyrant throne, source monster 1956'};
 // Named minibosses occupy guardian encounters, not ordinary random waves.
+for(const id of [1613,1627,1682,1634,1635,1636,1637,1638,1639,1652,1653,1654,1655,1656,1657,1658])if(CURATED[id]&&!CURATED[id].habitats.includes('biolab'))CURATED[id].habitats.push('biolab');
 const minibosses=new Set([1088,1090,1091,1092,1096,1120,1186,1259,1262,1270,1283,1296,1298,1299,1302,1307,1388,1582,1618,1720,1765]);
 const expansion=new Map(RAGNAROK_EXPANSION.map(m=>[m.key,m])),mvps=new Set(RAGNAROK_MVPS.map(m=>m.key));
 const baseRoles={familiar:'flyer',thiefbug:'swarm',tarou:'swarm',archerskeleton:'ranged',icetitan:'heavy',kasa:'flyer',salamander:'heavy',poring:'swarm',marin:'swarm',spore:'skirmisher',mandragora:'ranged',willow:'heavy',elderwillow:'caster',scorpion:'skirmisher',andre:'swarm',hode:'heavy',golem:'heavy',mummy:'skirmisher',whisper:'flyer',siroma:'skirmisher',gazeti:'caster'};
 const baseTiers={familiar:1,thiefbug:1,tarou:1,archerskeleton:1,icetitan:3,kasa:3,salamander:3,poring:1,marin:1,spore:1,mandragora:1,willow:1,elderwillow:2,scorpion:1,andre:1,hode:2,golem:2,mummy:1,whisper:1,siroma:1,gazeti:2};
 // These early volcanic natives keep the first fire-cave tier playable without importing forest animals.
-const tierOverrides={magmaring:1,knocker:1,imp:2,snowier:2,freezer:2,heater:2};
+const tierOverrides={metaling:1,anopheles:1,remover:2,magmaring:1,knocker:1,imp:2,snowier:2,freezer:2,heater:2};
 export const MONSTER_HABITATS=freeze(Object.fromEntries(Object.values(RAGNAROK_VOXEL_REFERENCES).map(ref=>{
  const ecology=CURATED[ref.id];if(!ecology)throw new Error('Missing curated Ragnarok ecology for '+ref.key+' ('+ref.id+')');
  const m=expansion.get(ref.key),bossKind=mvps.has(ref.key)||m?.boss===true?'mvp':minibosses.has(ref.id)?'miniboss':null,bossOnly=bossKind!==null;

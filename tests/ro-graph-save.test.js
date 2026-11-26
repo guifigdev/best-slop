@@ -29,7 +29,7 @@ test('graph saves reject duplicate, unknown, missing and mismatched region state
 });
 
 test('a completed graph persists all twenty-two regions while current position may be any visited region',()=>{
- for(const index of [0,5,11]){const g=fixture(index,true);g.bonk.clearedStages=RO_WORLD_ROUTE.slice().reverse().map(r=>r.key);g.bonk.visitedStages=RO_WORLD_ROUTE.map(r=>r.key);g.bonk.stage='finished';const cp=createRoCheckpoint(g);assert.ok(cp);assert.equal(cp.clearedStages.length,22);assert.equal(cp.floor,index+1);assert.equal(cp.routeBossDefeated,true);assert.deepEqual(cp.clearedStages,g.bonk.clearedStages);}
+ for(const index of [0,5,11]){const g=fixture(index,true);g.bonk.clearedStages=RO_WORLD_ROUTE.slice().reverse().map(r=>r.key);g.bonk.visitedStages=RO_WORLD_ROUTE.map(r=>r.key);g.bonk.stage='finished';const cp=createRoCheckpoint(g);assert.ok(cp);assert.equal(cp.clearedStages.length,25);assert.equal(cp.floor,index+1);assert.equal(cp.routeBossDefeated,true);assert.deepEqual(cp.clearedStages,g.bonk.clearedStages);}
  // Visiting the last stable index is not proof that every branch was cleared.
  const cp=createRoCheckpoint(fixture(11,true));assert.ok(cp);assert.equal(cp.floor,12);assert.ok(cp.clearedStages.length<12);
 });

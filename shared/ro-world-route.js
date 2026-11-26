@@ -1,3 +1,4 @@
+import {RO_BIOLAB_FLOORS} from './ro-biolab.js';
 import {habitatSpecies,RO_HABITAT_BY_KEY,MONSTER_HABITATS} from './ragnarok-habitats.js';
 import {MVP_BY_KEY} from './ragnarok-expansion.js';
 
@@ -28,6 +29,7 @@ const regions=[
  {key:'umbala',name:'Umbala · Árvore dos Wootan',scene:'grove',habitat:'forest',mvp:'baphomet',style:'umbala-canopy',description:'Árvores gigantes com casas elevadas, máscaras de madeira, cordas e tambores Wootan.',landmarks:['Árvore da aldeia','Ponte das máscaras','Tambores dos Wootan'],featured:['wootanshooter','wootanfighter','stoneshooter','woodengolem','dryad'],transition:'As raízes escurecem na passagem para Niflheim.',adaptation:'Baphomet é o guardião desta ligação survivor; não é apresentado como MVP oficial de Umbala.'},
  {key:'niflheim',name:'Niflheim · Cidade dos Mortos',scene:'crypt',habitat:'haunted',mvp:'fallenbishop',style:'niflheim-hollows',description:'Casas tortas, abóboras iluminadas, cercas retorcidas e uma torre assombrada.',landmarks:['Casa dos mortos','Jardim das abóboras','Campanário fantasma'],featured:['dullahan','loliruri','heirozoist','disguise','gibbet'],transition:'A passagem entre raízes retorna a Umbala.',adaptation:'O Bispo Caído é um guardião adaptado; não substitui a identidade do Lord of Death.'}
 
+,...RO_BIOLAB_FLOORS
 ];
 
 export const RO_LEGACY_ROUTE_SIZE=16;
@@ -42,6 +44,7 @@ export const roRouteRegion=roRouteStage,nextRoRegion=roRouteNext;
 const hash=(seed,key)=>{let n=Number(seed)>>>0;for(const c of key)n=Math.imul(n^c.charCodeAt(0),16777619)>>>0;return n;};
 export function roRouteEncounter(value=0,seed=1){
  const region=roRouteStage(value);if(!region)return null;
+ if(region.biolabFloor)return freeze({routeKey:region.key,habitat:'biolab',habitatName:'Laboratório de Somatologia',tier:3,species:[...region.species],guardians:region.species.slice(0,3),boss:region.mvp,bossKind:'mvp'});
  const tier=region.index<2?1:region.index<6?2:3,eligible=habitatSpecies(region.habitat,{tier,bosses:false}),featured=region.featured.filter(key=>eligible.includes(key)),rest=eligible.filter(key=>!featured.includes(key)).sort((a,b)=>hash(seed,region.key+':'+a)-hash(seed,region.key+':'+b)||a.localeCompare(b)),species=[...featured,...rest].slice(0,6+tier*2);
  const strongest=habitatSpecies(region.habitat,{tier:3,bosses:false}),heavy=strongest.filter(key=>['heavy','caster'].includes(MONSTER_HABITATS[key].role)),guardians=(heavy.length?heavy:strongest).slice().sort((a,b)=>hash(seed,a)-hash(seed,b)||a.localeCompare(b)).slice(0,3);
  if(!species.length||!MVP_BY_KEY[region.mvp])throw new Error('Invalid connected Ragnarok region: '+region.key);
@@ -60,7 +63,7 @@ export const RO_WORLD_GEOGRAPHY=freeze({
  'thor-volcano':{x:0,z:0},
  'glast-heim':{x:1,z:1},geffen:{x:2,z:1},'payon-cave':{x:3,z:2},'payon-forest':{x:3,z:3},prontera:{x:4,z:4},
  morroc:{x:-1,z:0},'morroc-pyramid':{x:-2,z:-1},rachel:{x:-3,z:-1},
- juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3},lutie:{x:-1,z:-2},'toy-factory':{x:-2,z:-2},'clock-tower':{x:2,z:0},'thanatos-tower':{x:1,z:-1},alberta:{x:5,z:4},'turtle-island':{x:5,z:5},amatsu:{x:6,z:4},comodo:{x:-1,z:1},umbala:{x:-1,z:2},niflheim:{x:-1,z:3}
+ 'biolab-1':{x:-1,z:-1},'biolab-2':{x:-2,z:-1.5},'biolab-3':{x:-3,z:-2},juno:{x:0,z:-1},'ice-cavern':{x:0,z:-2},valhalla:{x:0,z:-3},lutie:{x:-1,z:-2},'toy-factory':{x:-2,z:-2},'clock-tower':{x:2,z:0},'thanatos-tower':{x:1,z:-1},alberta:{x:5,z:4},'turtle-island':{x:5,z:5},amatsu:{x:6,z:4},comodo:{x:-1,z:1},umbala:{x:-1,z:2},niflheim:{x:-1,z:3}
 });
 export const RO_WORLD_LINKS=freeze([
  {a:'prontera',b:'payon-forest'},
@@ -78,6 +81,9 @@ export const RO_WORLD_LINKS=freeze([
  {a:'lutie',b:'toy-factory'},
  {a:'geffen',b:'clock-tower'},
  {a:'juno',b:'thanatos-tower'},
+ {a:'juno',b:'biolab-1'},
+ {a:'biolab-1',b:'biolab-2'},
+ {a:'biolab-2',b:'biolab-3'},
  {a:'prontera',b:'alberta'},
  {a:'alberta',b:'turtle-island'},
  {a:'alberta',b:'amatsu'},

@@ -15,6 +15,6 @@ export function bonkEquipmentPickupParts(pickup,time=0){
 }
 export function bonkEquipmentGlints(pickups,hero,time=0){
  const B=BONK_EQUIPMENT_ART_BUDGET,near=(pickups||[]).filter(p=>p.type==='equipment'&&Math.hypot(p.x-hero.x,p.z-hero.z)<=B.glintDistance).sort((a,b)=>Math.hypot(a.x-hero.x,a.z-hero.z)-Math.hypot(b.x-hero.x,b.z-hero.z)).slice(0,B.nearbyGlints),parts=[];
- for(const p of near){const phase=((time*.6+(Number(p.id)||0)*.173)%1+1)%1;if(phase>.65)continue;const y=1.2+Math.sin(phase*Math.PI)*.2,size=.07+Math.sin(phase*Math.PI)*.03;parts.push([p.x,y,p.z,size*3,.035,.035,0xffe6ad,0],[p.x,y,p.z,.035,size*3,.035,0xffe6ad,0],[p.x,y,p.z,.035,.035,size*3,0xffe6ad,0]);}
+ for(const p of near){const phase=((time*.6+(Number(p.id)||0)*.173)%1+1)%1;if(phase>.65)continue;const y=1.2+Math.sin(phase*Math.PI)*.2,size=.025+Math.sin(phase*Math.PI)*.015;parts.push([p.x,y,p.z,size*3,.035,.035,0x9baf99,0],[p.x,y,p.z,.035,size*3,.035,0x9baf99,0],[p.x,y,p.z,.035,.035,size*3,0x9baf99,0]);}
  return parts;
 }

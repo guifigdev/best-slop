@@ -44,7 +44,7 @@ export function applyRoSkillModifiers(base,modifiers={}){
 }
 
 /** Utility readiness is shared by the HUD and automatic casting. */
-export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
+export function roUtilitySkillReadiness(game,unit,weapon,stats={},options={}){
  const kind=roNativeZonePlan(weapon)?'zone':weapon?.kind,m=weapon?.mechanics||{},time=now(game);if(kind==='dash'&&m.retreat)return{ready:true,reasonCode:'ready',readyReason:'Pronta'};
  if(kind==='passive')return{ready:false,reasonCode:'passive',readyReason:'Passiva permanente'};
  if(kind==='heal'){
@@ -57,6 +57,7 @@ export function roUtilitySkillReadiness(game,unit,weapon,stats={}){
  }
  if(kind==='summon'&&(game.bonk?.roSkillSummons||[]).some(s=>s.source===unit.id&&s.key===weapon.key&&s.until>time))return{ready:false,reasonCode:'active',readyReason:'Invocação ativa'};
  // Offensive utility still needs a nearby monster; heals and defensive buffs do not.
+ if(options.aim&&['zone','dash'].includes(kind))return{ready:true,reasonCode:'ready',readyReason:'Pronta'};
  if(['zone','summon','dash'].includes(kind)){
   const range=Math.max(3,roSkillTargetRange(weapon,stats));
   if(!live(game).some(e=>distance(e,unit)<=range))return{ready:false,reasonCode:'target',readyReason:'Sem inimigo no alcance'};
@@ -70,7 +71,7 @@ function cleanse(unit,time,kind){unit.bonkPoisonTicks=0;unit.bonkPoisonUntil=tim
 /** Returns null for ordinary attacks. SP and cooldown are owned by the caller. */
 export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
  const plan=roNativeZonePlan(weapon,level),kind=plan?'zone':weapon?.kind;if(!['heal','buff','passive','zone','summon','dash'].includes(kind))return null;
- if(!roUtilitySkillReadiness(game,unit,weapon,stats)?.ready)return false;
+ if(!roUtilitySkillReadiness(game,unit,weapon,stats,{aim:api.aim})?.ready)return false;
  const b=game.bonk,time=now(game),m=weapon.mechanics||{},scale=factor(level),duration=weapon.key==='ws_meltdown'?10+5*Math.max(1,Math.min(10,level)):plan?.duration||safeDuration(weapon),radius=clamp((m.radius||weapon.radius||weapon.range||4)*(stats.area||1),1,24);
  if(kind==='heal'){
   unit.hp=Math.min(unit.maxHp,unit.hp+Math.max(0,finite(m.healFlat))*scale+unit.maxHp*clamp(m.healPercent,0,.5)*scale);
@@ -93,7 +94,7 @@ export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
   }
   emit(api,m.shieldPercent?'devotion':'battlecry',unit,{source:unit.id,target:unit.id,radius:2.5,duration:.7,skillKey:weapon.key});return true;
  }
- const targets=nearby(game,unit,Math.max(3,roSkillTargetRange(weapon,stats)),api).sort((a,c)=>distance(a,unit)-distance(c,unit)),target=targets.find(e=>clear(api,unit,e))||(kind==='dash'&&m.retreat?{x:unit.x+Math.sin(unit.facing||0),z:unit.z+Math.cos(unit.facing||0)}:null);
+ const targets=nearby(game,unit,Math.max(3,roSkillTargetRange(weapon,stats)),api).sort((a,c)=>distance(a,unit)-distance(c,unit)),target=api.aim&&['zone','dash'].includes(kind)?(clear(api,unit,api.aim)?api.aim:null):targets.find(e=>clear(api,unit,e))||(kind==='dash'&&m.retreat?{x:unit.x+Math.sin(unit.facing||0),z:unit.z+Math.cos(unit.facing||0)}:null);
  if(!target)return false;
  if(kind==='dash'){
   const away=m.retreat===true? -1:1,dx=(target.x-unit.x)*away,dz=(target.z-unit.z)*away,length=Math.hypot(dx,dz)||1,dashDistance=clamp(m.dashDistance||5,1,10);

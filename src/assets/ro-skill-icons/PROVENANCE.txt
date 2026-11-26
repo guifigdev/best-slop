@@ -1,0 +1,1 @@
+Original Ragnarok skill icons extracted read-only from data.grf. Artwork belongs to Gravity. Original pixels retained; magenta transparency converted to PNG alpha. Custom skills use separate authored pixel drawings.

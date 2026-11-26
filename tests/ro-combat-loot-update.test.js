@@ -45,7 +45,7 @@ test('axe basic is a delayed overhead ground strike with short real knockback an
  const boss={...enemy,bonkBoss:true,z:3};applyRoSkillHit(g,u,boss,roBasicAttack(u),1,{move:()=>assert.fail('bosses must resist axe displacement')});
 });
 test('new regions preserve the twelve saved indexes and their seeded entrances are reciprocal and reproducible',()=>{
- assert.equal(RO_WORLD_ROUTE.length,22);assert.equal(RO_WORLD_ROUTE[11].key,'valhalla');for(const key of ['lutie','toy-factory','clock-tower','thanatos-tower'])assert.ok(roWorldRegion(key));
+ assert.equal(RO_WORLD_ROUTE.length,25);assert.equal(RO_WORLD_ROUTE[11].key,'valhalla');for(const key of ['lutie','toy-factory','clock-tower','thanatos-tower'])assert.ok(roWorldRegion(key));
  const a=roWorldRegion('payon-cave',51),b=roWorldRegion('payon-cave',52);assert.notDeepEqual(a.gates.map(g=>[g.x,g.z]),b.gates.map(g=>[g.x,g.z]));assert.deepEqual(a,roWorldRegion('payon-cave',51));
  for(const region of RO_WORLD_ROUTE)for(const gate of roWorldGates(region,[],[],51)){const back=roWorldRegion(gate.nextKey,51).gates.find(g=>g.nextKey===region.key);assert.ok(back);assert.equal(gate.axis==='x'?gate.z:gate.x,back.axis==='x'?back.z:back.x);}
  for(const style of ['snow-village','toy-factory','clockwork','thanatos']){const parts=roExpansionSceneryParts(style,{stone:1,wood:2,dark:3,glow:4});assert.ok(parts.length>60&&parts.length<=180);assert.ok(parts.every(p=>p.slice(0,8).every(Number.isFinite)));}
@@ -60,7 +60,7 @@ test('Blessing supports nearby party members without stacking duplicate buffs or
 });
 test('old critical tome ranks migrate onto equipment without refund or lost progress and the atlas names all new regions',()=>{
  const {g,u}=make();g.command('p',{type:'bkReady'});u.bonkBuild.tomes.crit=3;const cp=createRoCheckpoint(g),restored=make();assert.ok(restored.g.command('p',{type:'bkRestore',checkpoint:cp}));assert.equal(restored.u.bonkBuild.tomes.crit,undefined);assert.equal(restored.u.bonkPendingLevels,0);assert.ok(Math.abs(bonkStats(restored.u).crit-.045)<1e-12);
- const html=roWorldAtlasMarkup({route:roWorldRegion('lutie'),clearedStages:[],visitedStages:[]});for(const text of ['Lutie','Fábrica de Brinquedos','Torre do Relógio','Torre de Thanatos','22 selos'])assert.ok(html.includes(text));assert.ok(!html.includes('undefined'));
+ const html=roWorldAtlasMarkup({route:roWorldRegion('lutie'),clearedStages:[],visitedStages:[]});for(const text of ['Lutie','Fábrica de Brinquedos','Torre do Relógio','Torre de Thanatos','25 selos'])assert.ok(html.includes(text));assert.ok(!html.includes('undefined'));
 });
 
 test('one upgrade offer favours different combat roles instead of several equivalent physical projectiles',()=>{

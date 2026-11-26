@@ -1,0 +1,4630 @@
+{
+  "source": "Original installed Ragnarok client: data.grf",
+  "records": {
+    "sm_sword": {
+      "resource": "data/texture/유저인터페이스/item/sm_sword.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "55b2fef9b412b236e8d2057cd9228da9af09c044dffd8121cecd1a5f657f9303"
+    },
+    "sm_twohand": {
+      "resource": "data/texture/유저인터페이스/item/sm_twohand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "827d84f23a62b38c3dfa331b2388da7f0c19db816281bdc491930f3f44f253e7"
+    },
+    "sm_recovery": {
+      "resource": "data/texture/유저인터페이스/item/sm_recovery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d90910160b809c771e77d74bc8a5c09d3fef74065c0200d427f9d72d4c04c889"
+    },
+    "sm_bash": {
+      "resource": "data/texture/유저인터페이스/item/sm_bash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cc5f376e429f9749e92214ce97313092e1301fbbe3b3d1458d70b7f39f8693c3"
+    },
+    "sm_provoke": {
+      "resource": "data/texture/유저인터페이스/item/sm_provoke.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "94b05bc23f4141d772836c0b998a68d89fff0f2b9cf4212973a583d6d7de9368"
+    },
+    "sm_magnum": {
+      "resource": "data/texture/유저인터페이스/item/sm_magnum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dbe5ce9a70cb33e1280922cf343fbfbf04b04810d066d0f61c0dae12bdb5d517"
+    },
+    "sm_endure": {
+      "resource": "data/texture/유저인터페이스/item/sm_endure.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5f0007d4ac73d0232e61a933f70eae2502673b88ecb403ed67844faab964ad3c"
+    },
+    "mg_srecovery": {
+      "resource": "data/texture/유저인터페이스/item/mg_srecovery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "be765399569583acd456fde05d57581d51acb5e4e05de684de615c8541682e32"
+    },
+    "mg_sight": {
+      "resource": "data/texture/유저인터페이스/item/mg_sight.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e941de106d2e0fe540c398c049dd07f735da5ab188393a245f27ea313ce663d0"
+    },
+    "mg_napalmbeat": {
+      "resource": "data/texture/유저인터페이스/item/mg_napalmbeat.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "97aed484662bf61527f12acb578124a54b656e25c5ff97cd1c80a8c83718fb40"
+    },
+    "mg_safetywall": {
+      "resource": "data/texture/유저인터페이스/item/mg_safetywall.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2bf9a02789869401a0c354092bfa1c4a59a482c19b08563d004a6505fd0b4504"
+    },
+    "mg_soulstrike": {
+      "resource": "data/texture/유저인터페이스/item/mg_soulstrike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6a2b1189c167feafd02a98f497882956349d6ab8b2b91ecbb256766a445a4aa8"
+    },
+    "mg_coldbolt": {
+      "resource": "data/texture/유저인터페이스/item/mg_coldbolt.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6f8ed60e36e5d00632025be927f42f81c6a14118ce446d79dde9f33fa62c1596"
+    },
+    "mg_frostdiver": {
+      "resource": "data/texture/유저인터페이스/item/mg_frostdiver.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7e58d1b61cb2c1697970fd573a3a58cb6b74029d4bf0b6125d7638da1b376118"
+    },
+    "mg_stonecurse": {
+      "resource": "data/texture/유저인터페이스/item/mg_stonecurse.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2eda4500349262d846f079411b37798b0ca212b3e8433fcaa5eef447f6a63c1d"
+    },
+    "mg_fireball": {
+      "resource": "data/texture/유저인터페이스/item/mg_fireball.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "18a4d940a0a76a9cfd363537735b5d52d28edbd4539675f1217a50bf95f34bb3"
+    },
+    "mg_firewall": {
+      "resource": "data/texture/유저인터페이스/item/mg_firewall.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "27248f3e08e2a4599f7d33090e587b7d2c2a8c23c15c4abb1a26c3dcfd483c14"
+    },
+    "mg_firebolt": {
+      "resource": "data/texture/유저인터페이스/item/mg_firebolt.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e5d57615ee1be01e5f30fa6a7420146aa51f1e0fb4706fe46f6d0d213ed869be"
+    },
+    "mg_lightningbolt": {
+      "resource": "data/texture/유저인터페이스/item/mg_lightningbolt.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3d7c64906f6057311d8d061fe69d5ed234b8a3590c6c5b6799c24268208c39cc"
+    },
+    "mg_thunderstorm": {
+      "resource": "data/texture/유저인터페이스/item/mg_thunderstorm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c119add094afcf762fd41e161c3e87c3668be2adb7992702e9ea92e9da118e37"
+    },
+    "al_dp": {
+      "resource": "data/texture/유저인터페이스/item/al_dp.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ff1a93c590efa943118b5b339b1ca90f4399a0e504a089bb70cfc5e37311db2f"
+    },
+    "al_demonbane": {
+      "resource": "data/texture/유저인터페이스/item/al_demonbane.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d46c4854c65d8f7ffc8511c25cad54a231023955c3b5f7f1c88968e0ba1eb74e"
+    },
+    "al_ruwach": {
+      "resource": "data/texture/유저인터페이스/item/al_ruwach.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f25ccddd6b6ad84a596ef879a5cc765b81e9f749570ccb08271a2761b7718e2c"
+    },
+    "al_pneuma": {
+      "resource": "data/texture/유저인터페이스/item/al_pneuma.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2d0f72a3f1f7832f5cf9b10a0aea7ea4d4d033cd0bb545b52bd9c6ebc640605c"
+    },
+    "al_heal": {
+      "resource": "data/texture/유저인터페이스/item/al_heal.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5284bfd5dc36e9419b6792108ea2f128e19b490365706c6c941a0e9b384a4096"
+    },
+    "al_incagi": {
+      "resource": "data/texture/유저인터페이스/item/al_incagi.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b9c6fee3211718f07184d725d5fb12fda6aca4659e5e69617bd1259db2871d3b"
+    },
+    "al_decagi": {
+      "resource": "data/texture/유저인터페이스/item/al_decagi.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c5ae1663d87246157fddc347ca1b025e7a313982f4c303dbdc89c410f15629bf"
+    },
+    "al_crucis": {
+      "resource": "data/texture/유저인터페이스/item/al_crucis.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dddc579372c8ed0499bfd842310d32f910e8c16ed1cb190507d6d519e81b110c"
+    },
+    "al_angelus": {
+      "resource": "data/texture/유저인터페이스/item/al_angelus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d754888f7b0b01ec901634f8dbf19e5323ddf2d09eb2c8838d2be6e2550dcb2d"
+    },
+    "al_blessing": {
+      "resource": "data/texture/유저인터페이스/item/al_blessing.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b2df4ea7639aa7eb71bdf8022d467bc13fb9c0a6d02bdef65302f4d54a3ffef1"
+    },
+    "al_cure": {
+      "resource": "data/texture/유저인터페이스/item/al_cure.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a018ed0385b5718e6b98fb927c34ee95c92f1dc13b60f51cac1633f6f35f2f40"
+    },
+    "mc_mammonite": {
+      "resource": "data/texture/유저인터페이스/item/mc_mammonite.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e41a1b7a9b64367a5672a17242b86f46d7b8cb13b49585585e2cd346d671e459"
+    },
+    "ac_owl": {
+      "resource": "data/texture/유저인터페이스/item/ac_owl.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fc2f5b6b7feea0b2877e3e0461beead958889f586f49cd84184afc974af736b4"
+    },
+    "ac_vulture": {
+      "resource": "data/texture/유저인터페이스/item/ac_vulture.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1b4b59fe532273bcdadc2b592dd10803b1d29ca5fd76329f2164b9548f86904b"
+    },
+    "ac_concentration": {
+      "resource": "data/texture/유저인터페이스/item/ac_concentration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e08673971251ef60b439265ff35c7f1c39569539b6f9d7143e0b4bf6440396af"
+    },
+    "ac_double": {
+      "resource": "data/texture/유저인터페이스/item/ac_double.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d0fa0741daf226450434c1c1fc40f6da07e605450b92c64fb2b3c6543ce0cddc"
+    },
+    "ac_shower": {
+      "resource": "data/texture/유저인터페이스/item/ac_shower.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "03d629f63c6735d9e158eeb5d602754026a0fc2b92e991e0c7fb8e7789397801"
+    },
+    "tf_double": {
+      "resource": "data/texture/유저인터페이스/item/tf_double.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1b935312f00ca27f18b7212dc93d729b7dc9bff1ad38647a08c1d33a97914eab"
+    },
+    "tf_miss": {
+      "resource": "data/texture/유저인터페이스/item/tf_miss.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "243c8208494c10620c0cc7d49a9b7634fc8a37532dfb60bcace0a642e13eb1aa"
+    },
+    "tf_hiding": {
+      "resource": "data/texture/유저인터페이스/item/tf_hiding.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9efef81e5d0ff80415bfd3c7f1f1ee52dafae2adeb470c6e1f1a1d63dbedabd4"
+    },
+    "tf_poison": {
+      "resource": "data/texture/유저인터페이스/item/tf_poison.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3ebae7ca8f1c5db0db21a884191e688ad9939eda534025f418c9f799304fb836"
+    },
+    "tf_detoxify": {
+      "resource": "data/texture/유저인터페이스/item/tf_detoxify.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8b5fc14c6ab9e8f4a93b23e48e38dbd421582c6f45dfaff34e8f71d11d332a9c"
+    },
+    "kn_spearmastery": {
+      "resource": "data/texture/유저인터페이스/item/kn_spearmastery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2bd5e520213b422841e64c90e29a8aeec95834d4fe7c6c3b3f86a838298228ae"
+    },
+    "kn_pierce": {
+      "resource": "data/texture/유저인터페이스/item/kn_pierce.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f62ff67599b70d15a3eaa86f88d814a4de836119260bc41e09fd3fb527e10c3f"
+    },
+    "kn_brandishspear": {
+      "resource": "data/texture/유저인터페이스/item/kn_brandishspear.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a3632ba8e89c0a3f8e53218e9ff07090eb644cc4d4ccc717c6af50170b964834"
+    },
+    "kn_spearstab": {
+      "resource": "data/texture/유저인터페이스/item/kn_spearstab.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "73d7b89a9f36a1b15ebc5d417d9db97f262fa6f5b669e52448fa436fa8098aa3"
+    },
+    "kn_spearboomerang": {
+      "resource": "data/texture/유저인터페이스/item/kn_spearboomerang.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bb51a398459731ac21772cb31cc4887ea80a8e51154fa23d9a5a265ef36e2ab9"
+    },
+    "kn_twohandquicken": {
+      "resource": "data/texture/유저인터페이스/item/kn_twohandquicken.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6e0583f4927c00cd62d88fc6a565a58552a3848aa99315a2e960e3942a25df52"
+    },
+    "kn_autocounter": {
+      "resource": "data/texture/유저인터페이스/item/kn_autocounter.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ac11ebf08b33eb3a7dbc7cf108b095f8d7f34925b07792dac2a22881f04e66aa"
+    },
+    "kn_bowlingbash": {
+      "resource": "data/texture/유저인터페이스/item/kn_bowlingbash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "359920584d30dace73aac59910134278f53650ee4574ac668d0f8b7f74242a99"
+    },
+    "pr_macemastery": {
+      "resource": "data/texture/유저인터페이스/item/pr_macemastery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "584bc93b13134d3bbf7b3330025f24af02fd90c68f7bd15fa47401a2fa9f2a91"
+    },
+    "pr_impositio": {
+      "resource": "data/texture/유저인터페이스/item/pr_impositio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2b8640d46d128f7f12e21686827d375ce5f21a8d7ddd2e972b1debd02d59e1a8"
+    },
+    "pr_suffragium": {
+      "resource": "data/texture/유저인터페이스/item/pr_suffragium.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5b32b964d8d7409f21336805a8c95bde3f919b2ccb393a1676f60d4fa6d1cb1a"
+    },
+    "pr_aspersio": {
+      "resource": "data/texture/유저인터페이스/item/pr_aspersio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bbf9cee0f42a813f9a026baf1efeebac7d18f98fd52ded0edacdb88d118fde61"
+    },
+    "pr_sanctuary": {
+      "resource": "data/texture/유저인터페이스/item/pr_sanctuary.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bc49133b790190ef467fdc806233bddd8dcbccee27e4d05488dc213a9d7688f2"
+    },
+    "pr_slowpoison": {
+      "resource": "data/texture/유저인터페이스/item/pr_slowpoison.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e8362f942afa939434858092ebdd4d5a3b3f475c8442d4815244df636b6dd438"
+    },
+    "pr_strecovery": {
+      "resource": "data/texture/유저인터페이스/item/pr_strecovery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5581275fbdb3e9f3595bf8b1c1324ea30728f654e075bc51c58a125ebc57c563"
+    },
+    "pr_kyrie": {
+      "resource": "data/texture/유저인터페이스/item/pr_kyrie.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "213258e7297d1c0257c7062cb134098affa4b227f485424ea913909b722b8dc2"
+    },
+    "pr_magnificat": {
+      "resource": "data/texture/유저인터페이스/item/pr_magnificat.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9160421fcc8ca6a7fdbcfea8dfea82a9c66dabe8a62c690ccfc6be6f829bcd78"
+    },
+    "pr_gloria": {
+      "resource": "data/texture/유저인터페이스/item/pr_gloria.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e7ff2218b805eddec86ff6bc297e976180df0f68e7492d170ed4dff28884f293"
+    },
+    "pr_lexdivina": {
+      "resource": "data/texture/유저인터페이스/item/pr_lexdivina.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "72316115930a4f3260d9d9f705664d4f246a4fe2f2a6bfb0385369272f1a3a5c"
+    },
+    "pr_turnundead": {
+      "resource": "data/texture/유저인터페이스/item/pr_turnundead.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2e2d6e9f9557d3d20797e90aa4d15c3071096a90e5e56b6e6e2a9d03974ad58e"
+    },
+    "pr_lexaeterna": {
+      "resource": "data/texture/유저인터페이스/item/pr_lexaeterna.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6e00ffc7c6d53e8779d76c8017acc972dc2fe9911a01485538bd050de9bbac20"
+    },
+    "pr_magnus": {
+      "resource": "data/texture/유저인터페이스/item/pr_magnus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e6f24ffc09c862538e97666fbea252650725d1a409c7d0644d62cf8db0bfccd4"
+    },
+    "wz_firepillar": {
+      "resource": "data/texture/유저인터페이스/item/wz_firepillar.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c1cbf51a2b8caafee9bce2608af1ac7b3a2c381d364413552349d168cf9542d3"
+    },
+    "wz_sightrasher": {
+      "resource": "data/texture/유저인터페이스/item/wz_sightrasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "caddff39ac1135e47ab7675accabc18d52b546e883741bb51b3f47f808884f50"
+    },
+    "wz_meteor": {
+      "resource": "data/texture/유저인터페이스/item/wz_meteor.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3fa72d03d516fac392db1c69153982c434038db626afd4532ed6b5a98ca453b9"
+    },
+    "wz_jupitel": {
+      "resource": "data/texture/유저인터페이스/item/wz_jupitel.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6eb520e2e48418cd2736b37cb3a6b8253dc08f5c51c1fa9f3bcb5694e4e0d184"
+    },
+    "wz_vermilion": {
+      "resource": "data/texture/유저인터페이스/item/wz_vermilion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5bd16eb957553085abd91129d9d77619e068e844a7ad36a1ef516d64e3500f2e"
+    },
+    "wz_waterball": {
+      "resource": "data/texture/유저인터페이스/item/wz_waterball.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5c2e7c419430605b51e19d47ef807a5cfbd9195d90ff529f405d1394ba325894"
+    },
+    "wz_icewall": {
+      "resource": "data/texture/유저인터페이스/item/wz_icewall.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "139a513a8a4e65a760f1c8515a70449aaf8ccec7002fa0ff1900c57fc26f2919"
+    },
+    "wz_frostnova": {
+      "resource": "data/texture/유저인터페이스/item/wz_frostnova.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "94ab6aa3492d036e11ccf71435429f74096613df2b08bacdfdefcef123ebde3d"
+    },
+    "wz_stormgust": {
+      "resource": "data/texture/유저인터페이스/item/wz_stormgust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9b73c265911b570abaa1f96df6c93e969c2d94bdd04c4ef32b09a101899d9e9f"
+    },
+    "wz_earthspike": {
+      "resource": "data/texture/유저인터페이스/item/wz_earthspike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e2f25f68f46c512e503f982f349d29dd08b0a1fdd35e4cb838334075b688fe7d"
+    },
+    "wz_heavendrive": {
+      "resource": "data/texture/유저인터페이스/item/wz_heavendrive.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8ff3c4295c68f84e2daf51ad9e8adb34e7efefd74e425fc1a39ee1da39304474"
+    },
+    "wz_quagmire": {
+      "resource": "data/texture/유저인터페이스/item/wz_quagmire.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "708757a45d765ad4bcad79674410cc3b1b762c8c548628ff6eeeb65f6c5be776"
+    },
+    "bs_hiltbinding": {
+      "resource": "data/texture/유저인터페이스/item/bs_hiltbinding.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1957fafcd67dc519d2c54e7dedd7c3ca4f3821ff09429de233dfcbec217bb7e9"
+    },
+    "bs_weaponresearch": {
+      "resource": "data/texture/유저인터페이스/item/bs_weaponresearch.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e13dab7404739338b35c8ba6575f6328653a75fbd769fdbba074b3b62ff43c1b"
+    },
+    "bs_skintemper": {
+      "resource": "data/texture/유저인터페이스/item/bs_skintemper.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8ed96666c7382104ae23c082226df41c91ea0ace716b4d9fd6ad7736cfac9678"
+    },
+    "bs_hammerfall": {
+      "resource": "data/texture/유저인터페이스/item/bs_hammerfall.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ae47ab3094ffab2a9dfdbed5b4f3cbc2e320a78f1668cb203068028138ee470f"
+    },
+    "bs_adrenaline": {
+      "resource": "data/texture/유저인터페이스/item/bs_adrenaline.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "38ba090f16f20c18de496b62d983837ddad125562288effbf5d9792dbafccf87"
+    },
+    "bs_weaponperfect": {
+      "resource": "data/texture/유저인터페이스/item/bs_weaponperfect.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "73218cfc3d1ec1d13bfe704f452a0f0f0559bf5ce85ef5e375188fef6bb8cd55"
+    },
+    "bs_overthrust": {
+      "resource": "data/texture/유저인터페이스/item/bs_overthrust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2366fc1d1b450569451caa0a0becc37721927fa5623371d0fe5aeb9ce15015b0"
+    },
+    "bs_maximize": {
+      "resource": "data/texture/유저인터페이스/item/bs_maximize.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b1cd3f828a7e1808044343e68b46413e505a762883ff1b0a51397462a840e6ec"
+    },
+    "ht_skidtrap": {
+      "resource": "data/texture/유저인터페이스/item/ht_skidtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ebb976def9614b502d352e54a3768a4d531774ecfb70fecaba74ee051c64a848"
+    },
+    "ht_landmine": {
+      "resource": "data/texture/유저인터페이스/item/ht_landmine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e3a66defe29fe09e82c543326b9ec459ac88e2662b8b5fb4a93494159af4aaca"
+    },
+    "ht_anklesnare": {
+      "resource": "data/texture/유저인터페이스/item/ht_anklesnare.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cdb89956b8dbc5d46dd27ea2dec7afdd95402ded84480208dceb5fcfe889aad0"
+    },
+    "ht_shockwave": {
+      "resource": "data/texture/유저인터페이스/item/ht_shockwave.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a49de81a9596ea86d928075f47a93ad3a399c08e15614f352d604ffa7f7a11e8"
+    },
+    "ht_sandman": {
+      "resource": "data/texture/유저인터페이스/item/ht_sandman.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7f401dfac8a63dea993bf216b3f93ec54345286630c46d17af398b6b5789d884"
+    },
+    "ht_flasher": {
+      "resource": "data/texture/유저인터페이스/item/ht_flasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "40b4f9c707142e1b2a6896a90be977ed6e8f50e77a444f89e17c3f1a5589ce71"
+    },
+    "ht_freezingtrap": {
+      "resource": "data/texture/유저인터페이스/item/ht_freezingtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "aeb98491c9cbf20753411e95892dc58ad6dd5dc573772042f334d7da6985d0d7"
+    },
+    "ht_blastmine": {
+      "resource": "data/texture/유저인터페이스/item/ht_blastmine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "da851fb1e0c4d42ab3f3615987598fd586021aea1f6c7ac09f5ca4900c947090"
+    },
+    "ht_claymoretrap": {
+      "resource": "data/texture/유저인터페이스/item/ht_claymoretrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0221ae6b4b4adf20e34ceec248b02da418b54ca25511951d45afaf3612969418"
+    },
+    "ht_beastbane": {
+      "resource": "data/texture/유저인터페이스/item/ht_beastbane.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4a07596454310da17a89ddf85d1135c2e2b29da48efa8f7e219a87c4567a4f81"
+    },
+    "ht_falcon": {
+      "resource": "data/texture/유저인터페이스/item/ht_falcon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bffc156cb0af6d8862afe0dbea7edf7b7121866d3aa3848054e2e65f58dc06eb"
+    },
+    "ht_steelcrow": {
+      "resource": "data/texture/유저인터페이스/item/ht_steelcrow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2bf06b8f980dbdb122b097a4b170ee157786096d917b05840110a80ad311a186"
+    },
+    "ht_blitzbeat": {
+      "resource": "data/texture/유저인터페이스/item/ht_blitzbeat.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5e716d117d8de6442296dc953b6d7c4bab46f4b6747d44704fd6ec04e084dcbb"
+    },
+    "as_right": {
+      "resource": "data/texture/유저인터페이스/item/as_right.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6cf11bcaea359bd4376475d9647bd2436f3393d48763cded23fe47bd7b65d89b"
+    },
+    "as_left": {
+      "resource": "data/texture/유저인터페이스/item/as_left.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9f67ac4c0116ccc59b1217e46385514eae199cec667cb53efbcfa1774bc974eb"
+    },
+    "as_katar": {
+      "resource": "data/texture/유저인터페이스/item/as_katar.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2f7422a4c1fad57382cb9d9a60f99b59a7375ed347fbd2d3af72172444d021a2"
+    },
+    "as_cloaking": {
+      "resource": "data/texture/유저인터페이스/item/as_cloaking.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "13da0ab0371108974166cc190cef33b873676b955162ba7b407fc9c88808d772"
+    },
+    "as_sonicblow": {
+      "resource": "data/texture/유저인터페이스/item/as_sonicblow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e9d07fa3d9a981af8c707a9a104e8f4af63bb7d620f260e54f473d840044c706"
+    },
+    "as_grimtooth": {
+      "resource": "data/texture/유저인터페이스/item/as_grimtooth.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3f49b3f811a9cac93172bfd9cdc32a701828fc839378e52cace90e311ba02bf0"
+    },
+    "as_enchantpoison": {
+      "resource": "data/texture/유저인터페이스/item/as_enchantpoison.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "53299bce4b8cdea1829a7ff773acc4c75bf1ec07d12f93758f312b7ecc67eac4"
+    },
+    "as_poisonreact": {
+      "resource": "data/texture/유저인터페이스/item/as_poisonreact.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f1b7c3d25c8b70305bce54232d189180b01ba2b8bf275ac2d24e8dfcbabf10b5"
+    },
+    "as_venomdust": {
+      "resource": "data/texture/유저인터페이스/item/as_venomdust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "97f783f61b869a258968150d80dcfde7a694a3a4672f9345cac119a0e3a0ae2b"
+    },
+    "as_splasher": {
+      "resource": "data/texture/유저인터페이스/item/as_splasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ae3d3d3875af7b008afd1bffa23026f868758a8fa2875f6d2975d2f7d4826cdc"
+    },
+    "sm_movingrecovery": {
+      "resource": "data/texture/유저인터페이스/item/sm_movingrecovery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3bac2d49120786a7de5a4423c23af63bf0c4409d3fb7826fb77287a8274731a7"
+    },
+    "sm_fatalblow": {
+      "resource": "data/texture/유저인터페이스/item/sm_fatalblow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3c270e08c7740ab4bdf549a203a5324b1a039f2113f6768031e5e69280241b59"
+    },
+    "sm_autoberserk": {
+      "resource": "data/texture/유저인터페이스/item/sm_autoberserk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "408573d4123ce04a4466cfc2e5f74bccb7ff07e02ade38954b8cc1d483ce9325"
+    },
+    "ac_chargearrow": {
+      "resource": "data/texture/유저인터페이스/item/ac_chargearrow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1132d25137632d69df4a57efc107ad5dae20180bdc8b5578fb2e4880713efea3"
+    },
+    "tf_sprinklesand": {
+      "resource": "data/texture/유저인터페이스/item/tf_sprinklesand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f62732ef81b6b5955d562257d1a5d2324917c948b73adc8405292ee2d3afd996"
+    },
+    "tf_backsliding": {
+      "resource": "data/texture/유저인터페이스/item/tf_backsliding.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "93ca72813b6852e1dbcd892c89a8659b7e7cca2cc97ce004e0cc7f0eb186710b"
+    },
+    "tf_throwstone": {
+      "resource": "data/texture/유저인터페이스/item/tf_throwstone.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cec99a3f80c605508bc829e357b12efcf39294f7f62548c6821eb64f26c22013"
+    },
+    "mc_cartrevolution": {
+      "resource": "data/texture/유저인터페이스/item/mc_cartrevolution.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4244dd2f90e35ca91278ce3a10392b06c720c96b8685c3454a3bc0a6340e980a"
+    },
+    "mc_loud": {
+      "resource": "data/texture/유저인터페이스/item/mc_loud.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "61522d4e10d712373856f8d8de3b0c7ee8e2f020188f9baf4a729506202fd90b"
+    },
+    "al_holylight": {
+      "resource": "data/texture/유저인터페이스/item/al_holylight.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a988e58a93f95b742942f738aa8860a6cd4dee4ee48110e95a8c27c4b6195680"
+    },
+    "mg_energycoat": {
+      "resource": "data/texture/유저인터페이스/item/mg_energycoat.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f5510ed7a41e3223d79a5ee0c38c15cfd5fc044dd66e8db9d13973696c61658f"
+    },
+    "rg_backstap": {
+      "resource": "data/texture/유저인터페이스/item/rg_backstap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7a55e2b2768e2e78962f98ef02280041e947fe6966c08dce269227a07df8351a"
+    },
+    "rg_tunneldrive": {
+      "resource": "data/texture/유저인터페이스/item/rg_tunneldrive.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "463c6fb5525a73745e133f55837be5b8e06ce0b40bdade4c801d208ddeeb85f1"
+    },
+    "rg_raid": {
+      "resource": "data/texture/유저인터페이스/item/rg_raid.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8be4c27900fcf896bbb74f861221f32071d4d8d2093c631b0659a968873e1a8c"
+    },
+    "rg_intimidate": {
+      "resource": "data/texture/유저인터페이스/item/rg_intimidate.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c0b332ad1059c5f25f0f9b31930fecd6aa415a7223a34a36d1ef974cd480cafa"
+    },
+    "am_axemastery": {
+      "resource": "data/texture/유저인터페이스/item/am_axemastery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ad66b84a9e4005bb8da1ea7e481e62d881ed09858da1b6511ce7ae31d3314bcc"
+    },
+    "am_learningpotion": {
+      "resource": "data/texture/유저인터페이스/item/am_learningpotion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3276239058e657d562ff34b6dc4cd071c662d4ca736940a22f2815910c9c3503"
+    },
+    "am_demonstration": {
+      "resource": "data/texture/유저인터페이스/item/am_demonstration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "77b1f59a995f74b839fd78bbda15e61d325fb5f5152ecff5be9725b3685cabe5"
+    },
+    "am_acidterror": {
+      "resource": "data/texture/유저인터페이스/item/am_acidterror.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4ebe99993ddf5ad10a865e165d226be61d8fbe1ea514dc57d212f5cf081fc917"
+    },
+    "am_potionpitcher": {
+      "resource": "data/texture/유저인터페이스/item/am_potionpitcher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "faeb723a552c8248337d0bd09e8cefbc0ccf6f753fcf61c52fb1814d336fb42c"
+    },
+    "am_cannibalize": {
+      "resource": "data/texture/유저인터페이스/item/am_cannibalize.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "14b8501b821dc82be5b102b382544aca58ced2513e152f182bcf54cd2bf2902f"
+    },
+    "am_spheremine": {
+      "resource": "data/texture/유저인터페이스/item/am_spheremine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fd59ad023bfa72c5c46ed6b95c7ea9f1ad5a0fd7bf9c8fc92810b5138232b407"
+    },
+    "am_cp_weapon": {
+      "resource": "data/texture/유저인터페이스/item/am_cp_weapon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1182001962869869eaf1332115fc3e3aad98ea109f3cc1bfd6b5a3552677cc55"
+    },
+    "am_cp_shield": {
+      "resource": "data/texture/유저인터페이스/item/am_cp_shield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7e955a684eba058c999cb46735dc1f53a9d0cf6f089027c848637f3148b35c25"
+    },
+    "am_cp_armor": {
+      "resource": "data/texture/유저인터페이스/item/am_cp_armor.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2c8f733248654a5ad4402f66286ac16315b835e490181d46adc2386876d41943"
+    },
+    "am_cp_helm": {
+      "resource": "data/texture/유저인터페이스/item/am_cp_helm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ef52deeb4b4ebcaa75e178e6f490c6c8abf8d83172263f3a330735c3c7c352b5"
+    },
+    "am_callhomun": {
+      "resource": "data/texture/유저인터페이스/item/am_callhomun.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8528a1650cfa96f86f8bd3e89616bf4362cdfd7858c417b0d2c1a7f5748bbc1e"
+    },
+    "cr_trust": {
+      "resource": "data/texture/유저인터페이스/item/cr_trust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7fe5125820c8003ccba60b896ab3332fb3ad323e79f51475a575710496acecc5"
+    },
+    "cr_autoguard": {
+      "resource": "data/texture/유저인터페이스/item/cr_autoguard.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "49788c604b24dca48bcb4c52287d5525aaf5bf6eb5d47d16dd9535a302c93aec"
+    },
+    "cr_shieldcharge": {
+      "resource": "data/texture/유저인터페이스/item/cr_shieldcharge.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ce03433364f3af2a01dc735d479e42416200c1114b82faa043b8000ccada86e2"
+    },
+    "cr_shieldboomerang": {
+      "resource": "data/texture/유저인터페이스/item/cr_shieldboomerang.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9863859673bec1884f5c2d3f4339fd99cbe14a76e2473c1a750010044d154109"
+    },
+    "cr_reflectshield": {
+      "resource": "data/texture/유저인터페이스/item/cr_reflectshield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c74b2a39fc3721640f729a3c429cee049a64445e048cd613ac5c5795904ec5f9"
+    },
+    "cr_holycross": {
+      "resource": "data/texture/유저인터페이스/item/cr_holycross.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "826836c08ddb618f61223117766f81cc13141e430bf1b0d87dce0d597b2d022b"
+    },
+    "cr_grandcross": {
+      "resource": "data/texture/유저인터페이스/item/cr_grandcross.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5268438b37b3973f99ceeaf73ff27586f8059f8427ec9ee6f27242672382eed3"
+    },
+    "cr_providence": {
+      "resource": "data/texture/유저인터페이스/item/cr_providence.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2aab436ee51bb191be587d2f76e967badc890b79228ddfe6f8cdba199dad49ff"
+    },
+    "cr_defender": {
+      "resource": "data/texture/유저인터페이스/item/cr_defender.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e041232799ece150a7472d735c4d48da7aa416d7b45ce320692e571ec0fe1a28"
+    },
+    "cr_spearquicken": {
+      "resource": "data/texture/유저인터페이스/item/cr_spearquicken.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e88a8875dd2875d3c60530ce2f69c366a43f0c94283e6cb3998ca1507f308e04"
+    },
+    "mo_ironhand": {
+      "resource": "data/texture/유저인터페이스/item/mo_ironhand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "469782157215277c266fbcd648ea256728d363b478f9dc0773a66e2e1708f3f8"
+    },
+    "mo_spiritsrecovery": {
+      "resource": "data/texture/유저인터페이스/item/mo_spiritsrecovery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b42a5e5b6d8dc44cb70cee4c3abaefb1ca2a98be96846b4a15eed3197e0fa8d5"
+    },
+    "mo_callspirits": {
+      "resource": "data/texture/유저인터페이스/item/mo_callspirits.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "70f5ed22543becfd4c3b1efac01b9e54fee2d980585cce91141a564a24ed5f51"
+    },
+    "mo_absorbspirits": {
+      "resource": "data/texture/유저인터페이스/item/mo_absorbspirits.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "42374301961f732dae62751ac0ecbb4d252a8f87746491f72a8da542f44768d7"
+    },
+    "mo_tripleattack": {
+      "resource": "data/texture/유저인터페이스/item/mo_tripleattack.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5fecd6f838571da67b219d91ee32db7908aa524e7256356f4c54b3290a7c0965"
+    },
+    "mo_bodyrelocation": {
+      "resource": "data/texture/유저인터페이스/item/mo_bodyrelocation.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "34bc5652818ead44cc887966d7e68c31a3b8c7ec964b4730f582aceb62b7fc4c"
+    },
+    "mo_dodge": {
+      "resource": "data/texture/유저인터페이스/item/mo_dodge.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "071a31d05aecf696f00e212131a23273a52a62e6f9f20eac5ac7833a084f2e3a"
+    },
+    "mo_investigate": {
+      "resource": "data/texture/유저인터페이스/item/mo_investigate.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dc504de693c16642c6444dc666c2a7abd6cca0f1fb8f88c3302580ab1c32e365"
+    },
+    "mo_fingeroffensive": {
+      "resource": "data/texture/유저인터페이스/item/mo_fingeroffensive.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2f25bce38b46f2f302956896b346abd91016fdfe04ea91a444df4366685c8e3a"
+    },
+    "mo_steelbody": {
+      "resource": "data/texture/유저인터페이스/item/mo_steelbody.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7a9a8a1806222a57be79a6d2fa573befe6ffd504631462755e9379d37ae1b84d"
+    },
+    "mo_bladestop": {
+      "resource": "data/texture/유저인터페이스/item/mo_bladestop.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ae0d4bca25e9a930d101c6d2c7bde922ef9082db839c3200e136bc5fd36bb5a1"
+    },
+    "mo_explosionspirits": {
+      "resource": "data/texture/유저인터페이스/item/mo_explosionspirits.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "81499718f383b494fd148060cb23cf7f8802cce4028e47990b1be041e2be6cb9"
+    },
+    "mo_extremityfist": {
+      "resource": "data/texture/유저인터페이스/item/mo_extremityfist.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "91b5dfd8cb0a38a8b2ee93548c3594f55cb5e6317b32c32055bc36f7e9cb2684"
+    },
+    "mo_chaincombo": {
+      "resource": "data/texture/유저인터페이스/item/mo_chaincombo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5b56c509a9e0de3828b211bfd5bf3ddced58e804707004788b13ea4e93dbbe5c"
+    },
+    "mo_combofinish": {
+      "resource": "data/texture/유저인터페이스/item/mo_combofinish.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7207c50e872ed7b53e206fe3654254bf6314b02ca868f6290662f9e53ccfa9b8"
+    },
+    "sa_advancedbook": {
+      "resource": "data/texture/유저인터페이스/item/sa_advancedbook.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "77a1ba4e01f1e435cdfbc205ba6de1a0e38c93aac0338c5cd3eaed016f263987"
+    },
+    "sa_magicrod": {
+      "resource": "data/texture/유저인터페이스/item/sa_magicrod.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dc954495bd57fb188a0c4e556b07dfed4b56902abc90ba6ae0b4679a125bbe68"
+    },
+    "sa_spellbreaker": {
+      "resource": "data/texture/유저인터페이스/item/sa_spellbreaker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "22483c084e19c3372558e571f1a51d2d9eb78b4026d12daa7b04644b6e51b316"
+    },
+    "sa_freecast": {
+      "resource": "data/texture/유저인터페이스/item/sa_freecast.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ffac7a8b3f43eb51fbc2c5b10659a081550e96f2ff1a651ad8ebf837cc25865f"
+    },
+    "sa_autospell": {
+      "resource": "data/texture/유저인터페이스/item/sa_autospell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "784db29da42305fc7a6688f364f6e8b58105974f4fd7a8b14de6eb3b4af3c2d3"
+    },
+    "sa_flamelauncher": {
+      "resource": "data/texture/유저인터페이스/item/sa_flamelauncher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "abf1f0be43d928250c46291a101a83706c849a4e04f072a6f88d47569ff8cc08"
+    },
+    "sa_frostweapon": {
+      "resource": "data/texture/유저인터페이스/item/sa_frostweapon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "23dfdc28e06eb14850006c5abc3b11f318c1c73d9bd4f38cce12245bf5ed4542"
+    },
+    "sa_lightningloader": {
+      "resource": "data/texture/유저인터페이스/item/sa_lightningloader.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c9ea46014390049acd55ddce10f573843bd21d1d345f02bf3c8830e4a8019e1c"
+    },
+    "sa_seismicweapon": {
+      "resource": "data/texture/유저인터페이스/item/sa_seismicweapon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1f3ef39cbae070f269960bbd6170df4fae7a61bfbe839775cc692edf54fccfcf"
+    },
+    "sa_dragonology": {
+      "resource": "data/texture/유저인터페이스/item/sa_dragonology.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "878f005d404bbed73ce5ac540ea7153802d8f649039daa70352d5bac584f91d6"
+    },
+    "sa_volcano": {
+      "resource": "data/texture/유저인터페이스/item/sa_volcano.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "91e4a075410e6c267c90fd8edaebf8bf777307bfbf9703ec495e0a5d28cab10c"
+    },
+    "sa_deluge": {
+      "resource": "data/texture/유저인터페이스/item/sa_deluge.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0cfe2f2983762a7765c02e6f6d540111616c626166dabd559810f6d78284f054"
+    },
+    "sa_violentgale": {
+      "resource": "data/texture/유저인터페이스/item/sa_violentgale.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "04d393a980d16e22ac01da7b89579680fcd8bb14144cb1811ce528e861a8deeb"
+    },
+    "sa_landprotector": {
+      "resource": "data/texture/유저인터페이스/item/sa_landprotector.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "612eff9cd272ca09eb71ff878444818e4a68e4023558bf02646303a6061d0194"
+    },
+    "sa_dispell": {
+      "resource": "data/texture/유저인터페이스/item/sa_dispell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "855a2ec8fb9f7fdc45b3165210a7408f998cf30bb53b79eecee7fdeacc2063f9"
+    },
+    "bd_lullaby": {
+      "resource": "data/texture/유저인터페이스/item/bd_lullaby.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "90491b9d24ff324ecdcb5306cd03dfc39a725b5f1c68939c343d9170c400708a"
+    },
+    "bd_richmankim": {
+      "resource": "data/texture/유저인터페이스/item/bd_richmankim.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f53695e52e5cb9d5a8c6c3dc3a5ccb9ac82ca55b7370feb385b8a01544cc57a0"
+    },
+    "bd_eternalchaos": {
+      "resource": "data/texture/유저인터페이스/item/bd_eternalchaos.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "db92cf454e24b273fbb706e76aea2e3b2ebfb75922324ea2a2992efd5d63dc16"
+    },
+    "bd_drumbattlefield": {
+      "resource": "data/texture/유저인터페이스/item/bd_drumbattlefield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5fee45421e9417e97c5d8358a17ada2fbfc19e0a5558e31dfd62bb20abfd6b60"
+    },
+    "bd_ringnibelungen": {
+      "resource": "data/texture/유저인터페이스/item/bd_ringnibelungen.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d63c76b48abc59b9910e96a24405f8f2596151c9591bf56d808b22911d5020f6"
+    },
+    "bd_rokisweil": {
+      "resource": "data/texture/유저인터페이스/item/bd_rokisweil.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4f4de2d112c8895a1bf461763a2ec90deb4a2861e2fe99aa1c2f1537c7087965"
+    },
+    "bd_siegfried": {
+      "resource": "data/texture/유저인터페이스/item/bd_siegfried.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c5cd0704209bf0b0d06a0c1a361df8082c5db7f4206309483db363146e6a48a9"
+    },
+    "ba_musicallesson": {
+      "resource": "data/texture/유저인터페이스/item/ba_musicallesson.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c5d855f8befa3e21888977caaa1b47bb0ed1bea8d55ca53053a7dbb1b9ae5615"
+    },
+    "ba_musicalstrike": {
+      "resource": "data/texture/유저인터페이스/item/ba_musicalstrike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0f41a2d470e84eb167f0cbbf41e9a482c0124d43e22ffab9b7c8bfeb9b4c2097"
+    },
+    "ba_dissonance": {
+      "resource": "data/texture/유저인터페이스/item/ba_dissonance.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "06bc4aff94355aa9820fc74d144b8dd61fd4ca61f6836fdcc357b6f3789607d5"
+    },
+    "ba_frostjoker": {
+      "resource": "data/texture/유저인터페이스/item/ba_frostjoker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e5fd69baec5bdcf1cc8afea6f2194d6bbd18f689210dff7d4404e724b1eeab28"
+    },
+    "ba_whistle": {
+      "resource": "data/texture/유저인터페이스/item/ba_whistle.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fc9790992c26531008065ac4d5f93aaa7851b809d3917c053132c0bc7c445e10"
+    },
+    "ba_assassincross": {
+      "resource": "data/texture/유저인터페이스/item/ba_assassincross.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1d575254f15e0829116fa2148a0a563d350dbf29b5cf3e3a1907a07746fe23db"
+    },
+    "ba_poembragi": {
+      "resource": "data/texture/유저인터페이스/item/ba_poembragi.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f3b3cd5434834cf7678ec2bbc60a8c3fda46fbf3cbe7b35df52b650072f0ee19"
+    },
+    "ba_appleidun": {
+      "resource": "data/texture/유저인터페이스/item/ba_appleidun.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "95e76fc4a56e0307d0a6699d09cd2ab37040a75ba38c23a98eebf8167ff627b7"
+    },
+    "lk_aurablade": {
+      "resource": "data/texture/유저인터페이스/item/lk_aurablade.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "362ab925920e9f758e9351cd2ac18922129c0e47ed6352c4253bd6946ff1830b"
+    },
+    "lk_parrying": {
+      "resource": "data/texture/유저인터페이스/item/lk_parrying.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "73cca8799c7d6093355722d5631bdfb91df3e2c1d8a99ebdf6f4afbbf9b2dbfb"
+    },
+    "lk_concentration": {
+      "resource": "data/texture/유저인터페이스/item/lk_concentration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ec4a6c8a2e471a350418f14536396cd46bfa079b12fd106e219627eadb9ce7b3"
+    },
+    "lk_tensionrelax": {
+      "resource": "data/texture/유저인터페이스/item/lk_tensionrelax.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f0a4589295c2ba56c1342ad8f4ab66affa9d3c1a1a4819fee3dac41fcf4768b5"
+    },
+    "lk_berserk": {
+      "resource": "data/texture/유저인터페이스/item/lk_berserk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "83fb137b2a8fcb1c1ae9a0b5f56aeb28e3b99382b67c888508f792cc4c81f796"
+    },
+    "hp_assumptio": {
+      "resource": "data/texture/유저인터페이스/item/hp_assumptio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "befd13f64869c046ecdc02ef365e22bef01e0d2d607f6d73dd39a18205d24cb3"
+    },
+    "hp_basilica": {
+      "resource": "data/texture/유저인터페이스/item/hp_basilica.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c5e66ea45db9c19366349a48b3d3caa2a5f9f311e4b261c16dd966841aa3d862"
+    },
+    "hp_meditatio": {
+      "resource": "data/texture/유저인터페이스/item/hp_meditatio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0cf13cdb6de81adc76f6e0fc4ddb6e2a4b6fafcdd7c0b26643b363479de7a96a"
+    },
+    "hw_souldrain": {
+      "resource": "data/texture/유저인터페이스/item/hw_souldrain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f884b6ecf56685ca4a7a5a5316c7c3858ad48a12694e358b8fd6ea0bc4866ad9"
+    },
+    "hw_magiccrasher": {
+      "resource": "data/texture/유저인터페이스/item/hw_magiccrasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9a81e586eb20c7721b09c2d5e3c93d5ab7b7129ba15bc32b9161fe1219f9aa30"
+    },
+    "hw_magicpower": {
+      "resource": "data/texture/유저인터페이스/item/hw_magicpower.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4eb447bbe7322fa8689679ddab464c3f59808a790a6c91d06300f27c2492cd2b"
+    },
+    "pa_pressure": {
+      "resource": "data/texture/유저인터페이스/item/pa_pressure.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "521c46f212bb7e259bf91c1324abcc8fdc86e7853ee9cd64479dff423fb2bf82"
+    },
+    "pa_sacrifice": {
+      "resource": "data/texture/유저인터페이스/item/pa_sacrifice.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0861f8bd23243ab3227b0fcbfc5f4cb8daae62d70a4dff3db63ca5b61242c593"
+    },
+    "pa_gospel": {
+      "resource": "data/texture/유저인터페이스/item/pa_gospel.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bead9ad511cd393bed81993fa6b3f4cd3ee9ab21f1e8e23e9fed564a8158e110"
+    },
+    "ch_palmstrike": {
+      "resource": "data/texture/유저인터페이스/item/ch_palmstrike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "521442f67edc306bd0c476356d080be07a99c2a2e6d8cdec2468d3ec71b413cb"
+    },
+    "ch_tigerfist": {
+      "resource": "data/texture/유저인터페이스/item/ch_tigerfist.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ccdc87bdb9f4186add94db3548706e2a6868d98896cda367bdb7763b4e72bb1d"
+    },
+    "ch_chaincrush": {
+      "resource": "data/texture/유저인터페이스/item/ch_chaincrush.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "865fc89625058d3b97e9603c5a888865ae45ba4abe5957edebdb6780ec2d6fd4"
+    },
+    "pf_hpconversion": {
+      "resource": "data/texture/유저인터페이스/item/pf_hpconversion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c7a05216d0f481bb48196f5dbaa4f747208cdd5d9a63edc8306307c7a6c5ed18"
+    },
+    "pf_soulchange": {
+      "resource": "data/texture/유저인터페이스/item/pf_soulchange.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "43083c93d292f02eb0f23b46e2eb05b7375cfa1ad7d43e24c11401157d89e851"
+    },
+    "pf_soulburn": {
+      "resource": "data/texture/유저인터페이스/item/pf_soulburn.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b969f6fa07f41586c291febca3bea2731b893610e6faa41e92bb4953ac23f6a8"
+    },
+    "asc_katar": {
+      "resource": "data/texture/유저인터페이스/item/asc_katar.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0d516e8a01d77eda7761f80887d16e5eebc26e9b40fb719810f4949a3cf2b1af"
+    },
+    "asc_edp": {
+      "resource": "data/texture/유저인터페이스/item/asc_edp.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f91f7b32480bb7d1c1bf44981ca3f0e6703e6109e6c7abd2fe1337e227a824bd"
+    },
+    "asc_breaker": {
+      "resource": "data/texture/유저인터페이스/item/asc_breaker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "180ea2f09702957c8e85068917803752243eb6a1f93461cc537cb74b3fcfa23c"
+    },
+    "sn_sight": {
+      "resource": "data/texture/유저인터페이스/item/sn_sight.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "aab25ecda44deedf8929ed260cbfec745e548635ed025c49d6d0ec4e65739ac8"
+    },
+    "sn_falconassault": {
+      "resource": "data/texture/유저인터페이스/item/sn_falconassault.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "91092edb8d7cc70b7c72d195ec524f7895bf7440d9539f585af67bdbcc9302e0"
+    },
+    "sn_sharpshooting": {
+      "resource": "data/texture/유저인터페이스/item/sn_sharpshooting.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d2d73c593c92b81ce6b3d6d7bcc1ab6f61666decf1c62f347a2a1338ad809a5f"
+    },
+    "sn_windwalk": {
+      "resource": "data/texture/유저인터페이스/item/sn_windwalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "37795cc64a46d76df98cf9da0bb57d318c4db7543ab2a56fc24f009a6cfcb2cc"
+    },
+    "ws_meltdown": {
+      "resource": "data/texture/유저인터페이스/item/ws_meltdown.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "598d5cb36e0544b580fa05124032006a82175c15ed3453a42364de671e225839"
+    },
+    "ws_cartboost": {
+      "resource": "data/texture/유저인터페이스/item/ws_cartboost.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "10082a61e7d6efe50505082d022a92949bfaa22264cce89f8625aa7458655b75"
+    },
+    "st_chasewalk": {
+      "resource": "data/texture/유저인터페이스/item/st_chasewalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bcef536c1fd66b11e407cb810ed51d36ee9eba22415c366d6444d1cb3cdc5fbf"
+    },
+    "st_rejectsword": {
+      "resource": "data/texture/유저인터페이스/item/st_rejectsword.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6f0044118b9fd64a3844b86d2ade18516bd46ce4ca759ce481ee20223887187f"
+    },
+    "cg_arrowvulcan": {
+      "resource": "data/texture/유저인터페이스/item/cg_arrowvulcan.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9dd1e33b063e39fc049e35ad3c8d2c9f513834215be8cb0d2e3c6dcd57a69d41"
+    },
+    "cg_moonlit": {
+      "resource": "data/texture/유저인터페이스/item/cg_moonlit.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d02ecc0aff82a569b2db89ef0513ce2a68aba338d9447a20434150ec2d79dbfb"
+    },
+    "lk_spiralpierce": {
+      "resource": "data/texture/유저인터페이스/item/lk_spiralpierce.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b83a83057b9884006e1eb75ee8959336415760a6afd679e3fb388bd6229aa2c2"
+    },
+    "lk_headcrush": {
+      "resource": "data/texture/유저인터페이스/item/lk_headcrush.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6138a7dc11add75db312855960e0d981a548c4210f1cd93636068da648be7bc6"
+    },
+    "lk_jointbeat": {
+      "resource": "data/texture/유저인터페이스/item/lk_jointbeat.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "868de8b5ff88fc80ce2d04dc086ebd2075aa52c35be738d151cf25bb736e6a49"
+    },
+    "hw_napalmvulcan": {
+      "resource": "data/texture/유저인터페이스/item/hw_napalmvulcan.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "972b76d6f8192a1290fce520260b59f0799e0ec855dfcfb6268e4d3e7d416c14"
+    },
+    "ch_soulcollect": {
+      "resource": "data/texture/유저인터페이스/item/ch_soulcollect.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "50edc46b7a4a2d1130c5250343e1b132b7f55048fd73d687ca07021f471c4af8"
+    },
+    "pf_mindbreaker": {
+      "resource": "data/texture/유저인터페이스/item/pf_mindbreaker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ac19c02a4a175e56a5804a040f48d683b9f0f7a03fb15c7aefa1911012fc7da1"
+    },
+    "pf_memorize": {
+      "resource": "data/texture/유저인터페이스/item/pf_memorize.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6368f075f004e6ac76e7f422f63b5f8ab5f668d2c1d4734d683482a55f12280f"
+    },
+    "pf_fogwall": {
+      "resource": "data/texture/유저인터페이스/item/pf_fogwall.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2702efac836267c70551c7c0fd36c0df1b3051ace6a9fcb8ebf41432de4aba5b"
+    },
+    "pf_spiderweb": {
+      "resource": "data/texture/유저인터페이스/item/pf_spiderweb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "75e7fcacd0d92f145cc1acd8e9983f2eea5735bc71cb665cecacfd61cc669ddb"
+    },
+    "asc_meteorassault": {
+      "resource": "data/texture/유저인터페이스/item/asc_meteorassault.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e887db3b4b349fe7e165c04d28d4b1f31ef0172b631acbd2f4160fefd926ab09"
+    },
+    "am_berserkpitcher": {
+      "resource": "data/texture/유저인터페이스/item/am_berserkpitcher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "208611bdb2fd302536d24a8faab7766760d031c8e7c586806b911b652246b91a"
+    },
+    "bs_adrenaline2": {
+      "resource": "data/texture/유저인터페이스/item/bs_adrenaline2.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9922f692b6f600b9f94121a78a2937e2c1aee00db43277535bc675b900a24d2a"
+    },
+    "cr_slimpitcher": {
+      "resource": "data/texture/유저인터페이스/item/cr_slimpitcher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f27b2e3a576ca94ff65f05aa8d1f5b507d5eee05ff20dcf8eb54e26acec98782"
+    },
+    "cr_fullprotection": {
+      "resource": "data/texture/유저인터페이스/item/cr_fullprotection.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5d2d1a3d73bb9c8e3b4880f28822414858d768f8ef00a5f83d936b9525ae5ab0"
+    },
+    "pa_shieldchain": {
+      "resource": "data/texture/유저인터페이스/item/pa_shieldchain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "00fd7679204c77683bd80a236890ad63816065bcbdc7e0d0e3d111871968b45b"
+    },
+    "hp_manarecharge": {
+      "resource": "data/texture/유저인터페이스/item/hp_manarecharge.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a21881cdeb22cc1334f0b05f6fd1bad325626d154652aea5d3afb0695a1c6edf"
+    },
+    "pf_doublecasting": {
+      "resource": "data/texture/유저인터페이스/item/pf_doublecasting.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "91bafee2375878a7105b5de3d91c32a537a9efdc258f0e67b62fefe8ee0250e4"
+    },
+    "hw_ganbantein": {
+      "resource": "data/texture/유저인터페이스/item/hw_ganbantein.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b524135762756fed2b18b888152bec8f027c7bc015892db642d66e487d405a2a"
+    },
+    "hw_gravitation": {
+      "resource": "data/texture/유저인터페이스/item/hw_gravitation.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "926af7e5dec5b3f0969a41dc73a6e54183a14ae15f288da4bb68447a93f396e8"
+    },
+    "ws_carttermination": {
+      "resource": "data/texture/유저인터페이스/item/ws_carttermination.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "13799bda746cfb470d6a5822dee94989548093c3caa16444e61e1638ddbd9f56"
+    },
+    "ws_overthrustmax": {
+      "resource": "data/texture/유저인터페이스/item/ws_overthrustmax.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2a89ed0d11e10fe11b24130c529beb9ff8edf5b986dcb8b6dc4100e12a0928e5"
+    },
+    "cg_tarotcard": {
+      "resource": "data/texture/유저인터페이스/item/cg_tarotcard.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3d88de57fe5a35cc66f1f94199f3b4956b8ae847d520b06fcc7e59c31101ec72"
+    },
+    "cr_aciddemonstration": {
+      "resource": "data/texture/유저인터페이스/item/cr_aciddemonstration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7e2379306f5f68ffc5cd5f3356edba163366e48e2aaade96feaa694a34b90a68"
+    },
+    "kn_onehand": {
+      "resource": "data/texture/유저인터페이스/item/kn_onehand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e510d9b3908b98d640642766e99a06b35deb70c2f5eec03a651ccc0ddd2b8d12"
+    },
+    "ht_power": {
+      "resource": "data/texture/유저인터페이스/item/ht_power.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a1cda7c5fa1cecb04ffd3f41fab013ab7d22c740a8d71038ad5c709209ad62d2"
+    },
+    "kn_chargeatk": {
+      "resource": "data/texture/유저인터페이스/item/kn_chargeatk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "554b9022376986c1bd9ec37386c88044e6291f2522af67c0ff2c780ebc08823f"
+    },
+    "cr_shrink": {
+      "resource": "data/texture/유저인터페이스/item/cr_shrink.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2dcbc5ae5a8e93c742cdba401dfebd7979f19ff0557dc1976912b0cb0cb3951d"
+    },
+    "as_sonicaccel": {
+      "resource": "data/texture/유저인터페이스/item/as_sonicaccel.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3b6411cf928f9f3fc84fe9cc73c581f30e878107a7aec2612ca303cff261d324"
+    },
+    "as_venomknife": {
+      "resource": "data/texture/유저인터페이스/item/as_venomknife.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d07e098fa85710feacc5c43aade6755893668d4b4403bbc47248243197ddea2b"
+    },
+    "rg_closeconfine": {
+      "resource": "data/texture/유저인터페이스/item/rg_closeconfine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5bc13ae211e719efce1fa76e2485e1bd0ca5700108abd84157f978898464c4ed"
+    },
+    "wz_sightblaster": {
+      "resource": "data/texture/유저인터페이스/item/wz_sightblaster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "14c26faea402dca74306abde322093770b51203337d53b5e9922956ca0f82a06"
+    },
+    "ht_phantasmic": {
+      "resource": "data/texture/유저인터페이스/item/ht_phantasmic.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3a12af72361a8098e367bde8a1a3a93a22ddc59c4618dbc0b68b8348d10d42ff"
+    },
+    "ba_pangvoice": {
+      "resource": "data/texture/유저인터페이스/item/ba_pangvoice.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "450a861bb18cff01f7fcffb7eba9c17a958477435b2f5057685b2d1a123f6ac6"
+    },
+    "mo_balkyoung": {
+      "resource": "data/texture/유저인터페이스/item/mo_balkyoung.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "87426fe3beab2a5a9195ca7569685b0fbebad3c64dc2e81f3d251076dbb3124b"
+    },
+    "rk_enchantblade": {
+      "resource": "data/texture/유저인터페이스/item/rk_enchantblade.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bd1fa36e2101edb3568a912b40899ba7806cec16a8312cd1551b09a12a7fd2f3"
+    },
+    "rk_sonicwave": {
+      "resource": "data/texture/유저인터페이스/item/rk_sonicwave.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a3c7d278c526de0ddfc6ee511162f23628d37322e2cf8a9c600b8536fd5bb7a9"
+    },
+    "rk_deathbound": {
+      "resource": "data/texture/유저인터페이스/item/rk_deathbound.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a4b56d33d1374bb5a24f89c0e027299e0508e134dbbf0696fe94039b80c641ff"
+    },
+    "rk_hundredspear": {
+      "resource": "data/texture/유저인터페이스/item/rk_hundredspear.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2f3f0520fa675d2f5a37276b65ac8c341f25aee918d9c4b439fe8ca65f609ad2"
+    },
+    "rk_windcutter": {
+      "resource": "data/texture/유저인터페이스/item/rk_windcutter.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2637a419e8f28a7df08f591c8ad42aef6c636467e226350fde0a6b660b82e603"
+    },
+    "rk_ignitionbreak": {
+      "resource": "data/texture/유저인터페이스/item/rk_ignitionbreak.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b0726359f3c50eca705bceef706c00c5d8894cae429d7643db0c30468d894091"
+    },
+    "rk_dragontraining": {
+      "resource": "data/texture/유저인터페이스/item/rk_dragontraining.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bc5436eae5bd8777bfeecc3245fc91ea2319637528c1c6dddf5f57267c8d9086"
+    },
+    "rk_dragonbreath": {
+      "resource": "data/texture/유저인터페이스/item/rk_dragonbreath.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b846491bf44f2264e0738a20a8f4385f339e2831de70c3750187c0c36eb82f38"
+    },
+    "rk_dragonhowling": {
+      "resource": "data/texture/유저인터페이스/item/rk_dragonhowling.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2d613cb01ae3e96498aac38b350242121c5dfe0b62bb3c794fcd48e8dc2e1dfe"
+    },
+    "rk_phantomthrust": {
+      "resource": "data/texture/유저인터페이스/item/rk_phantomthrust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "27ce5f738d8497a83445901e30cb6efe9f0b4dbe075c5f21c13b06d42f10c624"
+    },
+    "gc_venomimpress": {
+      "resource": "data/texture/유저인터페이스/item/gc_venomimpress.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "11b0bb456423c8545fb9c9ff6af1f8ca75c34929022a4e4e06459802532d1560"
+    },
+    "gc_crossimpact": {
+      "resource": "data/texture/유저인터페이스/item/gc_crossimpact.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b7b8e1a406451e9bbe3d59796cfe3eeb70f0f22bd5aa410758cf05902491e7de"
+    },
+    "gc_darkillusion": {
+      "resource": "data/texture/유저인터페이스/item/gc_darkillusion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c13190a3cf36dc38c27d4c8d7ca947b0bceab2b138f589bf1cad32055442d7c7"
+    },
+    "gc_researchnewpoison": {
+      "resource": "data/texture/유저인터페이스/item/gc_researchnewpoison.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c17b00495212b08b34a49de7d7b9b65e879f330e70140b3b1e3763a8557d4e0c"
+    },
+    "gc_antidote": {
+      "resource": "data/texture/유저인터페이스/item/gc_antidote.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fc826110804a735e062814d0d09885b9a2f3a0917b5066a732b3c653f561dfcb"
+    },
+    "gc_poisoningweapon": {
+      "resource": "data/texture/유저인터페이스/item/gc_poisoningweapon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3c746a9c5ec88331793a4cb567c30276c72edebfb899a8bc8b12fe679f180f7d"
+    },
+    "gc_weaponblocking": {
+      "resource": "data/texture/유저인터페이스/item/gc_weaponblocking.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f0d0fdf80aa64227679c32a67c3f68cf3438237150b03cad5189889a81543969"
+    },
+    "gc_counterslash": {
+      "resource": "data/texture/유저인터페이스/item/gc_counterslash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "82079c880582f86dbc66c693b089cd0726f1b2f647aa79e7e689cd7b57f5f08d"
+    },
+    "gc_weaponcrush": {
+      "resource": "data/texture/유저인터페이스/item/gc_weaponcrush.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0e6aabc5f03017095813c84d2ef6e72e5a4cbf1bb425d2dadea4638441519165"
+    },
+    "gc_venompressure": {
+      "resource": "data/texture/유저인터페이스/item/gc_venompressure.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "eecc5c19063e42ddc0747d24db8d721ceea40644c03be2f6b6e1834cd2e2a9de"
+    },
+    "gc_poisonsmoke": {
+      "resource": "data/texture/유저인터페이스/item/gc_poisonsmoke.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "12e0cbbaf548e6666ca335c59f6dfe94b4f0c2659d96f512559d475d82766132"
+    },
+    "gc_cloakingexceed": {
+      "resource": "data/texture/유저인터페이스/item/gc_cloakingexceed.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4087142e4fdc8e12cbb1d5172b239e1e76fe740140ea19a6a4210a8d7adec81e"
+    },
+    "gc_phantommenace": {
+      "resource": "data/texture/유저인터페이스/item/gc_phantommenace.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f628905f43c3304a95c8b04b3586ade209aaf390bd58012191c711bf160a2b71"
+    },
+    "gc_hallucinationwalk": {
+      "resource": "data/texture/유저인터페이스/item/gc_hallucinationwalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "03a0350fbbe0ef5becb28d26591a9e45283b15e45492f8cdd37edbae408de04f"
+    },
+    "gc_rollingcutter": {
+      "resource": "data/texture/유저인터페이스/item/gc_rollingcutter.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e52809f7d2bc6b872be5e2c6fb4cc530c388a8b7c524715fa6e910aaa3a536ab"
+    },
+    "gc_crossripperslasher": {
+      "resource": "data/texture/유저인터페이스/item/gc_crossripperslasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "27ddcdcd373bcacbc3d044a3cc108fac6c2ada80cf85fdb077d0e9b7fa587db4"
+    },
+    "ab_judex": {
+      "resource": "data/texture/유저인터페이스/item/ab_judex.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c0b5f06317c2154e70c54e2414ec35c8a0ea2525223940386307e31edff2aead"
+    },
+    "ab_ancilla": {
+      "resource": "data/texture/유저인터페이스/item/ab_ancilla.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0172a396dd959a1c4c60bad3b99afe5248f7213e6282c8cb7d5b443f67199319"
+    },
+    "ab_adoramus": {
+      "resource": "data/texture/유저인터페이스/item/ab_adoramus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f3a627138ba37bba52c2a1733db4dabb2eecd519d40f00aea736a2b2e53122a8"
+    },
+    "ab_clementia": {
+      "resource": "data/texture/유저인터페이스/item/ab_clementia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e61ba1bb85d7c969c1147b0e636d493d87c6ed0393ae1c788689e2a3fc8960bb"
+    },
+    "ab_canto": {
+      "resource": "data/texture/유저인터페이스/item/ab_canto.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8116a25c8a3f552bd6e1681d0507991dbbe147a18af892bbf084762abcfef87e"
+    },
+    "ab_cheal": {
+      "resource": "data/texture/유저인터페이스/item/ab_cheal.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6f11a5124ce40dc3be0aabcd08ccc8d1ad7715a0203646c84d3d7337433680f0"
+    },
+    "ab_epiclesis": {
+      "resource": "data/texture/유저인터페이스/item/ab_epiclesis.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b2368f36e8f834cbe242d681af3468f131f2d654b411a25265bd3e5ab0eb6815"
+    },
+    "ab_praefatio": {
+      "resource": "data/texture/유저인터페이스/item/ab_praefatio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "58c872c15cc404a2018c04bc88228139f053a6a61e11125af1c881d05056a44f"
+    },
+    "ab_oratio": {
+      "resource": "data/texture/유저인터페이스/item/ab_oratio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "626d7bc5b4a379ded2c98b50cd627145877743c642c76085c8f43d55f5871fda"
+    },
+    "ab_laudaagnus": {
+      "resource": "data/texture/유저인터페이스/item/ab_laudaagnus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6d84131497daae27a9f7255aca111ef470b8b009ed124e8088be573468d9ddea"
+    },
+    "ab_laudaramus": {
+      "resource": "data/texture/유저인터페이스/item/ab_laudaramus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7f7bbd300b052d154cec0b872f319b4f840c48f08765002647d0c4c03c10a19a"
+    },
+    "ab_renovatio": {
+      "resource": "data/texture/유저인터페이스/item/ab_renovatio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c3b26febd06906f9a674f3bc3470c071326afb189564cb369143c447d031de3e"
+    },
+    "ab_highnessheal": {
+      "resource": "data/texture/유저인터페이스/item/ab_highnessheal.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "47a73fd453ea372e22638b326d284bebb33ccebe71b56398a3e4dab36569105e"
+    },
+    "ab_clearance": {
+      "resource": "data/texture/유저인터페이스/item/ab_clearance.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b79c5b254b4ec90b14ee34578395e7ae0c81a9d5878250dfb0e854f7e803b8f7"
+    },
+    "ab_expiatio": {
+      "resource": "data/texture/유저인터페이스/item/ab_expiatio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3f28a0ac4955323fe768c434b750aef6bed082a4604fec71619b85331ca7c6ae"
+    },
+    "ab_duplelight": {
+      "resource": "data/texture/유저인터페이스/item/ab_duplelight.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e02d70a6c6a12e68e178018abeefa0a43a9d1fec0725b166825bb63b268ed1ec"
+    },
+    "ab_silentium": {
+      "resource": "data/texture/유저인터페이스/item/ab_silentium.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c6e86681f6e3eae03b853d3ebe98d3610868c29826e564f424333214dda9008c"
+    },
+    "wl_whiteimprison": {
+      "resource": "data/texture/유저인터페이스/item/wl_whiteimprison.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "829ec2a658b0a975852ee07958535b8d1fe7f4459d11878cab073de367e3e6e9"
+    },
+    "wl_soulexpansion": {
+      "resource": "data/texture/유저인터페이스/item/wl_soulexpansion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "98b127ed6f10633c9d1fc62cb023b7b8cf9842433aef87ebeee3d8d792cb905d"
+    },
+    "wl_frostmisty": {
+      "resource": "data/texture/유저인터페이스/item/wl_frostmisty.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8e8c99c4a285b54fd7a9e969ebe9ae183547ff9c6ef27aebcbe53c87e605d88a"
+    },
+    "wl_jackfrost": {
+      "resource": "data/texture/유저인터페이스/item/wl_jackfrost.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f04160da9d1f5936658986e71fc98552c2d4a4eedde4da5947368b9e6fd1594d"
+    },
+    "wl_marshofabyss": {
+      "resource": "data/texture/유저인터페이스/item/wl_marshofabyss.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ec1b007f3be510a4b5a55d27ad05e28fe4fa75b173bb70ea7b671285f45ae6d6"
+    },
+    "wl_recognizedspell": {
+      "resource": "data/texture/유저인터페이스/item/wl_recognizedspell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "09daf69a428877518ddb80d42eec266eaeeb239e8de991c70d7735e892e76f54"
+    },
+    "wl_siennaexecrate": {
+      "resource": "data/texture/유저인터페이스/item/wl_siennaexecrate.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ea14aaa9b1a07395b958ced8ed7d2a6fd893e56e827c13ff714b824638956bdf"
+    },
+    "wl_radius": {
+      "resource": "data/texture/유저인터페이스/item/wl_radius.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0d17c1125787b533c461b505b9575efbe199b3eec10d62dbb45659045f13abd2"
+    },
+    "wl_stasis": {
+      "resource": "data/texture/유저인터페이스/item/wl_stasis.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4e75129a195ae5ad1f78663ea52ecb19e74b4d343bff12e29050950b4ac80e53"
+    },
+    "wl_drainlife": {
+      "resource": "data/texture/유저인터페이스/item/wl_drainlife.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8dd354eed8247c10cb7841abcd4183b238d55fa21afa7ebd70491d7a57481dd4"
+    },
+    "wl_crimsonrock": {
+      "resource": "data/texture/유저인터페이스/item/wl_crimsonrock.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4dad3ac2cf5a0ad0cb6c4727b4628dfdc30ee35d06a483e1aedf3203c6a119f2"
+    },
+    "wl_hellinferno": {
+      "resource": "data/texture/유저인터페이스/item/wl_hellinferno.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9ef0d2fcd3e88b24abf3e37b8265a7dad80ec1ff036b20de1fb7405311c58eec"
+    },
+    "wl_comet": {
+      "resource": "data/texture/유저인터페이스/item/wl_comet.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d8b00de9be7cc841e6668cdbc7b91596d0928eab177029fd15fe5252b8487b3e"
+    },
+    "wl_chainlightning": {
+      "resource": "data/texture/유저인터페이스/item/wl_chainlightning.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a1bdef2b5eb3d098a3959b29dd88d187763228d4b050f7165c415aa9da598688"
+    },
+    "wl_earthstrain": {
+      "resource": "data/texture/유저인터페이스/item/wl_earthstrain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f0766d89ce61f0a1e44fb24debb165ade3b1b4834d5f283802d7953de79388ce"
+    },
+    "wl_tetravortex": {
+      "resource": "data/texture/유저인터페이스/item/wl_tetravortex.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "09986af72e2b76f26d9f350dbabfe1632ba3ff17584f9f20500f920fa4097125"
+    },
+    "wl_summonfb": {
+      "resource": "data/texture/유저인터페이스/item/wl_summonfb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "97f59a701b8d71c61b74ed5c5edf318d0ff487dddb3d04774a36ae1021b152b2"
+    },
+    "wl_summonbl": {
+      "resource": "data/texture/유저인터페이스/item/wl_summonbl.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "099b9990304c60ff8143e54cd13c5b1fff539ed46bae5bf4e1137a6a9bc0bc32"
+    },
+    "wl_summonwb": {
+      "resource": "data/texture/유저인터페이스/item/wl_summonwb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6657211bc22a28ea63c0b1b1116d020512bf806a7b6e45b58eaf303d2c9ef5d9"
+    },
+    "wl_summonstone": {
+      "resource": "data/texture/유저인터페이스/item/wl_summonstone.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5aea0cd77db17d9613482bb768c1dff93b81fb9a470d226be0616a38c3f1631c"
+    },
+    "wl_freeze_sp": {
+      "resource": "data/texture/유저인터페이스/item/wl_freeze_sp.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a4b56d33d1374bb5a24f89c0e027299e0508e134dbbf0696fe94039b80c641ff"
+    },
+    "ra_arrowstorm": {
+      "resource": "data/texture/유저인터페이스/item/ra_arrowstorm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "be2433a6e9be87bbe292b7a718bf1e9aab15501828c54479c3535200cb221970"
+    },
+    "ra_fearbreeze": {
+      "resource": "data/texture/유저인터페이스/item/ra_fearbreeze.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e1d7c2950b3cf3cda526879d07e9c7a4938eea442f8a92fd9bcaea623ef97363"
+    },
+    "ra_rangermain": {
+      "resource": "data/texture/유저인터페이스/item/ra_rangermain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f4018e8306b0a0657b6b70caf515e309409ccc4c71bcbbe57c4005c4086fb877"
+    },
+    "ra_aimedbolt": {
+      "resource": "data/texture/유저인터페이스/item/ra_aimedbolt.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a9f7b525dc22cc9c9b212fc0b5580e55878d7e7c573db90f7bc26d765de275d8"
+    },
+    "ra_electricshocker": {
+      "resource": "data/texture/유저인터페이스/item/ra_electricshocker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "62ee669f8106ec26b4ee9dc868d0b6b0cb85beaf9faddf2d80f11d1a5b5503c0"
+    },
+    "ra_clusterbomb": {
+      "resource": "data/texture/유저인터페이스/item/ra_clusterbomb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2810fbe61b91e42f6c6b69c1bb267dc9663721dd88ce97fc56e3cf3e7590033e"
+    },
+    "ra_wugmastery": {
+      "resource": "data/texture/유저인터페이스/item/ra_wugmastery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "05eb9383cbe4defa39e1077c86d1a7df2d342b231a35464d7bafd1072abac7fe"
+    },
+    "ra_wugrider": {
+      "resource": "data/texture/유저인터페이스/item/ra_wugrider.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "76cba64b7c21f647b3c85e54f83c3c763b45f692d19a3916d77d1ae03d5c7269"
+    },
+    "ra_wugdash": {
+      "resource": "data/texture/유저인터페이스/item/ra_wugdash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2dcfc6ad9d767ac87b810e3ebe3a8b3cfefdbe6e444ede187b72a1953522a029"
+    },
+    "ra_wugstrike": {
+      "resource": "data/texture/유저인터페이스/item/ra_wugstrike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fc12c423c09ab7dc5abfd98a64034e5b95b575df364c361212d8492771b334e9"
+    },
+    "ra_wugbite": {
+      "resource": "data/texture/유저인터페이스/item/ra_wugbite.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b7fc022c97ebb7d44072655a2f64f90b23863b6fd6346b490b563be02bca8fd2"
+    },
+    "ra_toothofwug": {
+      "resource": "data/texture/유저인터페이스/item/ra_toothofwug.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f10cbce1fe80115577686f5a29bddb5fd911dae3dcca4f4499c861eb12c10cd3"
+    },
+    "ra_sensitivekeen": {
+      "resource": "data/texture/유저인터페이스/item/ra_sensitivekeen.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f9b80284133661067d5e008991832b57cfe4193dda832e13c3f7483baa61997b"
+    },
+    "ra_camouflage": {
+      "resource": "data/texture/유저인터페이스/item/ra_camouflage.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "04540e5369c1f8e9905ba06efeb196dfdd1ed98a7c54fbd85f74f2c2db481e55"
+    },
+    "ra_researchtrap": {
+      "resource": "data/texture/유저인터페이스/item/ra_researchtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "21806a5f744d0af52fd977ddad44e9ac090d086dcedf96c0ade87725767f5d8c"
+    },
+    "ra_firingtrap": {
+      "resource": "data/texture/유저인터페이스/item/ra_firingtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "92268cfa55223b850948f14ce195bc15805d26e8f4fe4b18a58daf206cda7d3c"
+    },
+    "ra_iceboundtrap": {
+      "resource": "data/texture/유저인터페이스/item/ra_iceboundtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d74f718abb2160c0f7d519f10576e6cd73d5bd5121e53dfb5936989cc88c2015"
+    },
+    "nc_madolicence": {
+      "resource": "data/texture/유저인터페이스/item/nc_madolicence.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ed1e63c3e44c7313d4fd41eb61855ec91f6a0d6494b4703da19b91f58e3422cf"
+    },
+    "nc_boostknuckle": {
+      "resource": "data/texture/유저인터페이스/item/nc_boostknuckle.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5d03e3382eaf25778176203a1b3d08ad3255139224afaa3f953a37acf5c0ff78"
+    },
+    "nc_pilebunker": {
+      "resource": "data/texture/유저인터페이스/item/nc_pilebunker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "91f5378635e329b57d43b0c852143fb57c77b4fceadf00a2b334f8ac61b28292"
+    },
+    "nc_vulcanarm": {
+      "resource": "data/texture/유저인터페이스/item/nc_vulcanarm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bb6260b118ffebb92a6d266d4ab1d316ca7a7a0d9b556f3e119fd516ecb07ca3"
+    },
+    "nc_flamelauncher": {
+      "resource": "data/texture/유저인터페이스/item/nc_flamelauncher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9d52fc5972669450ab2db2fdf052e1b7f4afd3feb03b5367ae66a392e7fc67ca"
+    },
+    "nc_coldslower": {
+      "resource": "data/texture/유저인터페이스/item/nc_coldslower.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1e222f86aa7fc12d082beaf8600cf7a83953e3e6af136e67e70f0f4ef5ee5fd9"
+    },
+    "nc_armscannon": {
+      "resource": "data/texture/유저인터페이스/item/nc_armscannon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1b90a04a3ab2676400cd99d305cb2dd54111b5f9de2166a58c6aef9d9903e56b"
+    },
+    "nc_acceleration": {
+      "resource": "data/texture/유저인터페이스/item/nc_acceleration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e661ec52e605dd594417c4341c34ae8ef83d874a97fb42ae51483100aa34589b"
+    },
+    "nc_hovering": {
+      "resource": "data/texture/유저인터페이스/item/nc_hovering.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "522a3a22d3a1088d02fa94d700a40f6dad8f66c3567224648f2cff34e15bd85d"
+    },
+    "nc_f_sideslide": {
+      "resource": "data/texture/유저인터페이스/item/nc_f_sideslide.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "04d582eabb3dc3a11eda72e7c55d2294a25eae90f0b6afd575de1cdfbcc03b0a"
+    },
+    "nc_b_sideslide": {
+      "resource": "data/texture/유저인터페이스/item/nc_b_sideslide.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6e8d8d4fcb3f30d7988220509159c11590832589ad049629b21b8bb195282686"
+    },
+    "nc_mainframe": {
+      "resource": "data/texture/유저인터페이스/item/nc_mainframe.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9955f63770ad2d22b13a2c7a110dff60e5310b6f2f7ee3f0ea2cdea0f9cce8d6"
+    },
+    "nc_selfdestruction": {
+      "resource": "data/texture/유저인터페이스/item/nc_selfdestruction.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e2ec53f81cb0d196f579a4e2f9a1a7cc30f2a1a8cf1bf469660e6bc0fd3310f5"
+    },
+    "nc_shapeshift": {
+      "resource": "data/texture/유저인터페이스/item/nc_shapeshift.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "609240994e9d1e5903a9632363d6aac4978244b72702cfc15fd3570d6d239590"
+    },
+    "nc_infraredscan": {
+      "resource": "data/texture/유저인터페이스/item/nc_infraredscan.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5106948e968269adb6f4f8fabf795a2fd4c419e8b0023833f6863269cfe5663d"
+    },
+    "nc_analyze": {
+      "resource": "data/texture/유저인터페이스/item/nc_analyze.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ef51d630da90b05fd0af032c6863e904fd2fcd1a345e205a5893cb26f9a915da"
+    },
+    "nc_magneticfield": {
+      "resource": "data/texture/유저인터페이스/item/nc_magneticfield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dd9ae6d5c7b7c6ce3de6510a7e9afd19c51e5a2ef325de06eb5a232e9f1f4304"
+    },
+    "nc_neutralbarrier": {
+      "resource": "data/texture/유저인터페이스/item/nc_neutralbarrier.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b23dd4c37d60bf782a0d2b1c4175a46222d00712448682c340875e6aa685fe92"
+    },
+    "nc_stealthfield": {
+      "resource": "data/texture/유저인터페이스/item/nc_stealthfield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "841eafe31c8546bd69904fb5ec1cc0aba4aeb6d91556a1caecb2efe6e21eb50d"
+    },
+    "nc_repair": {
+      "resource": "data/texture/유저인터페이스/item/nc_repair.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bb6ccee52999a11d839b10fd9b47e670cec9e6aed34443dcdc8d3617c9a9a2c1"
+    },
+    "nc_trainingaxe": {
+      "resource": "data/texture/유저인터페이스/item/nc_trainingaxe.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "850ee0dced860af58b0c8bebb37ec400806d8d67ae92430f3e3b27ea9bfccad1"
+    },
+    "nc_researchfe": {
+      "resource": "data/texture/유저인터페이스/item/nc_researchfe.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "458e1c9f58dd760d26df01cd86a07e33ea60363abf62f5323aa67cc57e047205"
+    },
+    "nc_axeboomerang": {
+      "resource": "data/texture/유저인터페이스/item/nc_axeboomerang.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3dd069109b58e1b94d45bb07dacea6dea5cf9f0a3f3506b9d5955f8f87f6510b"
+    },
+    "nc_powerswing": {
+      "resource": "data/texture/유저인터페이스/item/nc_powerswing.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a7ca6e9ef55950f0ddbcb6727fcf8242bbd9a4be5debdbe8accaf73889509a96"
+    },
+    "nc_axetornado": {
+      "resource": "data/texture/유저인터페이스/item/nc_axetornado.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "738f548fbed742a1c7ef353a3b282b0aa8f9458fc710731f1f1420c99a1ccc04"
+    },
+    "nc_silversniper": {
+      "resource": "data/texture/유저인터페이스/item/nc_silversniper.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0b01afdcfd157aef8bf08a7d21ac91a682ac6a94c1f6c459da08c76430812b2c"
+    },
+    "nc_magicdecoy": {
+      "resource": "data/texture/유저인터페이스/item/nc_magicdecoy.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1aa9e119e0dce57a4edd19edd8090f8c1e474e6c1b2c6d623c8ac62594dbdf0e"
+    },
+    "sc_fatalmenace": {
+      "resource": "data/texture/유저인터페이스/item/sc_fatalmenace.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d52159d86997f5abfcb99cac8db8550d33c588e513d91e5a6bd76234664b9b73"
+    },
+    "sc_autoshadowspell": {
+      "resource": "data/texture/유저인터페이스/item/sc_autoshadowspell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a3337859b8293da6ee47abd3b4a1be0073a4fe8d128fc61f398914568b631b0d"
+    },
+    "sc_shadowform": {
+      "resource": "data/texture/유저인터페이스/item/sc_shadowform.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8ee4e331ed1ad10f381a7f3963fed6598d45878c71279fdaaed3c20e98945721"
+    },
+    "sc_triangleshot": {
+      "resource": "data/texture/유저인터페이스/item/sc_triangleshot.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9b5aba840c30a7b45dff28d977621e0442156e1d60dcc76b5562e7e91c178b32"
+    },
+    "sc_bodypaint": {
+      "resource": "data/texture/유저인터페이스/item/sc_bodypaint.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "61a33e86a49f7f75b4e7aa9196920665bfed595be025afca2eea80ba3896b6d4"
+    },
+    "sc_invisibility": {
+      "resource": "data/texture/유저인터페이스/item/sc_invisibility.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c00df276dc92d95a2067941ddf8ae28724ba31b2ef47c149883b04cc97f7c21f"
+    },
+    "sc_deadlyinfect": {
+      "resource": "data/texture/유저인터페이스/item/sc_deadlyinfect.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "83bcc145ef585a7b3da0e448b93a1bed31bd1d2d9dd788471c554c8e1f0625b2"
+    },
+    "sc_enervation": {
+      "resource": "data/texture/유저인터페이스/item/sc_enervation.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "21964b4b7e5874e9a1244b2d23c642cae5a9777824ffec87e95f751ede043499"
+    },
+    "sc_groomy": {
+      "resource": "data/texture/유저인터페이스/item/sc_groomy.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9d76f9d9484eb0f76a8f95df6886e83d8b27cafc5bb27ab80312b4294e893e07"
+    },
+    "sc_ignorance": {
+      "resource": "data/texture/유저인터페이스/item/sc_ignorance.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "72b2e626a998b72e7104ab00e65a12575b82fc389814a532ab0e4b6ec018a124"
+    },
+    "sc_laziness": {
+      "resource": "data/texture/유저인터페이스/item/sc_laziness.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8e071677881f70674d6a75625ab465711870cf88b91c832b2807826ec676bb48"
+    },
+    "sc_unlucky": {
+      "resource": "data/texture/유저인터페이스/item/sc_unlucky.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e17ae8cb1fef58aa144db9bb8152103b9fbbc967dea9218874c84d755d60bdb7"
+    },
+    "sc_weakness": {
+      "resource": "data/texture/유저인터페이스/item/sc_weakness.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "08b3d8a2e97478ce766f87d3c54786cd37450a94dddae988d8b93efd48924cf1"
+    },
+    "sc_manhole": {
+      "resource": "data/texture/유저인터페이스/item/sc_manhole.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "616e170386d4a2a0c176f3c71d165302c4cd492abd3bea891677c73916124f4a"
+    },
+    "sc_chaospanic": {
+      "resource": "data/texture/유저인터페이스/item/sc_chaospanic.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "64cb7398bcd40cec01a3e7105877f29e587c5cced60171da550a8031659f0268"
+    },
+    "sc_maelstrom": {
+      "resource": "data/texture/유저인터페이스/item/sc_maelstrom.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "09e95d2aa5eeff51423ab32f1bc1f7233fa2673ad1d2d02da9c4c72738e79ffd"
+    },
+    "sc_bloodylust": {
+      "resource": "data/texture/유저인터페이스/item/sc_bloodylust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b2ed11ada697ad996e9e1b193548b17f8784605930c9be8e1203a67973e5f732"
+    },
+    "sc_feintbomb": {
+      "resource": "data/texture/유저인터페이스/item/sc_feintbomb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5e5d83889d0628737b940c194d4f876ff02b62b9fb237da67a6b9d24eab5509f"
+    },
+    "lg_cannonspear": {
+      "resource": "data/texture/유저인터페이스/item/lg_cannonspear.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d64bfd15745be0e3c2f0627e5d0e85a7bc9fa4d574e005803810479574ab9bc4"
+    },
+    "lg_banishingpoint": {
+      "resource": "data/texture/유저인터페이스/item/lg_banishingpoint.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "24b951bb971b2a9f9dcd90eeea2187079b4701f0404e9f7dfe00f3cf3bfa0d2c"
+    },
+    "lg_trample": {
+      "resource": "data/texture/유저인터페이스/item/lg_trample.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a74bd0c368701b95f25838a60ebd38ad44aaad0efd01df702eaa1e4231aef897"
+    },
+    "lg_shieldpress": {
+      "resource": "data/texture/유저인터페이스/item/lg_shieldpress.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7eb441c757b9fe7188fd923669640ac3325b411de9c8da0f8c6a751f88378ff7"
+    },
+    "lg_reflectdamage": {
+      "resource": "data/texture/유저인터페이스/item/lg_reflectdamage.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9076f1174c590a032347d063ab9d10822429abf0dbc67a93bb5d921b74d7d8d9"
+    },
+    "lg_pinpointattack": {
+      "resource": "data/texture/유저인터페이스/item/lg_pinpointattack.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cf27689aeee2b9d501cfc794b33c06c844c58375a5c5a2ef0b6fca655ada073a"
+    },
+    "lg_forceofvanguard": {
+      "resource": "data/texture/유저인터페이스/item/lg_forceofvanguard.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3cefd2b2aade868df8f9bd4951a9c4eab1a35121e6df8085889ae7f6e0a0e1a1"
+    },
+    "lg_rageburst": {
+      "resource": "data/texture/유저인터페이스/item/lg_rageburst.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "865b2da7744fa4471ef02186bc35d3fe55d0fa082c762660aeae4271a8f40b9b"
+    },
+    "lg_shieldspell": {
+      "resource": "data/texture/유저인터페이스/item/lg_shieldspell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "11f245140d50d273660fa0299ec1daa651740606761d63f46d7ce3dbfca7ee39"
+    },
+    "lg_exeedbreak": {
+      "resource": "data/texture/유저인터페이스/item/lg_exeedbreak.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "01eee732d788cc131b4a9dd0c852f91fc7508fd38c55d5704ba857f1188ab804"
+    },
+    "lg_overbrand": {
+      "resource": "data/texture/유저인터페이스/item/lg_overbrand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c7e965d9d577cc5f402645e5caf953e810a18f98794d9e3daa9cc24f6291b37c"
+    },
+    "lg_prestige": {
+      "resource": "data/texture/유저인터페이스/item/lg_prestige.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d57b92fadb2721183d906b051d2c8a9b0c81b08d27c80292830f856735e6b85b"
+    },
+    "lg_banding": {
+      "resource": "data/texture/유저인터페이스/item/lg_banding.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cbbc9d2f4d2d6e01e184883cc6c17a6ef252bc6e3ea3bebe3bd8f01b270f260a"
+    },
+    "lg_moonslasher": {
+      "resource": "data/texture/유저인터페이스/item/lg_moonslasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f9e7231b34e0f1f809d784aabc218a2ce7cbc0c948a2e53ad5b9b02c1b31a3b4"
+    },
+    "lg_rayofgenesis": {
+      "resource": "data/texture/유저인터페이스/item/lg_rayofgenesis.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "36d6a07dab23f589087a3bba5c321272dd1fd2bc7a65c1c8f2d9c239b0180d3c"
+    },
+    "lg_piety": {
+      "resource": "data/texture/유저인터페이스/item/lg_piety.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4b1af6d5a088e8c144a8cfe5eb6ce9b8e63ccc7623e67f3a689402ee43588e1b"
+    },
+    "lg_earthdrive": {
+      "resource": "data/texture/유저인터페이스/item/lg_earthdrive.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3229dbbbe071a90fb027b4a6af7b8c5cdd4726e3e454d2a2669246ca4dedd4be"
+    },
+    "lg_hesperuslit": {
+      "resource": "data/texture/유저인터페이스/item/lg_hesperuslit.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9b13408e8c2f48d933b53231e68cb9e12e5f6ba0de93ba6336cadbf3827171ab"
+    },
+    "lg_inspiration": {
+      "resource": "data/texture/유저인터페이스/item/lg_inspiration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e9d780000123e3d0afba2381aa700173f44c5c839c8396792ae7427de2f3b0df"
+    },
+    "sr_dragoncombo": {
+      "resource": "data/texture/유저인터페이스/item/sr_dragoncombo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9c71548a10df9c2707d56f612996970fc6bb0b33c9d1c73db6c2855ee7a24b40"
+    },
+    "sr_skynetblow": {
+      "resource": "data/texture/유저인터페이스/item/sr_skynetblow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "25fc8146bf4157b56e0bc9c450638d6d87d873a0ca44a0e504b4760901d12950"
+    },
+    "sr_earthshaker": {
+      "resource": "data/texture/유저인터페이스/item/sr_earthshaker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "567f8194c6d7cb0fcd828084e58856cdf483d41faffec126d564939c2df0a6b0"
+    },
+    "sr_fallenempire": {
+      "resource": "data/texture/유저인터페이스/item/sr_fallenempire.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e1c8ffc196c0bf4fe8085ed5635a0b3d675371e3ea0849c2c356b4da63e9d8cb"
+    },
+    "sr_tigercannon": {
+      "resource": "data/texture/유저인터페이스/item/sr_tigercannon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b310d6d0857366edcd91e37fbc27d11065d990aea342e5ea9dd62919d18c5750"
+    },
+    "sr_rampageblaster": {
+      "resource": "data/texture/유저인터페이스/item/sr_rampageblaster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "baec5ca6b3993ffa4de01aa9638b1f9ad2b137a159055cfe4b0570b1387d797c"
+    },
+    "sr_crescentelbow": {
+      "resource": "data/texture/유저인터페이스/item/sr_crescentelbow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "18c956fd8a56738a67bf6e38e453b2dc6e1ae85c824e1ebfdff3b1eeb98e8c0d"
+    },
+    "sr_cursedcircle": {
+      "resource": "data/texture/유저인터페이스/item/sr_cursedcircle.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cd22f25541b0a4e40982c2ea4fbe310a8abe0a07906b3efb1997b43cebb163d7"
+    },
+    "sr_lightningwalk": {
+      "resource": "data/texture/유저인터페이스/item/sr_lightningwalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f63bacb0c3d88dcf871b84345d17179194d9627f6bf52b3347fcd284a52a4319"
+    },
+    "sr_knucklearrow": {
+      "resource": "data/texture/유저인터페이스/item/sr_knucklearrow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4fed267b798f752226c76b6a17f93bb3dc0be8944b4e0a424285d0f0621d5675"
+    },
+    "sr_windmill": {
+      "resource": "data/texture/유저인터페이스/item/sr_windmill.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "105e6fd38b36bc29ccd92bd1d9e09484dcf4905555ff8fc24d967d36c4d13ee8"
+    },
+    "sr_raisingdragon": {
+      "resource": "data/texture/유저인터페이스/item/sr_raisingdragon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2800688b8484dddb53a8526202da5bd44f6af879ad865a6218f056f5f4cfb986"
+    },
+    "sr_assimilatepower": {
+      "resource": "data/texture/유저인터페이스/item/sr_assimilatepower.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "002aa3a6b9e97474e15f4f38bdfb9e88983d336487db910b9d1981023b281c30"
+    },
+    "sr_gateofhell": {
+      "resource": "data/texture/유저인터페이스/item/sr_gateofhell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "96af55ac4a7c0a26306d26d64f19d2d6ddea087a1f39939192f0e86c85269635"
+    },
+    "sr_gentletouch_quiet": {
+      "resource": "data/texture/유저인터페이스/item/sr_gentletouch_quiet.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "89815e711c7ccf876fc31fe28cfa538ddfb8cbae5e6d289710e4b3d2b7018028"
+    },
+    "sr_gentletouch_cure": {
+      "resource": "data/texture/유저인터페이스/item/sr_gentletouch_cure.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "29d7ed654d84649996fba5b2c0dafb1c0ba8b982fc245f80361e97297e36e5a7"
+    },
+    "sr_gentletouch_energygain": {
+      "resource": "data/texture/유저인터페이스/item/sr_gentletouch_energygain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "96e3f3c40d99b93ff7bbf26580c5f7a499b016faa2e00b6a21caf7ae79047695"
+    },
+    "sr_gentletouch_change": {
+      "resource": "data/texture/유저인터페이스/item/sr_gentletouch_change.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3f1d0077d4666353083a586376a66bfcc9e587573ad9f76bd91c9fa7f2dca9de"
+    },
+    "sr_gentletouch_revitalize": {
+      "resource": "data/texture/유저인터페이스/item/sr_gentletouch_revitalize.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c4ad1b0c93bfcfc7cf9b797cc90d3f2ad1b0496f33edd5b01f0ead8bf9b385ee"
+    },
+    "mi_rush_windmill": {
+      "resource": "data/texture/유저인터페이스/item/mi_rush_windmill.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f543a92e784c777d3510ead093ab565a7a03dc86872baa6bc7dc55e0651e1377"
+    },
+    "mi_echosong": {
+      "resource": "data/texture/유저인터페이스/item/mi_echosong.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "906e498e7cbdfb38094a85c386850aad9d52b41c24a533428cdb671960d771f4"
+    },
+    "mi_harmonize": {
+      "resource": "data/texture/유저인터페이스/item/mi_harmonize.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "52d568e12a683c14534f6d4ac87431c10219dca35b0d23efdd5fbdaf56328515"
+    },
+    "wm_lesson": {
+      "resource": "data/texture/유저인터페이스/item/wm_lesson.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6129a85a56684b24fc5be26910e0ce25461351af53e0db1b3fa8a8b0e196450f"
+    },
+    "wm_metalicsound": {
+      "resource": "data/texture/유저인터페이스/item/wm_metalicsound.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "23b6f20105013d1e7e4b4c66a79cfb9e920ec3005268b478f451335df505af6f"
+    },
+    "wm_reverberation": {
+      "resource": "data/texture/유저인터페이스/item/wm_reverberation.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c231c517b44045c012ef245a5b449fb2adf1d651fd238f6956110c8cedb1884d"
+    },
+    "wm_severe_rainstorm": {
+      "resource": "data/texture/유저인터페이스/item/wm_severe_rainstorm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "96b2850eb0df3aa5d5371dfaf24be5ce22dc367877155fdeb948a5ad7027fe31"
+    },
+    "wm_poemofnetherworld": {
+      "resource": "data/texture/유저인터페이스/item/wm_poemofnetherworld.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3f258d3c2ac22cd7a0884c29b49e21777fbed264f24484b555999846e6c98f53"
+    },
+    "wm_voiceofsiren": {
+      "resource": "data/texture/유저인터페이스/item/wm_voiceofsiren.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3e31475b6faea4a6161bf9719f3e90c3db9722f02aec2f1e477a88ff9096b5bf"
+    },
+    "wm_lullaby_deepsleep": {
+      "resource": "data/texture/유저인터페이스/item/wm_lullaby_deepsleep.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6033604766b6e324d20d6b5f340242755d28f942816dc734aa24334d5db0146c"
+    },
+    "wm_sircleofnature": {
+      "resource": "data/texture/유저인터페이스/item/wm_sircleofnature.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8aed7e2a3e5fedfe73322bf1f0b121abe9dcda1be690602893e04bd6e268ccb5"
+    },
+    "wm_randomizespell": {
+      "resource": "data/texture/유저인터페이스/item/wm_randomizespell.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "78ef3f273d3336d7b6d19a163adc6384ec670b0ae46416a0ef8c97d413f40fe9"
+    },
+    "wm_gloomyday": {
+      "resource": "data/texture/유저인터페이스/item/wm_gloomyday.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "261a57f4a3d5a5d5370f457e727905b20556a0f482dca6f381021d214f6d2ece"
+    },
+    "wm_great_echo": {
+      "resource": "data/texture/유저인터페이스/item/wm_great_echo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d19c2cbad725474331ddc1e4d6c7955320cfdb482a4dea53c8bc1ec05385ae05"
+    },
+    "wm_song_of_mana": {
+      "resource": "data/texture/유저인터페이스/item/wm_song_of_mana.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8df9bab2ccb68d2f2c78bef7cd1094dd9ca78bd734c7fb10ca8be85cbd1599bf"
+    },
+    "wm_dance_with_wug": {
+      "resource": "data/texture/유저인터페이스/item/wm_dance_with_wug.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c31350f0f3fc85653d051b3f15d8c47b935f51d57a2f9c19a88f0d53f404f4f1"
+    },
+    "wm_sound_of_destruction": {
+      "resource": "data/texture/유저인터페이스/item/wm_sound_of_destruction.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d513fdebf894599a048792a96602243cb4662e24a8e589910c4868df3c495939"
+    },
+    "wm_saturday_night_fever": {
+      "resource": "data/texture/유저인터페이스/item/wm_saturday_night_fever.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ef843be12b7b27add42c57f076bc13481ba17a638d9dc87210409f7be3b88e9e"
+    },
+    "wm_lerads_dew": {
+      "resource": "data/texture/유저인터페이스/item/wm_lerads_dew.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6bf35894bdbb259ab48c35b098d0d8f6f2e07ebef9ea3a25d9eaeb8d2b6d705c"
+    },
+    "wm_melodyofsink": {
+      "resource": "data/texture/유저인터페이스/item/wm_melodyofsink.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "38a55019b829f6cb3ed0f1ea39166e4700fcc939024ba39663dfe08e31853b87"
+    },
+    "wm_beyond_of_warcry": {
+      "resource": "data/texture/유저인터페이스/item/wm_beyond_of_warcry.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "205f183ebd58bfc19ad5e931a4c6b888ee64a07b64af002219e93518ec57da37"
+    },
+    "wm_unlimited_humming_voice": {
+      "resource": "data/texture/유저인터페이스/item/wm_unlimited_humming_voice.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a87b8580d36424e76f853a0e11593e49221326c3bb383e22a00e72292e39f1fc"
+    },
+    "so_firewalk": {
+      "resource": "data/texture/유저인터페이스/item/so_firewalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1af84eadd4150ca76abc795ac8314cf7cfa46ab571bf038f0b628e202a206737"
+    },
+    "so_electricwalk": {
+      "resource": "data/texture/유저인터페이스/item/so_electricwalk.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1b88e541a227636af3723584a0ad17306b0cd7b18d55bd8f714c2ee0ae0758d5"
+    },
+    "so_spellfist": {
+      "resource": "data/texture/유저인터페이스/item/so_spellfist.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7b969e22a26f87ad285595ef20bdea5335ceb130f92abf25e615804dbffa0c4a"
+    },
+    "so_earthgrave": {
+      "resource": "data/texture/유저인터페이스/item/so_earthgrave.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9878f88edd260839d3a9e53a820628fb647802ab3c0eef3dc31f12f657ce43ab"
+    },
+    "so_diamonddust": {
+      "resource": "data/texture/유저인터페이스/item/so_diamonddust.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0043fde16a43e60c4cff09bcee8934e3f803cb4da26f09f2bca68d797fcdd9b3"
+    },
+    "so_poison_buster": {
+      "resource": "data/texture/유저인터페이스/item/so_poison_buster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9f572ca6cc6b253c1eccf45cddc21e6196e6654c839fdc2f017bbdc87665699f"
+    },
+    "so_psychic_wave": {
+      "resource": "data/texture/유저인터페이스/item/so_psychic_wave.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ba6d725749701880f4892f4ccc24dc6e163421332783dc00875e41eefa42ad9d"
+    },
+    "so_cloud_kill": {
+      "resource": "data/texture/유저인터페이스/item/so_cloud_kill.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9746620f0bffef6778aece1d50b6193c9889f789290a8ee8beeb87f45edd5d2c"
+    },
+    "so_striking": {
+      "resource": "data/texture/유저인터페이스/item/so_striking.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "89b599d8c8f7b5da3310cf0d001eea2f84a0bf735a4180b312196d1f69af16e7"
+    },
+    "so_warmer": {
+      "resource": "data/texture/유저인터페이스/item/so_warmer.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7ac555710adead1597f755c9fd0edc1b2a088917089eb0f676e85b4381ccc66d"
+    },
+    "so_vacuum_extreme": {
+      "resource": "data/texture/유저인터페이스/item/so_vacuum_extreme.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "41e9165272551ab74608475e994a1b265f9efed0a20bc524298f99811b6c205f"
+    },
+    "so_varetyr_spear": {
+      "resource": "data/texture/유저인터페이스/item/so_varetyr_spear.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "96b3024f3fc1a75726cd368878bcb37b4bc65607ff79013d7c7a30df46f26151"
+    },
+    "so_arrullo": {
+      "resource": "data/texture/유저인터페이스/item/so_arrullo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3ab9166bea7e5c389d59c0db9fda9be6dbbb8fa69a5ad737fb69de38f3a257bc"
+    },
+    "so_summon_agni": {
+      "resource": "data/texture/유저인터페이스/item/so_summon_agni.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3f2c72b1f232309fe9462e7af89389bfad572d612e189feaeb89202a062d209f"
+    },
+    "so_summon_aqua": {
+      "resource": "data/texture/유저인터페이스/item/so_summon_aqua.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b134a86e2a25a738e10c2cab903ee6ee54afe498ef8fad082f20777fbf24dd5e"
+    },
+    "so_summon_ventus": {
+      "resource": "data/texture/유저인터페이스/item/so_summon_ventus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cc845620997ea22d2d4b7ee4d579b0b3f99d3717f72714380c45e0f421f54dcf"
+    },
+    "so_summon_tera": {
+      "resource": "data/texture/유저인터페이스/item/so_summon_tera.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c5ee07edc8d75bf7a7bce1c852ea02ea3848e894f9e912378bf2764144cabf92"
+    },
+    "so_el_sympathy": {
+      "resource": "data/texture/유저인터페이스/item/so_el_sympathy.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "38e813013c35fc486982d6280be2d2ee5ad88f5adc4b2cd6c2004b44083944e3"
+    },
+    "so_fire_insignia": {
+      "resource": "data/texture/유저인터페이스/item/so_fire_insignia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b80ca2c1358d16ab5665a2b180c8d20154c6057bf7567bce8d11a06c87e34bf6"
+    },
+    "so_water_insignia": {
+      "resource": "data/texture/유저인터페이스/item/so_water_insignia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "895b78913e7128cc9b563021f74a247d6137efc015cbb751a8116ae0d5eada23"
+    },
+    "so_wind_insignia": {
+      "resource": "data/texture/유저인터페이스/item/so_wind_insignia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7f22c2af038aebe123eda1c2f8d150680542db745dd614a441535159001017fc"
+    },
+    "so_earth_insignia": {
+      "resource": "data/texture/유저인터페이스/item/so_earth_insignia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f62d1a45ef23402aefeb334841b5191ec628a2f91cab431d8916ab0d4374ec8d"
+    },
+    "gn_training_sword": {
+      "resource": "data/texture/유저인터페이스/item/gn_training_sword.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "07defe13c7f416028c4bbcf5f54c4acab80992ee3397908fad91df7ca3123629"
+    },
+    "gn_remodeling_cart": {
+      "resource": "data/texture/유저인터페이스/item/gn_remodeling_cart.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "66c115deee8921acc300acd7e7990ce564c9e1cbafc17aebde1e316ab68ea019"
+    },
+    "gn_cart_tornado": {
+      "resource": "data/texture/유저인터페이스/item/gn_cart_tornado.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0ca722f1d0b58e47e76481b11a7b2d6a2a882a18f9ff79b4c348c5e0a016cb11"
+    },
+    "gn_cartcannon": {
+      "resource": "data/texture/유저인터페이스/item/gn_cartcannon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e62ca4b17366cc871e1882033d274baca9f3493ffeb74426b4a1e4f1c3ebb0a3"
+    },
+    "gn_cartboost": {
+      "resource": "data/texture/유저인터페이스/item/gn_cartboost.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5d0203937c3394f37414fcb0b7bdb42865aa5abd5456e79b3c791d307c88fda3"
+    },
+    "gn_thorns_trap": {
+      "resource": "data/texture/유저인터페이스/item/gn_thorns_trap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "51c1a8a603624268567694270c1ea9ffc1d956ef1fb26364a3a35adb50e68ddc"
+    },
+    "gn_blood_sucker": {
+      "resource": "data/texture/유저인터페이스/item/gn_blood_sucker.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "acb9f299caa95a61ae5f1d6780c397ce9aa25c77a70e33def8684ea9c0c645dc"
+    },
+    "gn_spore_explosion": {
+      "resource": "data/texture/유저인터페이스/item/gn_spore_explosion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8ebab1106377981a06cb5bc94a889bb60c9f8d6cce0088afab1ba2c82992e78d"
+    },
+    "gn_wallofthorn": {
+      "resource": "data/texture/유저인터페이스/item/gn_wallofthorn.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "98e14a59eb05c395b667911690d158b82b1b21287573c31662ca1d32970bb4d2"
+    },
+    "gn_crazyweed": {
+      "resource": "data/texture/유저인터페이스/item/gn_crazyweed.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "90f40f992e4ff9e9aabc384fbb747ccc41079284d0615b9ea52dc203126e2903"
+    },
+    "gn_demonic_fire": {
+      "resource": "data/texture/유저인터페이스/item/gn_demonic_fire.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4178b41ea90a9826a715f7c6d6fc18892f7c682346c7dd8e67bda67fbf842287"
+    },
+    "gn_fire_expansion": {
+      "resource": "data/texture/유저인터페이스/item/gn_fire_expansion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2e56d4aa196c9cb217ca607d2a3c15388e598e66e8d83f5fe26b324b84713f4f"
+    },
+    "gn_hells_plant": {
+      "resource": "data/texture/유저인터페이스/item/gn_hells_plant.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f666c830bf7402227aedee88c8b52aff6363e0a985a9caf43f77c927c48baac3"
+    },
+    "gn_mandragora": {
+      "resource": "data/texture/유저인터페이스/item/gn_mandragora.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "660fdd40705e77f4736e8ac0cd83acad4d9ce55d9025f8c37954034ad791bd30"
+    },
+    "ab_secrament": {
+      "resource": "data/texture/유저인터페이스/item/ab_secrament.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f2247539948d6c4351313a99d3254479e0db5f896f2f51dd68051a9012afed79"
+    },
+    "sr_howlingoflion": {
+      "resource": "data/texture/유저인터페이스/item/sr_howlingoflion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0779d8cf674d9e895169feaac1fd688b56fac11c798d4aaaac58e308b96625bc"
+    },
+    "sr_rideinlightning": {
+      "resource": "data/texture/유저인터페이스/item/sr_rideinlightning.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b77e896edd37baad5297b8f1e70300e2d5e0dc7e68e7f1d8d2d1cd5a96743474"
+    },
+    "gc_darkcrow": {
+      "resource": "data/texture/유저인터페이스/item/gc_darkcrow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "087c925d454a95515398b506be490617226a24f3948719885b32f80a5eefbf3d"
+    },
+    "ra_unlimit": {
+      "resource": "data/texture/유저인터페이스/item/ra_unlimit.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a971690d68fed981bc4d290caa464ab0cd00582adaa1ade5d56ee2135128533e"
+    },
+    "gn_illusiondoping": {
+      "resource": "data/texture/유저인터페이스/item/gn_illusiondoping.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0c60d9690c3daeacdcd1c5300abb976c3a17842bdb76bc5eed35a5bcbecd2df5"
+    },
+    "rk_dragonbreath_water": {
+      "resource": "data/texture/유저인터페이스/item/rk_dragonbreath_water.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3611c3ffa9036b1a0d293a0886869575fd1d3c135f22c8520cd13761dd72108e"
+    },
+    "nc_magma_eruption": {
+      "resource": "data/texture/유저인터페이스/item/nc_magma_eruption.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1c3a23a709a81e7e8de1b87499ae36fed90484032149da671da15a3e23c2c806"
+    },
+    "wm_frigg_song": {
+      "resource": "data/texture/유저인터페이스/item/wm_frigg_song.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8c44f67de32535294d88285b6230900abb11339e79f127119d0bef78cfab2a38"
+    },
+    "so_elemental_shield": {
+      "resource": "data/texture/유저인터페이스/item/so_elemental_shield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f7eb481cc16702b711c0efa310691d92c67451cbdd14b06fe12c87b4d1c46eae"
+    },
+    "sr_flashcombo": {
+      "resource": "data/texture/유저인터페이스/item/sr_flashcombo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "50bfba7364a2dfd5e887e622cbcc871318276908174b514410f4b89f2afaf7b1"
+    },
+    "sc_escape": {
+      "resource": "data/texture/유저인터페이스/item/sc_escape.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b40c2b87c8274a5cf8ac458cc5ae85b36dfdfb13c8037efb5f84f87f906c8851"
+    },
+    "ab_offertorium": {
+      "resource": "data/texture/유저인터페이스/item/ab_offertorium.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f4e7808abf8448105963fe4948b8be52410eafb502b218e43a6bdcf78e14a5a5"
+    },
+    "wl_telekinesis_intense": {
+      "resource": "data/texture/유저인터페이스/item/wl_telekinesis_intense.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5671ab51b46403f6b1b96eeeb7400086e57c3d0e7fe12b4c736e0c0ecff27ad7"
+    },
+    "lg_kings_grace": {
+      "resource": "data/texture/유저인터페이스/item/lg_kings_grace.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e330f71fb8fe6450092e9a6fecf92f819c5b65aad57e60587b255f0848b32700"
+    },
+    "all_full_throttle": {
+      "resource": "data/texture/유저인터페이스/item/all_full_throttle.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "690d2d136067bb67eba066af166e7e4cf333de49b61268209ef98cdc00bec8bc"
+    },
+    "ab_vituperatum": {
+      "resource": "data/texture/유저인터페이스/item/ab_vituperatum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c6095f560d6cc18c713bc200772b90d143fcd66b3fee63bd3e5a804ef9d1a1c0"
+    },
+    "dk_servantweapon": {
+      "resource": "data/texture/유저인터페이스/item/dk_servantweapon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c7ba10456ffbfb623900c2383e4dd8faf286247970001955e0fbced3da83f6bd"
+    },
+    "dk_servant_w_sign": {
+      "resource": "data/texture/유저인터페이스/item/dk_servant_w_sign.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6204ab4410b576e5e3140b247efaea6e37072b893516068245132cb8147b2937"
+    },
+    "dk_servant_w_phantom": {
+      "resource": "data/texture/유저인터페이스/item/dk_servant_w_phantom.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1467becfd688b02520478c52bcae7d1286e04c22da60ffc3e25be52b1dca78ce"
+    },
+    "dk_servant_w_demol": {
+      "resource": "data/texture/유저인터페이스/item/dk_servant_w_demol.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2a7ddb26001b3f10f24b7c3386a7f54be14e541012c4b7d38222bbe8e5231d35"
+    },
+    "dk_chargingpierce": {
+      "resource": "data/texture/유저인터페이스/item/dk_chargingpierce.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "985ebae52ee9b88e93706b9cffcad628b42e5d034f7d8d32fe0a8ac6902dd1b4"
+    },
+    "dk_twohanddef": {
+      "resource": "data/texture/유저인터페이스/item/dk_twohanddef.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f71070b463955e8d285cea1c47217193978f43713afca1fccaa76b5f07d23139"
+    },
+    "dk_hackandslasher": {
+      "resource": "data/texture/유저인터페이스/item/dk_hackandslasher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b19ba733adc6f0783f56a54e64aa4f83b43f3deffecae7a2bf3dd2e329f29e44"
+    },
+    "dk_dragonic_aura": {
+      "resource": "data/texture/유저인터페이스/item/dk_dragonic_aura.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b86705b2d70d6ea9b36ae9f9407047551dce5d5ec00d678bbacb164110bc6c9a"
+    },
+    "dk_madness_crusher": {
+      "resource": "data/texture/유저인터페이스/item/dk_madness_crusher.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "992254ce12f83f9bfaa4a7a040420d1429bd734163800dc318b2bde558ecaaef"
+    },
+    "dk_vigor": {
+      "resource": "data/texture/유저인터페이스/item/dk_vigor.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ef4cfe21e8f6be63cd9f769585e8dc8047d71a54b3e53394b826ee46bd1025ee"
+    },
+    "dk_stormslash": {
+      "resource": "data/texture/유저인터페이스/item/dk_stormslash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c694eabf5b15fd38ae4d4516cd548de34ef6472d0cbeabc48665c2695b6d0130"
+    },
+    "ag_deadly_projection": {
+      "resource": "data/texture/유저인터페이스/item/ag_deadly_projection.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4b00ee4046b4b0e292654eaa3017f4e2ba33be1ccac2254c89441c6b06917d92"
+    },
+    "ag_destructive_hurricane": {
+      "resource": "data/texture/유저인터페이스/item/ag_destructive_hurricane.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "10425b9d674d034dfd4477691e8b459fce0a72d5bf4b42ad5f1920101ed1818a"
+    },
+    "ag_rain_of_crystal": {
+      "resource": "data/texture/유저인터페이스/item/ag_rain_of_crystal.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "004ca77496b64c22e50849bb059ed92fa9f086875a2c5ffc12b430c3346e3de8"
+    },
+    "ag_mystery_illusion": {
+      "resource": "data/texture/유저인터페이스/item/ag_mystery_illusion.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b341cd769e76b72d372392ed9086df984cfc65f6aa41a85f46dbe0d13ef7fcdd"
+    },
+    "ag_violent_quake": {
+      "resource": "data/texture/유저인터페이스/item/ag_violent_quake.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4ab1809df1121a20f3e795feaff9565aa1d9e067d3d525ab1dab9efed680a94b"
+    },
+    "ag_soul_vc_strike": {
+      "resource": "data/texture/유저인터페이스/item/ag_soul_vc_strike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4a14cd97f2e7e4bd7f36bfd0af4b6a8bc8626a5a112d75ec61cb547ab9493be6"
+    },
+    "ag_strantum_tremor": {
+      "resource": "data/texture/유저인터페이스/item/ag_strantum_tremor.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "79ce15da3bd8c2e1abc97beca4324b552ad17cb228834df8cb100e1a98e588e8"
+    },
+    "ag_all_bloom": {
+      "resource": "data/texture/유저인터페이스/item/ag_all_bloom.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2312f2c733e678522c80a8a2f89bd337b2e0dda443280004998a3a1c72502a56"
+    },
+    "ag_crystal_impact": {
+      "resource": "data/texture/유저인터페이스/item/ag_crystal_impact.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "96f5e32afb4e0a6b9a3399611cf91f4a71966f28e3e544da4e699dbce2e17619"
+    },
+    "ag_tornado_storm": {
+      "resource": "data/texture/유저인터페이스/item/ag_tornado_storm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a3ee5b255a9cb6871f8804dd47d55fddbf697554edf8bed730fd854839c3610a"
+    },
+    "ag_twohandstaff": {
+      "resource": "data/texture/유저인터페이스/item/ag_twohandstaff.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dfab4198167290d47e4cb03510b467f664598a846c6964bbaf9192cf45489864"
+    },
+    "ag_floral_flare_road": {
+      "resource": "data/texture/유저인터페이스/item/ag_floral_flare_road.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f546dfa8dc5609294e80ef6ba9aff0cf0bf819b22893d06c06e8080b22eb2def"
+    },
+    "ag_astral_strike": {
+      "resource": "data/texture/유저인터페이스/item/ag_astral_strike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4d60ca6c7cc1c6309e9435d54c67e9dd307fa78f3b6adad162583aae1a04b66b"
+    },
+    "ag_climax": {
+      "resource": "data/texture/유저인터페이스/item/ag_climax.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "52ffd514e9cd48869e7fd4b865a9f391a67258c5ec6ee88f76513a48e747f7d6"
+    },
+    "ag_rock_down": {
+      "resource": "data/texture/유저인터페이스/item/ag_rock_down.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c96ca8d8fc33785e9f7b49359a958749fa3babb0af512ba6c9dda996460ad0c3"
+    },
+    "ag_storm_cannon": {
+      "resource": "data/texture/유저인터페이스/item/ag_storm_cannon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "50914801fbb0fbce28e9a2f868893d9b7be8916b269986f74e694b39a9d7aa28"
+    },
+    "ag_crimson_arrow": {
+      "resource": "data/texture/유저인터페이스/item/ag_crimson_arrow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8b96cfc5bde8c5e15ade405c1810de78e1fb7721bd5b677184631f410c304149"
+    },
+    "ag_frozen_slash": {
+      "resource": "data/texture/유저인터페이스/item/ag_frozen_slash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "848eb01d2f69610e00fc2dcf4d009d82a8418af671999282ebbc5d6653379771"
+    },
+    "iq_powerful_faith": {
+      "resource": "data/texture/유저인터페이스/item/iq_powerful_faith.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1b8f819e4c6877e225f01bb78bb1aef5b61f0f8a64c0c916fc71890bf882ddeb"
+    },
+    "iq_firm_faith": {
+      "resource": "data/texture/유저인터페이스/item/iq_firm_faith.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a8a93cac879985ad8c6512412f2b0702c6526077ea129d3fd17e340f51be2d14"
+    },
+    "iq_will_of_faith": {
+      "resource": "data/texture/유저인터페이스/item/iq_will_of_faith.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4ad096f6ac11db041a9d7135217ecebf148c8e5029087f31d6409d4a6c76a274"
+    },
+    "iq_oleum_sanctum": {
+      "resource": "data/texture/유저인터페이스/item/iq_oleum_sanctum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d31a3b2363a82f9a1e278dedcab8ab96b3e4ca01af45d626ba6f988cded78ad4"
+    },
+    "iq_sincere_faith": {
+      "resource": "data/texture/유저인터페이스/item/iq_sincere_faith.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1d8d280237f5423aa8d122d48652ccf821b021a6d638e0870025429d3e70cbb4"
+    },
+    "iq_massive_f_blaster": {
+      "resource": "data/texture/유저인터페이스/item/iq_massive_f_blaster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ad56d9e19fe804346af94de798c2c7bdadfb6951c42c1dcae979e6ca41d7a0ad"
+    },
+    "iq_exposion_blaster": {
+      "resource": "data/texture/유저인터페이스/item/iq_exposion_blaster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9fd065405797bbe616396e25f6640951081164c08cc5eef1ed2296342439bc63"
+    },
+    "iq_first_brand": {
+      "resource": "data/texture/유저인터페이스/item/iq_first_brand.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0d303f037e4e0c99ccacc498b7977fab5c320372c8ebabf622facb25e9578507"
+    },
+    "iq_first_faith_power": {
+      "resource": "data/texture/유저인터페이스/item/iq_first_faith_power.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "32694d37584e912758c3e74f83bc6fcc694bc0b37631a815555493c81eb93145"
+    },
+    "iq_judge": {
+      "resource": "data/texture/유저인터페이스/item/iq_judge.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a263b4fd944f6472f54aa577ad642af00b6022dcc6744f9aefba3e4327b5c748"
+    },
+    "iq_second_flame": {
+      "resource": "data/texture/유저인터페이스/item/iq_second_flame.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "40b31592a425973003b3ac31a6dfe5564259e24305fddd6f40f2c452ddafbc8b"
+    },
+    "iq_second_faith": {
+      "resource": "data/texture/유저인터페이스/item/iq_second_faith.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0cffafc983200558bd360f9c9d8f51a7d28ae5adc5d7acb01a7cc4c9c6a39648"
+    },
+    "iq_second_judgement": {
+      "resource": "data/texture/유저인터페이스/item/iq_second_judgement.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0d4d784ce4df528f52bee58f440822abf7d2555296c8decf17800f098557c988"
+    },
+    "iq_third_punish": {
+      "resource": "data/texture/유저인터페이스/item/iq_third_punish.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2db6d6a54d9a04c784fe573f1d67b971ab4641fdcd79702b57fa485005cb7751"
+    },
+    "iq_third_flame_bomb": {
+      "resource": "data/texture/유저인터페이스/item/iq_third_flame_bomb.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bdf9e7a6cfb299af8e40e88168d5e5e7afb28bbfd2aee9cb5d80120520418943"
+    },
+    "iq_third_consecration": {
+      "resource": "data/texture/유저인터페이스/item/iq_third_consecration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0188fde14e56e0c5fc023bd2b1283f5b1bc1b13b0f1e28582ee16497ec4b4710"
+    },
+    "iq_third_exor_flame": {
+      "resource": "data/texture/유저인터페이스/item/iq_third_exor_flame.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9b1da8899df091feab28063ec82af1ad08e485c48d46e5d26030ef4f3d98ffbf"
+    },
+    "ig_guard_stance": {
+      "resource": "data/texture/유저인터페이스/item/ig_guard_stance.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cd71d81a5068dd4d8104ed7debb942d945fd50eafc90e7dbc3340f0a480294e0"
+    },
+    "ig_guardian_shield": {
+      "resource": "data/texture/유저인터페이스/item/ig_guardian_shield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "87494679abe99d16634e1b581bedbb71540db76c3ad3046ec9a2ea06ae74ec3e"
+    },
+    "ig_rebound_shield": {
+      "resource": "data/texture/유저인터페이스/item/ig_rebound_shield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f186dabcc0e9bcdc4c536d1963371aef7d9299e9d95d6b3555c53c926f664b43"
+    },
+    "ig_shield_mastery": {
+      "resource": "data/texture/유저인터페이스/item/ig_shield_mastery.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "cbd166e0be97e21a2510533f188677a52125cfa1f0f411397d0c8bd93ac918ba"
+    },
+    "ig_spear_sword_m": {
+      "resource": "data/texture/유저인터페이스/item/ig_spear_sword_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "98167f351da6ee37d0d8a5fe8fbb29c556556ead61d36b71b79bd05fdda1241f"
+    },
+    "ig_attack_stance": {
+      "resource": "data/texture/유저인터페이스/item/ig_attack_stance.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "87c13455770e5f20e3bfe91a9239ab85c3efc8c4c6d2a226043678d5ec26ee12"
+    },
+    "ig_holy_shield": {
+      "resource": "data/texture/유저인터페이스/item/ig_holy_shield.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "357be9f63c2a5d3a31088b090c0b103b26bf4fe4722bbc32980f668983ae64b3"
+    },
+    "ig_grand_judgement": {
+      "resource": "data/texture/유저인터페이스/item/ig_grand_judgement.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "76dcf516262eca687b54a1d5725e1ac5437e1c29c77d680a882a25cf3f716d6d"
+    },
+    "ig_judgement_cross": {
+      "resource": "data/texture/유저인터페이스/item/ig_judgement_cross.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ed206d6bb3d957d69d2cc9320925c1bffa2697b53e074d76fc06253382c22f9a"
+    },
+    "ig_shield_shooting": {
+      "resource": "data/texture/유저인터페이스/item/ig_shield_shooting.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2aeee2a818546d416e19655bf3b84ea5eb0effdc10ce93f4d66877c5407c7fe4"
+    },
+    "ig_overslash": {
+      "resource": "data/texture/유저인터페이스/item/ig_overslash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1332397650534f2166f52bb840aeaa70c71c48ed802804b6e2355efcdb060023"
+    },
+    "ig_cross_rain": {
+      "resource": "data/texture/유저인터페이스/item/ig_cross_rain.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "34005307272e3ba62cbf7b6e61c5eabc98aa60b544d9120ce1f599c0a1641e7f"
+    },
+    "cd_reparatio": {
+      "resource": "data/texture/유저인터페이스/item/cd_reparatio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6c7444f8ca86e674d7deb388a83adcef0e1f72b62abae14ede62051b2f3655a9"
+    },
+    "cd_mediale_votum": {
+      "resource": "data/texture/유저인터페이스/item/cd_mediale_votum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6c3460ca6e54a0529c5cd5c8e30bf508851ffa7f46c6405f18c8646353663ea8"
+    },
+    "cd_mace_book_m": {
+      "resource": "data/texture/유저인터페이스/item/cd_mace_book_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "82fd414f8acad088d37b5712c257dcf074277399bdfa4c7e26504106055d03f8"
+    },
+    "cd_argutus_vita": {
+      "resource": "data/texture/유저인터페이스/item/cd_argutus_vita.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c858707288c2b03f7b7c03dd1e18573a31384fd1ceced589c15c2d6921cd7e2d"
+    },
+    "cd_argutus_telum": {
+      "resource": "data/texture/유저인터페이스/item/cd_argutus_telum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6625e4ded0a8bb4e3fe9dd8c80f08074a5b9ff3ec3f5cc9b70702ad1d18cd5dc"
+    },
+    "cd_arbitrium": {
+      "resource": "data/texture/유저인터페이스/item/cd_arbitrium.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "97e910f7b47418074429f38be2f27ebd6b70b2eb6ef95ad0dac0709395793b72"
+    },
+    "cd_presens_acies": {
+      "resource": "data/texture/유저인터페이스/item/cd_presens_acies.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "74d12e7a040d23e636997342597f9838c9b8a3346b62dbf311c1d98a6d14589e"
+    },
+    "cd_fidus_animus": {
+      "resource": "data/texture/유저인터페이스/item/cd_fidus_animus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "381b4a642063b2cc89f0a88bb4727022fde3dcef1ce26597eadaf8d7e869f318"
+    },
+    "cd_effligo": {
+      "resource": "data/texture/유저인터페이스/item/cd_effligo.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "24ab844984df84be81996384f379b108f2e6f6e8ce754b16bed941b114675cd5"
+    },
+    "cd_competentia": {
+      "resource": "data/texture/유저인터페이스/item/cd_competentia.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8d1cb8059175815bca8fb47730aa88f937c40103899ec1797a52d3c8894af54b"
+    },
+    "cd_pneumaticus_procella": {
+      "resource": "data/texture/유저인터페이스/item/cd_pneumaticus_procella.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "31606781390773d8889c93cd26f3a040fd59a34844ad34ac0f927fa555f8b4a1"
+    },
+    "cd_dilectio_heal": {
+      "resource": "data/texture/유저인터페이스/item/cd_dilectio_heal.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5f9fc7d7b3e78a6fe200402a80873df267e9c52f04d7d497bd0b328058b9e398"
+    },
+    "cd_religio": {
+      "resource": "data/texture/유저인터페이스/item/cd_religio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ada35b5d75d4b21d5950cbbdc7fe5f3fc269f37755a92ef2c69e73349627fbe2"
+    },
+    "cd_benedictum": {
+      "resource": "data/texture/유저인터페이스/item/cd_benedictum.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0f2ed201cc8c55cb0f8fdee10d0f2d26ce8130672518fbd2157f02fbcda682e9"
+    },
+    "cd_petitio": {
+      "resource": "data/texture/유저인터페이스/item/cd_petitio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2ed8789fb55d635bfd7ae25dedece603d4c57653653cad7a866787acfc7a7d1a"
+    },
+    "cd_framen": {
+      "resource": "data/texture/유저인터페이스/item/cd_framen.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e379e96e4c2914b880b7e92a226da39e0312dd04d6b74aecef2370e30e8c1eff"
+    },
+    "shc_shadow_exceed": {
+      "resource": "data/texture/유저인터페이스/item/shc_shadow_exceed.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9a562d3be96be3275e813528b9589c9a4dc0dee5850b4be7df091c3b7635678d"
+    },
+    "shc_dancing_knife": {
+      "resource": "data/texture/유저인터페이스/item/shc_dancing_knife.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "461b289602b6ec0f4155a66c700d812aae53d38dbb3264d55433a7d3f88990e4"
+    },
+    "shc_savage_impact": {
+      "resource": "data/texture/유저인터페이스/item/shc_savage_impact.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a19e4f47432f90ab00136c6d53c938dc7e97566039e66e136685bbfd74072235"
+    },
+    "shc_shadow_sense": {
+      "resource": "data/texture/유저인터페이스/item/shc_shadow_sense.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "697ee395efe83d642f80d9abe19f759a037df261ab2e454933a06e93a254201f"
+    },
+    "shc_eternal_slash": {
+      "resource": "data/texture/유저인터페이스/item/shc_eternal_slash.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a06a5cc1f3181a0ac0aa0e2349b97080dd406d4067326f9c9630369a8be74e36"
+    },
+    "shc_potent_venom": {
+      "resource": "data/texture/유저인터페이스/item/shc_potent_venom.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d7a2dab4de42a7c745797ca1f24eeab683307c2c4164f2ee581a435a7ad53896"
+    },
+    "shc_shadow_stab": {
+      "resource": "data/texture/유저인터페이스/item/shc_shadow_stab.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c2f60548a5aa6887cb234d424d06fc96465d55394bc79831082bc6222c42238c"
+    },
+    "shc_impact_crater": {
+      "resource": "data/texture/유저인터페이스/item/shc_impact_crater.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fb4398e18eb12c62c19b160f4bebe3992d7aca16e524ab7f92da8a10ac7bd6de"
+    },
+    "shc_enchanting_shadow": {
+      "resource": "data/texture/유저인터페이스/item/shc_enchanting_shadow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "136df24c79ba422fa407c50c068f14c38c7e103cb95a677cb52dbb4e4fd03303"
+    },
+    "shc_fatal_shadow_crow": {
+      "resource": "data/texture/유저인터페이스/item/shc_fatal_shadow_crow.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c53a57cee88675e971b0ff01ff024458d85caea209a75a5f494e50c5e872a5d8"
+    },
+    "mt_axe_stomp": {
+      "resource": "data/texture/유저인터페이스/item/mt_axe_stomp.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "638ace448961b5548c4f4c1e66a6336581689c4eccd922e1e459810eec840d9c"
+    },
+    "mt_rush_quake": {
+      "resource": "data/texture/유저인터페이스/item/mt_rush_quake.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "002813cd19960bd7568600571275bb837ad39f0d29e82bcdab894652960f2887"
+    },
+    "mt_a_machine": {
+      "resource": "data/texture/유저인터페이스/item/mt_a_machine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "49aef9c72f0e0307c616ae9d7d7ffa7e2850e2d40d7c9f434a79010fee0d22ad"
+    },
+    "mt_d_machine": {
+      "resource": "data/texture/유저인터페이스/item/mt_d_machine.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "694a55f9a67a1e3032489b0eb664372eb098fe1c9614e7b17b060f7d205eeee6"
+    },
+    "mt_twoaxedef": {
+      "resource": "data/texture/유저인터페이스/item/mt_twoaxedef.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b29f3ce8eed66d8e87d69358767b54c52d0de6af7fd5150e10e41af38808133b"
+    },
+    "mt_abr_m": {
+      "resource": "data/texture/유저인터페이스/item/mt_abr_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7d603912f42936ec51d7fd445cc70d1cdae8c3ed1ca7d711f69729d36ef01cc2"
+    },
+    "mt_summon_abr_battle_warior": {
+      "resource": "data/texture/유저인터페이스/item/mt_summon_abr_battle_warior.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d165d6cca64c9048ec37f1b6cfec7b24998a77571baf7f951e4e36b843b4f856"
+    },
+    "mt_summon_abr_dual_cannon": {
+      "resource": "data/texture/유저인터페이스/item/mt_summon_abr_dual_cannon.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2a6d6afcbae3c2b380d00487c051607ee7aa8d8b1897f354d63507582859baf6"
+    },
+    "mt_summon_abr_mother_net": {
+      "resource": "data/texture/유저인터페이스/item/mt_summon_abr_mother_net.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0ee4abd2fb73dc9e589dfdda52cadb7ea1d72d5f87ee1df3124b9d56b500756b"
+    },
+    "mt_summon_abr_infinity": {
+      "resource": "data/texture/유저인터페이스/item/mt_summon_abr_infinity.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6813ca5b6fb0be5851bb9f7b23b782f41d691b17234edcfc36af71febe05aa4e"
+    },
+    "abc_dagger_and_bow_m": {
+      "resource": "data/texture/유저인터페이스/item/abc_dagger_and_bow_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5931442138f865bf094359e9aad7b69995555434c2d0ee0791f65d8480516e58"
+    },
+    "abc_magic_sword_m": {
+      "resource": "data/texture/유저인터페이스/item/abc_magic_sword_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7b0acbd9ba2dad8f8d802df4c2e004c552208c5f96369778797cbb2d24cb7242"
+    },
+    "abc_abyss_dagger": {
+      "resource": "data/texture/유저인터페이스/item/abc_abyss_dagger.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7055a8fbb069e3fa1532150dae15b65fca612cf090cf90a286d386494587a353"
+    },
+    "abc_unlucky_rush": {
+      "resource": "data/texture/유저인터페이스/item/abc_unlucky_rush.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0fd161b4d563214cc4aa68001cdd95a5c02101d2ba9097f7c3abf1226b9083ef"
+    },
+    "abc_chain_reaction_shot": {
+      "resource": "data/texture/유저인터페이스/item/abc_chain_reaction_shot.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e781bd3616754258a7acda3936c0e95f7b9927bd274113ab2a7199be7b0177e9"
+    },
+    "abc_from_the_abyss": {
+      "resource": "data/texture/유저인터페이스/item/abc_from_the_abyss.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "faa55aea6042a11150e88b27526d3da3f834c438729b3613077e4f6a8b86c15a"
+    },
+    "abc_abyss_slayer": {
+      "resource": "data/texture/유저인터페이스/item/abc_abyss_slayer.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ee48024ffb5e0b425681501903df95b6c188653559be3e6f9aa9a647c4b6e64b"
+    },
+    "abc_abyss_strike": {
+      "resource": "data/texture/유저인터페이스/item/abc_abyss_strike.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9fc9721cade757a94190b5bbf5e89d0478b7884207676f8b2e8704e923d2f422"
+    },
+    "abc_deft_stab": {
+      "resource": "data/texture/유저인터페이스/item/abc_deft_stab.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5077233a285167d707f2dc449eb524f70c011dd0f41799a060c0941daf3b2674"
+    },
+    "abc_abyss_square": {
+      "resource": "data/texture/유저인터페이스/item/abc_abyss_square.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ef075f26a52738278963bfd803ecaf729befc8df807d77557407c0c87c1ec479"
+    },
+    "abc_frenzy_shot": {
+      "resource": "data/texture/유저인터페이스/item/abc_frenzy_shot.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "777715be94e70be10978e6c58d5bbd914d745cc94f81775e464e03572cd3d2b0"
+    },
+    "wh_advanced_trap": {
+      "resource": "data/texture/유저인터페이스/item/wh_advanced_trap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "e4dba1b8d8845f856846a7761317e222e816174296e8a5430e23ed5352b962a1"
+    },
+    "wh_wind_sign": {
+      "resource": "data/texture/유저인터페이스/item/wh_wind_sign.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "24cca95a340496338d69befe36191d7dd69c030565677d26e2a274a20a2437ad"
+    },
+    "wh_naturefriendly": {
+      "resource": "data/texture/유저인터페이스/item/wh_naturefriendly.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b3ea51f87cc08cef2b74fa07d78a8bed965b176d24617d2dda13db263ed9412e"
+    },
+    "wh_hawkrush": {
+      "resource": "data/texture/유저인터페이스/item/wh_hawkrush.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ca2f17af27c6a19d792de971c1bb20aa687e821dfb5b37cb1f65fc285befdd97"
+    },
+    "wh_hawk_m": {
+      "resource": "data/texture/유저인터페이스/item/wh_hawk_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0f3160129bcd1309d4eb21be26e6664141314eff501d50046572b4404f794d10"
+    },
+    "wh_calamitygale": {
+      "resource": "data/texture/유저인터페이스/item/wh_calamitygale.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "324eb8bd9aa9c286bbfa47ed943dd8baa08b73f21008e901f088900c9f9950c6"
+    },
+    "wh_hawkboomerang": {
+      "resource": "data/texture/유저인터페이스/item/wh_hawkboomerang.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "953ff507e75259447ef2673187cecdbfa0115d0b87e92abf930f2d817a4c08ac"
+    },
+    "wh_galestorm": {
+      "resource": "data/texture/유저인터페이스/item/wh_galestorm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "7bea2d40eb80ed07f6cec7010804b261f8e076865187bad2d063675ea0c61679"
+    },
+    "wh_deepblindtrap": {
+      "resource": "data/texture/유저인터페이스/item/wh_deepblindtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "8643924b60e96b58a4a850af8954322f95bb32c8fa0e31a9bc5ea31cddea0868"
+    },
+    "wh_solidtrap": {
+      "resource": "data/texture/유저인터페이스/item/wh_solidtrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "af1184c3e7eb49e61832735b7bcf90857eaeeee82ca618031472c23c12062ead"
+    },
+    "wh_swifttrap": {
+      "resource": "data/texture/유저인터페이스/item/wh_swifttrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2c1cce1078000a0e2baf9004c6e0b8f0bc54200606c618f88bd68bd0d27ada66"
+    },
+    "wh_crescive_bolt": {
+      "resource": "data/texture/유저인터페이스/item/wh_crescive_bolt.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1843e5eabc625a4ab7a7602a53513580cbb1b01eacfefe4377071bff0dc4cebb"
+    },
+    "wh_flametrap": {
+      "resource": "data/texture/유저인터페이스/item/wh_flametrap.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "b6604d4c953b83567c5a44752df7c0a29d0e50f3b0e8f560c480a790bc791287"
+    },
+    "bo_bionics_m": {
+      "resource": "data/texture/유저인터페이스/item/bo_bionics_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "82890b62c571dca81e30b8c715bdacb1f3b49108a55820f6c9f75585d8343618"
+    },
+    "bo_the_whole_protection": {
+      "resource": "data/texture/유저인터페이스/item/bo_the_whole_protection.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0d17fbc22eccd779fcb22f107a33eb40bc3cbab8fbf34edc26c5ad6b8bb973cf"
+    },
+    "bo_advance_protection": {
+      "resource": "data/texture/유저인터페이스/item/bo_advance_protection.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "226b18ff24beaa88ddd5da60b3af1a99146656336d1991a4f3b6c46485b136da"
+    },
+    "bo_acidified_zone_water": {
+      "resource": "data/texture/유저인터페이스/item/bo_acidified_zone_water.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ed1c19a9c221eab2f446e5f3e0f01069fe733482f62732f1cf1d9451366337db"
+    },
+    "bo_acidified_zone_ground": {
+      "resource": "data/texture/유저인터페이스/item/bo_acidified_zone_ground.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "dfce3baeca6a2a8278d003eca1678dd697d133990ad3f46fa5658636e6a677d8"
+    },
+    "bo_acidified_zone_wind": {
+      "resource": "data/texture/유저인터페이스/item/bo_acidified_zone_wind.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "6155b23d5e56fb385c2b2eb602bc22fa27f5466d3464d4036f754e28b3ddbe8f"
+    },
+    "bo_acidified_zone_fire": {
+      "resource": "data/texture/유저인터페이스/item/bo_acidified_zone_fire.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "50d0e702dbff986798daa36fb45f9133ad06b9147ce35f9a77ef0f741d99ad37"
+    },
+    "bo_woodenwarrior": {
+      "resource": "data/texture/유저인터페이스/item/bo_woodenwarrior.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d94083e7ab5a5605cd37b150b3e8f9abc91dd541cf95895c0d485bc16a97d5d2"
+    },
+    "bo_wooden_fairy": {
+      "resource": "data/texture/유저인터페이스/item/bo_wooden_fairy.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5680aed6529bfc33e157003df73e9a58bf6234ec7de4de620c74200c26984019"
+    },
+    "bo_creeper": {
+      "resource": "data/texture/유저인터페이스/item/bo_creeper.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "fdce8088b35d43043bdac20bc858973c1e0e20ef93b8ee0cd6466bb7d0618956"
+    },
+    "bo_researchreport": {
+      "resource": "data/texture/유저인터페이스/item/bo_researchreport.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "a951fcfe3702eed8994419681b997bbbce09e02035bae23ee8e4f17960c000cf"
+    },
+    "bo_helltree": {
+      "resource": "data/texture/유저인터페이스/item/bo_helltree.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "9532d6fb15579e44c7c948fb37bf36ad7e1552d357b5d625de15410e3544b511"
+    },
+    "tr_stage_manner": {
+      "resource": "data/texture/유저인터페이스/item/tr_stage_manner.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "be54527b592177b649c0f36c8e27f3220a6ec3b087a480a08b886f1b940c6c0c"
+    },
+    "tr_mystic_symphony": {
+      "resource": "data/texture/유저인터페이스/item/tr_mystic_symphony.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4c82495200aa0e3f0386d7dec775b4e6b2d769703e5b8721b4cd7ad48aadfd4a"
+    },
+    "tr_kvasir_sonata": {
+      "resource": "data/texture/유저인터페이스/item/tr_kvasir_sonata.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "47998340581d399c5e36c3db93593a7a2ec7141ea4be58a5e0f59f2234374df3"
+    },
+    "tr_roseblossom": {
+      "resource": "data/texture/유저인터페이스/item/tr_roseblossom.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "76a050e7626b3cd2f001febfb08a81e67a310defe9627ba401e173e5aaca8f24"
+    },
+    "tr_rhythmshooting": {
+      "resource": "data/texture/유저인터페이스/item/tr_rhythmshooting.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2633ae4a72510470f9022491ad68b02d884e0bb1dddb179ace01709bfbc15cb7"
+    },
+    "tr_metalic_fury": {
+      "resource": "data/texture/유저인터페이스/item/tr_metalic_fury.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "08d61ee8f0ca9d975c861adade8521321c0e6ab7ef35274b805c55b819a68b83"
+    },
+    "tr_soundblend": {
+      "resource": "data/texture/유저인터페이스/item/tr_soundblend.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2f15cacc3b4a2ca487d429d6e315b71b882e9951e456337e3c27f800be0a8125"
+    },
+    "tr_gef_nocturn": {
+      "resource": "data/texture/유저인터페이스/item/tr_gef_nocturn.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "58af1426a7b013a7c30faf5012fc43a56436d562599e4e4687d63b7c2a2b37f1"
+    },
+    "tr_roki_capriccio": {
+      "resource": "data/texture/유저인터페이스/item/tr_roki_capriccio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d211def98b5c2939cb963028dd48f9018fbfffc1528ca4b45319125922f53ad2"
+    },
+    "tr_ain_rhapsody": {
+      "resource": "data/texture/유저인터페이스/item/tr_ain_rhapsody.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4935d000e60aed88da703bb44ecc3d7140bb7206d9493eeb5a93c829a38d0558"
+    },
+    "tr_musical_interlude": {
+      "resource": "data/texture/유저인터페이스/item/tr_musical_interlude.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "eadbd3f74f7be2b79059d392a04b9ca1ca2639921f5f865967ec41c9f44614ec"
+    },
+    "tr_jawaii_serenade": {
+      "resource": "data/texture/유저인터페이스/item/tr_jawaii_serenade.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5061c45d2c9d1da62d09cec0a84aefa1b5d38596751bb50e8007a6a38ec0bf7c"
+    },
+    "tr_nipelheim_requiem": {
+      "resource": "data/texture/유저인터페이스/item/tr_nipelheim_requiem.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "2c3442148ba17d6dd18d4c25b0face78aaeeb9c017d975831de14de1228f35d9"
+    },
+    "tr_pron_march": {
+      "resource": "data/texture/유저인터페이스/item/tr_pron_march.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f3befd73ecd9cd9bb9de7d1d02686cb8fb6da9ca89872b0e48570823d20e3d05"
+    },
+    "em_magic_book_m": {
+      "resource": "data/texture/유저인터페이스/item/em_magic_book_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "bc8777ca823e486caa443081dc7aa06cd00e394e862d89e5b9d287d6c80389f9"
+    },
+    "em_spell_enchanting": {
+      "resource": "data/texture/유저인터페이스/item/em_spell_enchanting.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "679b4ceab77de71c1d79a9386e0c5ed2e68b5966e067f81235648e10867350ef"
+    },
+    "em_activity_burn": {
+      "resource": "data/texture/유저인터페이스/item/em_activity_burn.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f9aad18c0c759a135426e5d13f129f1525e9fbf028914bb59a737e94e7967617"
+    },
+    "em_diamond_storm": {
+      "resource": "data/texture/유저인터페이스/item/em_diamond_storm.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d20a00c80f4a2742b774a6f228bbc22276c8185bf178d300be99e120f476965b"
+    },
+    "em_lightning_land": {
+      "resource": "data/texture/유저인터페이스/item/em_lightning_land.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "1aa3fe58a4b3c5b80bde3b8677d7251d9168659d70bb496a2be34ab9742b01c0"
+    },
+    "em_venom_swamp": {
+      "resource": "data/texture/유저인터페이스/item/em_venom_swamp.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ca27768821d3cb4d089eb8039a35fd6c6faa71846cec0791e0cff1cc2e43b1ed"
+    },
+    "em_conflagration": {
+      "resource": "data/texture/유저인터페이스/item/em_conflagration.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "f5a6138c41a312e749ff861f0751c9b0cdaca7d4727e8ac5e457640abe273c0e"
+    },
+    "em_terra_drive": {
+      "resource": "data/texture/유저인터페이스/item/em_terra_drive.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "d026cdbf176c2473e4282234dc2892bf2ceaf2fd30d2a1c498039248c2b6f35d"
+    },
+    "em_elemental_spirit_m": {
+      "resource": "data/texture/유저인터페이스/item/em_elemental_spirit_m.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3b1581cb6ed52b1803c478800cfbf8eb8218e7de58fff82288a0d3d4f2970cab"
+    },
+    "em_summon_elemental_ardor": {
+      "resource": "data/texture/유저인터페이스/item/em_summon_elemental_ardor.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "c3add9056a41de98f72fa4c7ef811ac50d958cdf6f591cc5c3b2c06767148552"
+    },
+    "em_summon_elemental_diluvio": {
+      "resource": "data/texture/유저인터페이스/item/em_summon_elemental_diluvio.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "3d44a525215a0e8f9b754f595c6805ef54c6c665a6d487dc4ffd2418e511cc93"
+    },
+    "em_summon_elemental_procella": {
+      "resource": "data/texture/유저인터페이스/item/em_summon_elemental_procella.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "48a73e4420ddf24a4ce3a043493530d47942304838d919527e4612406535dec2"
+    },
+    "em_summon_elemental_terremotus": {
+      "resource": "data/texture/유저인터페이스/item/em_summon_elemental_terremotus.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "ea1c941921e18278be9c073e289e39e21d5880fa1950cc5fbcc4a70fc6456bde"
+    },
+    "em_summon_elemental_serpens": {
+      "resource": "data/texture/유저인터페이스/item/em_summon_elemental_serpens.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4a61028e62598e9059d2ecfc06f462cf8fd9f22ce63e1ce420a608da84f27484"
+    },
+    "em_elemental_buster": {
+      "resource": "data/texture/유저인터페이스/item/em_elemental_buster.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "4fe6ce4db98dec87b5ef9ccfdb17b42ab7e7f6cc14d33285388199165a959291"
+    },
+    "em_elemental_veil": {
+      "resource": "data/texture/유저인터페이스/item/em_elemental_veil.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "5e6ab55c52a2e20df68b248105150245919849aacf43e3a60b6bb4412b0a9ea2"
+    },
+    "kn_riding": {
+      "resource": "data/texture/유저인터페이스/item/kn_riding.bmp",
+      "width": 24,
+      "height": 24,
+      "sha256": "0fde379381d2a9dd3165b461a2792f6fdd7a618cc0dc44cc4f318fd1cb74b7f0"
+    }
+  },
+  "mapping": {
+    "sm_sword": "sm_sword",
+    "sm_twohand": "sm_twohand",
+    "sm_recovery": "sm_recovery",
+    "bash": "sm_bash",
+    "sm_provoke": "sm_provoke",
+    "sm_magnum": "sm_magnum",
+    "sm_endure": "sm_endure",
+    "mg_srecovery": "mg_srecovery",
+    "mg_sight": "mg_sight",
+    "mg_napalmbeat": "mg_napalmbeat",
+    "mg_safetywall": "mg_safetywall",
+    "mg_soulstrike": "mg_soulstrike",
+    "coldbolt": "mg_coldbolt",
+    "mg_frostdiver": "mg_frostdiver",
+    "mg_stonecurse": "mg_stonecurse",
+    "fireball": "mg_fireball",
+    "mg_firewall": "mg_firewall",
+    "firebolt": "mg_firebolt",
+    "mg_lightningbolt": "mg_lightningbolt",
+    "mg_thunderstorm": "mg_thunderstorm",
+    "al_dp": "al_dp",
+    "al_demonbane": "al_demonbane",
+    "al_ruwach": "al_ruwach",
+    "al_pneuma": "al_pneuma",
+    "al_heal": "al_heal",
+    "al_incagi": "al_incagi",
+    "al_decagi": "al_decagi",
+    "al_crucis": "al_crucis",
+    "al_angelus": "al_angelus",
+    "al_blessing": "al_blessing",
+    "al_cure": "al_cure",
+    "mc_mammonite": "mc_mammonite",
+    "ac_owl": "ac_owl",
+    "ac_vulture": "ac_vulture",
+    "ac_concentration": "ac_concentration",
+    "doublestrafe": "ac_double",
+    "ac_shower": "ac_shower",
+    "tf_double": "tf_double",
+    "tf_miss": "tf_miss",
+    "tf_hiding": "tf_hiding",
+    "envenom": "tf_poison",
+    "tf_detoxify": "tf_detoxify",
+    "kn_spearmastery": "kn_spearmastery",
+    "kn_pierce": "kn_pierce",
+    "kn_brandishspear": "kn_brandishspear",
+    "kn_spearstab": "kn_spearstab",
+    "kn_spearboomerang": "kn_spearboomerang",
+    "kn_twohandquicken": "kn_twohandquicken",
+    "kn_autocounter": "kn_autocounter",
+    "bowlingbash": "kn_bowlingbash",
+    "pr_macemastery": "pr_macemastery",
+    "pr_impositio": "pr_impositio",
+    "pr_suffragium": "pr_suffragium",
+    "pr_aspersio": "pr_aspersio",
+    "pr_sanctuary": "pr_sanctuary",
+    "pr_slowpoison": "pr_slowpoison",
+    "pr_strecovery": "pr_strecovery",
+    "pr_kyrie": "pr_kyrie",
+    "pr_magnificat": "pr_magnificat",
+    "pr_gloria": "pr_gloria",
+    "pr_lexdivina": "pr_lexdivina",
+    "pr_turnundead": "pr_turnundead",
+    "pr_lexaeterna": "pr_lexaeterna",
+    "magnusexorcismus": "pr_magnus",
+    "wz_firepillar": "wz_firepillar",
+    "wz_sightrasher": "wz_sightrasher",
+    "wz_meteor": "wz_meteor",
+    "wz_jupitel": "wz_jupitel",
+    "wz_vermilion": "wz_vermilion",
+    "wz_waterball": "wz_waterball",
+    "wz_icewall": "wz_icewall",
+    "wz_frostnova": "wz_frostnova",
+    "stormgust": "wz_stormgust",
+    "wz_earthspike": "wz_earthspike",
+    "heavensdrive": "wz_heavendrive",
+    "wz_quagmire": "wz_quagmire",
+    "bs_hiltbinding": "bs_hiltbinding",
+    "bs_weaponresearch": "bs_weaponresearch",
+    "bs_skintemper": "bs_skintemper",
+    "hammerfall": "bs_hammerfall",
+    "bs_adrenaline": "bs_adrenaline",
+    "bs_weaponperfect": "bs_weaponperfect",
+    "bs_overthrust": "bs_overthrust",
+    "bs_maximize": "bs_maximize",
+    "ht_skidtrap": "ht_skidtrap",
+    "ht_landmine": "ht_landmine",
+    "ht_anklesnare": "ht_anklesnare",
+    "ht_shockwave": "ht_shockwave",
+    "ht_sandman": "ht_sandman",
+    "ht_flasher": "ht_flasher",
+    "ht_freezingtrap": "ht_freezingtrap",
+    "ht_blastmine": "ht_blastmine",
+    "ht_claymoretrap": "ht_claymoretrap",
+    "ht_beastbane": "ht_beastbane",
+    "ht_falcon": "ht_falcon",
+    "ht_steelcrow": "ht_steelcrow",
+    "blitzbeat": "ht_blitzbeat",
+    "as_right": "as_right",
+    "as_left": "as_left",
+    "as_katar": "as_katar",
+    "as_cloaking": "as_cloaking",
+    "sonicblow": "as_sonicblow",
+    "as_grimtooth": "as_grimtooth",
+    "as_enchantpoison": "as_enchantpoison",
+    "as_poisonreact": "as_poisonreact",
+    "as_venomdust": "as_venomdust",
+    "as_splasher": "as_splasher",
+    "sm_movingrecovery": "sm_movingrecovery",
+    "sm_fatalblow": "sm_fatalblow",
+    "sm_autoberserk": "sm_autoberserk",
+    "ac_chargearrow": "ac_chargearrow",
+    "tf_sprinklesand": "tf_sprinklesand",
+    "tf_backsliding": "tf_backsliding",
+    "tf_throwstone": "tf_throwstone",
+    "cartrevolution": "mc_cartrevolution",
+    "mc_loud": "mc_loud",
+    "holylight": "al_holylight",
+    "mg_energycoat": "mg_energycoat",
+    "backstab": "rg_backstap",
+    "rg_tunneldrive": "rg_tunneldrive",
+    "rg_raid": "rg_raid",
+    "rg_intimidate": "rg_intimidate",
+    "am_axemastery": "am_axemastery",
+    "am_learningpotion": "am_learningpotion",
+    "demonstration": "am_demonstration",
+    "am_acidterror": "am_acidterror",
+    "am_potionpitcher": "am_potionpitcher",
+    "am_cannibalize": "am_cannibalize",
+    "am_spheremine": "am_spheremine",
+    "am_cp_weapon": "am_cp_weapon",
+    "am_cp_shield": "am_cp_shield",
+    "am_cp_armor": "am_cp_armor",
+    "am_cp_helm": "am_cp_helm",
+    "am_callhomun": "am_callhomun",
+    "cr_trust": "cr_trust",
+    "cr_autoguard": "cr_autoguard",
+    "cr_shieldcharge": "cr_shieldcharge",
+    "shieldboomerang": "cr_shieldboomerang",
+    "cr_reflectshield": "cr_reflectshield",
+    "cr_holycross": "cr_holycross",
+    "cr_grandcross": "cr_grandcross",
+    "cr_providence": "cr_providence",
+    "cr_defender": "cr_defender",
+    "cr_spearquicken": "cr_spearquicken",
+    "mo_ironhand": "mo_ironhand",
+    "mo_spiritsrecovery": "mo_spiritsrecovery",
+    "mo_callspirits": "mo_callspirits",
+    "mo_absorbspirits": "mo_absorbspirits",
+    "mo_tripleattack": "mo_tripleattack",
+    "mo_bodyrelocation": "mo_bodyrelocation",
+    "mo_dodge": "mo_dodge",
+    "mo_investigate": "mo_investigate",
+    "fingeroffensive": "mo_fingeroffensive",
+    "mo_steelbody": "mo_steelbody",
+    "mo_bladestop": "mo_bladestop",
+    "mo_explosionspirits": "mo_explosionspirits",
+    "mo_extremityfist": "mo_extremityfist",
+    "mo_chaincombo": "mo_chaincombo",
+    "mo_combofinish": "mo_combofinish",
+    "sa_advancedbook": "sa_advancedbook",
+    "sa_magicrod": "sa_magicrod",
+    "sa_spellbreaker": "sa_spellbreaker",
+    "sa_freecast": "sa_freecast",
+    "sa_autospell": "sa_autospell",
+    "sa_flamelauncher": "sa_flamelauncher",
+    "sa_frostweapon": "sa_frostweapon",
+    "sa_lightningloader": "sa_lightningloader",
+    "sa_seismicweapon": "sa_seismicweapon",
+    "sa_dragonology": "sa_dragonology",
+    "sa_volcano": "sa_volcano",
+    "sa_deluge": "sa_deluge",
+    "sa_violentgale": "sa_violentgale",
+    "sa_landprotector": "sa_landprotector",
+    "sa_dispell": "sa_dispell",
+    "bd_lullaby": "bd_lullaby",
+    "bd_richmankim": "bd_richmankim",
+    "bd_eternalchaos": "bd_eternalchaos",
+    "bd_drumbattlefield": "bd_drumbattlefield",
+    "bd_ringnibelungen": "bd_ringnibelungen",
+    "bd_rokisweil": "bd_rokisweil",
+    "bd_siegfried": "bd_siegfried",
+    "ba_musicallesson": "ba_musicallesson",
+    "musicalstrike": "ba_musicalstrike",
+    "ba_dissonance": "ba_dissonance",
+    "ba_frostjoker": "ba_frostjoker",
+    "ba_whistle": "ba_whistle",
+    "ba_assassincross": "ba_assassincross",
+    "ba_poembragi": "ba_poembragi",
+    "ba_appleidun": "ba_appleidun",
+    "lk_aurablade": "lk_aurablade",
+    "lk_parrying": "lk_parrying",
+    "lk_concentration": "lk_concentration",
+    "lk_tensionrelax": "lk_tensionrelax",
+    "lk_berserk": "lk_berserk",
+    "hp_assumptio": "hp_assumptio",
+    "hp_basilica": "hp_basilica",
+    "hp_meditatio": "hp_meditatio",
+    "hw_souldrain": "hw_souldrain",
+    "hw_magiccrasher": "hw_magiccrasher",
+    "hw_magicpower": "hw_magicpower",
+    "pa_pressure": "pa_pressure",
+    "pa_sacrifice": "pa_sacrifice",
+    "pa_gospel": "pa_gospel",
+    "ch_palmstrike": "ch_palmstrike",
+    "ch_tigerfist": "ch_tigerfist",
+    "ch_chaincrush": "ch_chaincrush",
+    "pf_hpconversion": "pf_hpconversion",
+    "pf_soulchange": "pf_soulchange",
+    "pf_soulburn": "pf_soulburn",
+    "asc_katar": "asc_katar",
+    "asc_edp": "asc_edp",
+    "asc_breaker": "asc_breaker",
+    "sn_sight": "sn_sight",
+    "sn_falconassault": "sn_falconassault",
+    "sn_sharpshooting": "sn_sharpshooting",
+    "sn_windwalk": "sn_windwalk",
+    "ws_meltdown": "ws_meltdown",
+    "ws_cartboost": "ws_cartboost",
+    "st_chasewalk": "st_chasewalk",
+    "st_rejectsword": "st_rejectsword",
+    "cg_arrowvulcan": "cg_arrowvulcan",
+    "cg_moonlit": "cg_moonlit",
+    "lk_spiralpierce": "lk_spiralpierce",
+    "lk_headcrush": "lk_headcrush",
+    "lk_jointbeat": "lk_jointbeat",
+    "hw_napalmvulcan": "hw_napalmvulcan",
+    "ch_soulcollect": "ch_soulcollect",
+    "pf_mindbreaker": "pf_mindbreaker",
+    "pf_memorize": "pf_memorize",
+    "pf_fogwall": "pf_fogwall",
+    "pf_spiderweb": "pf_spiderweb",
+    "asc_meteorassault": "asc_meteorassault",
+    "am_berserkpitcher": "am_berserkpitcher",
+    "bs_adrenaline2": "bs_adrenaline2",
+    "cr_slimpitcher": "cr_slimpitcher",
+    "cr_fullprotection": "cr_fullprotection",
+    "pa_shieldchain": "pa_shieldchain",
+    "hp_manarecharge": "hp_manarecharge",
+    "pf_doublecasting": "pf_doublecasting",
+    "hw_ganbantein": "hw_ganbantein",
+    "hw_gravitation": "hw_gravitation",
+    "ws_carttermination": "ws_carttermination",
+    "ws_overthrustmax": "ws_overthrustmax",
+    "cg_tarotcard": "cg_tarotcard",
+    "cr_aciddemonstration": "cr_aciddemonstration",
+    "kn_onehand": "kn_onehand",
+    "ht_power": "ht_power",
+    "kn_chargeatk": "kn_chargeatk",
+    "cr_shrink": "cr_shrink",
+    "as_sonicaccel": "as_sonicaccel",
+    "as_venomknife": "as_venomknife",
+    "rg_closeconfine": "rg_closeconfine",
+    "wz_sightblaster": "wz_sightblaster",
+    "ht_phantasmic": "ht_phantasmic",
+    "ba_pangvoice": "ba_pangvoice",
+    "mo_balkyoung": "mo_balkyoung",
+    "rk_enchantblade": "rk_enchantblade",
+    "rk_sonicwave": "rk_sonicwave",
+    "rk_deathbound": "rk_deathbound",
+    "rk_hundredspear": "rk_hundredspear",
+    "rk_windcutter": "rk_windcutter",
+    "rk_ignitionbreak": "rk_ignitionbreak",
+    "rk_dragontraining": "rk_dragontraining",
+    "dragonbreath": "rk_dragonbreath",
+    "rk_dragonhowling": "rk_dragonhowling",
+    "rk_phantomthrust": "rk_phantomthrust",
+    "gc_venomimpress": "gc_venomimpress",
+    "gc_crossimpact": "gc_crossimpact",
+    "gc_darkillusion": "gc_darkillusion",
+    "gc_researchnewpoison": "gc_researchnewpoison",
+    "gc_antidote": "gc_antidote",
+    "gc_poisoningweapon": "gc_poisoningweapon",
+    "gc_weaponblocking": "gc_weaponblocking",
+    "gc_counterslash": "gc_counterslash",
+    "gc_weaponcrush": "gc_weaponcrush",
+    "gc_venompressure": "gc_venompressure",
+    "gc_poisonsmoke": "gc_poisonsmoke",
+    "gc_cloakingexceed": "gc_cloakingexceed",
+    "gc_phantommenace": "gc_phantommenace",
+    "gc_hallucinationwalk": "gc_hallucinationwalk",
+    "rollingcutter": "gc_rollingcutter",
+    "gc_crossripperslasher": "gc_crossripperslasher",
+    "judex": "ab_judex",
+    "ab_ancilla": "ab_ancilla",
+    "adoramus": "ab_adoramus",
+    "ab_clementia": "ab_clementia",
+    "ab_canto": "ab_canto",
+    "ab_cheal": "ab_cheal",
+    "ab_epiclesis": "ab_epiclesis",
+    "ab_praefatio": "ab_praefatio",
+    "ab_oratio": "ab_oratio",
+    "ab_laudaagnus": "ab_laudaagnus",
+    "ab_laudaramus": "ab_laudaramus",
+    "ab_renovatio": "ab_renovatio",
+    "ab_highnessheal": "ab_highnessheal",
+    "ab_clearance": "ab_clearance",
+    "ab_expiatio": "ab_expiatio",
+    "ab_duplelight": "ab_duplelight",
+    "ab_silentium": "ab_silentium",
+    "wl_whiteimprison": "wl_whiteimprison",
+    "wl_soulexpansion": "wl_soulexpansion",
+    "wl_frostmisty": "wl_frostmisty",
+    "wl_jackfrost": "wl_jackfrost",
+    "wl_marshofabyss": "wl_marshofabyss",
+    "wl_recognizedspell": "wl_recognizedspell",
+    "wl_siennaexecrate": "wl_siennaexecrate",
+    "wl_radius": "wl_radius",
+    "wl_stasis": "wl_stasis",
+    "wl_drainlife": "wl_drainlife",
+    "wl_crimsonrock": "wl_crimsonrock",
+    "wl_hellinferno": "wl_hellinferno",
+    "wl_comet": "wl_comet",
+    "chainlightning": "wl_chainlightning",
+    "wl_earthstrain": "wl_earthstrain",
+    "wl_tetravortex": "wl_tetravortex",
+    "wl_summonfb": "wl_summonfb",
+    "wl_summonbl": "wl_summonbl",
+    "wl_summonwb": "wl_summonwb",
+    "wl_summonstone": "wl_summonstone",
+    "wl_freeze_sp": "wl_freeze_sp",
+    "arrowstorm": "ra_arrowstorm",
+    "ra_fearbreeze": "ra_fearbreeze",
+    "ra_rangermain": "ra_rangermain",
+    "ra_aimedbolt": "ra_aimedbolt",
+    "ra_electricshocker": "ra_electricshocker",
+    "ra_clusterbomb": "ra_clusterbomb",
+    "ra_wugmastery": "ra_wugmastery",
+    "ra_wugrider": "ra_wugrider",
+    "ra_wugdash": "ra_wugdash",
+    "ra_wugstrike": "ra_wugstrike",
+    "ra_wugbite": "ra_wugbite",
+    "ra_toothofwug": "ra_toothofwug",
+    "ra_sensitivekeen": "ra_sensitivekeen",
+    "ra_camouflage": "ra_camouflage",
+    "ra_researchtrap": "ra_researchtrap",
+    "ra_firingtrap": "ra_firingtrap",
+    "ra_iceboundtrap": "ra_iceboundtrap",
+    "nc_madolicence": "nc_madolicence",
+    "nc_boostknuckle": "nc_boostknuckle",
+    "nc_pilebunker": "nc_pilebunker",
+    "nc_vulcanarm": "nc_vulcanarm",
+    "nc_flamelauncher": "nc_flamelauncher",
+    "nc_coldslower": "nc_coldslower",
+    "nc_armscannon": "nc_armscannon",
+    "nc_acceleration": "nc_acceleration",
+    "nc_hovering": "nc_hovering",
+    "nc_f_sideslide": "nc_f_sideslide",
+    "nc_b_sideslide": "nc_b_sideslide",
+    "nc_mainframe": "nc_mainframe",
+    "nc_selfdestruction": "nc_selfdestruction",
+    "nc_shapeshift": "nc_shapeshift",
+    "nc_infraredscan": "nc_infraredscan",
+    "nc_analyze": "nc_analyze",
+    "nc_magneticfield": "nc_magneticfield",
+    "nc_neutralbarrier": "nc_neutralbarrier",
+    "nc_stealthfield": "nc_stealthfield",
+    "nc_repair": "nc_repair",
+    "nc_trainingaxe": "nc_trainingaxe",
+    "nc_researchfe": "nc_researchfe",
+    "nc_axeboomerang": "nc_axeboomerang",
+    "nc_powerswing": "nc_powerswing",
+    "axetornado": "nc_axetornado",
+    "nc_silversniper": "nc_silversniper",
+    "nc_magicdecoy": "nc_magicdecoy",
+    "sc_fatalmenace": "sc_fatalmenace",
+    "sc_autoshadowspell": "sc_autoshadowspell",
+    "sc_shadowform": "sc_shadowform",
+    "triangleShot": "sc_triangleshot",
+    "sc_bodypaint": "sc_bodypaint",
+    "sc_invisibility": "sc_invisibility",
+    "sc_deadlyinfect": "sc_deadlyinfect",
+    "sc_enervation": "sc_enervation",
+    "sc_groomy": "sc_groomy",
+    "sc_ignorance": "sc_ignorance",
+    "sc_laziness": "sc_laziness",
+    "sc_unlucky": "sc_unlucky",
+    "sc_weakness": "sc_weakness",
+    "sc_manhole": "sc_manhole",
+    "sc_chaospanic": "sc_chaospanic",
+    "sc_maelstrom": "sc_maelstrom",
+    "sc_bloodylust": "sc_bloodylust",
+    "sc_feintbomb": "sc_feintbomb",
+    "lg_cannonspear": "lg_cannonspear",
+    "lg_banishingpoint": "lg_banishingpoint",
+    "lg_trample": "lg_trample",
+    "lg_shieldpress": "lg_shieldpress",
+    "lg_reflectdamage": "lg_reflectdamage",
+    "lg_pinpointattack": "lg_pinpointattack",
+    "lg_forceofvanguard": "lg_forceofvanguard",
+    "lg_rageburst": "lg_rageburst",
+    "lg_shieldspell": "lg_shieldspell",
+    "lg_exeedbreak": "lg_exeedbreak",
+    "overbrand": "lg_overbrand",
+    "lg_prestige": "lg_prestige",
+    "lg_banding": "lg_banding",
+    "lg_moonslasher": "lg_moonslasher",
+    "lg_rayofgenesis": "lg_rayofgenesis",
+    "lg_piety": "lg_piety",
+    "lg_earthdrive": "lg_earthdrive",
+    "lg_hesperuslit": "lg_hesperuslit",
+    "lg_inspiration": "lg_inspiration",
+    "sr_dragoncombo": "sr_dragoncombo",
+    "sr_skynetblow": "sr_skynetblow",
+    "sr_earthshaker": "sr_earthshaker",
+    "sr_fallenempire": "sr_fallenempire",
+    "tigercannon": "sr_tigercannon",
+    "sr_rampageblaster": "sr_rampageblaster",
+    "sr_crescentelbow": "sr_crescentelbow",
+    "sr_cursedcircle": "sr_cursedcircle",
+    "sr_lightningwalk": "sr_lightningwalk",
+    "sr_knucklearrow": "sr_knucklearrow",
+    "sr_windmill": "sr_windmill",
+    "sr_raisingdragon": "sr_raisingdragon",
+    "sr_assimilatepower": "sr_assimilatepower",
+    "sr_gateofhell": "sr_gateofhell",
+    "sr_gentletouch_quiet": "sr_gentletouch_quiet",
+    "sr_gentletouch_cure": "sr_gentletouch_cure",
+    "sr_gentletouch_energygain": "sr_gentletouch_energygain",
+    "sr_gentletouch_change": "sr_gentletouch_change",
+    "sr_gentletouch_revitalize": "sr_gentletouch_revitalize",
+    "mi_rush_windmill": "mi_rush_windmill",
+    "mi_echosong": "mi_echosong",
+    "mi_harmonize": "mi_harmonize",
+    "wm_lesson": "wm_lesson",
+    "wm_metalicsound": "wm_metalicsound",
+    "wm_reverberation": "wm_reverberation",
+    "severerainstorm": "wm_severe_rainstorm",
+    "wm_poemofnetherworld": "wm_poemofnetherworld",
+    "wm_voiceofsiren": "wm_voiceofsiren",
+    "wm_lullaby_deepsleep": "wm_lullaby_deepsleep",
+    "wm_sircleofnature": "wm_sircleofnature",
+    "wm_randomizespell": "wm_randomizespell",
+    "wm_gloomyday": "wm_gloomyday",
+    "wm_great_echo": "wm_great_echo",
+    "wm_song_of_mana": "wm_song_of_mana",
+    "wm_dance_with_wug": "wm_dance_with_wug",
+    "wm_sound_of_destruction": "wm_sound_of_destruction",
+    "wm_saturday_night_fever": "wm_saturday_night_fever",
+    "wm_lerads_dew": "wm_lerads_dew",
+    "wm_melodyofsink": "wm_melodyofsink",
+    "wm_beyond_of_warcry": "wm_beyond_of_warcry",
+    "wm_unlimited_humming_voice": "wm_unlimited_humming_voice",
+    "so_firewalk": "so_firewalk",
+    "so_electricwalk": "so_electricwalk",
+    "so_spellfist": "so_spellfist",
+    "so_earthgrave": "so_earthgrave",
+    "so_diamonddust": "so_diamonddust",
+    "so_poison_buster": "so_poison_buster",
+    "psychicwave": "so_psychic_wave",
+    "so_cloud_kill": "so_cloud_kill",
+    "so_striking": "so_striking",
+    "so_warmer": "so_warmer",
+    "so_vacuum_extreme": "so_vacuum_extreme",
+    "so_varetyr_spear": "so_varetyr_spear",
+    "so_arrullo": "so_arrullo",
+    "so_summon_agni": "so_summon_agni",
+    "so_summon_aqua": "so_summon_aqua",
+    "so_summon_ventus": "so_summon_ventus",
+    "so_summon_tera": "so_summon_tera",
+    "so_el_sympathy": "so_el_sympathy",
+    "so_fire_insignia": "so_fire_insignia",
+    "so_water_insignia": "so_water_insignia",
+    "so_wind_insignia": "so_wind_insignia",
+    "so_earth_insignia": "so_earth_insignia",
+    "gn_training_sword": "gn_training_sword",
+    "gn_remodeling_cart": "gn_remodeling_cart",
+    "gn_cart_tornado": "gn_cart_tornado",
+    "cartcannon": "gn_cartcannon",
+    "gn_cartboost": "gn_cartboost",
+    "gn_thorns_trap": "gn_thorns_trap",
+    "gn_blood_sucker": "gn_blood_sucker",
+    "gn_spore_explosion": "gn_spore_explosion",
+    "gn_wallofthorn": "gn_wallofthorn",
+    "gn_crazyweed": "gn_crazyweed",
+    "gn_demonic_fire": "gn_demonic_fire",
+    "gn_fire_expansion": "gn_fire_expansion",
+    "gn_hells_plant": "gn_hells_plant",
+    "gn_mandragora": "gn_mandragora",
+    "ab_secrament": "ab_secrament",
+    "sr_howlingoflion": "sr_howlingoflion",
+    "sr_rideinlightning": "sr_rideinlightning",
+    "gc_darkcrow": "gc_darkcrow",
+    "ra_unlimit": "ra_unlimit",
+    "gn_illusiondoping": "gn_illusiondoping",
+    "rk_dragonbreath_water": "rk_dragonbreath_water",
+    "nc_magma_eruption": "nc_magma_eruption",
+    "wm_frigg_song": "wm_frigg_song",
+    "so_elemental_shield": "so_elemental_shield",
+    "sr_flashcombo": "sr_flashcombo",
+    "sc_escape": "sc_escape",
+    "ab_offertorium": "ab_offertorium",
+    "wl_telekinesis_intense": "wl_telekinesis_intense",
+    "lg_kings_grace": "lg_kings_grace",
+    "all_full_throttle": "all_full_throttle",
+    "ab_vituperatum": "ab_vituperatum",
+    "dk_servantweapon": "dk_servantweapon",
+    "dk_servant_w_sign": "dk_servant_w_sign",
+    "dk_servant_w_phantom": "dk_servant_w_phantom",
+    "dk_servant_w_demol": "dk_servant_w_demol",
+    "dk_chargingpierce": "dk_chargingpierce",
+    "dk_twohanddef": "dk_twohanddef",
+    "hackandslasher": "dk_hackandslasher",
+    "dk_dragonic_aura": "dk_dragonic_aura",
+    "dk_madness_crusher": "dk_madness_crusher",
+    "dk_vigor": "dk_vigor",
+    "dk_stormslash": "dk_stormslash",
+    "ag_deadly_projection": "ag_deadly_projection",
+    "ag_destructive_hurricane": "ag_destructive_hurricane",
+    "ag_rain_of_crystal": "ag_rain_of_crystal",
+    "ag_mystery_illusion": "ag_mystery_illusion",
+    "ag_violent_quake": "ag_violent_quake",
+    "ag_soul_vc_strike": "ag_soul_vc_strike",
+    "ag_strantum_tremor": "ag_strantum_tremor",
+    "ag_all_bloom": "ag_all_bloom",
+    "crystalimpact": "ag_crystal_impact",
+    "ag_tornado_storm": "ag_tornado_storm",
+    "ag_twohandstaff": "ag_twohandstaff",
+    "ag_floral_flare_road": "ag_floral_flare_road",
+    "ag_astral_strike": "ag_astral_strike",
+    "ag_climax": "ag_climax",
+    "ag_rock_down": "ag_rock_down",
+    "ag_storm_cannon": "ag_storm_cannon",
+    "ag_crimson_arrow": "ag_crimson_arrow",
+    "ag_frozen_slash": "ag_frozen_slash",
+    "iq_powerful_faith": "iq_powerful_faith",
+    "iq_firm_faith": "iq_firm_faith",
+    "iq_will_of_faith": "iq_will_of_faith",
+    "iq_oleum_sanctum": "iq_oleum_sanctum",
+    "iq_sincere_faith": "iq_sincere_faith",
+    "iq_massive_f_blaster": "iq_massive_f_blaster",
+    "explosionblaster": "iq_exposion_blaster",
+    "iq_first_brand": "iq_first_brand",
+    "iq_first_faith_power": "iq_first_faith_power",
+    "iq_judge": "iq_judge",
+    "iq_second_flame": "iq_second_flame",
+    "iq_second_faith": "iq_second_faith",
+    "iq_second_judgement": "iq_second_judgement",
+    "iq_third_punish": "iq_third_punish",
+    "iq_third_flame_bomb": "iq_third_flame_bomb",
+    "iq_third_consecration": "iq_third_consecration",
+    "iq_third_exor_flame": "iq_third_exor_flame",
+    "ig_guard_stance": "ig_guard_stance",
+    "ig_guardian_shield": "ig_guardian_shield",
+    "ig_rebound_shield": "ig_rebound_shield",
+    "ig_shield_mastery": "ig_shield_mastery",
+    "ig_spear_sword_m": "ig_spear_sword_m",
+    "ig_attack_stance": "ig_attack_stance",
+    "ig_holy_shield": "ig_holy_shield",
+    "ig_grand_judgement": "ig_grand_judgement",
+    "ig_judgement_cross": "ig_judgement_cross",
+    "ig_shield_shooting": "ig_shield_shooting",
+    "ig_overslash": "ig_overslash",
+    "crossrain": "ig_cross_rain",
+    "cd_reparatio": "cd_reparatio",
+    "cd_mediale_votum": "cd_mediale_votum",
+    "cd_mace_book_m": "cd_mace_book_m",
+    "cd_argutus_vita": "cd_argutus_vita",
+    "cd_argutus_telum": "cd_argutus_telum",
+    "cd_arbitrium": "cd_arbitrium",
+    "cd_presens_acies": "cd_presens_acies",
+    "cd_fidus_animus": "cd_fidus_animus",
+    "cd_effligo": "cd_effligo",
+    "cd_competentia": "cd_competentia",
+    "cd_pneumaticus_procella": "cd_pneumaticus_procella",
+    "cd_dilectio_heal": "cd_dilectio_heal",
+    "cd_religio": "cd_religio",
+    "cd_benedictum": "cd_benedictum",
+    "cd_petitio": "cd_petitio",
+    "cd_framen": "cd_framen",
+    "shc_shadow_exceed": "shc_shadow_exceed",
+    "shc_dancing_knife": "shc_dancing_knife",
+    "shc_savage_impact": "shc_savage_impact",
+    "shc_shadow_sense": "shc_shadow_sense",
+    "eternalslash": "shc_eternal_slash",
+    "shc_potent_venom": "shc_potent_venom",
+    "shc_shadow_stab": "shc_shadow_stab",
+    "shc_impact_crater": "shc_impact_crater",
+    "shc_enchanting_shadow": "shc_enchanting_shadow",
+    "shc_fatal_shadow_crow": "shc_fatal_shadow_crow",
+    "mt_axe_stomp": "mt_axe_stomp",
+    "mt_rush_quake": "mt_rush_quake",
+    "mt_a_machine": "mt_a_machine",
+    "mt_d_machine": "mt_d_machine",
+    "mt_twoaxedef": "mt_twoaxedef",
+    "mt_abr_m": "mt_abr_m",
+    "mt_summon_abr_battle_warior": "mt_summon_abr_battle_warior",
+    "mt_summon_abr_dual_cannon": "mt_summon_abr_dual_cannon",
+    "mt_summon_abr_mother_net": "mt_summon_abr_mother_net",
+    "mt_summon_abr_infinity": "mt_summon_abr_infinity",
+    "abc_dagger_and_bow_m": "abc_dagger_and_bow_m",
+    "abc_magic_sword_m": "abc_magic_sword_m",
+    "abc_abyss_dagger": "abc_abyss_dagger",
+    "abc_unlucky_rush": "abc_unlucky_rush",
+    "abc_chain_reaction_shot": "abc_chain_reaction_shot",
+    "abc_from_the_abyss": "abc_from_the_abyss",
+    "abc_abyss_slayer": "abc_abyss_slayer",
+    "abc_abyss_strike": "abc_abyss_strike",
+    "abc_deft_stab": "abc_deft_stab",
+    "abysssquare": "abc_abyss_square",
+    "abc_frenzy_shot": "abc_frenzy_shot",
+    "wh_advanced_trap": "wh_advanced_trap",
+    "wh_wind_sign": "wh_wind_sign",
+    "wh_naturefriendly": "wh_naturefriendly",
+    "wh_hawkrush": "wh_hawkrush",
+    "wh_hawk_m": "wh_hawk_m",
+    "wh_calamitygale": "wh_calamitygale",
+    "wh_hawkboomerang": "wh_hawkboomerang",
+    "wh_galestorm": "wh_galestorm",
+    "wh_deepblindtrap": "wh_deepblindtrap",
+    "wh_solidtrap": "wh_solidtrap",
+    "wh_swifttrap": "wh_swifttrap",
+    "cresivebolt": "wh_crescive_bolt",
+    "wh_flametrap": "wh_flametrap",
+    "bo_bionics_m": "bo_bionics_m",
+    "bo_the_whole_protection": "bo_the_whole_protection",
+    "bo_advance_protection": "bo_advance_protection",
+    "bo_acidified_zone_water": "bo_acidified_zone_water",
+    "bo_acidified_zone_ground": "bo_acidified_zone_ground",
+    "bo_acidified_zone_wind": "bo_acidified_zone_wind",
+    "bo_acidified_zone_fire": "bo_acidified_zone_fire",
+    "bo_woodenwarrior": "bo_woodenwarrior",
+    "bo_wooden_fairy": "bo_wooden_fairy",
+    "bo_creeper": "bo_creeper",
+    "bo_researchreport": "bo_researchreport",
+    "bo_helltree": "bo_helltree",
+    "tr_stage_manner": "tr_stage_manner",
+    "tr_mystic_symphony": "tr_mystic_symphony",
+    "tr_kvasir_sonata": "tr_kvasir_sonata",
+    "tr_roseblossom": "tr_roseblossom",
+    "rhythmshooting": "tr_rhythmshooting",
+    "tr_metalic_fury": "tr_metalic_fury",
+    "tr_soundblend": "tr_soundblend",
+    "tr_gef_nocturn": "tr_gef_nocturn",
+    "tr_roki_capriccio": "tr_roki_capriccio",
+    "tr_ain_rhapsody": "tr_ain_rhapsody",
+    "tr_musical_interlude": "tr_musical_interlude",
+    "tr_jawaii_serenade": "tr_jawaii_serenade",
+    "tr_nipelheim_requiem": "tr_nipelheim_requiem",
+    "tr_pron_march": "tr_pron_march",
+    "em_magic_book_m": "em_magic_book_m",
+    "em_spell_enchanting": "em_spell_enchanting",
+    "em_activity_burn": "em_activity_burn",
+    "em_diamond_storm": "em_diamond_storm",
+    "em_lightning_land": "em_lightning_land",
+    "em_venom_swamp": "em_venom_swamp",
+    "conflagration": "em_conflagration",
+    "em_terra_drive": "em_terra_drive",
+    "em_elemental_spirit_m": "em_elemental_spirit_m",
+    "em_summon_elemental_ardor": "em_summon_elemental_ardor",
+    "em_summon_elemental_diluvio": "em_summon_elemental_diluvio",
+    "em_summon_elemental_procella": "em_summon_elemental_procella",
+    "em_summon_elemental_terremotus": "em_summon_elemental_terremotus",
+    "em_summon_elemental_serpens": "em_summon_elemental_serpens",
+    "em_elemental_buster": "em_elemental_buster",
+    "em_elemental_veil": "em_elemental_veil",
+    "kn_riding": "kn_riding"
+  },
+  "missing": [
+    "yggwisps",
+    "payonpetals",
+    "lunardew",
+    "dk_dragonic_breath",
+    "mt_spark_blaster",
+    "mt_triple_laser",
+    "mightySmash",
+    "bo_explosive_powder",
+    "mayhemicthorns",
+    "dk_dragonic_pierce",
+    "ig_radiant_spear",
+    "ig_imperial_cross",
+    "ig_imperial_pressure",
+    "mt_rush_strike",
+    "mt_powerful_swing",
+    "mt_energy_cannonade",
+    "bo_mystery_powder",
+    "bo_dust_explosion",
+    "shc_cross_slash",
+    "abc_hit_and_sliding",
+    "abc_chasing_break",
+    "abc_chasing_shot",
+    "abc_abyss_flame",
+    "ag_energy_conversion",
+    "em_psychic_stream",
+    "cd_divinus_flos",
+    "iq_blazing_flame_blast",
+    "wh_wild_walk",
+    "tr_rhythmical_wave"
+  ]
+}
