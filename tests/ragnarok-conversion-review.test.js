@@ -22,8 +22,8 @@ test('New regions reset combat cooldowns when their elapsed clock restarts',()=>
 test('A distant final MVP cannot strand its equipment when the floor closes',()=>{
  const{g,u}=setup();g.command('review',{type:'bkReady'});isolate(g);const before=u.roInventory.length;burningBoss(g,u);g.tick(.05);
  assert.equal(g.bonk.stage,'cleared');
- assert.equal(u.roInventory.length,before,'MVP equipment must stay on the ground until explicitly chosen');
- const drops=g.bonk.pickups.filter(p=>p.type==='equipment');assert.ok(drops.length);assert.ok(g.command('review',{type:'bkPickup',pickup:drops[0].id}),'cleared-floor results allow manual collection even at a distance');assert.equal(u.roInventory.length,before+1);assert.equal(g.command('review',{type:'bkPickup',pickup:drops[0].id}),false);
+ assert.equal(u.roInventory.length,before+1,'one MVP prize arrives directly; extra equipment remains on the ground');
+ const drops=g.bonk.pickups.filter(p=>p.type==='equipment');assert.ok(drops.length);assert.ok(g.command('review',{type:'bkPickup',pickup:drops[0].id}),'cleared-floor results allow manual collection even at a distance');assert.equal(u.roInventory.length,before+2);assert.equal(g.command('review',{type:'bkPickup',pickup:drops[0].id}),false);
 
 });
 test('Saving during a level-up offer preserves every unchosen skill upgrade',()=>{

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
+import {RO_CAST_MOVE_MULTIPLIER,RO_BASE_MOVE_SPEED} from '../shared/ro-locomotion.js';
 import {bonkStats} from '../shared/bonk.js';
 import {roSkillCastTime} from '../shared/ro-skill-controls.js';
 import {BONK_WEAPONS} from '../shared/bonk-catalog.js';
@@ -24,15 +25,42 @@ test('AUTO retains nearest-enemy targeting without manual input and resumes afte
  for(const expired of [false,true]){const {g,u}=arena(),target=enemy(g,u,5,0);u.bonkSkillAuto.basic=true;g.command('p',{type:'bkMove',dx:0,dz:1});assert.ok(g.command('p',{type:'bkAim',active:true,x:u.x,z:u.z-10}));if(expired){u.roManualAim.until=0;}else assert.ok(g.command('p',{type:'bkAim',active:false}));g.tick(.05);const attack=g.effects.find(e=>e.type==='roAttack'&&e.skillKey==='basic');assert.ok(attack);assert.equal(attack.target,target.id);const shot=g.bonk.projectiles[0];assert.ok(shot.dx>.99);assert.ok(Math.abs(shot.dz)<.1);}
 });
 
-test('casting stops movement and ice momentum, preserves aimed target until release and right-click cancels without spending SP',()=>{
- const {g,u}=arena(),target=enemy(g,u,5,0);const castTime=roSkillCastTime(BONK_WEAPONS.firebolt,1,bonkStats(u)).total;assert.ok(castTime>0);u.roIceMotion={x:6,z:0};g.command('p',{type:'bkMove',dx:1,dz:0});const start={x:u.x,z:u.z},mana=u.mana;assert.ok(g.command('p',{type:'bkCast',key:'firebolt',x:target.x,z:target.z,target:target.id}));assert.ok(u.roCasting);assert.equal(u.roCasting.aim.target,target.id);assert.equal(u.roIceMotion,undefined);for(let i=0;i<4;i++){assert.ok(g.command('p',{type:'bkMove',dx:1,dz:0}));g.tick(.05);near(u.x,start.x);near(u.z,start.z);assert.ok(u.roCasting);}assert.ok(g.command('p',{type:'bkCancelCast'}));assert.equal(u.roCasting,undefined);assert.equal(u.bonkWeaponAt.firebolt,undefined);assert.ok(u.mana>=Math.min(mana,u.maxMana));assert.equal(g.bonk.projectiles.length,0);assert.ok(g.command('p',{type:'bkMove',dx:1,dz:0}));g.tick(.05);assert.ok(u.x>start.x);
+test('archer basics fire exactly one aimed arrow even with oversized extra-projectile bonuses',()=>{
+ for(const extras of [0,8,40]){
+  const {g,u}=arena();u.bonkBuild.relics.silvermirror=extras;enemy(g,u,.5,-5);
+  assert.ok(g.command('p',{type:'bkCast',key:'basic',x:u.x,z:u.z-15}));
+  const shots=g.bonk.projectiles;assert.equal(shots.length,1);
+  near(shots.reduce((sum,p)=>sum+p.dx,0),0);
+  for(const shot of shots)assert.ok(shot.dz<-.95,'every extra arrow stays in the forward aiming cone');
+ }
+});
+
+test('held cursor aim is reprojected while the camera follows movement even without a pointermove event',()=>{
+ const sent=[],u={id:1,alive:true},state={options:{mode:'bonk'},players:{p:1},units:[u],bonk:{stage:'playing',weapons:[{key:'basic',kind:'projectile',ready:true,attackDelay:.8}]}},cursor={x:10,z:0};
+ const ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>(sent.push(c),true),getHeld:()=>new Set(['d']),view:{roAimPoint:()=>({...cursor})}});
+ ui.point({point:{x:10,z:0},button:0,aimPressed:true});
+ cursor.x=20;cursor.z=6;ui.updateInput(1000);
+ assert.deepEqual(sent.findLast(c=>c.type==='bkAim'),{type:'bkAim',active:true,x:20,z:6});
+ cursor.x=25;cursor.z=8;ui.updateInput(performance.now()+2000);
+ assert.deepEqual(sent.findLast(c=>c.type==='bkCast'),{type:'bkCast',key:'basic',x:25,z:8});
+ ui.point({button:0,aimReleased:true});const n=sent.length;ui.updateInput(performance.now()+4000);assert.ok(!sent.slice(n).some(c=>c.type==='bkCast'));
+});
+
+test('base walking is substantially slower, with normalized diagonal speed and no class-dependent reset',()=>{
+ const {g,u}=arena();assert.equal(RO_BASE_MOVE_SPEED,5);assert.equal(bonkStats(u).speed,5);
+ const start={x:u.x,z:u.z};g.command('p',{type:'bkMove',dx:1,dz:1});advance(g,.2);
+ near(Math.hypot(u.x-start.x,u.z-start.z),1);
+});
+
+test('casting slows movement and clears ice momentum, preserves aimed target until release and right-click cancels without spending SP',()=>{
+ const {g,u}=arena(),target=enemy(g,u,5,0);const castTime=roSkillCastTime(BONK_WEAPONS.firebolt,1,bonkStats(u)).total;assert.ok(castTime>0);u.roIceMotion={x:6,z:0};g.command('p',{type:'bkMove',dx:1,dz:0});const start={x:u.x,z:u.z},mana=u.mana;assert.ok(g.command('p',{type:'bkCast',key:'firebolt',x:target.x,z:target.z,target:target.id}));assert.ok(u.roCasting);assert.equal(u.roCasting.aim.target,target.id);assert.equal(u.roIceMotion,undefined);for(let i=0;i<4;i++){assert.ok(g.command('p',{type:'bkMove',dx:1,dz:0}));g.tick(.05);near(u.x,start.x+(i+1)*.05*bonkStats(u).speed*RO_CAST_MOVE_MULTIPLIER);near(u.z,start.z);assert.ok(u.roCasting);}assert.ok(g.command('p',{type:'bkCancelCast'}));assert.equal(u.roCasting,undefined);assert.equal(u.bonkWeaponAt.firebolt,undefined);assert.ok(u.mana>=Math.min(mana,u.maxMana));assert.equal(g.bonk.projectiles.length,0);assert.ok(g.command('p',{type:'bkMove',dx:1,dz:0}));g.tick(.05);assert.ok(u.x>start.x);
 });
 
 test('a cast that completes keeps the original selected enemy and only then spends SP and starts its recast',()=>{
  const {g,u}=arena(),target=enemy(g,u,5,0);assert.ok(g.command('p',{type:'bkCast',key:'firebolt',x:target.x,z:target.z,target:target.id}));const duration=u.roCasting.duration;assert.ok(g.command('p',{type:'bkAim',active:true,x:u.x,z:u.z-10}));advance(g,duration+.1);const attack=g.effects.find(e=>e.type==='roAttack'&&e.skillKey==='firebolt');assert.ok(attack);assert.equal(attack.target,target.id);assert.equal(u.roCasting,undefined);assert.ok(u.bonkWeaponAt.firebolt>0);
 });
 
-test('Ragnarok UI selects directed skills, left-click confirms and right-click cancels; held WASD is quiet during casting',()=>{
+test('Ragnarok UI selects directed skills, left-click confirms and right-click cancels; held WASD remains active during casting',()=>{
  const sent=[],interactions=[],u={id:1,alive:true},state={options:{mode:'bonk'},players:{p:1},units:[u],bonk:{stage:'playing',weapons:[{key:'basic',kind:'projectile',ready:true,attackDelay:.8},{key:'firebolt',kind:'projectile',ready:true}]}},ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>(sent.push(c),true),getHeld:()=>new Set(['w']),view:{setInteraction:value=>interactions.push(value)}});
- ui.action('skill',1);assert.equal(sent.length,0);assert.equal(ui.aiming(),'firebolt');ui.point({point:{x:-5,z:-8},button:0,aimPressed:true});assert.deepEqual(sent.slice(0,2),[{type:'bkAim',active:true,x:-5,z:-8},{type:'bkCast',key:'firebolt',x:-5,z:-8}]);assert.equal(ui.aiming(),null);ui.point({point:{x:0,z:0},button:2});assert.equal(sent.at(-1).type,'bkCancelCast');state.bonk.casting={key:'firebolt'};ui.updateInput(1000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:0});delete state.bonk.casting;ui.updateInput(2000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:-1});assert.equal(interactions.at(-1),'command');
+ ui.action('skill',1);assert.equal(sent.length,0);assert.equal(ui.aiming(),'firebolt');ui.point({point:{x:-5,z:-8},button:0,aimPressed:true});assert.deepEqual(sent.slice(0,2),[{type:'bkAim',active:true,x:-5,z:-8},{type:'bkCast',key:'firebolt',x:-5,z:-8}]);assert.equal(ui.aiming(),null);ui.point({point:{x:0,z:0},button:2});assert.equal(sent.at(-1).type,'bkCancelCast');state.bonk.casting={key:'firebolt'};ui.updateInput(1000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:-1});delete state.bonk.casting;ui.updateInput(2000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:-1});assert.equal(interactions.at(-1),'command');
 });

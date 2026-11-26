@@ -1,3 +1,4 @@
+import {validateRoManualAim,RO_MANUAL_AIM_LEASE} from '../shared/ro-manual-aim.js';
 import {stepRoMotion} from '../shared/ro-locomotion.js';
 import {tickRoEnvironmentHazards} from '../shared/ro-environment-hazards.js';
 import {moveUnit,navigation} from '../shared/field.js';
@@ -11,6 +12,20 @@ function keyOf(s,id){const u=s?.units?.find(u=>u.id===s.players?.[id]);return [s
 export function movementPredictionSupported(state){return state?.options?.mode==='bonk'&&!!state.bonk?.map||classics.has(state?.options?.mode);}
 export function applyPredictedMove(state,u,command,elapsed){
  if(state.options.mode==='bonk'){
+  // These commands only replay their locomotion/facing consequence. They never
+  // execute an attack, spend SP, roll RNG or change authoritative skill state.
+  if(command.type==='bkAim'&&typeof command.active==='boolean'){
+   const aim=command.active?validateRoManualAim(state,u,command):null;
+   if(command.active&&!aim)return false;
+   if(aim)u.roManualAim={...aim,until:elapsed+RO_MANUAL_AIM_LEASE};else delete u.roManualAim;
+   return true;
+  }
+  if(command.type==='bkCast'){
+   const entry=state.bonk.weapons?.find(w=>w?.key===command.key);
+   if(entry&&(entry.ready||entry.reasonCode==='target')&&entry.castTime>0&&!u.roCasting)u.roCasting={key:command.key,finishAt:elapsed+entry.castTime};
+   return true;
+  }
+  if(command.type==='bkCancelCast'){delete u.roCasting;delete u.roManualAim;return true;}
   if(command.type==='bkMove'&&finite(command.dx)&&finite(command.dz)){const d=Math.max(1,Math.hypot(command.dx,command.dz));u.bonkMove={dx:command.dx/d,dz:command.dz/d};u.bonkMoveAt=elapsed;return true;}
   if(['stop','hold'].includes(command.type)){u.bonkMove={dx:0,dz:0};return true;}
  }else if(classics.has(state.options.mode)){

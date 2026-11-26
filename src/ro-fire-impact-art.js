@@ -3,11 +3,11 @@ import {createVoxelFire,VOXEL_FIRE_BUDGET} from './voxel-fire.js';
 import {RO_SKILLS} from '../shared/ragnarok-jobs.js';
 import {isRoMeteorSkill} from '../shared/ro-meteor.js';
 
-export const RO_FIRE_IMPACT_BUDGET=Object.freeze({impacts:12,sites:16,sitesPerImpact:8,partsPerSite:VOXEL_FIRE_BUDGET.flames+VOXEL_FIRE_BUDGET.embers,instances:272,drawCalls:1,smoke:0,maxRadius:12,maxDuration:1.1});
+export const RO_FIRE_IMPACT_BUDGET=Object.freeze({impacts:12,sites:32,sitesPerImpact:8,partsPerSite:VOXEL_FIRE_BUDGET.flames+VOXEL_FIRE_BUDGET.embers,instances:544,drawCalls:1,smoke:0,maxRadius:12,maxDuration:1.1});
 const B=RO_FIRE_IMPACT_BUDGET,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),element=e=>e?.element||RO_SKILLS[e?.skillKey]?.element,seed=value=>[...String(value)].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,17)*.001;
 export function roFireImpactHandles(event){
  if(event?.type==='fireball'&&!event.bonk&&event.impact!==true&&(event.phase==='launch'||event.phase==='travel'||event.projectile===true||Number.isFinite(event.tx)||Number.isFinite(event.tz)||event.from&&event.to))return false;
- if(event?.skillKey==='asc_meteorassault')return false;
+ if(['asc_meteorassault','mg_firewall'].includes(event?.skillKey))return false;
  return !!event&&(event.type==='roMeteorImpact'||event.type==='fireball'&&(!event.element||event.element==='fire')||event.type==='abilityPulse'&&event.radius>=1.2&&element(event)==='fire');
 }
 export function roFireImpacts(state,time=state?.time||0){
@@ -16,7 +16,7 @@ export function roFireImpacts(state,time=state?.time||0){
   if(e.type==='abilityPulse'&&effects.some(other=>other.type==='fireball'&&Math.abs(other.time-e.time)<.1&&Math.hypot(other.x-e.x,other.z-e.z)<1))continue;
   entries.push({...e,key:'impact:'+e.id,time:e.time,duration,age,zone:false,radius:clamp(Number.isFinite(e.radius)?e.radius:2.5,.6,B.maxRadius)});
  }
- const elapsed=state?.bonk?.elapsed||0;for(const z of state?.bonk?.roSkillZones||[]){if(isRoMeteorSkill(z.key)||(z.weapon?.element||RO_SKILLS[z.key]?.element)!=='fire'||z.until<=elapsed||![z.x,z.z].every(Number.isFinite))continue;entries.push({...z,key:'zone:'+z.id,time:time-1,duration:1,age:0,zone:true,radius:clamp(z.radius||3,.6,B.maxRadius)});}
+ const elapsed=state?.bonk?.elapsed||0;for(const z of state?.bonk?.roSkillZones||[]){if(z.key==='mg_firewall'||z.weapon?.key==='mg_firewall'||isRoMeteorSkill(z.key)||(z.weapon?.element||RO_SKILLS[z.key]?.element)!=='fire'||z.until<=elapsed||![z.x,z.z].every(Number.isFinite))continue;entries.push({...z,key:'zone:'+z.id,time:time-1,duration:1,age:0,zone:true,radius:clamp(z.radius||3,.6,B.maxRadius)});}
  return entries.sort((a,b)=>Number(a.zone)-Number(b.zone)||b.time-a.time).slice(0,B.impacts);
 }
 export function createRoFireImpactArt({scene}){
@@ -33,10 +33,12 @@ export function createRoFireImpactArt({scene}){
   const useFrustum=!!camera?.projectionMatrix&&!!camera?.matrixWorldInverse;if(useFrustum)frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));const active=slots.filter(s=>{if(!s.event)return false;const e=s.event;bounds.center.set(e.x,heightAt(e.x,e.z)+e.radius*.5,e.z);bounds.radius=e.radius*1.6+3;return !useFrustum||frustum.intersectsSphere(bounds);});
   let at=0;sites=0;visibleImpacts=active.length;const siteBase=active.length?Math.min(B.sitesPerImpact,Math.floor(B.sites/active.length)):0,spare=active.length?B.sites-siteBase*active.length:0;
   for(const [index,slot]of active.entries()){
-   const e=slot.event,p=e.zone?0:clamp(e.age/e.duration,0,1),ease=1-Math.pow(1-p,3),fade=e.zone?.82:Math.min(1,p/.055)*Math.pow(1-p,.65),siteCount=Math.min(e.skillKey==='sm_magnum'?8:4,siteBase+(index<spare?1:0)),phase=seed(slot.key);
+   const e=slot.event,p=e.zone?0:clamp(e.age/e.duration,0,1),ease=1-Math.pow(1-p,3),fade=e.zone?.82:Math.min(1,p/.055)*Math.pow(1-p,.65),siteCount=Math.min(e.skillKey==='sm_magnum'||e.zone?8:4,siteBase+(index<spare?1:0)),phase=seed(slot.key);
    for(let site=0;site<siteCount;site++){
-    const circular=e.skillKey==='sm_magnum',angle=phase+site*(circular?Math.PI*2/siteCount:2.39996),spread=circular?e.radius*ease*.66:site===0?0:e.radius*(e.zone?.52:.15+ease*.40),x=e.x+Math.sin(angle)*spread,z=e.z+Math.cos(angle)*spread,base=heightAt(x,z);
-    const width=e.radius*(circular?.26:e.zone?.40:.24+ease*.43)*(siteCount===1?1.5:.85),height=e.radius*(e.zone?.24:.19+Math.sin(p*Math.PI)*.22);position.set(x,base+.04,z);rotation.setFromAxisAngle(axis,angle);scale.set(width,height,width);transform.compose(position,rotation,scale);
+    const circular=e.skillKey==='sm_magnum',angle=phase+site*(circular?Math.PI*2/siteCount:2.39996),spread=circular?e.radius*ease*.66:site===0?0:e.zone?e.radius*Math.sqrt(site/Math.max(1,siteCount-1))*.72:e.radius*(.15+ease*.40),x=e.x+Math.sin(angle)*spread,z=e.z+Math.cos(angle)*spread,base=heightAt(x,z);
+    // Coverage grows through separated plumes, never by stretching one cube
+    // into an opaque orange wall at large skill radii.
+    const width=Math.min(.85,e.radius*(circular?.26:e.zone?.40:.24+ease*.43)*(siteCount===1?1.5:.85)),height=Math.min(.72,e.radius*(e.zone?.24:.19+Math.sin(p*Math.PI)*.22));position.set(x,base+.04,z);rotation.setFromAxisAngle(axis,angle);scale.set(width,height,width);transform.compose(position,rotation,scale);
     template.update(time+phase*3+site*.47,{enabled:true,scale:1});for(const source of sources)for(let j=0;j<source.count;j++){source.getMatrixAt(j,local);world.multiplyMatrices(transform,local);mesh.setMatrixAt(at,world);source.getColorAt(j,color);mesh.setColorAt(at,color);alpha.setX(at++,fade);}
     sites++;
    }

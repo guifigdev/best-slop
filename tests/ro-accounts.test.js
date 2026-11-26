@@ -16,6 +16,22 @@ function fixture({migrate=true}={}){const sqlite=new DatabaseSync(':memory:');if
  return{sqlite,DB,request,settings,advance:ms=>stamp+=ms,conflict:n=>conflicts=n,randomCalls:()=>randomCalls};
 }
 async function account(f){const result=await f.request('account/create');assert.equal(result.status,201);return result.json();}
+
+test('ground cards stay locked until a nearby explicit pickup; claims are scoped, idempotent and expire',async()=>{
+ const f=fixture();try{
+  const {token}=await account(f),run=await(await f.request('run',{token,body:{pickupMode:'ground'}})).json(),kill={id:'ground-one',visual:'poring',x:3,z:4,mapSeed:123};
+  const reward=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[kill]}})).json();assert.deepEqual(reward.newCards,[]);assert.deepEqual(reward.account.cards,[]);assert.equal(reward.cardDrops[0].pending,true);
+  const body={runId:run.runId,receipt:kill.id,x:3,z:4,mapSeed:123};
+  assert.equal((await f.request('cards/claim',{token,body:{...body,receipt:'invented'}})).status,404);
+  assert.equal((await f.request('cards/claim',{token,body:{...body,x:30}})).status,400);
+  assert.equal((await f.request('cards/claim',{token,body:{...body,mapSeed:999}})).status,400);
+  const claimed=await(await f.request('cards/claim',{token,body})).json();assert.deepEqual(claimed.account.cards,['poring']);assert.equal(claimed.collectedCard.key,'poring');
+  const replay=await(await f.request('cards/claim',{token,body})).json();assert.deepEqual(replay.account.cards,['poring']);assert.equal(f.randomCalls(),1);
+  await f.request('rewards',{token,body:{runId:run.runId,kills:[{...kill,id:'expires',visual:'elderwillow'}]}});f.advance(180001);
+  assert.equal((await f.request('cards/claim',{token,body:{...body,receipt:'expires'}})).status,409);
+  assert.deepEqual((await(await f.request('account',{method:'GET',token})).json()).account.cards,['poring']);
+ }finally{f.sqlite.close();}
+});
 test('Cloud RO account recovery stores a token hash, has no CORS bypass, validates authentication and fails closed without D1',async()=>{
  const f=fixture();try{const created=await account(f),row=f.sqlite.prepare('SELECT * FROM ro_accounts').get();assert.ok(created.token.startsWith('ro_'));assert.equal(row.token_hash.length,64);assert.ok(!JSON.stringify(row).includes(created.token));
   assert.deepEqual(created.account.cards,[]);assert.equal((await f.request('account',{method:'GET'})).status,401);assert.equal((await f.request('account',{method:'GET',token:created.token})).status,200);

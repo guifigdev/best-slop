@@ -4,7 +4,7 @@ import {roGroundExpired,roGroundFade} from '../shared/ro-ground-lifetime.js';
 import {RO_GROUND_ICON_ATLAS,RO_GROUND_ICON_FRAMES} from './ro-ground-icon-atlas.js';
 export const RO_GROUND_ITEM_BUDGET=Object.freeze({items:96,distance:40,drawCalls:1,textureBytes:4194304});
 export function roGroundItemFrame(pickup){
- if(pickup?.type==='consumable')return RO_GROUND_ICON_FRAMES[pickup.key==='potion'?501:505]||null;
+ if(pickup?.type==='consumable')return RO_GROUND_ICON_FRAMES[pickup.key==='yggberry'?607:pickup.key==='potion'?501:505]||null;
  const d=RO_EQUIPMENT[pickup?.item?.key];if(!d)return null;
  if(RO_GROUND_ICON_FRAMES[d.sourceId])return RO_GROUND_ICON_FRAMES[d.sourceId];
  const reference=Object.values(RO_EQUIPMENT).find(r=>r.slot===d.slot&&r.weaponType===d.weaponType&&RO_GROUND_ICON_FRAMES[r.sourceId]);

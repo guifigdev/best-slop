@@ -20,6 +20,7 @@ export function useShortcuts({target=window,context,onAction}){
   if(!c.playing||c.modal)return;
   if(['Z','X'].includes(key)&&!e.repeat){e.preventDefault();onAction('consumable',key==='Z'?0:1);return;}
   if(c.bonk){
+   if(['C','V','B','N'].includes(key)&&!e.repeat){e.preventDefault();onAction('consumable',['Z','X','C','V','B','N'].indexOf(key));return;}
    if(c.bonkOffer&&key==='TAB')return;
    if(['w','a','s','d'].includes(e.key.toLowerCase())||e.key.startsWith('Arrow')){e.preventDefault();held.add(e.key.toLowerCase());return;}
    if(e.repeat)return;

@@ -1,7 +1,7 @@
 import {roRevealNearby} from './ro-mage-spells.js';
 import {roSkillDamageBudget,roNativeZonePlan} from './ro-damage-formulas.js';
 import {syncRoCompanions,tickRoCompanions} from './ro-pet-companions.js';
-import {roSkillTargetRange} from './ro-skill-range.js';
+import {roSkillTargetRange,isRoTrapSkill,roTrapEffectRadius} from './ro-skill-range.js';
 import {isRoArrowRainSkill,RO_ARROW_RAIN_TIMING} from './ro-arrow-rain.js';
 import {RO_SKILLS} from './ragnarok-jobs.js';
 import {isRoMeteorSkill,RO_METEOR_TIMING} from './ro-meteor.js';
@@ -72,7 +72,7 @@ function cleanse(unit,time,kind){unit.bonkPoisonTicks=0;unit.bonkPoisonUntil=tim
 export function castRoUtilitySkill(game,unit,weapon,level,stats={},api={}){
  const plan=roNativeZonePlan(weapon,level),kind=plan?'zone':weapon?.kind;if(!['heal','buff','passive','zone','summon','dash'].includes(kind))return null;
  if(!roUtilitySkillReadiness(game,unit,weapon,stats,{aim:api.aim})?.ready)return false;
- const b=game.bonk,time=now(game),m=weapon.mechanics||{},scale=factor(level),duration=weapon.key==='ws_meltdown'?10+5*Math.max(1,Math.min(10,level)):plan?.duration||safeDuration(weapon),radius=clamp((m.radius||weapon.radius||weapon.range||4)*(stats.area||1),1,24);
+ const b=game.bonk,time=now(game),m=weapon.mechanics||{},scale=factor(level),duration=weapon.key==='ws_meltdown'?10+5*Math.max(1,Math.min(10,level)):plan?.duration||safeDuration(weapon),radius=isRoTrapSkill(weapon)?roTrapEffectRadius(weapon,stats):clamp((m.radius||weapon.radius||weapon.range||4)*(stats.area||1),1,24);
  if(kind==='heal'){
   unit.hp=Math.min(unit.maxHp,unit.hp+Math.max(0,finite(m.healFlat))*scale+unit.maxHp*clamp(m.healPercent,0,.5)*scale);
   if(m.manaPercent)unit.mana=Math.min(unit.maxMana,unit.mana+unit.maxMana*clamp(m.manaPercent,0,.35)*scale);

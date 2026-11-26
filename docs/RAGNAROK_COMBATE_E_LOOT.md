@@ -91,7 +91,7 @@ A compra é autoritativa: o servidor recalcula oferta e preço, verifica distân
 
 O campo opcional `merchantPurchases` do checkpoint guarda as ofertas esgotadas. Saves antigos continuam válidos; recarregar a mesma expedição mantém os itens já vendidos esgotados. Recomeçar uma atividade nova inicia uma nova expedição com estoque renovado. A lista tem limite e validação de formato/identidade.
 
-Armadilhas de área (`trap_*`) são colocadas a até **4 metros** do personagem. Bônus de área ampliam seu raio, mas não a distância de colocação. Disponibilidade, alvo real e card de detalhes usam a mesma regra; se o alvo sair do alcance durante a conjuração, a armadilha não é liberada e não cobra SP. Flechas e demais magias mantêm seus alcances anteriores.
+Armadilhas de área (`trap_*`) são colocadas a até **4 metros** do personagem. O raio é compacto (aproximadamente 1,33–1,6 m); bônus de área acrescentam no máximo 25%, com teto absoluto de 2 m de raio, sem alterar a distância de colocação. Dano, fogo e descrição usam o mesmo raio. Disponibilidade, alvo real e card de detalhes usam a mesma regra; se o alvo sair do alcance durante a conjuração, a armadilha não é liberada e não cobra SP. Flechas e demais magias mantêm seus alcances anteriores.
 
 ## Perigos opcionais na exploração
 
@@ -125,3 +125,22 @@ O ataque básico de machado usa uma arma tridimensional de cabo de couro e lâmi
 Personagem abre Atributos, com pontos disponíveis, base/bônus/total e botões de custo real. Equipamentos e Habilidades ficam em abas visíveis. Mochila continua abrindo os itens; o atalho Personagem mostra pontos pendentes. Na escolha, retratos e nomes usam a segunda classe; um personagem novo inicia na primeira classe, preservando saves existentes.
 
 Contato usa o mesmo raio físico de seleção/colisão, com tolerância de 4 cm. Causa dano a cada 0,75 s por herói, respeitando esquiva, saltos, invulnerabilidade e controle dos inimigos. Um contato que realmente tira vida causa recuo de até 0,65 m em 0,14 s, com colisão e previsão compartilhada. Golpes de inimigos que causam dano também aplicam 0,18 s de trava de locomoção e conjuração, com reação visual; interrompem a conjuração atual. Dano ambiental não provoca essa trava. A movimentação mantém os comandos recebidos para continuar após o impacto.
+
+
+A velocidade base a pé é 5 m/s (antes 8,5); bônus de equipamentos, montarias e estados continuam relativos à base. Segurar o botão esquerdo atualiza a mira pela posição do cursor na tela, inclusive enquanto a câmera acompanha o personagem. Projéteis seguem essa direção sem desviar para inimigos próximos; magia de alvo mantém sua seleção.
+
+Conjurar mantém 45% da velocidade de movimento, sem zerar a entrada WASD. Cliente e servidor usam a mesma locomoção; a previsão reproduz apenas a consequência de movimento de mirar/conjurar/cancelar, sem disparar habilidades, cobrar SP ou alterar RNG. Atualizar a mira não suspende mais a previsão nem apaga o histórico de caminhada.
+
+## Revisão de hordas, recompensas e apresentação
+
+Regiões normais abrem com 24 monstros em posições seguras e recebem um grupo de seis por reforço. O limite ativo vai de 72 a 120 conforme a progressão, sem recuperar várias ondas atrasadas no mesmo tick. Após o MVP, ficam 18 monstros iniciais, reforços a cada três segundos e limite 48. A fila e os lotes da Torre permanecem próprios dela. Monstros comuns e elites têm 40% mais vida, 25% mais dano e 10% mais velocidade que o orçamento anterior; o orçamento de MVPs permanece independente e não acompanha o equipamento do jogador.
+
+Armadilhas têm raio visual e de dano compartilhado, limitado a dois metros mesmo com bônus de área extremos. Fogo usa chamas tridimensionais da fogueira, com dimensões individuais limitadas; áreas maiores distribuem pequenas chamas, sem esticar blocos em placas gigantes. A Barreira de Fogo tem somente seu renderizador dedicado. Névoa usa partículas suaves que derivam, crescem e desaparecem em ciclos, sem caixas transparentes com bordas retas.
+
+O ataque básico de arco dispara uma flecha, inclusive com bônus de quantidade de projéteis. Chuva de Flechas possui dez flechas na própria habilidade. A câmera normal usa distância 18; zoom livre aparece somente em diagnóstico. Rotação tem amortecimento; arrastar com o esquerdo também gira quando todas as habilidades ativas estão em AUTO. Primeira pessoa é experimental e pode ser ligada no painel Visual; Escape retorna à terceira pessoa.
+
+Novas partidas pedem cartas no chão à API da conta. O servidor conserva o resultado e a posição por três minutos; a carta só entra na coleção após clicar nela a até quatro metros, no mesmo mapa. Repetir a coleta não duplica a recompensa. Clientes antigos conservam compatibilidade temporária com o fluxo automático. Equipamentos de MVP dão um prêmio pessoal direto, reservado nos itens pendentes se a mochila estiver cheia, e os demais continuam no chão. A comemoração MVP é geometria voxel acima do herói e expira pelo relógio visual.
+
+Ragnarok possui seis espaços de consumíveis, com até dez cargas cada, nos atalhos Z/X/C/V/B/N. Fruto de Yggdrasil recupera PV e SP completos, compartilha a recarga das poções e cai de MVPs, raramente de comuns e elites. Os dois espaços e três cargas do Custom Hero continuam próprios desse modo.
+
+Os scripts de bônus de 305 cartas foram importados como dados de `rathena/db/re/item_db_etc.yml`, com interpretação limitada e sem execução de scripts arbitrários. Bônus suportados incluem atributos, raça, elemento, habilidades, crítico por raça, experiência por raça e imunidade mágica de Besouro-Ladrão Dourado com custo dobrado de SP. Condições de arma são respeitadas, como Guardião da Espada. Efeitos especiais ainda não suportados mantêm a adaptação anterior; isso não equivale a uma auditoria completa do database LATAM. Resistências a estados só atuam onde o estado correspondente existe no combate.

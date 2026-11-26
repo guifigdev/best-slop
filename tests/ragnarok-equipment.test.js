@@ -25,12 +25,12 @@ test('Shield, dual wield and two-handed swaps preserve bag contents and cannot d
 test('Sockets consume a loose card once, respect slot and capacity, and stay permanently with dropped items',()=>{
  const u=make(),weapon=u.roInventory[0],armor=u.roInventory[1];u.roCards=[{id:'fabre1',key:'fabre'},{id:'poring1',key:'poring'},{id:'poring2',key:'poring'}];
  assert.equal(roSocket(u,'poring1',weapon.id),false);assert.equal(roSocket(u,'fabre1',armor.id),false);assert.ok(roSocket(u,'fabre1',weapon.id));assert.equal(roSocket(u,'fabre1',weapon.id),false);assert.ok(roSocket(u,'poring1',armor.id));assert.equal(roSocket(u,'poring2',armor.id),false);
- const stats=roEquipmentBonuses(u);assert.equal(stats.vit,1);assert.equal(stats.maxHp,10);assert.equal(stats.luk,2);
+ const stats=roEquipmentBonuses(u);assert.equal(stats.vit,1);assert.equal(stats.maxHp,100);assert.equal(stats.luk,2);
  assert.ok(roDrop(u,weapon.id));assert.equal(u.roEquipment.weapon,null);assert.deepEqual(weapon.cards,[{id:'fabre1',key:'fabre'}]);assert.equal(roEquipmentBonuses(u).vit,0);assert.ok(roDrop(u,'poring2'));assert.equal(roDrop(u,'missing'),false);
 });
 test('Injected item stats, invalid slots, duplicate pointers and excess cards cannot inflate bonuses',()=>{
  const u=make(),weapon=u.roInventory[0],armor=u.roInventory[1];weapon.stats={attack:1e9};weapon.cards=Array.from({length:20},(_,id)=>({id,key:'fabre'}));armor.cards=[{id:90,key:'constructor'}];u.roEquipment.offhand=weapon.id;u.roEquipment.accessory=weapon.id;
- const stats=roEquipmentBonuses(u);assert.equal(stats.attack,RO_EQUIPMENT[weapon.key].stats.attack);assert.equal(stats.vit,3);assert.equal(stats.maxHp,30);assert.equal(stats.armor,RO_EQUIPMENT[armor.key].stats.armor);
+ const stats=roEquipmentBonuses(u);assert.equal(stats.attack,RO_EQUIPMENT[weapon.key].stats.attack);assert.equal(stats.vit,3);assert.equal(stats.maxHp,300);assert.equal(stats.armor,RO_EQUIPMENT[armor.key].stats.armor);
  assert.equal(roEquip(u,weapon.id,'__proto__'),false);assert.equal(roEquip(u,weapon.id,'armor'),false);
 });
 test('Rare card drops are monster-specific with exact normal and boss probability boundaries',()=>{

@@ -13,6 +13,18 @@ const game=(options={})=>{const g=new Game(123,{mode:'bonk',bonkLineage:'dragonk
 const storage=initial=>{const map=new Map(initial?[[RO_ACCOUNT_STORAGE_KEY,JSON.stringify(initial)]]:[]);return{getItem:key=>map.get(key)||null,setItem:(key,value)=>map.set(key,value),data:()=>JSON.parse(map.get(RO_ACCOUNT_STORAGE_KEY)||'{}')};};
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 
+test('new card drops appear on the ground first and only an explicit nearby claim unlocks the collection',async()=>{
+ const g=game(),drops=[],claimed=[],calls=[];let account=empty();
+ const fetchImpl=async(url,options={})=>{const path=url.split('/').pop(),body=options.body?JSON.parse(options.body):{};calls.push({path,body});
+  if(path==='create')return Response.json({token,account});if(path==='run')return Response.json({runId:'ground-run',account});if(path==='progress'){account.progress=body.checkpoint;return Response.json({account});}
+  if(path==='rewards')return Response.json({account,newCards:[],acknowledgedIds:['ground'],cardDrops:[{key:'poring',receipt:'ground',pending:true,x:10,z:10,mapSeed:g.bonk.map.seed,expiresAt:Date.now()+180000}]});
+  if(path==='claim'){account.cards=['poring'];return Response.json({account,collectedCard:{key:'poring',receipt:'ground',duplicate:false}});}throw Error(path);
+ };
+ const ui=createRagnarokAccountUI({fetchImpl,storage:storage(),getGame:()=>g,onCardDrop:d=>drops.push(d),onCardClaimed:d=>claimed.push(d)});await ui.loadReady();ui.prepareGame(g);await settle();await settle();assert.equal(calls.find(c=>c.path==='run').body.pickupMode,'ground');
+ g.bonk.rewardKills=[{id:'ground',visual:'poring',x:10,z:10}];ui.update(g);await settle();await settle();assert.equal(drops.length,1);assert.equal(drops[0].pending,true);assert.deepEqual(ui.account().cards,[]);assert.equal(claimed.length,0);
+ const u=g.player('p');u.x=50;u.z=50;assert.equal(await ui.claimCard('ground'),false);assert.equal(calls.filter(c=>c.path==='claim').length,0);u.x=u.z=10;assert.equal(await ui.claimCard('ground'),true);assert.deepEqual(ui.account().cards,['poring']);assert.equal(claimed.length,1);assert.equal(await ui.claimCard('ground'),false);
+});
+
 test('death saves the emptied bag immediately, without waiting for the periodic autosave',async()=>{
  const service=backend(),saved=storage(),messages=[],ui=createRagnarokAccountUI({fetchImpl:service.fetchImpl,storage:saved,toast:t=>messages.push(t)});await ui.loadReady();const g=game();ui.prepareGame(g);await settle();await settle();const u=g.player('p');u.roInventory.push(createRoEquipment('knife','do-not-restore'));await ui.save(g);const before=service.calls.filter(c=>c.path==='progress').length;roLoseBagOnDeath(u);u.alive=false;u.hp=0;ui.update(g);await settle();await settle();assert.equal(service.calls.filter(c=>c.path==='progress').length,before+1);assert.ok(messages.some(t=>t.includes('itens da mochila foram perdidos')));const hero=saved.data().account.progress.characters[0].checkpoint.hero;assert.ok(!hero.roInventory.some(i=>i.id==='do-not-restore'));ui.update(g);await settle();assert.equal(service.calls.filter(c=>c.path==='progress').length,before+1);
 });

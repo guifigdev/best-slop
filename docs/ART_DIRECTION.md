@@ -135,3 +135,8 @@ A revisão seguinte segue a referência de Bowling Bash enviada pelo usuário: f
 ## Referências nativas de Ragnarok
 
 Antes de criar ou revisar uma animação de Ragnarok, consultar os sprites e ações SPR/ACT originais e seus tempos; adaptar a coreografia à geometria voxel, preservando a identidade visual. As mortes e sons importados estão documentados em `RAGNAROK_MIDGARD_AUDIO.md`. O gelo facetado e seu vapor compartilhado continuam sendo o padrão de todos os modos.
+
+
+## Ícones de habilidades de Ragnarok
+
+Direção pedida pelo usuário: usar os ícones originais como referência de ação e identidade, criando interpretações pixelizadas próprias. Não tratar a extração literal dos ícones como o resultado final da revisão. Evitar repetir um mesmo desenho para habilidades diferentes; preservar silhueta, elemento e coreografia reconhecíveis.

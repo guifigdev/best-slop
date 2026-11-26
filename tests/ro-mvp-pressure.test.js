@@ -10,13 +10,13 @@ function arena(difficulty='normal'){
  const boss={id:g.id(),bonkBoss:true,bonkEnemy:true,alive:true,team:100,ragnarokMvp:'mistress',x:u.x+.5,z:u.z,hp:1e6,maxHp:1e6,speed:0,damage:100,interval:.9,collisionRadius:1,bonkNextAttack:0,bonkNextSpecial:Infinity,roNativeReadyAt:Infinity,roReinforceReadyAt:Infinity};
  g.units=[u,boss];g.effects=[];g.bonk.objectives=[];g.bonk.spawnAt=Infinity;g.bonk.bossSpawned=true;g.bonk.map.obstacles=[];return {g,u,boss};
 }
-test('MVP role profiles add fixed pressure while ordinary monster budgets stay unchanged',()=>{
+test('MVP role profiles and stronger ordinary monsters keep independent fixed budgets',()=>{
  const flyer=roMvpPressure('mistress'),heavy=roMvpPressure('eddga'),caster=roMvpPressure('ifrit');assert.ok(flyer.speed>heavy.speed);assert.ok(flyer.attackInterval<heavy.attackInterval);assert.ok(heavy.damage>flyer.damage);assert.ok(caster.specialInterval<heavy.specialInterval);
  for(const activity of ['adventure','tower'])for(const key of ['mistress','eddga','ifrit']){
   const b=roSurvivorEnemyBudget({key,boss:true,activity}),p=roMvpPressure(key);assert.ok(b.speedScale>roDifficulty('normal').speed);assert.ok(b.hp>0&&b.damage>100);assert.ok(p.attackInterval<1.3&&p.specialInterval<5.8);
   assert.deepEqual(b,roSurvivorEnemyBudget({key,boss:true,activity,level:150,equipment:{damage:1e8}}));
  }
- const common=roSurvivorEnemyBudget({key:'poring'});assert.equal(common.speedScale,roDifficulty('normal').speed);assert.deepEqual(common,roSurvivorEnemyBudget({key:'poring',level:150}));
+ const common=roSurvivorEnemyBudget({key:'poring'});assert.equal(common.speedScale,roDifficulty('normal').speed*1.1);assert.deepEqual(common,roSurvivorEnemyBudget({key:'poring',level:150}));
 });
 test('touching an MVP delivers its full basic attack on its own cadence without duplicate or delayed hits',()=>{
  const {g,u,boss}=arena(),hp=u.hp;g.tick(.05);const first=hp-u.hp;const ordinary=arena();ordinary.boss.bonkBoss=false;const normalHp=ordinary.u.hp;ordinary.g.tick(.05);assert.ok(first>(normalHp-ordinary.u.hp)*1.2,'full basic hit '+first+' versus touch '+(normalHp-ordinary.u.hp));assert.equal(g.effects.filter(e=>e.type==='damage'&&e.target===u.id).length,1);

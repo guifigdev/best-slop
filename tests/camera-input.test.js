@@ -33,3 +33,7 @@ test('two-finger character orbit zooms and rotates without translating the pivot
 });
 
 test('right-click cancels once on press, respects the drag deadzone and never clicks the world on release',()=>{let cancelled=0,taps=0;const rotations=[],g=createCameraGestures({isCharacterOrbit:()=>true,onCancel:()=>cancelled++,onTap:()=>taps++,onRotate:(x,y)=>rotations.push([x,y])});const e=(x,y)=>event(1,x,y,{pointerType:'mouse',button:2});assert.equal(g.down(e(10,10)),true);assert.equal(cancelled,1);g.move(e(13,12));assert.equal(rotations.length,0);g.move(e(40,20));assert.deepEqual(rotations,[[30,10]]);g.up(e(40,20));assert.equal(taps,0);assert.equal(cancelled,1);assert.equal(g.active,false);});
+
+test('all-AUTO Ragnarok can rotate with left drag while a manual skill restores left aiming and keeps right cancel',()=>{
+ let auto=true,manual=false,taps=0,cancels=0;const turns=[],g=createCameraGestures({isCharacterOrbit:()=>true,isCharacterLeftOrbit:()=>auto&&!manual,onRotate:(x,y)=>turns.push([x,y]),onTap:()=>taps++,onCancel:()=>cancels++});const left=(x,y)=>event(1,x,y,{pointerType:'mouse',button:0});assert.equal(g.down(left(0,0)),true);g.move(left(20,8));g.up(left(20,8));assert.deepEqual(turns,[[20,8]]);assert.equal(taps,0);manual=true;assert.equal(g.down(left(0,0)),false);manual=false;auto=false;assert.equal(g.down(left(0,0)),false);assert.equal(g.down(event(2,0,0,{pointerType:'mouse',button:2})),true);assert.equal(cancels,1);g.up(event(2,0,0,{pointerType:'mouse',button:2}));assert.equal(taps,0);
+});

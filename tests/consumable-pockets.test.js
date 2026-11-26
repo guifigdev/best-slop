@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../shared/simulation.js';
-import {addConsumable,consumePouch,validateConsumables} from '../shared/consumables.js';
+import {addConsumable,consumePouch,validateConsumables,RO_CONSUMABLE_SLOTS} from '../shared/consumables.js';
 import {createRoCheckpoint,validateRoCheckpoint} from '../shared/ragnarok-save.js';
 import {consumableDockMarkup} from '../src/consumable-dock.js';
 test('two potion pockets enforce their own capacity, shared cooldown and real health or mana restoration',()=>{
@@ -14,4 +14,13 @@ test('Ragnarok potion pockets persist, reject invalid saves and stay outside equ
 });
 test('classic shop buys potions into the two pockets even with a full equipment inventory',()=>{
  const g=new Game(8,{mode:'campaign'});g.addPlayer('p','knight');const u=g.player('p');g.atShop=()=>true;g.stockFor=()=>({potion:99,manapot:99});u.inventory=Array.from({length:6},()=>({key:'sword',level:1,charges:1}));assert.ok(g.command('p',{type:'item',item:'potion'}));assert.ok(g.command('p',{type:'item',item:'manapot'}));assert.equal(u.inventory.length,6);assert.equal(u.consumables[0].key,'potion');u.hp=10;assert.ok(g.command('p',{type:'useConsumable',slot:0}));assert.equal(u.hp,310);
+});
+
+test('Ragnarok has six independent ten-charge stacks, migrated saves and a fruit that heals both HP and SP',()=>{
+ const g=new Game(1,{mode:'bonk'});g.addPlayer('p','knight');g.command('p',{type:'bkReady'});const u=g.player('p');u.consumables=Array(RO_CONSUMABLE_SLOTS).fill(null);
+ for(let i=0;i<60;i++)assert.ok(addConsumable(u,'yggberry'));assert.equal(addConsumable(u,'yggberry'),false);assert.equal(u.consumables[5].charges,10);
+ u.hp=u.maxHp;u.mana=0;const used=consumePouch(u,5,10,{survivor:true});assert.ok(used);assert.equal(used.hp,0);assert.equal(u.mana,u.maxMana);assert.equal(u.consumables[5].charges,9);
+ u.hp=1;assert.ok(consumePouch(u,5,20,{survivor:true}));assert.equal(u.hp,u.maxHp);assert.equal(consumePouch(u,5,30,{survivor:true}),null,'a full character cannot waste a fruit');
+ const cp=createRoCheckpoint(g);assert.equal(cp.hero.consumables.length,6);assert.equal(validateRoCheckpoint(cp).hero.consumables[5].charges,8);cp.hero.consumables=[{key:'potion',charges:3},null];assert.equal(validateRoCheckpoint(cp).hero.consumables.length,6);
+ assert.match(consumableDockMarkup(u,40,{survivor:true}),/data-consumable="5"/);assert.match(consumableDockMarkup(u,40,{survivor:true}),/Fruto de Yggdrasil/);
 });
