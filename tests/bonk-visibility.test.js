@@ -9,6 +9,13 @@ import {BONK_STAGES} from '../shared/bonk-catalog.js';
 const cameraAt=(x=0,z=20,lookX=0,lookZ=0)=>{const c=new T.PerspectiveCamera(65,16/9,.1,270);c.position.set(x,12,z);c.lookAt(lookX,2,lookZ);c.updateMatrixWorld();return c;};
 const snapshot=map=>({options:{mode:'bonk'},units:[{bonkHero:true,alive:true,x:0,z:23}],bonk:{map,objects:map.objects,pickups:[],projectiles:[],objectives:map.landmarks}});
 
+test('unchanged visibility reuses GPU buffers, tiny camera motion preserves matching subsets and source edits invalidate the cache',()=>{
+ const v=createBonkVisibility(),g=new T.BoxGeometry(),m=new T.MeshBasicMaterial(),mesh=new T.InstancedMesh(g,m,2),matrix=new T.Matrix4(),camera=cameraAt(0,0,0,-20);for(let i=0;i<2;i++)mesh.setMatrixAt(i,matrix.makeTranslation(i*2,2,-15));v.capture(mesh,2);v.update(camera);const version=mesh.instanceMatrix.version;v.update(camera);assert.equal(mesh.instanceMatrix.version,version);assert.equal(v.stats().uploadedInstances,0);camera.position.x+=.00001;camera.updateMatrixWorld();v.update(camera);assert.equal(mesh.instanceMatrix.version,version);mesh.setMatrixAt(0,matrix.makeTranslation(1,2,-12));v.capture(mesh,2);v.update(camera);assert.ok(mesh.instanceMatrix.version>version);mesh.getMatrixAt(0,matrix);assert.equal(matrix.elements[14],-12);v.reset();mesh.dispose();g.dispose();m.dispose();
+});
+test('a fog-distance budget omits invisible distant geometry and restores it when range expands',()=>{
+ const v=createBonkVisibility({margin:0}),g=new T.BoxGeometry(),m=new T.MeshBasicMaterial(),mesh=new T.InstancedMesh(g,m,2),matrix=new T.Matrix4(),camera=cameraAt(0,0,0,-100);for(const [i,z]of [-15,-200].entries())mesh.setMatrixAt(i,matrix.makeTranslation(0,2,z));v.capture(mesh,2);v.update(camera,{maxDistance:80});assert.equal(mesh.count,1);v.update(camera,{maxDistance:250});assert.equal(mesh.count,2);v.reset();mesh.dispose();g.dispose();m.dispose();
+});
+
 test('instance compaction rejects behind-camera geometry and restores cached transforms on a full camera turn',()=>{
  const v=createBonkVisibility({margin:0}),geometry=new T.BoxGeometry(1,1,1),material=new T.MeshBasicMaterial(),mesh=new T.InstancedMesh(geometry,material,3),m=new T.Matrix4(),c=new T.Color();
  for(const [i,z]of [-10,20,100].entries()){m.makeTranslation(0,2,z);mesh.setMatrixAt(i,m);mesh.setColorAt(i,c.setHex([0xff0000,0x00ff00,0x0000ff][i]));}mesh.count=3;v.capture(mesh,3);

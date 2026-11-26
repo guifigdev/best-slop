@@ -20,12 +20,13 @@ export function createRoCompanionArt({scene,material}={}){
  const ownedMaterial=!material,mat=material||new T.MeshLambertMaterial({vertexColors:true}),mesh=new T.InstancedMesh(geometry,mat,RO_COMPANION_ART_BUDGET.parts);
  mesh.name='ro-allied-companions';mesh.count=0;mesh.instanceColor=new T.InstancedBufferAttribute(new Float32Array(RO_COMPANION_ART_BUDGET.parts*3),3);mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.castShadow=false;mesh.receiveShadow=true;mesh.frustumCulled=false;scene.add(mesh);
  const root=new T.Object3D(),part=new T.Object3D(),matrix=new T.Matrix4(),color=new T.Color(),frustum=new T.Frustum(),projection=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(),3);let visible=0,culled=0,disposed=false;
- return{mesh,update(state,time=state?.time||0,groundAt=()=>0,camera){
+ return{mesh,update(state,time=state?.time||0,groundAt=()=>0,camera,{firstPersonOwner=null}={}){
   mesh.count=visible=culled=0;if(disposed||!state?.bonk)return;
   if(camera){camera.updateMatrixWorld();frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));}
   const elapsed=state.bonk.elapsed||0,candidates=(state.bonk.roSkillSummons||[]).filter(p=>p.persistent&&p.until>elapsed&&state.units?.some(u=>u.id===p.source&&u.alive)&&roCompanionParts(p.companion).length);
   if(camera)candidates.sort((a,b)=>Math.hypot(a.x-camera.position.x,a.z-camera.position.z)-Math.hypot(b.x-camera.position.x,b.z-camera.position.z));
   for(const pet of candidates){
+   if(pet.mounted&&pet.source===firstPersonOwner){culled++;continue;}
    if(visible>=RO_COMPANION_ART_BUDGET.visible){culled++;continue;}
    const ground=groundAt(pet.x,pet.z),fly=pet.companion==='falcon',height=Number.isFinite(ground)?ground:0;
    sphere.center.set(pet.x,height+1.7,pet.z);

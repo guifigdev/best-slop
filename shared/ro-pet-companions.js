@@ -4,7 +4,8 @@ export const RO_COMPANION_LIMITS=Object.freeze({perHero:4,leash:24,attackTargets
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const valid=p=>Number.isFinite(p?.x)&&Number.isFinite(p?.z);
 const passable=(api,a,b)=>(!api.segment||api.segment(a,b))&&!api.blocked?.(b);
-function home(unit,index){const angle=(Number.isFinite(unit.facing)?unit.facing:0)+Math.PI+index*1.7;return{x:unit.x+Math.sin(angle)*2.4,z:unit.z+Math.cos(angle)*2.4};}
+export function roCompanionHome(unit,index=0,facing=unit.facing||0){const side=(index%2?-1:1)*(2.6+Math.floor(index/2)*.45),back=.6+Math.floor(index/2)*.35;return{x:unit.x+Math.cos(facing)*side-Math.sin(facing)*back,z:unit.z-Math.sin(facing)*side-Math.cos(facing)*back};}
+const home=(unit,index,facing)=>roCompanionHome(unit,index,facing);
 function moveToward(pet,target,dt,speed,api){const d=dist(pet,target);let travel=Math.min(d,Math.max(0,Math.min(RO_COMPANION_LIMITS.dt,Number.isFinite(dt)?dt:0))*speed);pet.moving=false;if(d<.08)return;pet.facing=Math.atan2(target.x-pet.x,target.z-pet.z);const dx=(target.x-pet.x)/d,dz=(target.z-pet.z)/d;while(travel>.001){const step=Math.min(RO_COMPANION_LIMITS.moveStep,travel),p={x:pet.x+dx*step,z:pet.z+dz*step};if(!passable(api,pet,p))break;Object.assign(pet,p);pet.moving=true;travel-=step;}}
 /** Host-only state, serialized in the existing roSkillSummons snapshot. */
 export function syncRoCompanions(game,unit,time,api={}){
@@ -22,12 +23,14 @@ export function syncRoCompanions(game,unit,time,api={}){
 export function tickRoCompanions(game,unit,dt,time,api={}){
  const pets=(game.bonk?.roSkillSummons||[]).filter(p=>p.persistent&&p.source===unit.id).slice(0,RO_COMPANION_LIMITS.perHero);
  for(const pet of pets){
+  pet.followFacing??=unit.facing||0;const move=unit.bonkMove;if(unit.moving&&Math.hypot(move?.dx||0,move?.dz||0)>.01)pet.followFacing=Math.atan2(move.dx,move.dz);
   if(!valid(pet)||dist(pet,unit)>RO_COMPANION_LIMITS.leash){let position=home(unit,pet.homeIndex);if(!passable(api,unit,position))position={x:unit.x,z:unit.z};Object.assign(pet,position);}
   const targets=game.bonk.stage==='playing'?(api.nearby?.(unit,pet.range)||(game.units||[]).filter(e=>e.bonkEnemy&&e.alive&&dist(e,unit)<=pet.range)):[];
   const target=targets.filter(e=>e.alive&&e.bonkEnemy&&dist(e,unit)<=pet.range&&passable(api,pet,e)).sort((a,b)=>dist(pet,a)-dist(pet,b)||String(a.id).localeCompare(String(b.id)))[0];
   pet.target=target?.id||null;
   const mounted=roMountedKind(unit)===pet.companion;pet.mounted=mounted;
-  const destination=target&&dist(pet,target)>1.5?target:target?pet:home(unit,pet.homeIndex);
+  const escort=home(unit,pet.homeIndex,pet.followFacing),chase=target&&!unit.moving&&(pet.companion!=='worg'||pet.at<=time||time-(pet.attackAt??-100)<.18),side=pet.homeIndex%2?-1:1,dx=target?target.x-unit.x:0,dz=target?target.z-unit.z:1,length=Math.hypot(dx,dz)||1,flank=target?{x:target.x+dz/length*side*1.1,z:target.z-dx/length*side*1.1}:null;
+  const destination=chase&&dist(pet,target)>1.5?flank:chase?pet:escort;
   if(mounted)Object.assign(pet,{x:unit.x,z:unit.z,facing:unit.facing||0,moving:!!unit.moving});else moveToward(pet,destination,dt,pet.companion==='falcon'?12:9,api);
   if(!target||dist(pet,target)>pet.radius+1||pet.at>time)continue;
   pet.at=time+pet.interval;pet.attackAt=time;if(!mounted)pet.facing=Math.atan2(target.x-pet.x,target.z-pet.z);
