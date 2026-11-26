@@ -17,10 +17,10 @@ export function generateBonkLevel(seed=1,stageKey='grove',habitat=null,route=nul
  for(let i=0;i<470;i++){
   const x=(hash(seed+i*4.13)-.5)*220,z=(hash(seed+i*8.71)-.5)*220;if(clear({x,z})||habitat==='meadow'&&i%2===0)continue;
   const solid=i%3!==0,type=stageKey==='sands'?(i%4?'sandstone':'cactus'):stageKey==='coast'?(i%5===0?'palm':i%3?'coastal-rock':'coral'):stageKey==='grove'?(i%4?'tree':'boulder'):stageKey==='forge'?(i%3?'basalt':'vent'):stageKey==='glacier'?(i%3?'crystal':'snowbank'):stageKey==='payon'?(i%5?'boulder':'stalagmite'):stageKey==='crypt'?(i%4?'weathered-rock':'grave-marker'):(i%3?'arcane-crystal':'runic-obelisk'),scale=.7+hash(i+seed)*1.7,w=['tree','cactus','palm'].includes(type)?.75*scale:1.1+scale*1.1,d=['tree','cactus','palm'].includes(type)?.75*scale:1+scale;
-  const o={id:'bonk-prop-'+i,x,z,w,d,h:['tree','palm'].includes(type)?4.5+scale*2:1.4+scale*2.1,type,scale,solid};decorations.push(o);if(solid)obstacles.push({...o,alive:true});
+   const snowyVillage=route?.style==='snow-village',villageType=snowyVillage?(i%5===0?'snow-rock':i%4===0?'snowbank':'snow-pine'):type,pine=villageType==='snow-pine',o={id:'bonk-prop-'+i,x,z,w:pine?.75*scale:w,d:pine?.75*scale:d,h:pine||['tree','palm'].includes(type)?4.5+scale*2:villageType==='snow-rock'?1.4+scale*.3:1.4+scale*2.1,type:villageType,scale,solid};decorations.push(o);if(solid)obstacles.push({...o,alive:true});
  }
  // Four monumental ruins frame avenues rather than filling the play space.
- for(const [cx,cz]of [[-37,-37],[39,-35],[-39,64],[36,65]])for(let i=0;i<6;i++){const p={x:cx+(i%3-1)*4,z:cz+(Math.floor(i/3)-.5)*7};if(clear(p))continue;const o={id:'bonk-ruin-'+cx+'-'+cz+'-'+i,...p,w:1.8,d:1.8,h:4+(i%3),type:i%2?'pillar':'statue',solid:true};decorations.push(o);obstacles.push({...o,alive:true});}
+  for(const [cx,cz]of [[-37,-37],[39,-35],[-39,64],[36,65]])for(let i=0;i<6;i++){const p={x:cx+(i%3-1)*4,z:cz+(Math.floor(i/3)-.5)*7};if(clear(p))continue;const snow=route?.style==='snow-village',o={id:'bonk-ruin-'+cx+'-'+cz+'-'+i,...p,w:snow?.75:1.8,d:snow?.75:1.8,h:4+(i%3),type:snow?'snow-pine':i%2?'pillar':'statue',solid:true};decorations.push(o);obstacles.push({...o,alive:true});}
  // Regional scenery occupies lateral pockets, leaving the 12m objective avenues
  // and every gameplay landmark unchanged. Open gates have only post colliders.
  for(const [i,o]of scenicSites.entries()){

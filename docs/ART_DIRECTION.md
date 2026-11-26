@@ -140,3 +140,4 @@ Antes de criar ou revisar uma animação de Ragnarok, consultar os sprites e aç
 ## Ícones de habilidades de Ragnarok
 
 Direção pedida pelo usuário: usar os ícones originais como referência de ação e identidade, criando interpretações pixelizadas próprias. Não tratar a extração literal dos ícones como o resultado final da revisão. Evitar repetir um mesmo desenho para habilidades diferentes; preservar silhueta, elemento e coreografia reconhecíveis.
+Lutie usa pinheiros voxel em camadas com neve acumulada, troncos marrons e rochas baixas nevadas. As formações cristalinas altas ficam na Caverna de Gelo. A vegetação ao longe também segue o bioma; a vila preserva chalés, presentes, lagos congelados e o frost nas bordas da tela. A HUD identifica a região pelo nome da rota, sem chamar Lutie de Caverna de Gelo por compartilharem o terreno glacier.
