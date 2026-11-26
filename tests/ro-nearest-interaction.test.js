@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {bonkInteraction,createBonkUI} from '../src/bonk-ui.js';
+const hero={id:1,alive:true,x:0,z:0,gold:100};
+test('E compares actual distance across equipment, potions, NPCs, chests and cards without category priority',()=>{
+ const b={nearbyTownService:{id:'npc',x:3,z:0,name:'Kafra'},nearbySecretMerchant:{id:'shop',x:2.8,z:0,name:'Mercador'},nearbyEquipment:{id:'gear',x:7,z:0,item:{key:'knife'}},nearbyConsumable:{id:'potion',x:1.5,z:0,key:'potion',canCarry:true},objects:[{id:'chest',x:2,z:0,type:'chest'}],nearestObject:'chest'},cards=[{id:'card',pending:true,key:'poring',x:1,z:0}];assert.equal(bonkInteraction(b,hero,cards).object.id,'card');assert.equal(bonkInteraction(b,hero,[]).object.id,'potion');b.nearbyEquipment.x=.5;assert.equal(bonkInteraction(b,hero,cards).object.id,'gear');b.nearbyEquipment.used=true;assert.equal(bonkInteraction(b,hero,cards).object.id,'card');cards[0].x=6;assert.equal(bonkInteraction(b,hero,cards).object.id,'potion');b.nearbyConsumable.canCarry=false;assert.equal(bonkInteraction(b,hero,cards).allowed,false,'a full bag does not silently target a farther object');
+});
+test('E invokes the same nearest card shown by the HUD and does not collect gear or open a farther NPC',()=>{
+ const claimed=[],sent=[],state={options:{mode:'bonk'},players:{p:1},units:[hero],bonk:{stage:'playing',nearbyEquipment:{id:'gear',x:7,z:0,item:{key:'knife'}},nearbyTownService:{id:'npc',x:3,z:0,name:'Kafra'},objects:[]}},cards=[{id:'receipt',pending:true,key:'poring',x:1,z:0}],ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>sent.push(c),view:{nearbyRoCards:()=>cards},onCardClaim:id=>claimed.push(id),onInventory:()=>assert.fail('a farther equipment/NPC must not open')});ui.action('interact');assert.deepEqual(claimed,['receipt']);assert.deepEqual(sent,[]);
+});

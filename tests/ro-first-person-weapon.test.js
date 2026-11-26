@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import * as T from 'three';
-import {createRoFirstPersonWeapon,roFirstPersonWeaponKind,roFirstPersonAttackPose,RO_FIRST_PERSON_WEAPON_BUDGET as B} from '../src/ro-first-person-weapon.js';
+import {createRoFirstPersonWeapon,roFirstPersonWeaponKind,roFirstPersonAttackPose,roFirstPersonBowShape,RO_FIRST_PERSON_WEAPON_BUDGET as B} from '../src/ro-first-person-weapon.js';
+import {roHasRangedWeapon,RO_RANGED_CURSOR} from '../src/ro-ranged-cursor.js';
 import {roFirstPersonEyeHeight,roFirstPersonPose,roFirstPersonShotOffset} from '../src/ro-camera.js';
 import {createRoEquipment} from '../shared/ragnarok-equipment.js';
 const camera=new T.PerspectiveCamera(75,16/9,.1,1000);camera.position.set(4,2.15,8);camera.lookAt(4,2.15,-10);camera.updateMatrixWorld();
@@ -18,4 +19,17 @@ test('first-person arrow muzzle converges onto the real projectile path without 
 
 test('the weapon uses one depth-correct overlay draw, preserves the world color and restores renderer state',()=>{
  const art=createRoFirstPersonWeapon({scene:new T.Scene()}),calls=[],renderer={autoClear:true,info:{autoReset:true},clearDepth(){calls.push('depth');},render(scene,camera){assert.equal(this.autoClear,false);assert.equal(scene.children.length,1);calls.push('weapon');}};try{art.update({options:{mode:'bonk'},effects:[]},hero(),1,camera,{enabled:true});art.render(renderer,camera);assert.deepEqual(calls,['depth','weapon']);assert.equal(renderer.autoClear,true);assert.equal(renderer.info.autoReset,true);art.reset();art.render(renderer,camera);assert.equal(calls.length,2);}finally{art.dispose();}
+});
+
+test('the bow draws along the arrow axis, with its grip ahead of the string and the arrow pointing away from the camera',()=>{
+ const rest=roFirstPersonBowShape(0),drawn=roFirstPersonBowShape(1);assert.ok(drawn.nock[2]>rest.nock[2]);assert.ok(drawn.grip[2]<drawn.nock[2]);assert.ok(drawn.arrowTip[2]<drawn.grip[2]);for(const p of [...drawn.tips,drawn.nock,drawn.grip,drawn.arrowTip])assert.equal(p[0],drawn.grip[0]);assert.equal(drawn.tips[0][2],drawn.tips[1][2]);
+});
+
+test('casting and successful spell release have distinct hand poses and bounded 3D particles, including utility spells',()=>{
+ const art=createRoFirstPersonWeapon({scene:new T.Scene()}),u=hero('rod'),s={options:{mode:'bonk'},bonk:{elapsed:5},effects:[]};try{u.roCasting={key:'firebolt',started:4,finishAt:6,duration:2};art.update(s,u,10,camera,{enabled:true});const charged=Array.from(art.mesh.instanceMatrix.array),pose=roFirstPersonAttackPose(u,[],10,5);assert.equal(pose.charging,true);assert.equal(pose.active,false);assert.equal(pose.charge,.5);assert.equal(art.stats().casting,true);delete u.roCasting;u.roSkillRelease={time:10.1,key:'mg_sight',element:'fire',kind:'buff'};s.bonk.elapsed=6;art.update(s,u,10.25,camera,{enabled:true});assert.equal(art.stats().attack,true);assert.equal(art.stats().casting,false);assert.equal(art.stats().skill,'mg_sight');assert.notDeepEqual(Array.from(art.mesh.instanceMatrix.array),charged);assert.ok(art.mesh.count<=B.parts);assert.equal(art.mesh.material.map,null);art.update(s,u,11,camera,{enabled:true});assert.equal(art.stats().attack,false);}finally{art.dispose();}
+});
+
+test('ranged cursor follows equipped weapons while melee and offhands do not acquire an aiming reticle',()=>{
+ assert.ok(roHasRangedWeapon(hero('bow')));assert.ok(roHasRangedWeapon(hero('rod')));assert.equal(roHasRangedWeapon(hero('knife'),{kind:'projectile'}),false);assert.equal(roHasRangedWeapon({}, {kind:'projectile'}),true);assert.match(RO_RANGED_CURSOR,/16 16, crosshair$/);
+ const shot={source:1,skillKey:'mg_soulstrike',dx:1,dz:0,travelled:0};assert.ok(roFirstPersonShotOffset(shot,1).y>0);assert.deepEqual(roFirstPersonShotOffset({...shot,roMageBolt:true},1),{x:0,y:0,z:0});
 });

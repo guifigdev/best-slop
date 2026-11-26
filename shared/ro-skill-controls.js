@@ -23,12 +23,15 @@ export function finishRoSkillCast(game,unit,stats,attack){
  const casting=unit.roCasting;if(!casting||game.bonk.stage!=='playing'||game.bonk.offer||unit.bonkOffer||game.paused||game.bonk.elapsed<casting.finishAt)return false;
  delete unit.roCasting;if(!unit.alive||!unit.bonkBuild.weapons[casting.key])return false;
  const weapon=BONK_WEAPONS[casting.key],level=unit.bonkBuild.weapons[casting.key];if(!weapon||(unit.mana||0)<roSkillManaCost(weapon,level,stats)||!attack(weapon,level,stats,casting.aim))return false;
- lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[casting.key]=game.bonk.elapsed+roSkillCooldown(weapon,level,stats);return true;
+ recordRoSkillRelease(game,unit,weapon);lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[casting.key]=game.bonk.elapsed+roSkillCooldown(weapon,level,stats);return true;
 }
 const nativeAt=(value,level)=>(Array.isArray(value)?value[Math.min(value.length-1,Math.max(0,level-1))]:value)||0;
 export const roSkillCooldown=(weapon,level,stats={})=>{if(weapon?.key==='basic')return stats.attackDelay??weapon.cooldown/Math.max(.01,stats.haste||1);const native=RO_NATIVE_SKILL_DATA[roSkillSource(weapon)],bonus=stats.skillBonuses?.[roSkillSource(weapon)]||{},seconds=native?nativeAt(native.cooldown,level)/1000:weapon.cooldown/(Math.max(.01,stats.haste||1)*(1+(level-1)*.045));return Math.max(0,(seconds-(bonus.cooldownSeconds||0))*(1-Math.min(1,(bonus.cooldown||0)+(stats.cooldownReduction||0))));};
 export const roSkillAfterCast=(weapon,level,stats={})=>Math.max(0,nativeAt(RO_NATIVE_SKILL_DATA[roSkillSource(weapon)]?.afterCast,level)/1000)*(1-Math.min(1,(stats.afterCastReduction||0)+(stats.skillBonuses?.[roSkillSource(weapon)]?.afterCast||0)));
 function lockRoAction(unit,weapon,level,stats,elapsed){unit.roAfterCastUntil=Math.max(unit.roAfterCastUntil||0,elapsed+roSkillAfterCast(weapon,level,stats));unit.roSkillActionUntil=elapsed+(stats.attackMotion??Math.max(.08,.22/Math.max(1,stats.haste||1)));}
+// A successful release survives snapshot interpolation, including utility skills
+// that do not emit a weapon attack. Starting or cancelling a cast never sets it.
+function recordRoSkillRelease(game,unit,weapon){unit.roSkillRelease={time:game.time,key:weapon.key,element:weapon.element||'physical',kind:weapon.kind};}
 
 
 export function roSkillStatus(game,unit,key,stats={},options={manual:true}){
@@ -55,7 +58,7 @@ export function castRoSkill(game,unit,key,stats,attack,options={manual:true}){
  const status=roSkillStatus(game,unit,key,stats,options);if(!status.ready)return{ok:false,reason:status.readyReason,reasonCode:status.reasonCode};
  if(roIsMount(key)){const ok=toggleRoMount(unit,key);return {ok,reason:unit.roMountSkill===key?'Montado':'Desmontado',reasonCode:'mount'};}
  const weapon=key==='basic'?roBasicAttack(unit):BONK_WEAPONS[key],level=unit.bonkBuild.weapons[key],cast=roSkillCastTime(weapon,level,stats),aim=options.aim||activeRoManualAim(game,unit);if(cast.total>1e-6){unit.castAt=game.time;unit.bonkDashUntil=0;delete unit.roIceMotion;unit.roCasting={key,level,...(aim?{aim:{x:aim.x,z:aim.z,...(aim.target!==undefined?{target:aim.target}:{})}}:{}),started:game.bonk.elapsed,finishAt:game.bonk.elapsed+cast.total,duration:cast.total,variable:cast.variable,fixed:cast.fixed};return{ok:true,reason:'Conjurando '+weapon.name,reasonCode:'casting'};}if(typeof attack!=='function'||!attack(weapon,level,stats,aim))return{ok:false,reason:'Sem inimigo no alcance',reasonCode:'target'};
- lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[key]=game.bonk.elapsed+status.cooldown;return{ok:true,reason:'Habilidade usada',reasonCode:'cast'};
+ recordRoSkillRelease(game,unit,weapon);lockRoAction(unit,weapon,level,stats,game.bonk.elapsed);(unit.bonkWeaponAt||={})[key]=game.bonk.elapsed+status.cooldown;return{ok:true,reason:'Habilidade usada',reasonCode:'cast'};
 }
 
 export function setRoSkillAuto(game,unit,key,enabled){
