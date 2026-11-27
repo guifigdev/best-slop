@@ -22,6 +22,6 @@ export function unitBodyContact(a,b,ra=a.collisionRadius||.45,rb=b.collisionRadi
  if(!ha&&!hb)return{depth:ra+rb-d,nx:d?dx/d:1,nz:d?dz/d:0};
  const axes=[];for(const h of [ha,hb])if(h)for(let i=0;i<h.length;i++){const p=h[i],q=h[(i+1)%h.length],x=q.z-p.z,z=p.x-q.x,n=Math.hypot(x,z);if(n)axes.push([x/n,z/n]);}
  if(!ha||!hb){const circle=ha?b:a,h=ha||hb;let nearest=h[0];for(const p of h)if(Math.hypot(p.x-circle.x,p.z-circle.z)<Math.hypot(nearest.x-circle.x,nearest.z-circle.z))nearest=p;const x=circle.x-nearest.x,z=circle.z-nearest.z,n=Math.hypot(x,z);if(n)axes.push([x/n,z/n]);}
- const project=(u,h,r,x,z)=>h?h.reduce((v,p)=>[Math.min(v[0],p.x*x+p.z*z),Math.max(v[1],p.x*x+p.z*z)],[Infinity,-Infinity]):[u.x*x+u.z*z-r,u.x*x+u.z*z+r];
+ const project=(u,h,r,x,z)=>{if(!h){const center=u.x*x+u.z*z;return[center-r,center+r];}let min=Infinity,max=-Infinity;for(const p of h){const value=p.x*x+p.z*z;min=Math.min(min,value);max=Math.max(max,value);}return[min,max];};
  let result={depth:Infinity,nx:1,nz:0};for(let [x,z]of axes){const aa=project(a,ha,ra,x,z),bb=project(b,hb,rb,x,z),depth=Math.min(aa[1]-bb[0],bb[1]-aa[0]);if(depth<result.depth){if(x*dx+z*dz<0){x=-x;z=-z;}result={depth,nx:x,nz:z};}}return result;
 }

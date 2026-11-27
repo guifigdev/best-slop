@@ -1,0 +1,620 @@
+{
+  "baselineCommit": "1c0b149c60c3af91559145a4bece9112d8088ad4",
+  "afterSourceSha256": {
+    "shared/unit-collision.js": "7c08b9250a6e3d5f76da55d03c0d205d556b0f5276da42a48e042dffca502c91",
+    "shared/unit-body-shape.js": "3097eb5bb6f53b61384a265aa37a5d733b395fed0b643fb75afd53bbfd9f0d31"
+  },
+  "scope": "Synthetic Node CPU only, not GPU or FPS. V8 sampling enabled on both runs.",
+  "equivalence": {
+    "denseScenes": 40,
+    "positionsAndCollisionCounters": "exact match against baseline resolver",
+    "scenarioUnitsEventPeaksAndSnapshotBytes": "unchanged"
+  },
+  "before": {
+    "date": "2026-11-27T21:12:53.002Z",
+    "node": "v24.11.1",
+    "cpu": "AMD Ryzen 5 5600G with Radeon Graphics         ",
+    "platform": "win32",
+    "steps": 180,
+    "dt": 0.03333333333333333,
+    "seed": 271127,
+    "synthetic": true,
+    "measuresGPU": false,
+    "cases": [
+      {
+        "name": "0 monsters; no automatic attacks",
+        "skills": [],
+        "units": 1,
+        "peaks": {
+          "effects": 0,
+          "projectiles": 0,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 0.309,
+          "p50Ms": 0.259,
+          "p95Ms": 0.479,
+          "maxMs": 1.243
+        },
+        "snapshot": {
+          "meanMs": 0.418,
+          "p50Ms": 0.294,
+          "p95Ms": 0.557,
+          "maxMs": 4.694
+        },
+        "stringify": {
+          "meanMs": 1.16,
+          "p50Ms": 1.104,
+          "p95Ms": 1.355,
+          "maxMs": 2.445
+        },
+        "bonkStats": {
+          "meanMs": 0.11,
+          "p50Ms": 0.122,
+          "p95Ms": 0.177,
+          "maxMs": 0.388
+        },
+        "inventoryMarkup": {
+          "meanMs": 1.468,
+          "p50Ms": 0.152,
+          "p95Ms": 0.376,
+          "maxMs": 64.656
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.369,
+          "p50Ms": 0.264,
+          "p95Ms": 0.615,
+          "maxMs": 2.74
+        },
+        "fullSnapshotBytes": 231057,
+        "afterStaticAndSkillCacheBytes": 26989
+      },
+      {
+        "name": "60 monsters; no automatic attacks",
+        "skills": [],
+        "units": 61,
+        "peaks": {
+          "effects": 0,
+          "projectiles": 0,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 9.62,
+          "p50Ms": 6.917,
+          "p95Ms": 24.076,
+          "maxMs": 85.916
+        },
+        "snapshot": {
+          "meanMs": 0.469,
+          "p50Ms": 0.396,
+          "p95Ms": 0.717,
+          "maxMs": 2.422
+        },
+        "stringify": {
+          "meanMs": 1.699,
+          "p50Ms": 1.55,
+          "p95Ms": 2.291,
+          "maxMs": 3.025
+        },
+        "bonkStats": {
+          "meanMs": 0.078,
+          "p50Ms": 0.07,
+          "p95Ms": 0.127,
+          "maxMs": 0.195
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.146,
+          "p50Ms": 0.112,
+          "p95Ms": 0.303,
+          "maxMs": 0.339
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.289,
+          "p50Ms": 0.224,
+          "p95Ms": 0.504,
+          "maxMs": 1.182
+        },
+        "fullSnapshotBytes": 274046,
+        "afterStaticAndSkillCacheBytes": 69978
+      },
+      {
+        "name": "140 monsters; automatic mage skills",
+        "skills": [
+          "mg_lightningbolt",
+          "mg_soulstrike",
+          "mg_frostdiver",
+          "wz_meteor",
+          "wz_jupitel",
+          "mg_thunderstorm"
+        ],
+        "units": 141,
+        "peaks": {
+          "effects": 89,
+          "projectiles": 5,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 44.698,
+          "p50Ms": 28.027,
+          "p95Ms": 162.196,
+          "maxMs": 345.934
+        },
+        "snapshot": {
+          "meanMs": 0.489,
+          "p50Ms": 0.44,
+          "p95Ms": 0.615,
+          "maxMs": 2.43
+        },
+        "stringify": {
+          "meanMs": 2.859,
+          "p50Ms": 2.765,
+          "p95Ms": 3.539,
+          "maxMs": 3.91
+        },
+        "bonkStats": {
+          "meanMs": 0.13,
+          "p50Ms": 0.147,
+          "p95Ms": 0.217,
+          "maxMs": 0.269
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.432,
+          "p50Ms": 0.123,
+          "p95Ms": 0.309,
+          "maxMs": 14.248
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 1.21,
+          "p50Ms": 1.287,
+          "p95Ms": 1.666,
+          "maxMs": 2.143
+        },
+        "fullSnapshotBytes": 612829,
+        "afterStaticAndSkillCacheBytes": 148636
+      },
+      {
+        "name": "280 monsters; automatic mage skills",
+        "skills": [
+          "mg_lightningbolt",
+          "mg_soulstrike",
+          "mg_frostdiver",
+          "wz_meteor",
+          "wz_jupitel",
+          "mg_thunderstorm"
+        ],
+        "units": 281,
+        "peaks": {
+          "effects": 46,
+          "projectiles": 5,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 215.17,
+          "p50Ms": 109.842,
+          "p95Ms": 907.356,
+          "maxMs": 1763.145
+        },
+        "snapshot": {
+          "meanMs": 0.37,
+          "p50Ms": 0.316,
+          "p95Ms": 0.572,
+          "maxMs": 1.842
+        },
+        "stringify": {
+          "meanMs": 3.703,
+          "p50Ms": 3.588,
+          "p95Ms": 4.236,
+          "maxMs": 7.492
+        },
+        "bonkStats": {
+          "meanMs": 0.088,
+          "p50Ms": 0.075,
+          "p95Ms": 0.143,
+          "maxMs": 0.36
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.129,
+          "p50Ms": 0.109,
+          "p95Ms": 0.219,
+          "maxMs": 0.221
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.867,
+          "p50Ms": 0.824,
+          "p95Ms": 1.295,
+          "maxMs": 1.591
+        },
+        "fullSnapshotBytes": 715284,
+        "afterStaticAndSkillCacheBytes": 251091
+      }
+    ],
+    "sampledHotspots": [
+      {
+        "name": "(anonymous)",
+        "file": "unit-collision.js",
+        "selfPercent": 35.63
+      },
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 18.09
+      },
+      {
+        "name": "resolveUnitCollisions",
+        "file": "unit-collision.js",
+        "selfPercent": 7.68
+      },
+      {
+        "name": "nearby",
+        "file": "unit-collision.js",
+        "selfPercent": 7.11
+      },
+      {
+        "name": "tickBonk",
+        "file": "bonk.js",
+        "selfPercent": 5.07
+      },
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 4.51
+      },
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 2.96
+      },
+      {
+        "name": "(garbage collector)",
+        "file": "",
+        "selfPercent": 2.14
+      },
+      {
+        "name": "(anonymous)",
+        "file": "unit-collision.js",
+        "selfPercent": 2.13
+      },
+      {
+        "name": "unitBodyHull",
+        "file": "unit-body-shape.js",
+        "selfPercent": 1.35
+      },
+      {
+        "name": "unitBlocked",
+        "file": "unit-collision.js",
+        "selfPercent": 0.96
+      },
+      {
+        "name": "unitsPhysicallyCollide",
+        "file": "unit-footprint.js",
+        "selfPercent": 0.96
+      },
+      {
+        "name": "unitHasPhysicalBody",
+        "file": "unit-footprint.js",
+        "selfPercent": 0.95
+      },
+      {
+        "name": "(anonymous)",
+        "file": "profile-ragnabonk.mjs",
+        "selfPercent": 0.91
+      },
+      {
+        "name": "spatial",
+        "file": "unit-collision.js",
+        "selfPercent": 0.87
+      },
+      {
+        "name": "(anonymous)",
+        "file": "unit-collision.js",
+        "selfPercent": 0.77
+      }
+    ]
+  },
+  "after": {
+    "date": "2026-11-27T21:19:52.006Z",
+    "node": "v24.11.1",
+    "cpu": "AMD Ryzen 5 5600G with Radeon Graphics         ",
+    "platform": "win32",
+    "steps": 180,
+    "dt": 0.03333333333333333,
+    "seed": 271127,
+    "synthetic": true,
+    "measuresGPU": false,
+    "cases": [
+      {
+        "name": "0 monsters; no automatic attacks",
+        "skills": [],
+        "units": 1,
+        "peaks": {
+          "effects": 0,
+          "projectiles": 0,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 0.29,
+          "p50Ms": 0.273,
+          "p95Ms": 0.429,
+          "maxMs": 0.752
+        },
+        "snapshot": {
+          "meanMs": 0.36,
+          "p50Ms": 0.267,
+          "p95Ms": 0.431,
+          "maxMs": 3.9
+        },
+        "stringify": {
+          "meanMs": 1.128,
+          "p50Ms": 1.073,
+          "p95Ms": 1.418,
+          "maxMs": 1.612
+        },
+        "bonkStats": {
+          "meanMs": 0.109,
+          "p50Ms": 0.065,
+          "p95Ms": 0.296,
+          "maxMs": 1.535
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.698,
+          "p50Ms": 0.139,
+          "p95Ms": 0.257,
+          "maxMs": 27.669
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.35,
+          "p50Ms": 0.255,
+          "p95Ms": 0.614,
+          "maxMs": 2.896
+        },
+        "fullSnapshotBytes": 231057,
+        "afterStaticAndSkillCacheBytes": 26989
+      },
+      {
+        "name": "60 monsters; no automatic attacks",
+        "skills": [],
+        "units": 61,
+        "peaks": {
+          "effects": 0,
+          "projectiles": 0,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 6.645,
+          "p50Ms": 5.509,
+          "p95Ms": 16.004,
+          "maxMs": 26.092
+        },
+        "snapshot": {
+          "meanMs": 0.295,
+          "p50Ms": 0.248,
+          "p95Ms": 0.399,
+          "maxMs": 1.676
+        },
+        "stringify": {
+          "meanMs": 1.437,
+          "p50Ms": 1.375,
+          "p95Ms": 1.922,
+          "maxMs": 2.205
+        },
+        "bonkStats": {
+          "meanMs": 0.076,
+          "p50Ms": 0.07,
+          "p95Ms": 0.101,
+          "maxMs": 0.213
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.14,
+          "p50Ms": 0.107,
+          "p95Ms": 0.184,
+          "maxMs": 1.354
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.23,
+          "p50Ms": 0.21,
+          "p95Ms": 0.32,
+          "maxMs": 0.544
+        },
+        "fullSnapshotBytes": 274046,
+        "afterStaticAndSkillCacheBytes": 69978
+      },
+      {
+        "name": "140 monsters; automatic mage skills",
+        "skills": [
+          "mg_lightningbolt",
+          "mg_soulstrike",
+          "mg_frostdiver",
+          "wz_meteor",
+          "wz_jupitel",
+          "mg_thunderstorm"
+        ],
+        "units": 141,
+        "peaks": {
+          "effects": 89,
+          "projectiles": 5,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 28.384,
+          "p50Ms": 25.037,
+          "p95Ms": 62.088,
+          "maxMs": 105.841
+        },
+        "snapshot": {
+          "meanMs": 0.476,
+          "p50Ms": 0.411,
+          "p95Ms": 0.661,
+          "maxMs": 2.066
+        },
+        "stringify": {
+          "meanMs": 3.027,
+          "p50Ms": 2.84,
+          "p95Ms": 3.615,
+          "maxMs": 4.357
+        },
+        "bonkStats": {
+          "meanMs": 0.134,
+          "p50Ms": 0.147,
+          "p95Ms": 0.196,
+          "maxMs": 0.23
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.418,
+          "p50Ms": 0.179,
+          "p95Ms": 0.26,
+          "maxMs": 11.46
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 1.442,
+          "p50Ms": 1.475,
+          "p95Ms": 2.321,
+          "maxMs": 5.289
+        },
+        "fullSnapshotBytes": 612829,
+        "afterStaticAndSkillCacheBytes": 148636
+      },
+      {
+        "name": "280 monsters; automatic mage skills",
+        "skills": [
+          "mg_lightningbolt",
+          "mg_soulstrike",
+          "mg_frostdiver",
+          "wz_meteor",
+          "wz_jupitel",
+          "mg_thunderstorm"
+        ],
+        "units": 281,
+        "peaks": {
+          "effects": 46,
+          "projectiles": 5,
+          "zones": 0
+        },
+        "tick": {
+          "meanMs": 90.139,
+          "p50Ms": 86.864,
+          "p95Ms": 167.195,
+          "maxMs": 308.857
+        },
+        "snapshot": {
+          "meanMs": 0.371,
+          "p50Ms": 0.302,
+          "p95Ms": 0.588,
+          "maxMs": 1.735
+        },
+        "stringify": {
+          "meanMs": 4.091,
+          "p50Ms": 3.8,
+          "p95Ms": 5.767,
+          "maxMs": 7.144
+        },
+        "bonkStats": {
+          "meanMs": 0.079,
+          "p50Ms": 0.072,
+          "p95Ms": 0.108,
+          "maxMs": 0.207
+        },
+        "inventoryMarkup": {
+          "meanMs": 0.141,
+          "p50Ms": 0.112,
+          "p95Ms": 0.255,
+          "maxMs": 0.496
+        },
+        "skillLibraryMarkup": {
+          "meanMs": 0.866,
+          "p50Ms": 0.776,
+          "p95Ms": 1.476,
+          "maxMs": 1.869
+        },
+        "fullSnapshotBytes": 715284,
+        "afterStaticAndSkillCacheBytes": 251091
+      }
+    ],
+    "sampledHotspots": [
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 26.97
+      },
+      {
+        "name": "resolveUnitCollisions",
+        "file": "unit-collision.js",
+        "selfPercent": 12.77
+      },
+      {
+        "name": "nearby",
+        "file": "unit-collision.js",
+        "selfPercent": 12.61
+      },
+      {
+        "name": "tickBonk",
+        "file": "bonk.js",
+        "selfPercent": 9.58
+      },
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 5.56
+      },
+      {
+        "name": "unitBodyContact",
+        "file": "unit-body-shape.js",
+        "selfPercent": 4.53
+      },
+      {
+        "name": "(garbage collector)",
+        "file": "",
+        "selfPercent": 2.85
+      },
+      {
+        "name": "unitBlocked",
+        "file": "unit-collision.js",
+        "selfPercent": 2.61
+      },
+      {
+        "name": "unitBodyHull",
+        "file": "unit-body-shape.js",
+        "selfPercent": 2.17
+      },
+      {
+        "name": "unitHasPhysicalBody",
+        "file": "unit-footprint.js",
+        "selfPercent": 1.95
+      },
+      {
+        "name": "(anonymous)",
+        "file": "profile-ragnabonk.mjs",
+        "selfPercent": 1.89
+      },
+      {
+        "name": "spatial",
+        "file": "unit-collision.js",
+        "selfPercent": 1.59
+      },
+      {
+        "name": "(anonymous)",
+        "file": "unit-collision.js",
+        "selfPercent": 1.53
+      },
+      {
+        "name": "nearby",
+        "file": "unit-collision.js",
+        "selfPercent": 1.24
+      },
+      {
+        "name": "space",
+        "file": "unit-footprint.js",
+        "selfPercent": 0.81
+      },
+      {
+        "name": "unitBodyHull",
+        "file": "unit-body-shape.js",
+        "selfPercent": 0.57
+      },
+      {
+        "name": "unitsPhysicallyCollide",
+        "file": "unit-footprint.js",
+        "selfPercent": 0.56
+      }
+    ]
+  }
+}

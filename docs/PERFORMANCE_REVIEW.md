@@ -1,5 +1,7 @@
 # Revisão de desempenho — 19/11/2026
 
+> Registro histórico dos cenários de Castle Fight. Para o diagnóstico atual de Ragnabonk, colisões, efeitos e comparação com Godot, consulte [Performance e Godot, de 27/11/2026](architecture/PERFORMANCE_E_GODOT.md).
+
 Esta revisão mede CPU e tamanho de snapshots em cenários sintéticos pelo Node. **Não mede FPS, GPU, draw calls reais nem bateria de celular.** A arte voxel, cores de vértice e animação em poses a 8 Hz foram preservadas. Não é recomendável suavizar toda a imagem ou reduzir a legibilidade para esconder gargalos de CPU.
 
 ## Reprodução e limites

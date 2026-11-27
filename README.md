@@ -1,6 +1,10 @@
 # Custom Hero — Pátio dos Nove Reinos
 
-Jogo independente para navegador, com combate RTS e personagens e bestas voxel originais. Arte sem texturas, cores de vértice, corpos agrupados, terreno e plateia instanciados. Movimentos usam clipes de poses pré-calculadas a 8 Hz; não é um pipeline de Blender/VAT.
+Jogo para navegador em JavaScript e Three.js, com simulação compartilhada com servidor Node.js. O conjunto inclui Custom Hero e modos adicionais, entre eles Ragnarok/Ragnabonk. Arte usa esculturas voxel/facetadas, geometria consolidada e instanciamento; ícones, atlas, áudio e algumas animações também usam assets importados. A animação combina poses e rigs procedurais; o pipeline principal não é Blender/VAT.
+
+## Manual técnico atual
+
+A [documentação consolidada de arquitetura](docs/architecture/README.md) cobre runtime, rede, padrões, regras de negócio, voxel art, animação, shaders e inventário dos módulos. O [diagnóstico de performance e comparação com Godot](docs/architecture/PERFORMANCE_E_GODOT.md) registra as medições de 27/11/2026 e o plano para melhorar o visual sem sacrificar a horda. As seções históricas abaixo podem descrever etapas anteriores; use o manual e o código para conferir o estado atual.
 
 ## Produção e modos novos
 

@@ -28,14 +28,22 @@ export function beginUnitMotion(game,u,intended=false){let m=motions.get(u);if(!
 function finalizeMotion(game,u){const m=motions.get(u);if(m?.time===game.time)u.moving=m.intended&&Math.hypot(u.x-m.x,u.z-m.z)>.002;}
 const ignored=(id,ignore)=>Array.isArray(ignore)?ignore.includes(id):ignore instanceof Set?ignore.has(id):ignore!==undefined&&id===ignore;
 
-export function unitBlocked(game,u,point,ignoreId){
- if(solidBlocked(game,u,point))return true;const radius=unitRadius(u);
- return (game.units||[]).some(other=>!ignored(other.id,ignoreId)&&live(other)&&compatible(u,other)&&unitsPhysicallyCollide(u,other)&&unitBodyContact({...u,...point},other,radius,unitRadius(other)).depth>EPS);
+export function unitBlocked(game,u,point,ignoreId,hash=null){
+ if(solidBlocked(game,u,point))return true;const radius=unitRadius(u),probe=point===u?u:{...u,...point};
+ for(const other of hash?nearby(hash,u,point):game.units||[]){
+  if(ignored(other.id,ignoreId)||!live(other)||!compatible(u,other)||!unitsPhysicallyCollide(u,other))continue;
+  const otherRadius=unitRadius(other),dx=point.x-other.x,dz=point.z-other.z,reach=radius+otherRadius+.1;
+  // Same conservative broad phase as unitBodyContact; avoid a hull/SAT and
+  // copying the complete actor for every far-away recovery candidate.
+  if(dx*dx+dz*dz>reach*reach)continue;
+  if(unitBodyContact(probe,other,radius,otherRadius).depth>EPS)return true;
+ }
+ return false;
 }
 
 function bucketKey(u,x=u.x,z=u.z){return`${space(u)}|${layer(u)}|${Math.floor(x/BUCKET)},${Math.floor(z/BUCKET)}`;}
 function spatial(units){const result=new Map();result.maxRadius=units.reduce((r,u)=>Math.max(r,unitRadius(u)),0);for(const unit of units){const key=bucketKey(unit),list=result.get(key)||[];list.push(unit);result.set(key,list);}return result;}
-function nearby(hash,u){const result=[],x=Math.floor(u.x/BUCKET),z=Math.floor(u.z/BUCKET),prefix=`${space(u)}|${layer(u)}|`,reach=Math.max(1,Math.ceil((unitRadius(u)+(hash.maxRadius||0))/BUCKET));for(let dx=-reach;dx<=reach;dx++)for(let dz=-reach;dz<=reach;dz++){const bucket=hash.get(`${prefix}${x+dx},${z+dz}`);if(bucket)result.push(...bucket);}return result;}
+function nearby(hash,u,point=u){const result=[],x=Math.floor(point.x/BUCKET),z=Math.floor(point.z/BUCKET),prefix=`${space(u)}|${layer(u)}|`,reach=Math.max(1,Math.ceil((unitRadius(u)+(hash.maxRadius||0))/BUCKET));for(let dx=-reach;dx<=reach;dx++)for(let dz=-reach;dz<=reach;dz++){const bucket=hash.get(`${prefix}${x+dx},${z+dz}`);if(bucket)result.push(...bucket);}return result;}
 function idAngle(a,b){let hash=2166136261;for(const char of `${a.id}:${b.id}`)hash=Math.imul(hash^char.charCodeAt(0),16777619);return(hash>>>0)/4294967296*Math.PI*2;}
 
 function slide(game,u,destination){const p=bounded(game,u,destination),dx=p.x-u.x,dz=p.z-u.z,steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.15));for(let i=0;i<steps;i++){const next=bounded(game,u,{x:u.x+dx/steps,z:u.z+dz/steps});if(unitSegmentClear(game,u,u,next)){u.x=next.x;u.z=next.z;continue;}const x={x:next.x,z:u.z},z={x:u.x,z:next.z};if(Math.abs(dx)>EPS&&!solidBlocked(game,u,x)&&unitSegmentClear(game,u,u,x))u.x=x.x;else if(Math.abs(dz)>EPS&&!solidBlocked(game,u,z)&&unitSegmentClear(game,u,u,z))u.z=z.z;else break;}}
@@ -50,7 +58,7 @@ export function resolveUnitCollisions(game,dt){
    }if(penetration<=EPS)break;}
  // Recover coincident/legacy spawns that were already invalid. Candidates stay
  // in the same cell and require a solid-free path; walls are never tunneled.
- const maxRadius=units.reduce((r,u)=>Math.max(r,unitRadius(u)),.4),recoveryScale=game.options?.mode==='bonk'?.8:Math.max(.8,maxRadius*2),maxDistance=Math.min(12,Math.max(3,Math.sqrt(units.length)*recoveryScale));let recoveryHash=spatial(units);for(const unit of units){const overlaps=nearby(recoveryHash,unit).some(other=>unitsPhysicallyCollide(unit,other)&&unitBodyContact(unit,other,unitRadius(unit),unitRadius(other)).depth>EPS);if(!wallBlocked(game,unit,unit)&&!overlaps)continue;if(!unitBlocked(game,unit,unit))continue;const origin={x:unit.x,z:unit.z},step=Math.max(.25,unitRadius(unit)*.6);let found=null;for(let radius=step;radius<=maxDistance&&!found;radius+=step){const count=Math.max(12,Math.ceil(Math.PI*2*radius/step));for(let i=0;i<count;i++){const angle=i/count*Math.PI*2,p=bounded(game,unit,{x:origin.x+Math.cos(angle)*radius,z:origin.z+Math.sin(angle)*radius});if(!unitBlocked(game,unit,p)&&clearPath(game,unit,p)){found=p;break;}}}if(found){unit.x=found.x;unit.z=found.z;recoveryHash=spatial(units);}}
+ const maxRadius=units.reduce((r,u)=>Math.max(r,unitRadius(u)),.4),recoveryScale=game.options?.mode==='bonk'?.8:Math.max(.8,maxRadius*2),maxDistance=Math.min(12,Math.max(3,Math.sqrt(units.length)*recoveryScale));let recoveryHash=spatial(units);for(const unit of units){const overlaps=nearby(recoveryHash,unit).some(other=>unitsPhysicallyCollide(unit,other)&&unitBodyContact(unit,other,unitRadius(unit),unitRadius(other)).depth>EPS);if(!wallBlocked(game,unit,unit)&&!overlaps)continue;if(!unitBlocked(game,unit,unit,undefined,recoveryHash))continue;const origin={x:unit.x,z:unit.z},step=Math.max(.25,unitRadius(unit)*.6);let found=null;for(let radius=step;radius<=maxDistance&&!found;radius+=step){const count=Math.max(12,Math.ceil(Math.PI*2*radius/step));for(let i=0;i<count;i++){const angle=i/count*Math.PI*2,p=bounded(game,unit,{x:origin.x+Math.cos(angle)*radius,z:origin.z+Math.sin(angle)*radius});if(!unitBlocked(game,unit,p,undefined,recoveryHash)&&clearPath(game,unit,p)){found=p;break;}}}if(found){unit.x=found.x;unit.z=found.z;recoveryHash=spatial(units);}}
  for(const unit of units)finalizeMotion(game,unit);
  const hash=spatial(units);let unresolved=0;for(const a of units)for(const b of nearby(hash,a))if(order(a,b)<0&&unitsPhysicallyCollide(a,b)&&unitBodyContact(a,b,unitRadius(a),unitRadius(b)).depth>EPS)unresolved++;return{pairs,passes,unresolved};
 }

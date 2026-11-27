@@ -23,6 +23,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: node scripts/check-architecture-docs.mjs
       - run: node --test --test-concurrency=2 tests/*.test.js
       - run: npm run build
   deploy:

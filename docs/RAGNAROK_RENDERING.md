@@ -1,5 +1,7 @@
 # Renderização do mundo de Midgard
 
+> Este documento registra a evolução da renderização. O desenho consolidado atual e seus limites estão no [manual de arquitetura](architecture/README.md), com capítulos próprios para voxel art, shaders e performance.
+
 O limite físico continua em 115 unidades de cada lado; o terreno e as silhuetas se estendem até 518,4. O horizonte mistura a paisagem com a atmosfera, e a região seguinte aparece na paleta do terreno junto à passagem. Não há um plano azul representando o fim do mapa.
 
 Os lotes de instâncias guardam seus dados de origem. A cada quadro, depois de posicionar a câmera, o recorte espacial rejeita células e compacta as instâncias e os índices de terreno que intersectam o enquadramento. Girar a câmera restaura corretamente os dados originais. Só as linhas necessárias são atualizadas na GPU. Personagens, rastros de armas e avisos também têm recorte por câmera.
