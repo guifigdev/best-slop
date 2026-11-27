@@ -26,12 +26,13 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | .wav | 525 | 20911376 |
 | .woff2 | 4 | 102260 |
 
-## src (351 módulos)
+## src (358 módulos)
 
 | Módulo | Bytes de fonte | Imports locais encontrados |
 | --- | ---: | ---: |
 | [src/ability-cooldown.css](../../src/ability-cooldown.css) | 2237 | 0 |
 | [src/actor-identity.js](../../src/actor-identity.js) | 1371 | 10 |
+| [src/actor-lod.js](../../src/actor-lod.js) | 857 | 0 |
 | [src/animal-sculptures.js](../../src/animal-sculptures.js) | 8272 | 0 |
 | [src/animation-profiles.js](../../src/animation-profiles.js) | 576 | 0 |
 | [src/army-art.js](../../src/army-art.js) | 7042 | 6 |
@@ -122,6 +123,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/game-window-dragging.css](../../src/game-window-dragging.css) | 849 | 0 |
 | [src/game-window-dragging.js](../../src/game-window-dragging.js) | 5620 | 1 |
 | [src/gameplay-hud.css](../../src/gameplay-hud.css) | 8483 | 0 |
+| [src/gpu-frame-timer.js](../../src/gpu-frame-timer.js) | 2438 | 0 |
 | [src/habitat-scenery.js](../../src/habitat-scenery.js) | 2078 | 0 |
 | [src/hazard-art.js](../../src/hazard-art.js) | 6676 | 1 |
 | [src/health-bars.js](../../src/health-bars.js) | 534 | 1 |
@@ -149,7 +151,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/loot-ui.js](../../src/loot-ui.js) | 14482 | 6 |
 | [src/loot-world-pose.js](../../src/loot-world-pose.js) | 269 | 0 |
 | [src/loot.css](../../src/loot.css) | 10928 | 0 |
-| [src/main.js](../../src/main.js) | 115637 | 114 |
+| [src/main.js](../../src/main.js) | 116038 | 116 |
 | [src/map-editor.js](../../src/map-editor.js) | 14188 | 4 |
 | [src/market.js](../../src/market.js) | 11355 | 2 |
 | [src/mobile-hud.js](../../src/mobile-hud.js) | 12682 | 6 |
@@ -169,6 +171,9 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/online-room-ui.js](../../src/online-room-ui.js) | 9475 | 7 |
 | [src/online-room.css](../../src/online-room.css) | 13017 | 1 |
 | [src/overlay-policy.js](../../src/overlay-policy.js) | 493 | 0 |
+| [src/performance-hud.css](../../src/performance-hud.css) | 1694 | 0 |
+| [src/performance-hud.js](../../src/performance-hud.js) | 5667 | 2 |
+| [src/performance-samples.js](../../src/performance-samples.js) | 1903 | 0 |
 | [src/permanent-ui.js](../../src/permanent-ui.js) | 2137 | 4 |
 | [src/phase-killer-art.js](../../src/phase-killer-art.js) | 21179 | 3 |
 | [src/phase-killer-scenery-art.js](../../src/phase-killer-scenery-art.js) | 7041 | 0 |
@@ -199,6 +204,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/ragnarok-tower-art-a.js](../../src/ragnarok-tower-art-a.js) | 30800 | 2 |
 | [src/ragnarok-tower-art-b.js](../../src/ragnarok-tower-art-b.js) | 29331 | 9 |
 | [src/ragnarok-tower-finale-art.js](../../src/ragnarok-tower-finale-art.js) | 3728 | 0 |
+| [src/render-prewarm.js](../../src/render-prewarm.js) | 2865 | 0 |
 | [src/ro-arrow-rain-art.js](../../src/ro-arrow-rain-art.js) | 5146 | 1 |
 | [src/ro-assassin-impact-art.js](../../src/ro-assassin-impact-art.js) | 6266 | 1 |
 | [src/ro-atlas-shaders.js](../../src/ro-atlas-shaders.js) | 3069 | 0 |
@@ -257,6 +263,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/ro-mining-art.js](../../src/ro-mining-art.js) | 3841 | 1 |
 | [src/ro-mobile-hud.css](../../src/ro-mobile-hud.css) | 12830 | 0 |
 | [src/ro-mobile-hud.js](../../src/ro-mobile-hud.js) | 5679 | 3 |
+| [src/ro-model-prewarm-worker.js](../../src/ro-model-prewarm-worker.js) | 868 | 1 |
 | [src/ro-monster-death.js](../../src/ro-monster-death.js) | 3586 | 1 |
 | [src/ro-mount-art.js](../../src/ro-mount-art.js) | 702 | 1 |
 | [src/ro-mvp-domain-art.js](../../src/ro-mvp-domain-art.js) | 5281 | 0 |
@@ -323,8 +330,8 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/scene-state.js](../../src/scene-state.js) | 1872 | 1 |
 | [src/scenery-tree-art.js](../../src/scenery-tree-art.js) | 1872 | 0 |
 | [src/scenery.js](../../src/scenery.js) | 2968 | 4 |
-| [src/setup-ui.js](../../src/setup-ui.js) | 5439 | 4 |
-| [src/setup.css](../../src/setup.css) | 2501 | 0 |
+| [src/setup-ui.js](../../src/setup-ui.js) | 5948 | 5 |
+| [src/setup.css](../../src/setup.css) | 2636 | 0 |
 | [src/shop-access.js](../../src/shop-access.js) | 405 | 0 |
 | [src/shop-guide.css](../../src/shop-guide.css) | 3618 | 0 |
 | [src/shop-guide.js](../../src/shop-guide.js) | 6962 | 3 |
@@ -357,7 +364,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [src/unit-inspector.js](../../src/unit-inspector.js) | 15407 | 12 |
 | [src/unit-ownership.js](../../src/unit-ownership.js) | 400 | 0 |
 | [src/unit-selection-footprint.js](../../src/unit-selection-footprint.js) | 437 | 1 |
-| [src/view.js](../../src/view.js) | 106999 | 115 |
+| [src/view.js](../../src/view.js) | 110187 | 119 |
 | [src/visual-fluid.js](../../src/visual-fluid.js) | 5615 | 0 |
 | [src/voxel-fire.js](../../src/voxel-fire.js) | 3313 | 0 |
 | [src/voxel-fluid-surface.js](../../src/voxel-fluid-surface.js) | 2818 | 0 |
@@ -676,7 +683,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [scripts/ro-client-bmp.mjs](../../scripts/ro-client-bmp.mjs) | 1437 | 0 |
 | [scripts/transcribe-ro-midi.py](../../scripts/transcribe-ro-midi.py) | 6298 | 1 |
 
-## tests (388 módulos)
+## tests (390 módulos)
 
 | Módulo | Bytes de fonte | Imports locais encontrados |
 | --- | ---: | ---: |
@@ -827,6 +834,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [tests/nordic-heroes.test.js](../../tests/nordic-heroes.test.js) | 2242 | 2 |
 | [tests/nordic-monster-art.test.js](../../tests/nordic-monster-art.test.js) | 3031 | 5 |
 | [tests/online-all-modes.test.js](../../tests/online-all-modes.test.js) | 15972 | 5 |
+| [tests/performance-monitor.test.js](../../tests/performance-monitor.test.js) | 4561 | 3 |
 | [tests/permanent-enchants.test.js](../../tests/permanent-enchants.test.js) | 12258 | 2 |
 | [tests/phase-chat-overlay.test.js](../../tests/phase-chat-overlay.test.js) | 4944 | 1 |
 | [tests/phase-killer-assets.test.js](../../tests/phase-killer-assets.test.js) | 5817 | 2 |
@@ -869,6 +877,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [tests/ragnarok-tower-drops.test.js](../../tests/ragnarok-tower-drops.test.js) | 3424 | 3 |
 | [tests/ragnarok-visual-integration.test.js](../../tests/ragnarok-visual-integration.test.js) | 4015 | 8 |
 | [tests/realms.test.js](../../tests/realms.test.js) | 6667 | 7 |
+| [tests/render-prewarm-lod.test.js](../../tests/render-prewarm-lod.test.js) | 4172 | 4 |
 | [tests/ro-account-card-inventory.test.js](../../tests/ro-account-card-inventory.test.js) | 5245 | 6 |
 | [tests/ro-accounts.test.js](../../tests/ro-accounts.test.js) | 24474 | 6 |
 | [tests/ro-arrow-rain.test.js](../../tests/ro-arrow-rain.test.js) | 6845 | 7 |

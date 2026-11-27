@@ -1,0 +1,4 @@
+import {voxelShellGeometry} from './voxel-shell.js';
+// Identical shell builder in a worker; transfer buffers instead of copying them.
+export function bakePrewarmGeometry(parts){const geometry=voxelShellGeometry(parts),attributes={};for(const key of ['position','normal','color']){const a=geometry.getAttribute(key);attributes[key]={array:a.array,itemSize:a.itemSize};}const result={attributes,userData:geometry.userData,bounds:{center:geometry.boundingSphere.center.toArray(),radius:geometry.boundingSphere.radius}};geometry.dispose();return result;}
+if(typeof self!=='undefined')self.onmessage=({data})=>{try{const result=bakePrewarmGeometry(data.parts);self.postMessage({id:data.id,key:data.key,...result},Object.values(result.attributes).map(a=>a.array.buffer));}catch(error){self.postMessage({id:data.id,key:data.key,error:String(error?.message||error)});}};

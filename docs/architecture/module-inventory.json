@@ -2,11 +2,11 @@
   "schema": 1,
   "description": "Textual inventory; binary assets are summarized by extension, not indexed as modules. Excludes generated build outputs. Imports/exports are approximate, not semantic analysis.",
   "counts": {
-    "src": 351,
+    "src": 358,
     "shared": 220,
     "server": 13,
     "scripts": 46,
-    "tests": 388,
+    "tests": 390,
     "deploy": 4,
     "drizzle": 2,
     ".github/workflows": 1
@@ -88,6 +88,18 @@
       "externalImports": [],
       "exports": [
         "actorModelKey"
+      ],
+      "budgets": []
+    },
+    {
+      "path": "src/actor-lod.js",
+      "bytes": 857,
+      "lines": 11,
+      "localImports": [],
+      "externalImports": [],
+      "exports": [
+        "ACTOR_LOD",
+        "actorPoseLod"
       ],
       "budgets": []
     },
@@ -1555,6 +1567,17 @@
       "budgets": []
     },
     {
+      "path": "src/gpu-frame-timer.js",
+      "bytes": 2438,
+      "lines": 20,
+      "localImports": [],
+      "externalImports": [],
+      "exports": [
+        "createGPUFrameTimer"
+      ],
+      "budgets": []
+    },
+    {
       "path": "src/habitat-scenery.js",
       "bytes": 2078,
       "lines": 12,
@@ -1992,8 +2015,8 @@
     },
     {
       "path": "src/main.js",
-      "bytes": 115637,
-      "lines": 414,
+      "bytes": 116038,
+      "lines": 417,
       "localImports": [
         "shared/archetypes.js",
         "shared/arenas.js",
@@ -2065,6 +2088,8 @@
         "src/npc-shop.css",
         "src/online-room-ui.js",
         "src/overlay-policy.js",
+        "src/performance-hud.css",
+        "src/performance-hud.js",
         "src/permanent-ui.js",
         "src/phase-killer-ui.js",
         "src/phase-killer.css",
@@ -2416,6 +2441,45 @@
       "exports": [
         "overlayPausesGame",
         "fountainRecoveryText"
+      ],
+      "budgets": []
+    },
+    {
+      "path": "src/performance-hud.css",
+      "bytes": 1694,
+      "lines": 2,
+      "localImports": [],
+      "externalImports": [],
+      "exports": [],
+      "budgets": []
+    },
+    {
+      "path": "src/performance-hud.js",
+      "bytes": 5667,
+      "lines": 19,
+      "localImports": [
+        "src/floating-window.js",
+        "src/performance-samples.js"
+      ],
+      "externalImports": [],
+      "exports": [
+        "PERFORMANCE_STORAGE_KEY",
+        "PERFORMANCE_DEFAULTS",
+        "performancePreference",
+        "performanceSettingsMarkup",
+        "createPerformanceHUD"
+      ],
+      "budgets": []
+    },
+    {
+      "path": "src/performance-samples.js",
+      "bytes": 1903,
+      "lines": 10,
+      "localImports": [],
+      "externalImports": [],
+      "exports": [
+        "PERFORMANCE_SAMPLE_CAPACITY",
+        "createPerformanceSamples"
       ],
       "budgets": []
     },
@@ -2902,6 +2966,24 @@
         "ragnarokTowerFinaleSpec"
       ],
       "budgets": []
+    },
+    {
+      "path": "src/render-prewarm.js",
+      "bytes": 2865,
+      "lines": 21,
+      "localImports": [],
+      "externalImports": [],
+      "exports": [
+        "RENDER_PREWARM_BUDGET",
+        "resolvePrewarmWorkerURL",
+        "createRenderPrewarm"
+      ],
+      "budgets": [
+        {
+          "name": "RENDER_PREWARM_BUDGET",
+          "declaration": "{modelsPerWorld:16,pendingJobs:1}"
+        }
+      ]
     },
     {
       "path": "src/ro-arrow-rain-art.js",
@@ -3920,6 +4002,19 @@
         "roMobileHUDMarkup",
         "roMobilePanelMarkup",
         "roEnvironmentStatusMarkup"
+      ],
+      "budgets": []
+    },
+    {
+      "path": "src/ro-model-prewarm-worker.js",
+      "bytes": 868,
+      "lines": 5,
+      "localImports": [
+        "src/voxel-shell.js"
+      ],
+      "externalImports": [],
+      "exports": [
+        "bakePrewarmGeometry"
       ],
       "budgets": []
     },
@@ -4977,11 +5072,12 @@
     },
     {
       "path": "src/setup-ui.js",
-      "bytes": 5439,
-      "lines": 20,
+      "bytes": 5948,
+      "lines": 21,
       "localImports": [
         "src/competition-ui.js",
         "src/deployment-config.js",
+        "src/performance-hud.js",
         "src/ro-audio-settings.js",
         "src/setup.css"
       ],
@@ -4993,7 +5089,7 @@
     },
     {
       "path": "src/setup.css",
-      "bytes": 2501,
+      "bytes": 2636,
       "lines": 6,
       "localImports": [],
       "externalImports": [],
@@ -5485,8 +5581,8 @@
     },
     {
       "path": "src/view.js",
-      "bytes": 106999,
-      "lines": 381,
+      "bytes": 110187,
+      "lines": 391,
       "localImports": [
         "shared/arena-size.js",
         "shared/bloody-battlefield.js",
@@ -5503,6 +5599,7 @@
         "shared/teams.js",
         "shared/tree-tag.js",
         "src/actor-identity.js",
+        "src/actor-lod.js",
         "src/animation-profiles.js",
         "src/battlefield.js",
         "src/bloody-tournament-world.js",
@@ -5529,6 +5626,7 @@
         "src/exploration-fog.js",
         "src/exploration-minimap.css",
         "src/exploration-minimap.js",
+        "src/gpu-frame-timer.js",
         "src/health-bars.js",
         "src/hero-cosmetics.js",
         "src/hero-models.js",
@@ -5551,6 +5649,7 @@
         "src/projectile-art.js",
         "src/ragnarok-job-art.js",
         "src/ragnarok-monster-art.js",
+        "src/render-prewarm.js",
         "src/ro-arrow-rain-art.js",
         "src/ro-assassin-impact-art.js",
         "src/ro-atmosphere.js",
@@ -5576,6 +5675,7 @@
         "src/ro-mage-spell-art.js",
         "src/ro-meteor-art.js",
         "src/ro-mining-art.js",
+        "src/ro-model-prewarm-worker.js?worker&url",
         "src/ro-monster-death.js",
         "src/ro-mount-art.js",
         "src/ro-mvp-victory-art.js",
@@ -13143,6 +13243,22 @@
       "budgets": []
     },
     {
+      "path": "tests/performance-monitor.test.js",
+      "bytes": 4561,
+      "lines": 29,
+      "localImports": [
+        "src/gpu-frame-timer.js",
+        "src/performance-hud.js",
+        "src/performance-samples.js"
+      ],
+      "externalImports": [
+        "node:assert/strict",
+        "node:test"
+      ],
+      "exports": [],
+      "budgets": []
+    },
+    {
       "path": "tests/permanent-enchants.test.js",
       "bytes": 12258,
       "lines": 115,
@@ -13867,6 +13983,23 @@
         "shared/simulation.js",
         "shared/skill-quality.js",
         "src/scene-state.js"
+      ],
+      "externalImports": [
+        "node:assert/strict",
+        "node:test"
+      ],
+      "exports": [],
+      "budgets": []
+    },
+    {
+      "path": "tests/render-prewarm-lod.test.js",
+      "bytes": 4172,
+      "lines": 26,
+      "localImports": [
+        "src/actor-lod.js",
+        "src/render-prewarm.js",
+        "src/ro-model-prewarm-worker.js",
+        "src/voxel-shell.js"
       ],
       "externalImports": [
         "node:assert/strict",

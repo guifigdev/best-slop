@@ -1,6 +1,6 @@
 # Arquitetura do Custom Hero e Ragnabonk
 
-Estado consolidado em 27/11/2026, a partir do código publicado em `1c0b149` e da correção de colisão descrita no diagnóstico de performance. Este manual cobre o cliente, a simulação, os modos, a persistência, a produção de arte e o caminho de renderização. As tabelas de milhares de habilidades, itens e monstros continuam nos catálogos executáveis; copiar cada registro para prosa criaria duas fontes divergentes de regras.
+Estado consolidado em 27/11/2026, incluindo a correção de colisão descrita no diagnóstico de performance e a primeira etapa de monitor, pré-aquecimento e LOD. Este manual cobre o cliente, a simulação, os modos, a persistência, a produção de arte e o caminho de renderização. As tabelas de milhares de habilidades, itens e monstros continuam nos catálogos executáveis; copiar cada registro para prosa criaria duas fontes divergentes de regras.
 
 ## Leitura por assunto
 
@@ -13,6 +13,8 @@ Estado consolidado em 27/11/2026, a partir do código publicado em `1c0b149` e d
 | [Shaders e efeitos](SHADERS_E_EFEITOS.md) | Materiais, pós-processamento, iluminação, água, fogo, roteamento e orçamento visual |
 | [Pipelines de produção](PIPELINES_DE_PRODUCAO.md) | Importação, ícones, áudio, mapas, skill completa e manutenção/publicação |
 | [Performance e Godot](PERFORMANCE_E_GODOT.md) | Medições reproduzíveis, gargalos, plano de melhoria visual e comparação de engines |
+| [Monitor, pré-aquecimento e LOD](MONITOR_E_PRE_AQUECIMENTO.md) | Configurações, métricas, Worker, limites e validação da primeira etapa gráfica |
+| [Prompt para outro chat](PROMPT_PROXIMO_CHAT.md) | Contexto e instruções para continuar performance e acabamento voxel sem aumentar custo |
 | [Inventário de módulos](MODULE_INVENTORY.md) | Índice gerado de todos os módulos de código nas pastas principais e suas dependências locais |
 
 ## O que usamos para fazer o jogo

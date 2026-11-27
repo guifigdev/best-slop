@@ -79,15 +79,17 @@ Estes são riscos concretos do desenho atual, ainda sem classificação por temp
 
 ## Plano para ganhar desempenho e melhorar o visual
 
+A primeira etapa de monitor, Worker de preparação de corpos, compilação antecipada e LOD de pose está implementada. Consulte [Monitor, pré-aquecimento e LOD](MONITOR_E_PRE_AQUECIMENTO.md) para o escopo efetivo e seus limites. Ainda falta comparar FPS no hardware de referência; os números da simulação acima não foram substituídos por uma alegação de ganho gráfico.
+
 | Prioridade | Entrega | Ganho buscado | Critério de validação |
 | --- | --- | --- | --- |
 | P0, iniciada | Broad phase e recuperação de corpos; remover alocações redundantes | Cortar picos que congelam simulação | Mesmos corpos/regras; stress e replay; percentis de tick |
-| P0 | Perfil do frame real por etapa e GPU timer assíncrono quando suportado | Separar simulação, view, DOM, GC e GPU | Cena gravada/reproduzível em FP e terceira; nenhuma leitura GPU bloqueante |
+| P0, monitor implementado | Perfil do frame real por etapa e GPU timer assíncrono quando suportado | Separar simulação, view, DOM, GC e GPU | Falta captura comparativa em hardware; nenhuma leitura GPU bloqueante |
 | P1 | Solver com vizinhança persistente, reaproveitamento de shape/axes e recuperação limitada ao necessário | Fazer 140–280 corpos caberem no orçamento | Densidade preservada; chokes, MVPs, paredes, invocações e determinismo |
 | P1 | Dispatcher único de eventos e scheduler de VFX | Evitar percorrer/recriar o mesmo efeito em várias rotas | Uma rota dona por fase; avisos de gameplay nunca desaparecem |
 | P1 | Templates geométricos e parâmetros animados na GPU | Efeitos mais ricos com menos trabalho JS | Mesma coreografia com uploads/GC menores |
-| P1 | Bake/pré-aquecimento de espécies, armas e shaders em transições | Reduzir stutter de primeiro encontro/cast | Comparar frame frio e quente; sem pausa longa ao entrar |
-| P2 | Chunks espaciais, LOD e atualização por distância | Gastar detalhe perto do jogador | Ator/ameaça continuam legíveis; não alterar dano/culling de gameplay |
+| P1, iniciada | Bake/pré-aquecimento de espécies, armas e shaders em transições | Worker já prepara corpos do encontro; armas/VFX ainda incompletos | Comparar frame frio e quente; sem pausa longa ao entrar |
+| P2, LOD de pose implementado | Chunks espaciais, LOD e atualização por distância | Gastar detalhe perto do jogador; ainda faltam chunks/LOD geométrico | Ator/ameaça continuam legíveis; não alterar dano/culling de gameplay |
 | P2 | Upload só de ranges ativos e pools de dados contíguos | Menor banda e coleta de lixo | Memória estável após repetição; contagem/forma preservadas |
 | P2 | Sombras e scattering adaptativos por custo | Preservar luz sem repetir trabalho caro | Tamanho de pixel/luz medido; arma e HUD nítidos |
 | P2 | Snapshots dinâmicos compactos e revisão de escrita síncrona | Menor custo por sala/cliente | Bytes, serialização, tick e latência sob múltiplas salas |

@@ -1,0 +1,9 @@
+export const PERFORMANCE_SAMPLE_CAPACITY=180;
+const phases=['input','save','simulation','view','audio','ui'];
+export function createPerformanceSamples({now=()=>performance.now(),capacity=PERFORMANCE_SAMPLE_CAPACITY}={}){
+ const work=new Float64Array(capacity),frames=new Float64Array(capacity),phaseTotals=Object.fromEntries(phases.map(p=>[p,0]));const phaseHistory=Object.fromEntries(phases.map(p=>[p,new Float64Array(capacity)]));let enabled=false,count=0,index=0,lastFrame=null,start=0,phaseAt=0,phase='input',recording=false;
+ const reset=()=>{count=index=0;lastFrame=null;recording=false;for(const p of phases)phaseTotals[p]=0;};
+ return{setEnabled(value){enabled=!!value;reset();},begin(frameTime){if(!enabled)return;start=phaseAt=now();phase='input';recording=true;for(const p of phases)phaseTotals[p]=0;const interval=lastFrame===null?0:frameTime-lastFrame;lastFrame=frameTime;frames[index]=interval>0&&interval<1000?interval:0;},mark(next){if(!recording||!phases.includes(next))return;const at=now();phaseTotals[phase]+=Math.max(0,at-phaseAt);phase=next;phaseAt=at;},end(){if(!recording)return;const at=now();phaseTotals[phase]+=Math.max(0,at-phaseAt);work[index]=Math.max(0,at-start);for(const p of phases)phaseHistory[p][index]=phaseTotals[p];index=(index+1)%capacity;count=Math.min(capacity,count+1);recording=false;},reset,
+  snapshot(){if(!count)return{samples:0,fps:null,cpuMs:null,frameMs:null,p95Ms:null,phases:{...phaseTotals}};let cpu=0,total=0,n=0;const intervals=[],averages=Object.fromEntries(phases.map(p=>[p,0]));for(let i=0;i<count;i++){cpu+=work[i];for(const p of phases)averages[p]+=phaseHistory[p][i]/count;if(frames[i]>0){total+=frames[i];n++;intervals.push(frames[i]);}}intervals.sort((a,b)=>a-b);return{samples:count,fps:n?1000/(total/n):null,cpuMs:cpu/count,frameMs:n?total/n:null,p95Ms:n?intervals[Math.min(n-1,Math.floor(n*.95))]:null,phases:averages};}
+ };
+}
