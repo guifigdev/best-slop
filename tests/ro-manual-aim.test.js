@@ -64,3 +64,9 @@ test('Ragnarok UI selects directed skills, left-click confirms and right-click c
  const sent=[],interactions=[],u={id:1,alive:true},state={options:{mode:'bonk'},players:{p:1},units:[u],bonk:{stage:'playing',weapons:[{key:'basic',kind:'projectile',ready:true,attackDelay:.8},{key:'firebolt',kind:'projectile',ready:true}]}},ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>(sent.push(c),true),getHeld:()=>new Set(['w']),view:{setInteraction:value=>interactions.push(value)}});
  ui.action('skill',1);assert.equal(sent.length,0);assert.equal(ui.aiming(),'firebolt');ui.point({point:{x:-5,z:-8},button:0,aimPressed:true});assert.deepEqual(sent.slice(0,2),[{type:'bkAim',active:true,x:-5,z:-8},{type:'bkCast',key:'firebolt',x:-5,z:-8}]);assert.equal(ui.aiming(),null);ui.point({point:{x:0,z:0},button:2});assert.equal(sent.at(-1).type,'bkCancelCast');state.bonk.casting={key:'firebolt'};ui.updateInput(1000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:-1});delete state.bonk.casting;ui.updateInput(2000);assert.deepEqual(sent.at(-1),{type:'bkMove',dx:0,dz:-1});assert.equal(interactions.at(-1),'command');
 });
+
+
+test('Golpe Fulminante and other melee hotkeys attack the current reticle target immediately without opening a ground circle',()=>{
+ const sent=[],interactions=[],state={options:{mode:'bonk'},players:{p:1},units:[{id:1,alive:true}],bonk:{stage:'playing',weapons:[{key:'basic',kind:'slash'},{key:'bash',kind:'slash',ready:true}]}},ui=createBonkUI({getState:()=>state,getOwner:()=> 'p',send:c=>(sent.push(c),true),view:{roAimPoint:()=>({x:3,z:5,target:2}),setInteraction:k=>interactions.push(k)}});
+ ui.action('skill',1);assert.deepEqual(sent,[{type:'bkCast',key:'bash',x:3,z:5,target:2}]);assert.equal(ui.aiming(),null);assert.ok(!interactions.includes('ground'));
+});

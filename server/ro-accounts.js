@@ -1,3 +1,4 @@
+import {roMigrateAccountCards,roGrantAccountCard,consumeRoAccountCard,reconcileRoAccountSockets} from '../shared/ro-card-inventory.js';
 import {RO_PROGRESS_MAX_BYTES,RO_PROGRESS_BODY_MAX_BYTES} from '../shared/ro-account-limits.js';
 import {RO_CARDS,RO_EQUIPMENT_SLOTS,roCardFitsSlot,rollRoLoot} from '../shared/ragnarok-equipment.js';
 import {RAGNAROK_VOXEL_REFERENCES} from '../shared/monster-visual-references.js';
@@ -9,7 +10,7 @@ const PREFIX='/api/ragnarok/',MAX_BODY=150*1024,RUN_TTL=6*60*60*1000,MAX_RECEIPT
 const own=(object,key)=>typeof key==='string'&&Object.hasOwn(object,key);
 const response=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const error=(status,message)=>response({error:message},status);
-const publicAccount=(state,siteLinked=false)=>({id:state.id,siteLinked,cards:state.cards,presets:state.presets,activePreset:state.activePreset,...(state.progress?{progress:state.progress}:{})});
+const publicAccount=(state,siteLinked=false)=>({id:state.id,siteLinked,cards:state.cards,cardVersion:2,cardStock:roMigrateAccountCards(state).cardStock,presets:state.presets,activePreset:state.activePreset,...(state.progress?{progress:state.progress}:{})});
 async function digest(value){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 async function body(request,maxBytes=MAX_BODY){
  if(Number(request.headers.get('Content-Length')||0)>maxBytes)throw new RangeError('Body too large');
@@ -51,7 +52,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
  const url=new URL(request.url);if(!url.pathname.startsWith(PREFIX))return null;
  const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)return error(403,'Origin not allowed');
  const route=url.pathname.slice(PREFIX.length),method=request.method;
- const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST','characters/delete':'POST','cards/claim':'POST'};
+ const methods={account:'GET','account/create':'POST',presets:'POST',run:'POST',rewards:'POST',progress:'POST','characters/delete':'POST','cards/claim':'POST','cards/socket':'POST'};
  if(!own(methods,route))return error(404,'Unknown account route');if(method!==methods[route])return response({error:'Method not allowed'},405);
  if(!env?.DB?.prepare)return error(503,'Cloud account storage unavailable');const db=env.DB;
  try{
@@ -67,7 +68,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
   for(let attempt=0;attempt<6;attempt++){
    // An explicit recovery key intentionally selects that account. Otherwise
    // Sites identity gives the same user-owned row across devices and sessions.
-   const row=tokenHash?await accountRow(db,tokenHash):await siteAccountRow(db,siteUserId);if(!row)return error(401,tokenHash?'Invalid recovery key':'Create your game account first');const linked=tokenHash?await bindLegacyAccount(db,row,siteUserId):!!row.site_user_id;const state=JSON.parse(row.payload),stamp=now();
+   const row=tokenHash?await accountRow(db,tokenHash):await siteAccountRow(db,siteUserId);if(!row)return error(401,tokenHash?'Invalid recovery key':'Create your game account first');const linked=tokenHash?await bindLegacyAccount(db,row,siteUserId):!!row.site_user_id;const state=roMigrateAccountCards(JSON.parse(row.payload)),stamp=now();
    if(route==='account')return response({account:publicAccount(state,linked)});
    let extra={};
    if(route==='presets'){const next=presets(input.presets,state.cards);if(!next||!next.some(p=>p.id===input.activePreset))return error(400,'Invalid or locked card preset');state.presets=next;state.activePreset=input.activePreset;}
@@ -76,7 +77,8 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
     const progress=validateRoAccountProgress(state.progress||{version:1,characters:[]}),deleted=new Set(progress?.deletedCharacters||[]);if(!progress)return error(400,'Invalid account progress');deleted.add(input.id);
     const next=validateRoAccountProgress({...progress,characters:progress.characters.filter(c=>c.id!==input.id),deletedCharacters:[...deleted]});if(!next)return error(400,'Character deletion history exceeds account limit');state.progress=next;
    }
-   if(route==='progress'){const progress=validateRoAccountProgress(input.checkpoint);if(!progress)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify({...progress.warehouse,revision:0})!==JSON.stringify({...prior,revision:0})))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=validateRoAccountProgress({...progress,deletedCharacters:[...new Set([...(state.progress?.deletedCharacters||[]),...(progress.deletedCharacters||[])])]});if(!state.progress)return error(400,'Character deletion history exceeds account limit');}
+   if(route==='progress'){const progress=reconcileRoAccountSockets(validateRoAccountProgress(input.checkpoint)||{},state.cardSockets);if(!progress?.characters)return error(400,'Invalid checkpoint');const prior=state.progress?.warehouse;if(prior&&(progress.warehouse.revision<prior.revision||progress.warehouse.revision===prior.revision&&JSON.stringify({...progress.warehouse,revision:0})!==JSON.stringify({...prior,revision:0})))return error(409,'Warehouse changed in another session; reload your account before saving.');state.progress=validateRoAccountProgress({...progress,deletedCharacters:[...new Set([...(state.progress?.deletedCharacters||[]),...(progress.deletedCharacters||[])])]});if(!state.progress)return error(400,'Character deletion history exceeds account limit');}
+   if(route==='cards/socket'){const result=consumeRoAccountCard(state,input);if(!result.ok)return error(400,result.reason);extra.socket=result.socket;}
    if(route==='run'){if(input.activity!==undefined&&!['adventure','tower'].includes(input.activity))return error(400,'Invalid activity');state.run={id:crypto.randomUUID(),activity:input.activity==='tower'?'tower':'adventure',started:stamp,processed:[],count:0,pickupMode:input.pickupMode==='ground'?'ground':'automatic',cardDrops:[]};extra.runId=state.run.id;}
    if(route==='cards/claim'){
     const run=state.run;if(!run||input.runId!==run.id||run.pickupMode!=='ground'||stamp-run.started>RUN_TTL)return error(409,'Run expired or replaced');
@@ -84,7 +86,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
     const drop=(run.cardDrops||[]).find(d=>d.receipt===input.receipt);if(!drop)return error(404,'Card drop not found');
     if(!drop.claimed&&stamp>=drop.expiresAt)return error(409,'Card drop expired');
     if(!drop.claimed&&(!Number.isFinite(input.x)||!Number.isFinite(input.z)||Math.hypot(input.x-drop.x,input.z-drop.z)>4||input.mapSeed!==drop.mapSeed))return error(400,'Approach the card before picking it up');
-    const duplicate=state.cards.includes(drop.key);if(!duplicate)state.cards.push(drop.key);drop.claimed=true;extra.collectedCard={key:drop.key,receipt:drop.receipt,duplicate};
+    const duplicate=state.cards.includes(drop.key);if(!drop.claimed)roGrantAccountCard(state,drop.key);drop.claimed=true;extra.collectedCard={key:drop.key,receipt:drop.receipt,duplicate};
    }
    if(route==='rewards'){
     if(!Array.isArray(input.kills)||input.kills.length>40||input.kills.some(k=>!validKill(k)))return error(400,'Invalid monster reports');
@@ -98,7 +100,7 @@ export async function handlerRagnarokRequest(request,env,{now=Date.now,random=Ma
        if(!Number.isFinite(kill.x)||!Number.isFinite(kill.z)||Math.abs(kill.x)>115||Math.abs(kill.z)>115||!Number.isSafeInteger(kill.mapSeed))continue;
        const pending={key:drop.key,receipt,x:kill.x,z:kill.z,mapSeed:kill.mapSeed,expiresAt:stamp+180000,claimed:false};
        run.cardDrops=(run.cardDrops||[]).filter(d=>d.expiresAt>stamp).slice(-127);run.cardDrops.push(pending);cardDrops.push({...pending,pending:true,duplicate});
-      }else{if(!duplicate){state.cards.push(drop.key);newCards.push(drop.key);}cardDrops.push({key:drop.key,receipt,duplicate});}
+      }else{roGrantAccountCard(state,drop.key);if(!duplicate)newCards.push(drop.key);cardDrops.push({key:drop.key,receipt,duplicate});}
      }
     }
     run.processed=[...processed];extra.newCards=newCards;extra.cardDrops=cardDrops;extra.acknowledgedIds=acknowledgedIds;

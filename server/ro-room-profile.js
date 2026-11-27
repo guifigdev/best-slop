@@ -12,6 +12,6 @@ export async function ragnarokRoomProfile(store,input={}) {
  if(input.characterId&&!character)throw Error('Personagem não encontrado na sua conta.');
  if(character&&explicitLineage&&character.lineage!==lineage)throw Error('O personagem salvo não pertence à classe escolhida. Escolha um personagem dessa classe ou crie um novo.');
  const saved=character?(character.checkpoints?.[input.activity]||character.checkpoint):null,checkpoint=saved?{...saved,hero:character.checkpoint.hero}:null;
- const cards=account.presets?.find(p=>p.id===account.activePreset)?.cards||{};
- return {warehouse:account.progress?.warehouse||{version:1,revision:0,items:[]},lineage:character?.lineage||lineage,checkpoint,cards,resume:input.resume===true,characterId:character?.id};
+ const cards={};
+ return {accountId:account.id,warehouse:account.progress?.warehouse||{version:1,revision:0,items:[]},lineage:character?.lineage||lineage,checkpoint,cards,resume:input.resume===true,characterId:character?.id};
 }

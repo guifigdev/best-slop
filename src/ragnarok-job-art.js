@@ -1,3 +1,4 @@
+import {roVoxelWeapon,roHeldWeaponKey} from './ro-voxel-weapons.js';
 import {roEquippedWeaponModel,roEquippedOffhandModel} from '../shared/ro-equipped-weapon.js';
 import {voxelTagPortrait} from './tag-character-art.js';
 import {roThiefJobSpec} from './ro-thief-job-art.js';
@@ -15,9 +16,9 @@ const JOBS={
 export const RAGNAROK_JOB_KINDS=Object.freeze(Object.keys(JOBS));
 const cache=new Map(),portraits=new Map(),P=.052,SKIN=0xe4b798,SHADOW=0xb27c68,WHITE=0xf4e7ce,INK=0x342e39,STEEL=0x9aa8b2,GOLD=0xd7b477;
 const tint=(c,t)=>[16,8,0].reduce((n,s)=>n|(Math.min(255,Math.round((c>>s&255)*t))<<s),0);
-const freeze=s=>{for(const a of s.parts)Object.freeze(a);for(const a of s.legs)Object.freeze(a);if(s.weaponRig){s.weaponRig.parts.forEach(Object.freeze);Object.freeze(s.weaponRig.parts);Object.freeze(s.weaponRig.indices);Object.freeze(s.weaponRig.pivot);if(s.weaponRig.arms){for(const arm of s.weaponRig.arms){arm.parts.forEach(Object.freeze);Object.freeze(arm.parts);Object.freeze(arm.indices);Object.freeze(arm.pivot);Object.freeze(arm);}Object.freeze(s.weaponRig.arms);}Object.freeze(s.weaponRig);}Object.freeze(s.parts);Object.freeze(s.legs);Object.freeze(s.wings);Object.freeze(s.features);return Object.freeze(s);};
+const freeze=s=>{for(const a of s.parts)Object.freeze(a);for(const a of s.legs)Object.freeze(a);if(s.weaponRig){s.weaponRig.parts.forEach(Object.freeze);Object.freeze(s.weaponRig.parts);Object.freeze(s.weaponRig.indices);Object.freeze(s.weaponRig.pivot);if(s.weaponRig.weapon){Object.freeze(s.weaponRig.weapon.indices);Object.freeze(s.weaponRig.weapon.pivot);Object.freeze(s.weaponRig.weapon);}if(s.weaponRig.arms){for(const arm of s.weaponRig.arms){arm.parts.forEach(Object.freeze);Object.freeze(arm.parts);Object.freeze(arm.indices);Object.freeze(arm.pivot);Object.freeze(arm);}Object.freeze(s.weaponRig.arms);}Object.freeze(s.weaponRig);}Object.freeze(s.parts);Object.freeze(s.legs);Object.freeze(s.wings);Object.freeze(s.features);return Object.freeze(s);};
 function mainHandJobSpec(value){
- const key=typeof value==='string'?value:value?.bonkJob;if(!Object.hasOwn(JOBS,key))return null;const held=typeof value==='object'?roEquippedWeaponModel(value):null,cacheKey=key+(typeof value==='object'&&value.roEquipment?':equipped':'')+(held&&held!==JOBS[key][2]?':'+held:'');if(cache.has(cacheKey))return cache.get(cacheKey);if((key==='thief'||key==='assassin')&&(!held||held===JOBS[key][2])){const spec=roThiefJobSpec(key);cache.set(cacheKey,spec);return spec;}
+ const key=typeof value==='string'?value:value?.bonkJob;if(!Object.hasOwn(JOBS,key))return null;const held=typeof value==='object'?roEquippedWeaponModel(value):null,itemKey=typeof value==='object'?roHeldWeaponKey(value):null,cacheKey=key+(itemKey?':item-'+itemKey:'')+(typeof value==='object'&&value.roEquipment?':equipped':'')+(held&&held!==JOBS[key][2]?':'+held:'');if(cache.has(cacheKey))return cache.get(cacheKey);if((key==='thief'||key==='assassin')&&(!held||held===JOBS[key][2])){const spec=roThiefJobSpec(key,itemKey);cache.set(cacheKey,spec);return spec;}
  const [family,rank,originalWeapon,cloth,trim,hair,style]=JOBS[key],weapon=held||originalWeapon,parts=[],legs=[],features=['face','layered-hair',weapon],b=(x,y,z,w,h,d,c)=>parts.push([x*P,y*P,z*P,w*P,h*P,d*P,c]);
  const band=(y,width=10,c=trim)=>{b(0,y,0,width,1,6,c);b(0,y,3.4,3,1.5,1,GOLD);};
  const gem=(x,y,z,c=0x65c7c3)=>{b(x,y,z,1.6,2,1.1,GOLD);b(x,y,z+.7,.8,1.2,.5,c);};
@@ -72,6 +73,7 @@ function mainHandJobSpec(value){
  if(weapon==='fists'){for(let s of [-1,1]){b(s*7,13,3,4,4,3,trim);for(let i=0;i<4;i++)b(s*7+(i-1.5)*.9,13.5,4.8,.8,2,.9,rank===4?GOLD:WHITE);}}
  if(weapon==='flask'){b(8,17,3.4,5,6,4,0x71a196);b(8,21,3.4,2,3,2,0xaacbb4);b(8,22.5,3.4,2.4,1,2.4,0x785844);b(8,16,5.6,3,2,.5,0x9edf91);b(6.5,18.5,5.6,.6,2,.4,WHITE);}
  if(weapon==='cannon'){b(9,17,3,6,6,10,0x4b5d65);for(let i=0;i<4;i++){b(6.2+i*1.8,17,8.3,1.3,4,1.2,trim);}b(9,17,9,3,3,1,INK);b(9,21,3,3,2,3,GOLD);}
+ const itemModel=itemKey?roVoxelWeapon(itemKey):null;if(itemModel){parts.splice(weaponStart,parts.length-weaponStart,...itemModel.parts.map(p=>weapon==='katar'?[p[0]+8*P,12.5*P-p[2],p[1]+3.8*P,p[3],p[5],p[4],p[6]]:[p[0]+8*P,p[1]+12.5*P,p[2]+1.7*P,...p.slice(3)]));features.push('item-sculpture:'+itemKey);}
  const weaponEnd=parts.length;
  if(rank===4){features.push('fourth-job-regalia');for(let s of [-1,1]){for(let i=0;i<4;i++){b(s*(3+i*.7),23-i*.4,3,1,1.2,1,GOLD);}gem(s*3.7,12,4.5,0x8ec5cd);}for(let y=14;y<21;y+=1.3)b(0,y,4.5,.65,.7,.5,GOLD);}
  // Katar and Thief-line weapons need two independently articulated shoulders.
@@ -80,7 +82,7 @@ function mainHandJobSpec(value){
   const pivot=[side*6.5*P,20.5*P,0],indices=parts.map((p,i)=>((i>=weaponStart&&i<weaponEnd&&Math.sign(p[0])===side)||(p[0]*side>5*P&&p[1]>10*P&&p[1]<22*P&&p[2]>-.1))?i:-1).filter(i=>i>=0);
   return{key:side===1?'right':'left',side,pivot,indices,parts:indices.map(i=>{const p=parts[i];return[p[0]-pivot[0],p[1]-pivot[1],p[2]-pivot[2],...p.slice(3)];})};
  }):null;
- const pivot=[6.5*P,20.5*P,0],indices=arms?arms.flatMap(a=>a.indices):['sword','greatsword','axe','dagger','spear','mace'].includes(weapon)?parts.map((p,i)=>i>=weaponStart&&i<weaponEnd||p[0]>5*P&&p[1]>10*P&&p[1]<22*P&&p[2]>-.1?i:-1).filter(i=>i>=0):[],weaponRig=indices.length?{kind:arms?(weapon==='katar'?'dual-katar':'dual-weapon'):['spear','dagger'].includes(weapon)?'thrust':weapon==='axe'?'overhead-axe':'overhead-sword',job:key,pivot,indices,parts:indices.map(i=>{const p=parts[i];return[p[0]-pivot[0],p[1]-pivot[1],p[2]-pivot[2],...p.slice(3)];}),...(arms?{arms}:{})}:null;
+ const pivot=[6.5*P,20.5*P,0],indices=arms?arms.flatMap(a=>a.indices):['sword','greatsword','axe','dagger','spear','mace'].includes(weapon)?parts.map((p,i)=>i>=weaponStart&&i<weaponEnd||p[0]>5*P&&p[1]>10*P&&p[1]<22*P&&p[2]>-.1?i:-1).filter(i=>i>=0):[],weaponRig=indices.length?{kind:arms?(weapon==='katar'?'dual-katar':'dual-weapon'):['spear','dagger'].includes(weapon)?'thrust':weapon==='axe'?'overhead-axe':'overhead-sword',job:key,pivot,indices,...(itemModel&&!arms?{weapon:{pivot:[8*P,12.5*P,1.7*P],indices:Array.from({length:weaponEnd-weaponStart},(_,i)=>weaponStart+i),parts:itemModel.parts}}:{}),parts:indices.map(i=>{const p=parts[i];return[p[0]-pivot[0],p[1]-pivot[1],p[2]-pivot[2],...p.slice(3)];}),...(arms?{arms}:{})}:null;
  const height=Math.max(...parts.map(p=>p[1]+p[4]/2));const result=freeze({key:cacheKey,theme:'ragnarok-job',parts,legs,wings:[],weaponRig,fur:SKIN,muzzle:SKIN,height,eyeLine:27.8*P,motion:weapon==='bow'?'ranged':weapon==='staff'?'caster':'humanoid',features});cache.set(cacheKey,result);return result;
 }
 const offhandSpecs=new Map();

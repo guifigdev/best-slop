@@ -90,11 +90,11 @@ export const roCardFitsSlot=(card,slot)=>card?.slot===roSlotType(slot)||slot==='
 const starter=freeze({dragonknight:'sword',imperialguard:'spear',archmage:'rod',elementalmaster:'staff',windhawk:'bow',troubadour:'bow',cardinal:'mace',inquisitor:'mace',meister:'axe',biolo:'axe',shadowcross:'knife',abysschaser:'knife'});
 const validId=id=>(typeof id==='string'&&id.length>0)||(typeof id==='number'&&Number.isSafeInteger(id));
 export function createRoEquipment(key,id){return own(RO_EQUIPMENT,key)&&validId(id)?{id,key,cards:[]}:null;}
-export function initializeRoInventory(u,lineage){
+export function initializeRoInventory(u,lineage,namespace=null){
  if(!u||typeof u!=='object')return false;
  u.roLineage=own(starter,lineage)?lineage:'dragonknight';
  if(Array.isArray(u.roInventory)&&u.roEquipment&&Array.isArray(u.roCards))return true;
- const prefix=`${u.id??'hero'}:ro:starter`,weapon=createRoEquipment(starter[u.roLineage],`${prefix}:weapon`),armor=createRoEquipment('adventurersuit',`${prefix}:armor`);
+ const prefix=`${namespace??u.id??'hero'}:ro:starter`,weapon=createRoEquipment(starter[u.roLineage],`${prefix}:weapon`),armor=createRoEquipment('adventurersuit',`${prefix}:armor`);
  u.roInventory=[weapon,armor];u.roCards=[];u.roEquipment=Object.fromEntries(RO_EQUIPMENT_SLOTS.map(slot=>[slot,slot==='weapon'?weapon.id:slot==='armor'?armor.id:null]));u.roBagVersion=1;
  if(u.roLineage==='shadowcross'&&(u.roTier||0)>=1){const second=createRoEquipment('knife',`${prefix}:offhand`);u.roInventory.push(second);u.roEquipment.offhand=second.id;}
  return true;
@@ -110,8 +110,9 @@ export function roMigrateBag(u,{force=false}={}){
  for(const item of [...u.roInventory].sort((a,b)=>Number(worn.has(b.id))-Number(worn.has(a.id)))){const quantity=roEquipmentQuantity(item),equipped=Number(worn.has(item.id)),take=Math.min(quantity,equipped+available);available-=take-equipped;if(take){const keptItem={...item};if(take>1)keptItem.quantity=take;else delete keptItem.quantity;kept.push(keptItem);}if(quantity>take){let id=item.id;if(take){let n=1;do{id=String(item.id).slice(0,78)+':saved:'+n++;}while(ids.has(id));ids.add(id);}u.roUnclaimed.push({...item,id,quantity:quantity-take});}}
  u.roInventory=kept;u.roBagVersion=1;
 }
+export const roItemAccountAllowed=(u,item)=>(item?.cards||[]).every(c=>!c.accountId||c.accountId===u?.roAccountId);
 export function roReceiveEquipment(u,item,{stack=false}={}){
- if(!u||!item||!validId(item.id)||!own(RO_EQUIPMENT,item.key)||item.quantity!==undefined&&(!Number.isSafeInteger(item.quantity)||item.quantity<1))return null;
+ if(!u||!item||!roItemAccountAllowed(u,item)||!validId(item.id)||!own(RO_EQUIPMENT,item.key)||item.quantity!==undefined&&(!Number.isSafeInteger(item.quantity)||item.quantity<1))return null;
  u.roInventory??=[];const same=u.roInventory.find(existing=>existing.id===item.id);if(same)return same;
  if(roBagUsage(u)+roEquipmentQuantity(item)>RO_BAG_CAPACITY)return null;
  const target=stack&&!item.refine&&!(item.cards||[]).length&&!Object.keys(item.enchants||{}).length?u.roInventory.find(existing=>existing.key===item.key&&!existing.refine&&!(existing.cards||[]).length&&!Object.keys(existing.enchants||{}).length):null;
@@ -126,7 +127,8 @@ export function roCompactInventory(u){
 }
 const findItem=(u,id)=>validId(id)?inventory(u).find(item=>item&&item.id===id&&own(RO_EQUIPMENT,item.key)):null;
 export const roCanDualWield=u=>u?.roLineage==='shadowcross'&&(u.roTier||0)>=1;
-export function roItemFitsSlot(u,item,slot){const definition=RO_EQUIPMENT[item?.key];return !!definition&&(definition.slot===slot||definition.slot==='accessory'&&slot==='accessory2'||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&roCanDualWield(u)&&['dagger','sword','axe'].includes(definition.weaponType));}
+export function roItemSlotCompatible(u,item,slot){const definition=RO_EQUIPMENT[item?.key];return !!definition&&(definition.slot===slot||definition.slot==='accessory'&&slot==='accessory2'||slot==='offhand'&&definition.slot==='weapon'&&definition.hands===1&&roCanDualWield(u)&&['dagger','sword','axe'].includes(definition.weaponType));}
+export function roItemFitsSlot(u,item,slot){return roItemAccountAllowed(u,item)&&roItemSlotCompatible(u,item,slot);}
 const fits=roItemFitsSlot;
 export const roCompatibleSlots=(u,item)=>RO_EQUIPMENT_SLOTS.filter(slot=>fits(u,item,slot));
 

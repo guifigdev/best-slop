@@ -157,3 +157,27 @@ test('explicit character deletion is idempotent and retains a cloud character mi
 test('duplicate card drops are still reported visibly but never duplicate the permanent unlock',async()=>{
  const f=fixture();try{const {token}=await account(f);const run=await(await f.request('run',{token,body:{activity:'adventure'}})).json();const first=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'first',visual:'poring'}]}})).json();assert.deepEqual(first.newCards,['poring']);assert.equal(first.cardDrops[0].duplicate,false);const second=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'second',visual:'poring'}]}})).json();assert.deepEqual(second.newCards,[]);assert.deepEqual(second.account.cards,['poring']);assert.deepEqual(second.cardDrops,[{key:'poring',receipt:'second',duplicate:true}]);const replay=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:'second',visual:'poring'}]}})).json();assert.deepEqual(replay.cardDrops,[]);}finally{f.sqlite.close();}
 });
+
+
+test('account card copies are consumed once in game, survive save and warehouse transfer, and cannot be forged by a checkpoint',async()=>{
+ const f=fixture();try{
+  const {token,account:a}=await account(f),g=new Game(9,{mode:'bonk'});g.addPlayer('p','knight');const cp=createRoCheckpoint(g),armor=cp.hero.roInventory.find(i=>i.key==='adventurersuit');assert.ok(armor);
+  const row=f.sqlite.prepare('SELECT payload FROM ro_accounts WHERE id=?').get(a.id),state=JSON.parse(row.payload);state.cards=['poring'];f.sqlite.prepare('UPDATE ro_accounts SET payload=? WHERE id=?').run(JSON.stringify(state),a.id);
+  const progress=saveRoCharacter({version:1,characters:[]},{id:'hero-one',name:'Knight',lineage:'dragonknight',checkpoint:cp,updatedAt:1});assert.equal((await f.request('progress',{token,body:{checkpoint:progress}})).status,200);
+  const body={characterId:'hero-one',itemId:armor.id,key:'poring',operation:'socket-attempt-01'},first=await(await f.request('cards/socket',{token,body})).json();assert.equal(first.account.cardStock.poring,undefined);assert.equal(first.account.progress.characters[0].checkpoint.hero.roInventory.find(i=>i.id===armor.id).cards[0].key,'poring');
+  const replay=await(await f.request('cards/socket',{token,body})).json();assert.equal(replay.socket.id,first.socket.id);assert.equal((await f.request('cards/socket',{token,body:{...body,operation:'socket-attempt-02'}})).status,400);
+  const forged=structuredClone(first.account.progress),hero=forged.characters[0].checkpoint.hero;hero.roInventory.find(i=>i.id===armor.id).cards=[];hero.roInventory.find(i=>i.id===hero.roEquipment.weapon).cards=[{id:'forged-card',key:'fabre'}];
+  const saved=await(await f.request('progress',{token,body:{checkpoint:forged}})).json(),savedHero=saved.account.progress.characters[0].checkpoint.hero;assert.deepEqual(savedHero.roInventory.find(i=>i.id===armor.id).cards,[{id:first.socket.id,key:'poring',accountId:a.id}]);assert.deepEqual(savedHero.roInventory.find(i=>i.id===savedHero.roEquipment.weapon).cards,[]);
+  const run=await(await f.request('run',{token})).json();const drops=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:100,visual:'poring'},{id:101,visual:'poring'}]}})).json();assert.equal(drops.account.cardStock.poring,2);assert.deepEqual(drops.account.cards,['poring']);
+  const again=await(await f.request('rewards',{token,body:{runId:run.runId,kills:[{id:100,visual:'poring'},{id:101,visual:'poring'}]}})).json();assert.equal(again.account.cardStock.poring,2);
+ }finally{f.sqlite.close();}
+});
+
+
+test('two simultaneous socket requests cannot spend the same last account copy twice',async()=>{
+ const f=fixture();try{const {token,account:a}=await account(f),row=f.sqlite.prepare('SELECT payload FROM ro_accounts WHERE id=?').get(a.id),state=JSON.parse(row.payload);state.cards=['fabre'];f.sqlite.prepare('UPDATE ro_accounts SET payload=? WHERE id=?').run(JSON.stringify(state),a.id);
+ const g=new Game(7,{mode:'bonk'});g.addPlayer('p','knight');const cp=createRoCheckpoint(g),progress=saveRoCharacter({version:1,characters:[]},{id:'hero-one',name:'A',lineage:'dragonknight',checkpoint:cp,updatedAt:1});await f.request('progress',{token,body:{checkpoint:progress}});
+ const input={characterId:'hero-one',itemId:cp.hero.roEquipment.weapon,key:'fabre'},responses=await Promise.all(['concurrent-one','concurrent-two'].map(operation=>f.request('cards/socket',{token,body:{...input,operation}})));assert.deepEqual(responses.map(r=>r.status).sort(),[200,400]);
+ const final=await(await f.request('account',{method:'GET',token})).json(),hero=final.account.progress.characters[0].checkpoint.hero;assert.equal(final.account.cardStock.fabre,undefined);assert.equal(hero.roInventory.find(i=>i.id===input.itemId).cards.length,1);
+ }finally{f.sqlite.close();}
+});

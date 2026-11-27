@@ -1,3 +1,4 @@
+import {roHeldWeaponKey} from './ro-voxel-weapons.js';
 import {roEquippedWeaponModel,roEquippedOffhandModel} from '../shared/ro-equipped-weapon.js';
 import {ragnarokMonsterModelKey} from './ragnarok-monster-art.js';
 import {bloodyModelKey} from './bloody-unit-art.js';
@@ -9,4 +10,4 @@ import {legacyCharacterModelKey} from './legacy-character-art.js';
 import {castleUnitModelKey} from './castle-unit-art.js';
 // Cached geometry must distinguish ordinary heroes and monsters as well as
 // custom scenarios. A null key would reuse the first body for every species.
-export function actorModelKey(u){return (u.bonkHero&&u.bonkJob?'ro-job:'+u.bonkJob+':equipped'+(roEquippedOffhandModel(u)?':left-'+roEquippedOffhandModel(u):'')+(roEquippedWeaponModel(u)?':'+roEquippedWeaponModel(u):''):null)||bloodyModelKey(u)||ragnarokMonsterModelKey(u)||dungeonMonsterModelKey(u)||phaseKillerModelKey(u)||treeTrainedModelKey(u)||tagCharacterKey(u)||legacyCharacterModelKey(u)||(u.castleUnit||u.castleBuilderKey?castleUnitModelKey(u):null)||`${u.hero?'hero':'monster'}:${u.hero||u.kind||'unknown'}`;}
+export function actorModelKey(u){return (u.bonkHero&&u.bonkJob?'ro-job:'+u.bonkJob+':equipped'+(roHeldWeaponKey(u)?':item-'+roHeldWeaponKey(u):'')+(roEquippedOffhandModel(u)?':left-'+roEquippedOffhandModel(u):'')+(roEquippedWeaponModel(u)?':'+roEquippedWeaponModel(u):''):null)||bloodyModelKey(u)||ragnarokMonsterModelKey(u)||dungeonMonsterModelKey(u)||phaseKillerModelKey(u)||treeTrainedModelKey(u)||tagCharacterKey(u)||legacyCharacterModelKey(u)||(u.castleUnit||u.castleBuilderKey?castleUnitModelKey(u):null)||`${u.hero?'hero':'monster'}:${u.hero||u.kind||'unknown'}`;}

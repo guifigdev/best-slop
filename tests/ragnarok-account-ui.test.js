@@ -80,7 +80,7 @@ test('An explicit card choice survives late cloud selection even when it matches
 });
 test('Partial reward acknowledgements preserve unprocessed kills and never grant cards locally',async()=>{
  const service=backend(),toasts=[],ui=createRagnarokAccountUI({fetchImpl:service.fetchImpl,storage:storage(),toast:m=>toasts.push(m)});await ui.loadReady();const g=game();ui.prepareGame(g);await settle();await settle();g.bonk.rewardKills=[{id:'one',visual:'poring'},{id:'two',visual:'poring'}];ui.update(g);await settle();await settle();
- assert.deepEqual(g.bonk.rewardKills.map(k=>k.id),['two']);assert.deepEqual(ui.account().cards,['poring']);assert.ok(toasts.some(t=>t.includes('Permanente')));
+ assert.deepEqual(g.bonk.rewardKills.map(k=>k.id),['two']);assert.deepEqual(ui.account().cards,['poring']);assert.ok(toasts.some(t=>t.includes('cópia')));
  const offlineStorage=storage(),offline=createRagnarokAccountUI({storage:offlineStorage,fetchImpl:async()=>Response.json({error:'down'},{status:503})});await offline.loadReady();const local=game();offline.prepareGame(local);local.bonk.rewardKills=[{id:'x',visual:'poring'}];offline.update(local);await offline.save(local);assert.equal(offline.status(),'local');assert.deepEqual(offline.account().cards,[]);assert.equal(local.bonk.rewardKills.length,1);assert.equal(offlineStorage.data().account.progress.characters.length,1);
 });
 test('Recovery account changes ignore a stale in-flight create response and replace the stored recovery token',async()=>{

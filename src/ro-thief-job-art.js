@@ -1,11 +1,12 @@
+import {roVoxelWeapon} from './ro-voxel-weapons.js';
 // Male costume studies from GungHo's official Thief and Assassin sprite/illustration
 // sheets. These are authored voxel sculpts and pose studies, not extracted ACTs.
 const P=.052,SKIN=0xe6b69b,SKIN_DARK=0xb77d66,CREAM=0xe6d4b4,INK=0x352a32,STEEL=0xa6b2b9;
 const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freeze);Object.freeze(value);}return value;},cache=new Map();
 export const RO_THIEF_ART_SOURCES=freeze({thief:'https://ragnarokonline.gungho.jp/gameguide/character/thief/thief.html',assassin:'https://ragnarokonline.gungho.jp/gameguide/character/thief/assassin.html',policy:'Authored male voxel costume and combat-pose studies from official static sprite sheets; no binary ACT animation extraction.'});
 
-export function roThiefJobSpec(key){
- if(!['thief','assassin'].includes(key))return null;if(cache.has(key))return cache.get(key);
+export function roThiefJobSpec(key,itemKey=null){
+ if(!['thief','assassin'].includes(key))return null;const cacheKey=key+(itemKey?':item-'+itemKey:'');if(cache.has(cacheKey))return cache.get(cacheKey);
  const assassin=key==='assassin',parts=[],legs=[],arms=[],cloth=assassin?0x65445f:0x826657,dark=assassin?0x412f45:0x4d3c3b,hair=assassin?0xe2dce0:0xa74932,bronze=assassin?0xb48b64:0xa57d56,features=['face','layered-hair',assassin?'katar':'dagger','official-male-costume',assassin?'crossed-ivory-wraps':'boned-leather-vest',assassin?'split-waist-panels':'baggy-knee-trousers',assassin?'trailing-scarf':'forehead-goggles'];
  const b=(x,y,z,w,h,d,c)=>{parts.push([x*P,y*P,z*P,w*P,h*P,d*P,c]);};
  // Lower-leg cylinders are the existing two-leg locomotion rig; ornament stays
@@ -13,6 +14,7 @@ export function roThiefJobSpec(key){
  for(const side of [-1,1]){
   legs.push({x:side*2.7*P,y:4.3*P,z:0,w:3.5*P,h:8.6*P,d:4.2*P,color:assassin?dark:CREAM});
   for(let row=0;row<7;row++){const y=8.8+row*.85,w=assassin?3.5:4.4+Math.sin(row/6*Math.PI)*1.1;b(side*2.8,y,0,w,.93,4.5, row%3===0?dark:cloth);}
+  const weaponStart=parts.length;
   if(assassin){
    for(let row=0;row<8;row++){const y=2+row*.9;b(side*2.7,y,2.3,3.1,.52,.55,CREAM);b(side*(2.7+.65*Math.sin(row)),y+.4,2.55,1.4,.55,.4,0xc1b29c);}
    b(side*2.7,1,1.2,4.2,1.8,6.2,0x65404b);b(side*2.7,1.9,2.8,3.7,.65,2.4,0x8a5c64);b(side*2.7,.2,1.1,4.35,.5,6.4,INK);
@@ -58,6 +60,7 @@ export function roThiefJobSpec(key){
   for(let row=0;row<4;row++){const width=4.2-Math.abs(row-1)*.65;b(side*5.45,21.7-row*.48,-.1,width,.65,4.3-row*.12,row%2?bronze:assassin?0xc09e79:0x8b694b);for(let rib=0;rib<4;rib++)b(side*(4.2+rib*.72),21.6-row*.48,2.1-rib*.09,.45,.22,.25,assassin?0xd6bb8d:0xc29a68);}
   b(side*6.1,18.8,.25,2.45,4.8,3.1,SKIN);b(side*6.45,15.7,1.05,2.5,3.2,2.9,SKIN);b(side*6.5,14.7,1.9,2.85,1.5,3.1,assassin?0x755361:0x684b3f);b(side*6.5,13.3,2.2,2.7,1.8,2.8,assassin?0x594254:0x61483c);
   for(let finger=0;finger<3;finger++)b(side*6.5+(finger-1)*.62,12.7,3.5,.5,.9,.6,SKIN_DARK);
+  const weaponStart=parts.length;
   if(assassin){
    for(let row=0;row<4;row++)b(side*6.4,16+row*.72,2.52,2.8,.44,.5,row%2?CREAM:0xc6b29d);
    b(side*6.5,13.7,3.4,3.9,1.6,2.3,bronze);b(side*6.5,13.7,4.5,2.7,1.2,.7,0x6d5960);
@@ -66,8 +69,9 @@ export function roThiefJobSpec(key){
   }else if(side===1){
    b(6.5,13.5,3.8,1.1,1.5,3.4,0x704b35);for(let row=0;row<7;row++){const x=6.4-row*.15,y=14+row*.38,z=5.5+row*.72,width=2.5-row*.23;b(x,y,z,width,.62,.9,STEEL);b(x-width*.3,y+.4,z,.35,.25,.85,0xe2e5de);}b(6.5,13.7,5,4,.6,.7,bronze);
   }
+  const itemModel=itemKey?roVoxelWeapon(itemKey):null;if(itemModel&&(assassin||side===1)){parts.splice(weaponStart,parts.length-weaponStart,...itemModel.parts.map(p=>[side*6.5*P+p[0],13.5*P-p[2],3.8*P+p[1],p[3],p[5],p[4],p[6]]));}
   const indices=parts.slice(start).map((_,i)=>start+i);arms.push({key:side===1?'right':'left',side,pivot,indices,parts:indices.map(i=>{const p=parts[i];return[p[0]-pivot[0],p[1]-pivot[1],p[2]-pivot[2],...p.slice(3)];})});
  }
  const indices=arms.flatMap(a=>a.indices),weaponRig={kind:assassin?'dual-katar':'dagger-thrust',job:key,pivot:[0,0,0],indices,parts:indices.map(i=>[...parts[i]]),arms};
- const result=freeze({key,theme:'ragnarok-job',parts,legs,wings:[],weaponRig,fur:SKIN,muzzle:SKIN,height:Math.max(...parts.map(p=>p[1]+p[4]/2)),eyeLine:28.1*P,motion:'humanoid',features,reference:RO_THIEF_ART_SOURCES[key]});cache.set(key,result);return result;
+ const result=freeze({key,theme:'ragnarok-job',parts,legs,wings:[],weaponRig,fur:SKIN,muzzle:SKIN,height:Math.max(...parts.map(p=>p[1]+p[4]/2)),eyeLine:28.1*P,motion:'humanoid',features,reference:RO_THIEF_ART_SOURCES[key]});cache.set(cacheKey,result);return result;
 }

@@ -1,3 +1,4 @@
+import {roCraftWeapon} from './ro-crafting.js';
 import {RO_STARTER_CHEST_WEAPONS,roBuildEquipmentUnlockLevel} from './ro-build-loot.js';
 import {RO_BUILD_EQUIPMENT,RO_BUILD_EQUIPMENT_SOURCES} from './ro-build-equipment.js';
 import {roTradeHub,RO_TRADE_HUBS} from './ro-region-services.js';
@@ -28,6 +29,7 @@ export function roTownServiceCommand(game,unit,c){if(c.type==='bkTownClose'){del
  if(c.type==='bkTownBuy'&&service.type==='potionShop'){const cost=service.potionPrices[c.key];if(!cost||unit.gold<cost||!canCarryConsumable(unit,c.key)||!addConsumable(unit,c.key))return false;unit.gold-=cost;return true;}
  if(c.type==='bkTownBuy'&&service.type==='equipmentShop'){const offer=service.stock.find(o=>o.key===c.key);if(!offer||unit.gold<offer.price||roBagUsage(unit)>=RO_BAG_CAPACITY)return false;const item=createRoEquipment(offer.key,'shop:'+game.worldSeed+':'+game.id());if(!item||!roReceiveEquipment(unit,item))return false;unit.gold-=offer.price;return true;}
  if(c.type==='bkTownHeal'&&service.type==='healer'){if(unit.gold<service.healPrice||unit.hp>=unit.maxHp&&unit.mana>=unit.maxMana)return false;unit.gold-=service.healPrice;unit.hp=unit.maxHp;unit.mana=unit.maxMana;game.fx('heal',unit.x,unit.z,{source:unit.id,duration:.8});return true;}
+ if(c.type==='bkTownCraft'&&service.type==='blacksmith')return roCraftWeapon(game,unit,c.key);
  if(c.type==='bkTownRefine'&&service.type==='blacksmith')return roRefineEquipment(game,unit,c.item,{protect:c.protect===true});
  return false;
 }
