@@ -7,7 +7,7 @@
     "server": 13,
     "scripts": 46,
     "tests": 388,
-    "deploy": 5,
+    "deploy": 4,
     "drizzle": 2,
     ".github/workflows": 1
   },
@@ -10345,8 +10345,8 @@
     },
     {
       "path": "scripts/generate-architecture-inventory.mjs",
-      "bytes": 4812,
-      "lines": 25,
+      "bytes": 5105,
+      "lines": 27,
       "localImports": [
         "shared/bonk-catalog.js",
         "shared/monster-visual-references.js",
@@ -10354,6 +10354,7 @@
         "shared/ragnarok-jobs.js"
       ],
       "externalImports": [
+        "node:child_process",
         "node:fs/promises",
         "node:path"
       ],
@@ -17479,15 +17480,6 @@
       "path": "deploy/compose.yaml",
       "bytes": 1908,
       "lines": 62,
-      "localImports": [],
-      "externalImports": [],
-      "exports": [],
-      "budgets": []
-    },
-    {
-      "path": "deploy/wrangler.assets.toml",
-      "bytes": 479,
-      "lines": 16,
       "localImports": [],
       "externalImports": [],
       "exports": [],

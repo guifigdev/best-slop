@@ -652,7 +652,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [scripts/extract-bloody-terrain.py](../../scripts/extract-bloody-terrain.py) | 4161 | 0 |
 | [scripts/extract-phase-killer-world.py](../../scripts/extract-phase-killer-world.py) | 3013 | 0 |
 | [scripts/extract-warcraft-terrain.py](../../scripts/extract-warcraft-terrain.py) | 14587 | 0 |
-| [scripts/generate-architecture-inventory.mjs](../../scripts/generate-architecture-inventory.mjs) | 4812 | 4 |
+| [scripts/generate-architecture-inventory.mjs](../../scripts/generate-architecture-inventory.mjs) | 5105 | 4 |
 | [scripts/import-ro-aspd.py](../../scripts/import-ro-aspd.py) | 881 | 0 |
 | [scripts/import-ro-card-effects.py](../../scripts/import-ro-card-effects.py) | 1582 | 1 |
 | [scripts/import-ro-client-media.mjs](../../scripts/import-ro-client-media.mjs) | 8996 | 3 |
@@ -1069,7 +1069,7 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [tests/world-landscape.test.js](../../tests/world-landscape.test.js) | 5898 | 4 |
 | [tests/world-particle-stability.test.js](../../tests/world-particle-stability.test.js) | 5179 | 3 |
 
-## deploy (5 módulos)
+## deploy (4 módulos)
 
 | Módulo | Bytes de fonte | Imports locais encontrados |
 | --- | ---: | ---: |
@@ -1077,7 +1077,6 @@ Resumo de `src/assets/`; bytes de arquivo não equivalem a memória decodificada
 | [deploy/assets-worker.js](../../deploy/assets-worker.js) | 2373 | 0 |
 | [deploy/bootstrap-docker.sh](../../deploy/bootstrap-docker.sh) | 2030 | 0 |
 | [deploy/compose.yaml](../../deploy/compose.yaml) | 1908 | 0 |
-| [deploy/wrangler.assets.toml](../../deploy/wrangler.assets.toml) | 479 | 0 |
 
 ## drizzle (2 módulos)
 
