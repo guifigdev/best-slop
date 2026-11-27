@@ -32,7 +32,7 @@ test('the 101st throne preserves its five source waves and its own armoured Nagh
 });
 test('the expedition continues after Entweihen at 100, saves the 101st entrance, then finishes only after Naght and every final wave',()=>{
  const g=new Game(81,{mode:'bonk',bonkActivity:'tower',bonkLineage:'archmage'});g.addPlayer('p','mage');const u=g.player('p'),checkpoint=createRoCheckpoint(g);checkpoint.floor=100;checkpoint.clearedStages=Array(99).fill('crypt');assert.ok(validateRoCheckpoint(checkpoint));assert.ok(g.command('p',{type:'bkRestore',checkpoint,activity:'tower'}));assert.equal(g.bonk.stage,'playing');assert.equal(g.bonk.floor,100);g.bonk.towerQueue=[];g.units=[u];g.tick(.05);assert.equal(g.bonk.stage,'cleared');assert.equal(g.bonk.won,false);assert.equal(g.phase,'wave');assert.ok(g.command('p',{type:'bkNext'}));assert.equal(g.bonk.floor,101);assert.equal(g.bonk.map.tower.floor,101);assert.equal(g.bonk.floorTotal,211);const cp=createRoCheckpoint(g);assert.equal(cp.floor,101);assert.ok(validateRoCheckpoint(cp));
- g.options.bonkDebug=true;let count=0,lastPhase=-1;
+ g.options.bonkDebug=true;u.bonkSkillAuto=Object.fromEntries(Object.keys(u.bonkBuild.weapons).map(key=>[key,false]));let count=0,lastPhase=-1;
  for(let i=0;i<180&&g.bonk.stage==='playing';i++){g.bonk.towerSpawnAt=g.bonk.elapsed;g.tick(.05);const live=g.units.filter(e=>e.bonkEnemy&&e.alive);if(!live.length)continue;const phases=new Set(live.map(e=>e.roTowerPhase));assert.equal(phases.size,1);const phase=live[0].roTowerPhase;assert.ok(phase>=lastPhase);lastPhase=phase;count+=live.length;for(const e of live)e.alive=false;}
  assert.equal(count,211);assert.equal(lastPhase,4);assert.equal(g.bonk.stage,'finished');assert.equal(g.bonk.won,true);assert.equal(g.phase,'victory');
 });

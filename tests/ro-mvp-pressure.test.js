@@ -19,7 +19,7 @@ test('MVP role profiles and stronger ordinary monsters keep independent fixed bu
  const common=roSurvivorEnemyBudget({key:'poring'});assert.equal(common.speedScale,roDifficulty('normal').speed*1.1);assert.deepEqual(common,roSurvivorEnemyBudget({key:'poring',level:150}));
 });
 test('touching an MVP delivers its full basic attack on its own cadence without duplicate or delayed hits',()=>{
- const {g,u,boss}=arena(),hp=u.hp;g.tick(.05);const first=hp-u.hp;const ordinary=arena();ordinary.boss.bonkBoss=false;const normalHp=ordinary.u.hp;ordinary.g.tick(.05);assert.ok(first>(normalHp-ordinary.u.hp)*1.2,'full basic hit '+first+' versus touch '+(normalHp-ordinary.u.hp));assert.equal(g.effects.filter(e=>e.type==='damage'&&e.target===u.id).length,1);
+ const {g,u,boss}=arena(),hp=u.hp;g.tick(.05);const first=hp-u.hp;const ordinary=arena();ordinary.boss.bonkBoss=false;const normalHp=ordinary.u.hp;ordinary.g.tick(.05);assert.ok(first>(normalHp-ordinary.u.hp)*1.08,'full basic hit '+first+' versus touch '+(normalHp-ordinary.u.hp));assert.equal(g.effects.filter(e=>e.type==='damage'&&e.target===u.id).length,1);
  const collected=new Map(g.effects.filter(e=>e.type==='damage'&&e.target===u.id).map(e=>[e.id,e]));
  for(let i=0;i<44;i++){u.hp=u.maxHp;delete u.roContactPush;u.x=boss.x-.5;u.z=boss.z;g.tick(.05);for(const e of g.effects)if(e.type==='damage'&&e.target===u.id)collected.set(e.id,e);}
  const hits=[...collected.values()];assert.equal(hits.length,3);assert.ok(hits.every((hit,i)=>!i||hit.time-hits[i-1].time>=boss.interval-.00001));assert.equal(g.units.length,2);

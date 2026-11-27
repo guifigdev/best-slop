@@ -1,4 +1,6 @@
 export function roMouseLook(yaw,pitch,dx,dy,sensitivity=.0025){return{yaw:yaw-(Number.isFinite(dx)?dx:0)*sensitivity,pitch:Math.max(-1.35,Math.min(1.35,pitch-(Number.isFinite(dy)?dy:0)*sensitivity))};}
+export function roThirdPersonMouseLook(yaw,elevation,dx,dy){const look=roMouseLook(yaw,-elevation,dx,dy);return{yaw:look.yaw,elevation:Math.max(.12,Math.min(1.35,-look.pitch))};}
+export function roMouseLookEnabled(state,unit,suspended=false){return state?.options?.mode==='bonk'&&!!unit?.alive&&!suspended&&!state.bonk?.offer&&!unit.bonkOffer&&(['playing','cleared'].includes(state.bonk?.stage)||state.bonk?.stage==='finished'&&state.bonk.won===true);}
 // The browser requires a user gesture to capture the mouse. After capture,
 // movement rotates the camera without a held mouse button or screen edges.
 export function createRoFirstPersonLook({canvas,onMove=()=>{},onChange=()=>{}}){

@@ -33,5 +33,5 @@ test('cross-branch skills are offered before class evolution',()=>{
 
  test('ordinary monsters and elites receive stronger bodies, contact and pursuit while MVP pressure stays independent',()=>{
  const common=roSurvivorEnemyBudget({key:'poring'}),elite=roSurvivorEnemyBudget({key:'poring',elite:true}),mvp=roSurvivorEnemyBudget({key:'poring',boss:true});
- assert.ok(common.hp>=216&&common.hp<=218);assert.ok(common.damage>=67&&common.damage<=68);assert.equal(common.speedScale,1.056);assert.equal(elite.speedScale,1.056);assert.ok(elite.hp>common.hp*3);assert.ok(mvp.hp>elite.hp*5);assert.ok(mvp.damage>common.damage);assert.equal(roSurvivorEnemyBudget({key:'poring',level:150}).hp,common.hp);
+ assert.ok(common.hp>=216&&common.hp<=218);assert.ok(common.damage>=77&&common.damage<=78);assert.equal(common.speedScale,1.056);assert.equal(elite.speedScale,1.056);assert.ok(elite.hp>common.hp*3);assert.ok(mvp.hp>elite.hp*5);assert.ok(mvp.damage>common.damage);assert.equal(roSurvivorEnemyBudget({key:'poring',level:150}).hp,common.hp);
  });

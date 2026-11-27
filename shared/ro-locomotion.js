@@ -1,7 +1,7 @@
 import {RO_CONTACT_KNOCKBACK} from './ro-contact-combat.js';
 import {bonkBlocked} from './bonk-level.js';
 import {roIceMovement} from './ro-ice-terrain.js';
-export const RO_BASE_MOVE_SPEED=5;
+export {RO_BASE_MOVE_SPEED} from './ro-movement-scale.js';
 export const RO_CAST_MOVE_MULTIPLIER=.45;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export function moveRoActor(map,u,dx,dz,dt,speed=u.speed){const length=Math.hypot(dx,dz);if(!length||!Number.isFinite(length)){u.moving=false;return;}dx/=length;dz/=length;const distance=Math.min(dt,.1)*speed,steps=Math.max(1,Math.ceil(distance/.25)),step=distance/steps,r=u.collisionRadius||.45,bottom=u.bonkJumpHeight||0;u.moving=false;
